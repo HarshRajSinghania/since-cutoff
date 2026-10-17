@@ -51,6 +51,13 @@ inputs:
     description: Add the Markdown summary to the job summary.
     required: false
     default: "true"
+  pr-comment:
+    description: >-
+      On pull_request events, post the Markdown summary as one comment on the pull request, and
+      edit that comment on later runs. The job needs `permissions: pull-requests: write`; where
+      the token cannot write (pull requests from forks), the step prints a notice instead.
+    required: false
+    default: "false"
   cache:
     description: >-
       Cache PyPI metadata, package sources and API diffs between runs (saved also when
@@ -211,6 +218,80 @@ runs:
       with:
         path: ${{ runner.temp }}/since-cutoff-cache
         key: ${{ steps.cache.outputs.cache-primary-key }}
+
+    # One comment per pull request, found again by its marker and edited on each run. Before
+    # "Report the result", so that a failing scan still updates it.
+    - name: Comment on the pull request
+      if: ${{ !cancelled() && inputs.pr-comment == 'true' && steps.scan.outputs.exit-code != '' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        SC_MARKDOWN: ${{ steps.scan.outputs.markdown }}
+        SC_STEP_SUMMARY: ${{ inputs.step-summary }}
+        SC_PR: ${{ github.event.pull_request.number }}
+        SC_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        SC_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        set -uo pipefail
+        marker='<!-- since-cutoff:pr-comment -->'
+        if [ -z "$SC_PR" ]; then
+          echo "::notice title=since-cutoff::pr-comment: not a pull request ($GITHUB_EVENT_NAME), so no comment"
+          exit 0
+        fi
+        if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ -n "$SC_HEAD_REPO" ] && [ "$SC_HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+          echo "::notice title=since-cutoff::pr-comment: the token of a pull request from a fork cannot comment, so the summary is in the job summary only"
+          exit 0
+        fi
+
+        # GitHub takes up to 65,536 characters; a byte is at most one character. A longer
+        # summary is cut after a whole line, its open <details> closed.
+        max="${SINCE_CUTOFF_COMMENT_MAX_BYTES:-64000}"
+        run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        body="$(mktemp "${RUNNER_TEMP:-/tmp}/since-cutoff-comment.XXXXXX")"
+        {
+          printf '%s\n' "$marker"
+          if [ -n "$SC_MARKDOWN" ] && [ -f "$SC_MARKDOWN" ]; then
+            if [ "$(( $(wc -c < "$SC_MARKDOWN") ))" -le "$max" ]; then
+              cat "$SC_MARKDOWN"
+            else
+              LC_ALL=C awk -v max="$max" '
+                { size += length($0) + 1; if (size > max) exit; print
+                  opened += gsub(/<details/, "&"); closed += gsub(/<\/details>/, "&") }
+                END { for (i = closed; i < opened; i++) print "</details>" }
+              ' "$SC_MARKDOWN"
+              if [ "$SC_STEP_SUMMARY" = "true" ]; then
+                printf '\n**The summary is longer than a comment can be, so it was cut here: the [job summary](%s) has all of it.**\n' "$run_url"
+              else
+                printf '\n**The summary is longer than a comment can be, so it was cut here** (`step-summary: true` adds all of it to the [job summary](%s)).\n' "$run_url"
+              fi
+            fi
+          else
+            printf '## since-cutoff scan\n\nThe scan did not finish, so there is no summary for this commit: see the [workflow run](%s).\n' "$run_url"
+          fi
+          printf '\n<sub>Updated for %s by the since-cutoff action ([workflow run](%s)).</sub>\n' "${SC_HEAD_SHA:0:7}" "$run_url"
+        } > "$body"
+
+        comments="repos/$GITHUB_REPOSITORY/issues/$SC_PR/comments"
+        if ! ids="$(gh api --paginate "$comments" --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id")"; then
+          echo "::warning title=since-cutoff::pr-comment: could not read the pull request's comments; the job needs permissions: pull-requests: write"
+          exit 0
+        fi
+        id="${ids%%$'\n'*}"
+        if [ -n "$id" ]; then
+          request=(--method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id")
+        else
+          request=(--method POST "$comments")
+        fi
+        # This repository's CI checks the comment without posting it.
+        if [ -n "${SINCE_CUTOFF_COMMENT_DRY_RUN:-}" ]; then
+          { echo "gh api ${request[*]} -F body=@-"; echo; cat "$body"; } > "$SINCE_CUTOFF_COMMENT_DRY_RUN"
+          echo "Dry run: gh api ${request[*]} -F body=@$body"
+          exit 0
+        fi
+        if ! gh api "${request[@]}" -F "body=@$body" --jq '"pr-comment: " + .html_url'; then
+          echo "::warning title=since-cutoff::pr-comment: could not write the comment; the job needs permissions: pull-requests: write"
+        fi
+        exit 0
 
     - name: Report the result
       if: ${{ !cancelled() && steps.scan.outputs.exit-code != '' && (steps.scan.outputs.exit-code != '0' || steps.scan.outputs.notes-exit-code != '0') }}

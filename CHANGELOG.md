@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- The GitHub Action posts its summary on the pull request with `pr-comment: true` (#33): one
+  comment, found again by a hidden `<!-- since-cutoff:pr-comment -->` marker and edited on each
+  run, so it describes the latest push, also once the scan finds nothing. It uses the `gh` CLI
+  and the job's token, which needs `permissions: pull-requests: write`; on a pull request from a
+  fork, whose token can only read, and on other events, the step prints a notice and posts
+  nothing, and a token that cannot write gets a warning, never a failed job. A summary longer
+  than a comment can be (65,536 characters) is cut after a whole line, its open `<details>`
+  closed, with a link to the job summary. The step runs before the one that fails the job, so a
+  failing scan still updates the comment.
+- A Docker image on each release (#35): `ghcr.io/mohammadhijjawi97/since-cutoff:X.Y.Z` and
+  `:latest`, for linux/amd64 and linux/arm64, for GitLab CI, Jenkins, Buildkite and other CI that
+  runs tools from containers (`docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/src" IMAGE scan
+  --model ...`). The Dockerfile pins python:3.12-slim by digest (Dependabot updates it) and the
+  release by a build argument that `scripts/check_versions.py` checks, installs no `run` extra,
+  runs as a non-root user with its cache in `/cache`, and still starts the MCP server without
+  arguments (`ENTRYPOINT ["since-cutoff"]`, `CMD ["mcp"]`), as MCP directories expect. CI builds
+  it on every pull request, checks `--version`, MCP `tools/list` and a scan of
+  `examples/agent-app`; `release.yml` pushes it after PyPI has the release, with
+  `packages: write` for that job only.
+
 - Notes from the diff say what to use instead in more cases, and point somewhere useful when they
   cannot (an audit of 36 libraries found 25 of 36 notes ending in "since-cutoff found no
   replacement in X's deprecation text", several although the text named one; #14). A replacement

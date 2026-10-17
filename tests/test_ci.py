@@ -5,7 +5,11 @@ from __future__ import annotations
 import ast
 import importlib.util
 import json
+import os
 import re
+import shutil
+import subprocess
+import sys
 import textwrap
 from datetime import date
 from pathlib import Path
@@ -302,7 +306,7 @@ def test_action_pins_this_release_and_declares_its_interface() -> None:
     action = _read("action.yml")
     default = re.search(r"since-cutoff-version:\n(?:    .*\n)*?    default: \"(.+)\"", action)
     assert default is not None and default.group(1) == __version__
-    for name in ("model", "working-directory", "only", "exclude", "fail-on-changes"):
+    for name in ("model", "working-directory", "only", "exclude", "fail-on-changes", "pr-comment"):
         assert f"\n  {name}:\n" in action
     for name in ("changed-packages", "changes", "deprecations", "markdown", "report"):
         assert f"\n  {name}:\n" in action
@@ -324,9 +328,10 @@ def test_action_saves_its_cache_before_it_fails() -> None:
         "Restore the since-cutoff cache",
         "Scan the dependencies",
         "Save the since-cutoff cache",
+        "Comment on the pull request",
         "Report the result",
     ]
-    _, restore, scan, save, report = steps
+    _, restore, scan, save, _, report = steps
     # actions/cache saves only after a successful job: fail-on-changes would lose the cache.
     assert "uses: actions/cache/restore@" in restore and "uses: actions/cache/save@" in save
     assert "uses: actions/cache@" not in action
@@ -336,6 +341,210 @@ def test_action_saves_its_cache_before_it_fails() -> None:
     assert scan.rstrip().endswith("exit 0")
     assert "steps.scan.outputs.exit-code != '0'" in report
     assert 'exit "$SC_STATUS"' in report and "::error title=since-cutoff::" in report
+
+
+# A stand-in for the gh CLI: it logs each call, lists the comment ids in $GH_EXISTING, keeps the
+# body it is given, and fails a read or a write when asked to.
+_FAKE_GH = """\
+#!/usr/bin/env bash
+printf '%s\\n' "$*" >> "$GH_LOG"
+case "$*" in
+  *--paginate*)
+    if [ -n "${GH_FAIL_READ:-}" ]; then echo "HTTP 403: Resource not accessible" >&2; exit 1; fi
+    if [ -n "${GH_EXISTING:-}" ]; then printf '%s\\n' $GH_EXISTING; fi ;;
+  *)
+    if [ -n "${GH_FAIL_WRITE:-}" ]; then echo "HTTP 403: Resource not accessible" >&2; exit 1; fi
+    for arg in "$@"; do
+      case "$arg" in body=@*) cp "${arg#body=@}" "$GH_BODY" ;; esac
+    done
+    echo "pr-comment: https://github.com/o/r/pull/7#issuecomment-1" ;;
+esac
+"""
+
+
+def _bash() -> str:
+    """Git Bash on Windows (the runners' `bash` step shell), not WSL's System32 bash."""
+    found = shutil.which("bash")
+    if sys.platform == "win32":
+        git = shutil.which("git")
+        candidates = [Path(found)] if found and "\\windows\\" not in found.lower() else []
+        candidates += (
+            [folder / "bin" / "bash.exe" for folder in Path(git).resolve().parents] if git else []
+        )
+        found = next((str(path) for path in candidates if path.is_file()), None)
+    if found is None:
+        pytest.skip("bash (Git Bash on Windows) is not installed")
+    return found
+
+
+class _CommentStep:
+    """The action's "Comment on the pull request" step, run with bash against a fake gh."""
+
+    def __init__(self, tmp_path: Path) -> None:
+        step = _read("action.yml").split("\n    - name: Comment on the pull request\n", 1)[1]
+        block = re.search(r"run: \|\n((?:        .*\n|\n)+)", step.split("\n    - name: ")[0])
+        assert block is not None
+        self.script = textwrap.dedent(block.group(1))
+        self.tmp = tmp_path
+        bin_dir = tmp_path / "bin"
+        bin_dir.mkdir()
+        (bin_dir / "gh").write_bytes(_FAKE_GH.encode())
+        (bin_dir / "gh").chmod(0o755)
+        self.log, self.body = tmp_path / "gh.log", tmp_path / "posted.md"
+        self.env = {
+            **os.environ,
+            "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+            "GH_LOG": str(self.log),
+            "GH_BODY": str(self.body),
+            "RUNNER_TEMP": str(tmp_path),
+            "GITHUB_EVENT_NAME": "pull_request",
+            "GITHUB_REPOSITORY": "o/r",
+            "GITHUB_SERVER_URL": "https://github.com",
+            "GITHUB_RUN_ID": "99",
+            "SC_MARKDOWN": "",
+            "SC_STEP_SUMMARY": "true",
+            "SC_PR": "7",
+            "SC_HEAD_REPO": "o/r",
+            "SC_HEAD_SHA": "abcdef0123456789",
+        }
+
+    def summary(self, text: str) -> None:
+        path = self.tmp / "summary.md"
+        path.write_bytes(text.encode())
+        self.env["SC_MARKDOWN"] = str(path)
+
+    def run(self, **env: str) -> tuple[str, list[str]]:
+        """The step's output, and the gh calls it made."""
+        done = subprocess.run(
+            [_bash(), "-c", self.script],
+            env={**self.env, **env},
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=60,
+        )
+        assert done.returncode == 0, done.stderr  # the step never fails the job
+        calls = self.log.read_text(encoding="utf-8").splitlines() if self.log.exists() else []
+        return done.stdout + done.stderr, calls
+
+    def posted(self) -> str:
+        return self.body.read_bytes().decode()
+
+
+MARKER = "<!-- since-cutoff:pr-comment -->"
+RUN_URL = "https://github.com/o/r/actions/runs/99"
+
+
+def test_pr_comment_posts_the_summary_then_edits_that_comment(tmp_path) -> None:
+    step = _CommentStep(tmp_path)
+    step.summary("## since-cutoff scan\n\n- 1 of 9 dependencies changed its API\n")
+
+    # The first run finds no comment of its own and creates one.
+    out, calls = step.run()
+    assert calls[0].startswith("api --paginate repos/o/r/issues/7/comments --jq ")
+    assert '.user.login == "github-actions[bot]"' in calls[0]
+    assert f'.body | startswith("{MARKER}")' in calls[0]
+    assert calls[1].startswith("api --method POST repos/o/r/issues/7/comments -F body=@")
+    assert "issuecomment-1" in out
+    assert step.posted() == (
+        f"{MARKER}\n## since-cutoff scan\n\n- 1 of 9 dependencies changed its API\n\n"
+        f"<sub>Updated for abcdef0 by the since-cutoff action ([workflow run]({RUN_URL})).</sub>\n"
+    )
+
+    # A later run edits the first comment with the marker.
+    step.log.unlink()
+    step.summary("## since-cutoff scan\n\n- 0 of 9 dependencies changed their API\n")
+    _, calls = step.run(GH_EXISTING="42 43")
+    assert calls[1].startswith("api --method PATCH repos/o/r/issues/comments/42 -F body=@")
+    assert "- 0 of 9 dependencies" in step.posted()
+
+
+def test_pr_comment_cuts_a_long_summary_and_links_to_the_job_summary(tmp_path) -> None:
+    step = _CommentStep(tmp_path)
+    package = "<details><summary><b>pkg{n}</b></summary>\n\n" + "- `é.f` changed\n" * 40
+    step.summary(
+        "## since-cutoff scan\n\n"
+        + "\n</details>\n\n".join(package.format(n=n) for n in range(400))
+        + "\n</details>\n"
+    )
+    step.run()
+    posted = step.posted()
+    assert len(posted) <= 65536 < len((tmp_path / "summary.md").read_text(encoding="utf-8"))
+    assert posted.startswith(MARKER + "\n## since-cutoff scan\n")
+    assert posted.count("<details>") == posted.count("</details>") > 0
+    assert f"cut here: the [job summary]({RUN_URL}) has all of it." in posted
+    assert posted.rstrip().endswith("</sub>")
+
+    step.summary("## since-cutoff scan\n\n" + package.format(n=1) + "</details>\n")
+    step.run(SINCE_CUTOFF_COMMENT_MAX_BYTES="200", SC_STEP_SUMMARY="false")
+    posted = step.posted()
+    assert posted.count("<details>") == posted.count("</details>") == 1
+    assert "(`step-summary: true` adds all of it to the [job summary]" in posted
+
+
+@pytest.mark.parametrize(
+    ("env", "notice"),
+    [
+        ({"SC_PR": "", "GITHUB_EVENT_NAME": "push"}, "not a pull request (push), so no comment"),
+        ({"SC_HEAD_REPO": "fork/r"}, "the token of a pull request from a fork cannot comment"),
+    ],
+)
+def test_pr_comment_skips_pushes_and_forks_with_a_notice(tmp_path, env, notice) -> None:
+    step = _CommentStep(tmp_path)
+    out, calls = step.run(**env)
+    assert f"::notice title=since-cutoff::pr-comment: {notice}" in out
+    assert calls == []
+
+
+def test_pr_comment_warns_without_failing_when_the_token_cannot_write(tmp_path) -> None:
+    step = _CommentStep(tmp_path)
+    out, calls = step.run(GH_FAIL_READ="1")
+    assert "could not read the pull request's comments" in out and len(calls) == 1
+    out, calls = step.run(GH_FAIL_WRITE="1")
+    assert "::warning title=since-cutoff::pr-comment: could not write the comment" in out
+    assert "pull-requests: write" in out
+
+
+def test_pr_comment_says_when_the_scan_wrote_no_summary(tmp_path) -> None:
+    step = _CommentStep(tmp_path)
+    step.env["SC_MARKDOWN"] = str(tmp_path / "missing.md")
+    step.run()
+    assert (
+        "The scan did not finish, so there is no summary for this commit: see the "
+        f"[workflow run]({RUN_URL})."
+    ) in step.posted()
+
+
+def test_pr_comment_dry_run_writes_the_call_and_the_comment_to_a_file(tmp_path) -> None:
+    step = _CommentStep(tmp_path)
+    step.summary("## since-cutoff scan\n")
+    dry = tmp_path / "dry-run.txt"
+    out, calls = step.run(SINCE_CUTOFF_COMMENT_DRY_RUN=str(dry), GH_EXISTING="42")
+    assert len(calls) == 1 and "--paginate" in calls[0]  # it reads, and writes nothing
+    assert "Dry run: gh api --method PATCH repos/o/r/issues/comments/42" in out
+    lines = dry.read_text(encoding="utf-8").splitlines()
+    assert lines[:4] == [
+        "gh api --method PATCH repos/o/r/issues/comments/42 -F body=@-",
+        "",
+        MARKER,
+        "## since-cutoff scan",
+    ]
+    assert not step.body.exists()
+
+
+def test_the_image_is_pinned_and_runs_as_a_user() -> None:
+    dockerfile = _read("Dockerfile")
+    # The base image by digest (Dependabot updates it), the release by version, no [run] extra.
+    assert re.search(r"^FROM python:3\.\d+-slim@sha256:[0-9a-f]{64}$", dockerfile, re.M)
+    assert f"\nARG SINCE_CUTOFF_VERSION={__version__}\n" in dockerfile
+    assert (
+        'pip install --no-cache-dir --disable-pip-version-check "since-cutoff==${SINCE_CUTOFF_VERSION}"'
+        in dockerfile
+    )
+    assert re.search(r"^USER 10001$", dockerfile, re.M)
+    # `docker run IMAGE` starts the MCP server (Glama), `docker run IMAGE scan ...` scans.
+    assert dockerfile.rstrip().endswith('ENTRYPOINT ["since-cutoff"]\nCMD ["mcp"]')
+    assert "SINCE_CUTOFF_CACHE=/cache" in dockerfile
 
 
 # ------------------------------------------ workflows (OpenSSF Scorecard checks)
@@ -387,6 +596,7 @@ def test_tokens_are_read_only_unless_a_job_needs_to_write() -> None:
         ("release.yml", "publish", "id-token"),  # PyPI trusted publishing
         ("release.yml", "mcp-registry", "id-token"),  # mcp-publisher login github-oidc
         ("release.yml", "github-release", "contents"),  # gh release create
+        ("release.yml", "docker", "packages"),  # push the image to ghcr.io
         ("scorecard.yml", "analysis", "id-token"),  # publish_results
         ("scorecard.yml", "analysis", "security-events"),  # the SARIF upload to code scanning
     }
@@ -466,9 +676,10 @@ def test_every_version_field_names_this_release(capsys) -> None:
     found = check.versions()
     # The package, server.json (twice), the Claude Code, Agent Plugins, Codex and Gemini
     # manifests, the skill's metadata.version, both MCP launcher pins, CITATION.cff, the action's
-    # default, the changelog and, in each of the four READMEs, the pre-commit rev and the
-    # action's default; the plugin's SessionStart hook is checked on its own (see below).
-    assert len(found) == 22
+    # default, the Dockerfile's, the changelog and, in each of the four READMEs, the pre-commit
+    # rev and the action's default; the plugin's SessionStart hook is checked on its own (see
+    # below).
+    assert len(found) == 23
     assert dict.fromkeys(found, __version__) == found
     assert check.problems() == []  # including CITATION's date = the changelog's release date
     assert check.main(["check_versions.py", f"v{__version__}"]) == 0

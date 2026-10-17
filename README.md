@@ -82,9 +82,8 @@ anthropic 0.56.0 -> 1.8.0 (0.56.0 was the latest release 30 days before the cuto
   Messages.create: temperature, top_k and top_p were removed                          uses this API
     app/main.py   calls create
     Note: `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword
-          arguments. If the API still needs them, pass them through its `extra_body` or
-          `extra_query` argument. since-cutoff found no replacement in anthropic's deprecation
-          text. [diff]
+          arguments. If the API still needs them, pass them through its `extra_body` argument.
+          [diff]
 
 2 notes ready: `since-cutoff sync` writes them to AGENTS.md and keeps them in step with
   pyproject.toml.
@@ -95,8 +94,8 @@ The call in `app/main.py` passes none of these parameters, so it is marked "uses
 it edits the call. The note is what `since-cutoff sync` writes into AGENTS.md so that it does
 not; its tag, `[diff]`, says what the note rests on: a static comparison of the two releases'
 public APIs. The parameters left the signature, which is not the same as the API dropping the
-field, so where the pinned method has an `extra_body` or `extra_query` argument the note says
-so instead of telling the assistant to drop the field.
+field, so where the pinned method has an `extra_body` argument the note says so instead of
+telling the assistant to drop the field.
 
 `since-cutoff sync` then writes the two notes. It prints the block as a diff and asks
 `Write this to AGENTS.md? [y/N]` (`--yes` writes without asking; `--dry-run` only shows the
@@ -104,17 +103,17 @@ diff). For the sample project, the block ends with:
 
 ```markdown
 **anthropic 1.8.0** (compared from 0.56.0)
-- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` or `extra_query` argument. since-cutoff found no replacement in anthropic's deprecation text. [diff]
+- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 
 **huggingface-hub 2.0.0** (compared from 0.33.1)
-- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. since-cutoff found no replacement for `proxies` in huggingface-hub's deprecation text. [diff]
+- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases (2.0.0). [diff]
 <!-- since-cutoff:end -->
 ```
 
 Above the bullets are the start marker, a meta line (the model, its cutoff, where the versions
 come from, a hash of the dependencies and a hash of the block's own text, so that a hand edit
 shows) and a header that names the model, the cutoff and the file the versions come from, says
-what the tags mean and that no library code was run. The whole block is about 420 tokens. Text
+what the tags mean and that no library code was run. The whole block is about 410 tokens. Text
 outside the block keeps its bytes, and `since-cutoff unapply` removes the block. After an
 upgrade, run `sync` again; `sync --check` in CI and `status` offline tell you when the notes
 fall behind ([Keep the notes current](https://github.com/MohammadHijjawi97/since-cutoff#keep-the-notes-current-sync-and-status)).
@@ -464,11 +463,13 @@ and [PRIVACY.md](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/PRI
 
 **Why do some notes say "since-cutoff found no replacement"?** A note names a replacement only
 when the library's own deprecation text states one and that name exists in your pinned version
-(tag `[diff + library]`). Otherwise the note states the change and says that no replacement was
-found: a guessed replacement that an agent then follows is worse than none. Names in the pinned
+(tag `[diff + library]`). Otherwise the note states the change and points at the package's
+changelog with the pinned version (the Changelog URL in its PyPI metadata, else its GitHub
+releases page), or, when PyPI lists neither, says that no replacement was found: a guessed
+replacement that an agent then follows is worse than none. Names in the pinned
 version that merely look similar are shown in the terminal as "not confirmed as replacements";
 `sync --suggestions` writes them into the notes, tagged `[not confirmed]`. Where the pinned method
-still has an `extra_body` or `extra_query` argument, as anthropic's `Messages.create()` does, the
+still has an `extra_body` argument, as anthropic's `Messages.create()` does, the
 note points to it, since a request parameter that left the signature may still be accepted by the
 API.
 
@@ -483,7 +484,7 @@ files have the block, and say when a block in AGENTS.md alone is not imported. F
 `sync` updates every file that has a block, and `status` reports each.
 
 **How much do the notes cost in tokens?** The agent reads the block on every turn. For the
-sample project it is about 420 tokens, of which the two notes are about 160; the rest is the
+sample project it is about 410 tokens, of which the two notes are about 140; the rest is the
 header that names the model and the cutoff and says what the tags mean (counted at four
 characters per token, as since-cutoff does). `sync` writes notes only for the changed APIs your
 code uses (`--scope imported` adds up to 5 per imported package), and a model-written note has
@@ -866,10 +867,10 @@ was checked, and nothing else is claimed:
 
 | tag | what was checked | what was not |
 |---|---|---|
-| `[diff]` | The change is in a static comparison (griffe) of the public APIs of two releases: the latest release published at least 30 days before the model's training cutoff (by default), and the version your project pins. The sources are read, not imported. With `[diff]` alone, no replacement is named: the note says what the library's own deprecation text says ("there is no replacement for `resume_download`"), or that since-cutoff found no replacement in it. | Behaviour, and whether a call still runs: the pinned release may still accept a removed parameter with a warning, as huggingface-hub 2.0.0 does for `resume_download`. The terminal, report.md, the MCP tools and the JSON add a "Runtime:" line when the pinned source still handles one; the block does not, since the advice is the same. Whether your model gets it wrong. |
+| `[diff]` | The change is in a static comparison (griffe) of the public APIs of two releases: the latest release published at least 30 days before the model's training cutoff (by default), and the version your project pins. The sources are read, not imported. With `[diff]` alone, no replacement is named: the note says what the library's own deprecation text says ("there is no replacement for `resume_download`"), or points at the package's changelog (the Changelog URL in its PyPI metadata, else its GitHub releases page) with the pinned version, or, when PyPI lists neither, that since-cutoff found no replacement in that text. | Behaviour, and whether a call still runs: the pinned release may still accept a removed parameter with a warning, as huggingface-hub 2.0.0 does for `resume_download`. The terminal, report.md, the MCP tools and the JSON add a "Runtime:" line when the pinned source still handles one; the block does not, since the advice is the same. Whether your model gets it wrong. |
 | `[diff + library]` | As `[diff]`, and the library's own deprecation text (a docstring, a parameter's docstring entry, an `@deprecated` message or a `warnings.warn` text, in the older release or, for a deprecation, in the pinned one) states the replacement ("Use `stop` instead"), and that name exists in your pinned version. Text that only mentions a name as advice is quoted under `[diff]`, not taken as a replacement. | That the replacement behaves the same. |
 | `[diff + move checked]` | As `[diff]`, and the object at the new path is the same object as far as can be counted: a class or module keeps at least half of the old one's public names, a function keeps its parameters, a value is the same. | Behaviour. |
-| `[diff + metadata]` | The older release's Requires-Dist (its wheel's METADATA) lists a library the pinned one does not, and places in the public API that named that library's types (parameters, return types, attributes, base classes, re-exports) name the types of another library the pinned release requires, or of a copy of the old one it ships, with none of the old library left: openai 3.x, anthropic 1.8, huggingface-hub 2.0 and mcp 2.2 take `httpx2` objects where they took `httpx` ones. | Behaviour: whether the pinned release still accepts the old library's objects (openai 3 converts some, anthropic 1.8 raises `TypeError`, according to their sources). The terminal, report.md, the MCP tools and the JSON add an "Installed:" line (whether your project, its virtual environment included, still has the old library) and a "Runtime:" line that points to where the pinned source still names it. |
+| `[diff + metadata]` | The older release's Requires-Dist (its wheel's METADATA) lists a library the pinned one does not, and places in the public API that named that library's types (parameters, return types, attributes, base classes, re-exports) name the types of another library the pinned release requires, or of a copy of the old one it ships, with none of the old library left: openai 3.x, anthropic 1.8, huggingface-hub 2.0 and mcp 2.2 take `httpx2` objects where they took `httpx` ones. `[metadata]` alone marks the one bullet for a package first released after the cutoff (or within the margin before it) that your code imports: there is no release to compare from, so the note gives the date of its first release, its PyPI summary and its changelog URL. | Behaviour: whether the pinned release still accepts the old library's objects (openai 3 converts some, anthropic 1.8 raises `TypeError`, according to their sources). The terminal, report.md, the MCP tools and the JSON add an "Installed:" line (whether your project, its virtual environment included, still has the old library) and a "Runtime:" line that points to where the pinned source still names it. |
 | `[diff; probable rename]` | A parameter in the same position, with the same annotation, has a new name, and no version note in the pinned release's docstring (`.. versionadded::`, `.. versionchanged::`) says that one was added or the other removed. A guess, labelled as one. | That it is the same parameter. |
 | `[type-checked]` | Written by a model during `since-cutoff run` and kept because its example passed the type check below. | Behaviour; that the bullet's explanation is true beyond the names it shows. |
 | `[not confirmed]` | Only with `sync --suggestions`: names in the pinned version that look similar to what was removed (the bullet's tag then reads `[diff; not confirmed]`). | That any of them replaces it. |

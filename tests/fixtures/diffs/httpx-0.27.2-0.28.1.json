@@ -33,6 +33,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.AsyncClient.__init__",
     "httpx.Client.__init__"
@@ -78,6 +79,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.AsyncClient.__init__",
     "httpx.Client.__init__"
@@ -122,6 +124,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.create_ssl_context"
    ],
@@ -162,6 +165,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.delete"
    ],
@@ -202,6 +206,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.delete"
    ],
@@ -242,6 +247,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.get"
    ],
@@ -282,6 +288,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.get"
    ],
@@ -322,6 +329,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.head"
    ],
@@ -362,6 +370,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.head"
    ],
@@ -402,6 +411,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.options"
    ],
@@ -442,6 +452,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.options"
    ],
@@ -482,6 +493,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.patch"
    ],
@@ -522,6 +534,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.patch"
    ],
@@ -562,6 +575,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.post"
    ],
@@ -602,6 +616,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.post"
    ],
@@ -642,6 +657,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.put"
    ],
@@ -682,6 +698,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.put"
    ],
@@ -722,6 +739,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.request"
    ],
@@ -762,6 +780,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.request"
    ],
@@ -802,6 +821,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.stream"
    ],
@@ -842,6 +862,7 @@
    "namesake": null,
    "deprecated_by": null,
    "call_form": null,
+   "call_form_only": null,
    "import_paths": [
     "httpx.stream"
    ],

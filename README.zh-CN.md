@@ -53,28 +53,27 @@ anthropic 0.56.0 -> 1.8.0 (0.56.0 was the latest release 30 days before the cuto
   Messages.create: temperature, top_k and top_p were removed                          uses this API
     app/main.py   calls create
     Note: `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword
-          arguments. If the API still needs them, pass them through its `extra_body` or
-          `extra_query` argument. since-cutoff found no replacement in anthropic's deprecation
-          text. [diff]
+          arguments. If the API still needs them, pass them through its `extra_body` argument.
+          [diff]
 
 2 notes ready: `since-cutoff sync` writes them to AGENTS.md and keeps them in step with
   pyproject.toml.
 ```
 
-`app/main.py` 中的调用没有传这些参数中的任何一个，所以被标为“uses this API”（用到了这个 API），而不是“old form”（旧写法）：它现在能正常运行，但一个按 0.60.0 写代码的助手在修改这个调用时，可能会加上 `temperature=0.2`。这条说明就是 `since-cutoff sync` 写进 AGENTS.md、用来防止这种情况的内容；它的标签 `[diff]` 表明了它的依据：对两个版本公开 API 的静态对比。参数从函数签名中移除，并不等于 API 不再接受这个字段；所以当锁定版本的方法带有 `extra_body` 或 `extra_query` 参数时，说明会指出这一点，而不是让助手删掉这个字段。
+`app/main.py` 中的调用没有传这些参数中的任何一个，所以被标为“uses this API”（用到了这个 API），而不是“old form”（旧写法）：它现在能正常运行，但一个按 0.60.0 写代码的助手在修改这个调用时，可能会加上 `temperature=0.2`。这条说明就是 `since-cutoff sync` 写进 AGENTS.md、用来防止这种情况的内容；它的标签 `[diff]` 表明了它的依据：对两个版本公开 API 的静态对比。参数从函数签名中移除，并不等于 API 不再接受这个字段；所以当锁定版本的方法带有 `extra_body` 参数时，说明会指出这一点，而不是让助手删掉这个字段。
 
 接着，`since-cutoff sync` 写入这两条说明。它以 diff 的形式显示区块，并询问 `Write this to AGENTS.md? [y/N]`（`--yes` 不询问直接写入；`--dry-run` 只显示 diff）。对于示例项目，区块的结尾是：
 
 ```markdown
 **anthropic 1.8.0** (compared from 0.56.0)
-- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` or `extra_query` argument. since-cutoff found no replacement in anthropic's deprecation text. [diff]
+- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 
 **huggingface-hub 2.0.0** (compared from 0.33.1)
-- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. since-cutoff found no replacement for `proxies` in huggingface-hub's deprecation text. [diff]
+- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases (2.0.0). [diff]
 <!-- since-cutoff:end -->
 ```
 
-在这些条目之上是开始标记、一行元数据（模型、它的截止日期、版本的来源、依赖的哈希值，以及区块自身文本的哈希值，这样手动修改就能被发现），以及一段开头说明：写明模型、截止日期和版本来自哪个文件，解释各个标签的含义，并说明没有运行任何库的代码。整个区块约 420 个 token。区块以外的文本逐字节保持不变，`since-cutoff unapply` 可以移除这个区块。升级依赖后再运行一次 `sync`；CI 中的 `sync --check` 和离线的 `status` 会在说明过时时提醒你（见[用 sync 和 status 保持说明最新](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#用-sync-和-status-保持说明最新)）。
+在这些条目之上是开始标记、一行元数据（模型、它的截止日期、版本的来源、依赖的哈希值，以及区块自身文本的哈希值，这样手动修改就能被发现），以及一段开头说明：写明模型、截止日期和版本来自哪个文件，解释各个标签的含义，并说明没有运行任何库的代码。整个区块约 410 个 token。区块以外的文本逐字节保持不变，`since-cutoff unapply` 可以移除这个区块。升级依赖后再运行一次 `sync`；CI 中的 `sync --check` 和离线的 `status` 会在说明过时时提醒你（见[用 sync 和 status 保持说明最新](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#用-sync-和-status-保持说明最新)）。
 
 **在你的项目上试试。** 不需要 API key，不调用模型。在项目根目录运行：
 
@@ -265,11 +264,11 @@ npx skills add MohammadHijjawi97/since-cutoff
 
 **什么内容会被发送到哪里？** `scan`、`sync`、`status`、MCP 服务器、GitHub Action 和 pre-commit 钩子只读取 PyPI（元数据和 wheel 文件）和 models.dev，不向任何模型发送任何内容。`run` 会向你选择的模型服务商发送提示词：包名、版本、有变更 API 的公开签名和文档字符串、生成的任务，以及（为了写说明）模型自己的回答；绝不会发送你的源代码。哪些文件用到了有变更的 API，会显示在终端和 `.since-cutoff/` 中，只有你主动发送时才会传到别处：用 `--markdown` 生成的 CI 摘要，或调用了 MCP 工具 `project_changes` 的 Agent。没有遥测。详见[它会运行、发送和保存什么](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#它会运行发送和保存什么)和 [PRIVACY.md](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/PRIVACY.md)（英文）。
 
-**为什么有些说明写着“since-cutoff found no replacement”？** 只有当库自己的弃用文本写明了替代写法、且这个名称存在于你锁定的版本中时，说明才会给出替代写法（标签 `[diff + library]`）。否则，说明只陈述变更，并指出没有找到替代写法：猜出来的替代写法会被 Agent 照着用，比不给更糟。锁定版本中那些只是名字相似的内容，会在终端中以“not confirmed as replacements”显示；`sync --suggestions` 会把它们写进说明，标为 `[not confirmed]`。当锁定版本的方法仍带有 `extra_body` 或 `extra_query` 参数时（例如 anthropic 的 `Messages.create()`），说明会指出这一点，因为从签名中移除的请求参数可能仍被 API 接受。
+**为什么有些说明写着“since-cutoff found no replacement”？** 只有当库自己的弃用文本写明了替代写法、且这个名称存在于你锁定的版本中时，说明才会给出替代写法（标签 `[diff + library]`）。否则，说明陈述变更，并给出该包的变更日志（其 PyPI 元数据中的 Changelog 链接，否则是它在 GitHub 上的 releases 页面）和锁定的版本；PyPI 两者都没有列出时，才指出没有找到替代写法：猜出来的替代写法会被 Agent 照着用，比不给更糟。锁定版本中那些只是名字相似的内容，会在终端中以“not confirmed as replacements”显示；`sync --suggestions` 会把它们写进说明，标为 `[not confirmed]`。当锁定版本的方法仍带有 `extra_body` 参数时（例如 anthropic 的 `Messages.create()`），说明会指出这一点，因为从签名中移除的请求参数可能仍被 API 接受。
 
 **写进 AGENTS.md 还是 CLAUDE.md？** `sync` 写进 AGENTS.md；只有 CLAUDE.md 时写进 CLAUDE.md；CLAUDE.md 没有导入 AGENTS.md 时两个文件都写（[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)）；两者中已经有区块的，就写进那个（`--target` 可以指定任意文件）。Claude Code 读取 CLAUDE.md，只有当 CLAUDE.md 用一行 `@AGENTS.md` 导入了 AGENTS.md 时才会读取 AGENTS.md；Codex、Cursor 和 Copilot 读取 AGENTS.md。要只保留一份，就在 CLAUDE.md 中加上 `@AGENTS.md`，再运行 `since-cutoff unapply --target CLAUDE.md`；两个文件都有区块时，`scan`、`sync` 和 `status` 会提示这一点，只在 AGENTS.md 中的区块没有被导入时也会提示。此后 `sync` 会更新每个有区块的文件，`status` 也会逐个报告。
 
-**这些说明要花多少 token？** Agent 每一轮都会读取这个区块。对示例项目来说，区块约 420 个 token，其中两条说明约 160 个；其余是开头说明，写明模型和截止日期并解释各个标签（按每 4 个字符一个 token 计算，与 since-cutoff 自己的算法一致）。`sync` 只为你的代码用到的有变更 API 写说明（`--scope imported` 为每个导入的包最多再加 5 条），模型写的说明最多 60 个英文单词。在基准测试中，区块在 285 到 505 个 token 之间，带说明的会话消耗的总 token 数是不带说明的 0.73 倍。`run` 会报告每个区块的 token 数。
+**这些说明要花多少 token？** Agent 每一轮都会读取这个区块。对示例项目来说，区块约 410 个 token，其中两条说明约 140 个；其余是开头说明，写明模型和截止日期并解释各个标签（按每 4 个字符一个 token 计算，与 since-cutoff 自己的算法一致）。`sync` 只为你的代码用到的有变更 API 写说明（`--scope imported` 为每个导入的包最多再加 5 条），模型写的说明最多 60 个英文单词。在基准测试中，区块在 285 到 505 个 token 之间，带说明的会话消耗的总 token 数是不带说明的 0.73 倍。`run` 会报告每个区块的 token 数。
 
 **能离线用吗？** `status` 完全不访问网络。`scan` 和 `sync` 需要从 PyPI 获取每个包的版本列表（缓存 12 小时；PyPI 无法访问时，使用更早的缓存副本，并在输出中说明它是哪一天的），以及每个有变更的包的源码；源码和对比结果都会缓存，所以之后的运行只需几秒。训练截止日期来自 models.dev，并内置一份快照供离线使用。
 
@@ -534,10 +533,10 @@ since-cutoff 从不单独使用“verified”（已验证）这个词。每条�
 
 | 标签 | 检查了什么 | 没有检查什么 |
 |---|---|---|
-| `[diff]` | 这个变更出现在对两个版本公开 API 的静态对比（griffe）中：默认在模型训练截止日期至少 30 天之前发布的最新版本，以及你的项目锁定的版本。源码只被读取，不被导入。只有 `[diff]` 时，说明不会给出任何替代项：它转述库自己的弃用说明中的话（“there is no replacement for `resume_download`”，没有替代项），或者说明 since-cutoff 在其中没有找到替代项。 | 行为，以及调用是否仍能运行：锁定的版本可能仍会接受一个已移除的参数并发出警告，比如 huggingface-hub 2.0.0 对 `resume_download` 就是这样。当锁定版本的源码仍会处理某个参数时，终端、report.md、MCP 工具和 JSON 会加上一行“Runtime:”；区块中不写，因为建议是一样的。你的模型是否会写错。 |
+| `[diff]` | 这个变更出现在对两个版本公开 API 的静态对比（griffe）中：默认在模型训练截止日期至少 30 天之前发布的最新版本，以及你的项目锁定的版本。源码只被读取，不被导入。只有 `[diff]` 时，说明不会给出任何替代项：它转述库自己的弃用说明中的话（“there is no replacement for `resume_download`”，没有替代项），或者给出该包的变更日志（其 PyPI 元数据中的 Changelog 链接，否则是它在 GitHub 上的 releases 页面）和锁定的版本，或者在 PyPI 两者都没有列出时，说明 since-cutoff 在那段文字中没有找到替代项。 | 行为，以及调用是否仍能运行：锁定的版本可能仍会接受一个已移除的参数并发出警告，比如 huggingface-hub 2.0.0 对 `resume_download` 就是这样。当锁定版本的源码仍会处理某个参数时，终端、report.md、MCP 工具和 JSON 会加上一行“Runtime:”；区块中不写，因为建议是一样的。你的模型是否会写错。 |
 | `[diff + library]` | 同 `[diff]`，并且库自己的弃用说明（docstring、docstring 中某个参数的条目、`@deprecated` 消息或 `warnings.warn` 文本，来自旧版本；对于弃用，则来自锁定版本）明确给出了替代项（“Use `stop` instead”），而且这个名称在你锁定的版本中存在。只是作为建议提到某个名称的文字，会在 `[diff]` 下引用，不被当作替代项。 | 替代项的行为是否相同。 |
 | `[diff + move checked]` | 同 `[diff]`，并且就能统计的方面而言，新路径上的对象就是同一个对象：类或模块至少保留了旧对象一半的公开名称，函数保留了它的参数，值保持不变。 | 行为。 |
-| `[diff + metadata]` | 旧版本的 Requires-Dist（其 wheel 的 METADATA）列出了一个锁定的版本不再列出的库，而公开 API 中原先用到该库类型的位置（参数、返回类型、属性、基类、重新导出）改为用到锁定的版本所依赖的另一个库的类型，或它自带的旧库副本的类型，旧库的类型一个也没有留下：openai 3.x、anthropic 1.8、huggingface-hub 2.0 和 mcp 2.2 在原先接受 `httpx` 对象的地方改为接受 `httpx2` 对象。 | 行为：锁定的版本是否仍接受旧库的对象（根据各自的源码，openai 3 会转换其中一部分，anthropic 1.8 会抛出 `TypeError`）。终端、report.md、MCP 工具和 JSON 会加上一行“Installed:”（你的项目，包括其虚拟环境，是否仍有旧库）和一行“Runtime:”，指出锁定版本的源码在哪里仍提到它。 |
+| `[diff + metadata]` | 旧版本的 Requires-Dist（其 wheel 的 METADATA）列出了一个锁定的版本不再列出的库，而公开 API 中原先用到该库类型的位置（参数、返回类型、属性、基类、重新导出）改为用到锁定的版本所依赖的另一个库的类型，或它自带的旧库副本的类型，旧库的类型一个也没有留下：openai 3.x、anthropic 1.8、huggingface-hub 2.0 和 mcp 2.2 在原先接受 `httpx` 对象的地方改为接受 `httpx2` 对象。单独的 `[metadata]` 标记的是你的代码导入的、在截止日期之后（或截止日期前的余量天数内）才首次发布的包的那一条说明：没有任何版本可以对比，所以说明给出它首次发布的日期、它在 PyPI 上的简介和它的变更日志链接。 | 行为：锁定的版本是否仍接受旧库的对象（根据各自的源码，openai 3 会转换其中一部分，anthropic 1.8 会抛出 `TypeError`）。终端、report.md、MCP 工具和 JSON 会加上一行“Installed:”（你的项目，包括其虚拟环境，是否仍有旧库）和一行“Runtime:”，指出锁定版本的源码在哪里仍提到它。 |
 | `[diff; probable rename]` | 位置相同、类型注解相同的参数换了新名字，且锁定版本 docstring 中的版本说明（`.. versionadded::`、`.. versionchanged::`）没有说新参数是新增的或旧参数已被移除。这是推测，并标明为推测。 | 它是否就是同一个参数。 |
 | `[type-checked]` | 由模型在 `since-cutoff run` 中写出，因为它的示例通过了下面的类型检查而被保留。 | 行为；这条说明的解释在它展示的名称之外是否也正确。 |
 | `[not confirmed]` | 仅在使用 `sync --suggestions` 时出现：锁定版本中与被移除内容相似的名称（这时说明条目的标签写作 `[diff; not confirmed]`）。 | 其中任何一个能替代它。 |

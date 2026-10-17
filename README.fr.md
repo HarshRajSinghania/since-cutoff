@@ -88,9 +88,8 @@ anthropic 0.56.0 -> 1.8.0 (0.56.0 was the latest release 30 days before the cuto
   Messages.create: temperature, top_k and top_p were removed                          uses this API
     app/main.py   calls create
     Note: `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword
-          arguments. If the API still needs them, pass them through its `extra_body` or
-          `extra_query` argument. since-cutoff found no replacement in anthropic's deprecation
-          text. [diff]
+          arguments. If the API still needs them, pass them through its `extra_body` argument.
+          [diff]
 
 2 notes ready: `since-cutoff sync` writes them to AGENTS.md and keeps them in step with
   pyproject.toml.
@@ -102,8 +101,8 @@ assistant qui écrit pour la 0.60.0 pourrait ajouter `temperature=0.2` en modifi
 note est ce que `since-cutoff sync` écrit dans AGENTS.md pour l'en empêcher ; son étiquette,
 `[diff]`, indique sur quoi elle repose : une comparaison statique des API publiques des deux
 versions. Qu'un paramètre quitte la signature ne veut pas dire que l'API a abandonné le
-champ : quand la méthode épinglée a un argument `extra_body` ou `extra_query`, la note le dit au
-lieu de demander à l'assistant de supprimer le champ.
+champ : quand la méthode épinglée a un argument `extra_body`, la note le dit au lieu de
+demander à l'assistant de supprimer le champ.
 
 `since-cutoff sync` écrit ensuite les deux notes. Il affiche le bloc sous forme de diff et
 demande `Write this to AGENTS.md? [y/N]` (`--yes` écrit sans demander ; `--dry-run` n'affiche
@@ -111,10 +110,10 @@ que le diff). Pour le projet d'exemple, le bloc se termine ainsi :
 
 ```markdown
 **anthropic 1.8.0** (compared from 0.56.0)
-- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` or `extra_query` argument. since-cutoff found no replacement in anthropic's deprecation text. [diff]
+- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 
 **huggingface-hub 2.0.0** (compared from 0.33.1)
-- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. since-cutoff found no replacement for `proxies` in huggingface-hub's deprecation text. [diff]
+- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases (2.0.0). [diff]
 <!-- since-cutoff:end -->
 ```
 
@@ -122,7 +121,7 @@ Au-dessus des puces se trouvent le marqueur de début, une ligne de métadonnée
 date limite, la provenance des versions, une empreinte des dépendances et une autre du texte du
 bloc lui-même, pour qu'une modification à la main se voie) et un en-tête qui nomme le modèle, la
 date limite et le fichier d'où viennent les versions, explique les étiquettes et précise
-qu'aucun code de bibliothèque n'a été exécuté. Le bloc entier fait environ 420 tokens. Le texte
+qu'aucun code de bibliothèque n'a été exécuté. Le bloc entier fait environ 410 tokens. Le texte
 hors du bloc garde ses octets, et `since-cutoff unapply` retire le bloc. Après une mise à jour,
 relancez `sync` ; `sync --check` dans la CI et `status` hors ligne vous préviennent quand les
 notes ne sont plus à jour ([Tenir les notes à jour](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.fr.md#tenir-les-notes-à-jour-avec-sync-et-status)).
@@ -498,11 +497,14 @@ et [PRIVACY.md](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/PRIV
 **Pourquoi certaines notes disent-elles « since-cutoff found no replacement » ?** Une note ne
 nomme un remplaçant que lorsque le texte de dépréciation de la bibliothèque elle-même en indique
 un et que ce nom existe dans votre version épinglée (étiquette `[diff + library]`). Sinon, la note
-énonce le changement et dit qu'aucun remplaçant n'a été trouvé : un remplaçant deviné, que
+énonce le changement et renvoie au journal des modifications du paquet avec la version
+épinglée (l'URL « Changelog » de ses métadonnées PyPI, sinon sa page de versions sur
+GitHub) ou, quand PyPI n'indique ni l'une ni l'autre, dit qu'aucun remplaçant n'a été
+trouvé : un remplaçant deviné, que
 l'agent suit ensuite, est pire qu'aucun. Les noms de la version épinglée qui ressemblent
 seulement à ce qui a été supprimé sont affichés dans le terminal comme « not confirmed as
 replacements » ; `sync --suggestions` les écrit dans les notes avec l'étiquette `[not confirmed]`.
-Quand la méthode épinglée a encore un argument `extra_body` ou `extra_query`, comme
+Quand la méthode épinglée a encore un argument `extra_body`, comme
 `Messages.create()` d'anthropic, la note le signale, car un paramètre de requête retiré de la
 signature peut encore être accepté par l'API.
 
@@ -518,7 +520,7 @@ importé. Ensuite `sync` met à jour chaque fichier qui a un bloc, et `status` r
 chacun.
 
 **Combien coûtent les notes en tokens ?** L'agent lit le bloc à chaque tour. Pour le projet
-d'exemple, il fait environ 420 tokens, dont environ 160 pour les deux notes ; le reste est
+d'exemple, il fait environ 410 tokens, dont environ 140 pour les deux notes ; le reste est
 l'en-tête, qui nomme le modèle et la date limite et explique les étiquettes (à raison de quatre
 caractères par token, comme le compte since-cutoff). `sync` n'écrit des notes que pour les API
 modifiées qu'utilise votre code (`--scope imported` en ajoute jusqu'à 5 par paquet importé), et
@@ -928,10 +930,10 @@ since-cutoff n'emploie jamais le mot « verified » (vérifié) sans précisio
 
 | étiquette | ce qui a été vérifié | ce qui ne l'a pas été |
 |---|---|---|
-| `[diff]` | Le changement figure dans une comparaison statique (griffe) des API publiques de deux versions : la plus récente publiée au moins 30 jours avant la date limite d'entraînement du modèle (par défaut), et la version qu'épingle votre projet. Les sources sont lues, pas importées. Avec `[diff]` seul, aucun remplaçant n'est nommé : la note rapporte ce que dit le texte de dépréciation de la bibliothèque elle-même (« there is no replacement for `resume_download` », il n'y a pas de remplaçant), ou que since-cutoff n'y en a trouvé aucun. | Le comportement, et si un appel fonctionne encore : la version épinglée peut encore accepter un paramètre supprimé avec un avertissement, comme huggingface-hub 2.0.0 le fait pour `resume_download`. Le terminal, report.md, les outils MCP et le JSON ajoutent une ligne « Runtime: » quand le code source épinglé en traite encore un ; le bloc non, puisque le conseil est le même. Si votre modèle se trompe dessus. |
+| `[diff]` | Le changement figure dans une comparaison statique (griffe) des API publiques de deux versions : la plus récente publiée au moins 30 jours avant la date limite d'entraînement du modèle (par défaut), et la version qu'épingle votre projet. Les sources sont lues, pas importées. Avec `[diff]` seul, aucun remplaçant n'est nommé : la note rapporte ce que dit le texte de dépréciation de la bibliothèque elle-même (« there is no replacement for `resume_download` », il n'y a pas de remplaçant), ou renvoie au journal des modifications du paquet (l'URL « Changelog » de ses métadonnées PyPI, sinon sa page de versions sur GitHub) avec la version épinglée, ou, quand PyPI n'indique ni l'une ni l'autre, dit que since-cutoff n'y en a trouvé aucun. | Le comportement, et si un appel fonctionne encore : la version épinglée peut encore accepter un paramètre supprimé avec un avertissement, comme huggingface-hub 2.0.0 le fait pour `resume_download`. Le terminal, report.md, les outils MCP et le JSON ajoutent une ligne « Runtime: » quand le code source épinglé en traite encore un ; le bloc non, puisque le conseil est le même. Si votre modèle se trompe dessus. |
 | `[diff + library]` | Comme `[diff]`, et le texte de dépréciation de la bibliothèque elle-même (une docstring, l'entrée d'un paramètre dans la docstring, un message `@deprecated` ou un texte `warnings.warn`, dans l'ancienne version ou, pour une dépréciation, dans la version épinglée) énonce le remplaçant (« Use `stop` instead »), et ce nom existe dans votre version épinglée. Un texte qui ne mentionne un nom qu'à titre de conseil est cité sous `[diff]` ; il n'est pas pris pour un remplaçant. | Que le remplaçant se comporte de la même façon. |
 | `[diff + move checked]` | Comme `[diff]`, et l'objet au nouveau chemin est le même objet, autant qu'on puisse le compter : une classe ou un module garde au moins la moitié des noms publics de l'ancien, une fonction garde ses paramètres, une valeur est la même. | Le comportement. |
-| `[diff + metadata]` | Le Requires-Dist de l'ancienne version (le METADATA de sa wheel) liste une bibliothèque que la version épinglée ne liste plus, et les endroits de l'API publique qui nommaient des types de cette bibliothèque (paramètres, types de retour, attributs, classes de base, réexportations) nomment des types d'une autre bibliothèque que la version épinglée requiert, ou d'une copie de l'ancienne qu'elle embarque, sans qu'il reste aucun de l'ancienne : openai 3.x, anthropic 1.8, huggingface-hub 2.0 et mcp 2.2 prennent des objets `httpx2` là où ils prenaient des objets `httpx`. | Le comportement : si la version épinglée accepte encore les objets de l'ancienne bibliothèque (openai 3 en convertit certains, anthropic 1.8 lève `TypeError`, d'après leur code source). Le terminal, report.md, les outils MCP et le JSON ajoutent une ligne « Installed: » (votre projet, environnement virtuel compris, a-t-il encore l'ancienne bibliothèque) et une ligne « Runtime: » qui indique où le code source épinglé la nomme encore. |
+| `[diff + metadata]` | Le Requires-Dist de l'ancienne version (le METADATA de sa wheel) liste une bibliothèque que la version épinglée ne liste plus, et les endroits de l'API publique qui nommaient des types de cette bibliothèque (paramètres, types de retour, attributs, classes de base, réexportations) nomment des types d'une autre bibliothèque que la version épinglée requiert, ou d'une copie de l'ancienne qu'elle embarque, sans qu'il reste aucun de l'ancienne : openai 3.x, anthropic 1.8, huggingface-hub 2.0 et mcp 2.2 prennent des objets `httpx2` là où ils prenaient des objets `httpx`. `[metadata]` seul marque l'unique puce d'un paquet publié pour la première fois après la date limite (ou dans la marge qui la précède) que votre code importe : aucune version ne permet de comparer, la note donne donc la date de sa première version, son résumé PyPI et l'URL de son journal des modifications. | Le comportement : si la version épinglée accepte encore les objets de l'ancienne bibliothèque (openai 3 en convertit certains, anthropic 1.8 lève `TypeError`, d'après leur code source). Le terminal, report.md, les outils MCP et le JSON ajoutent une ligne « Installed: » (votre projet, environnement virtuel compris, a-t-il encore l'ancienne bibliothèque) et une ligne « Runtime: » qui indique où le code source épinglé la nomme encore. |
 | `[diff; probable rename]` | Un paramètre à la même position, avec la même annotation, porte un nouveau nom, et aucune note de version de la docstring de la version épinglée (`.. versionadded::`, `.. versionchanged::`) ne dit que l'un a été ajouté ou l'autre supprimé. Une supposition, signalée comme telle. | Qu'il s'agisse du même paramètre. |
 | `[type-checked]` | Rédigée par un modèle pendant `since-cutoff run` et conservée parce que son exemple a passé la vérification de types décrite plus bas. | Le comportement ; que l'explication de la puce soit vraie au-delà des noms qu'elle montre. |
 | `[not confirmed]` | Seulement avec `sync --suggestions` : des noms de la version épinglée qui ressemblent à ce qui a été supprimé (l'étiquette de la puce est alors `[diff; not confirmed]`). | Que l'un d'eux le remplace. |

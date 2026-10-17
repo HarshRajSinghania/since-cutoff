@@ -32,7 +32,8 @@ from since_cutoff.notes import diff_note
 
 FIXTURES = Path(__file__).parent / "fixtures" / "diffs"
 # The fixtures ship in the sdist: a bigger diff keeps only some kinds (a fixture's "kinds").
-MAX_FIXTURE_BYTES = 150 * 1024
+# mcp's 121 changes, each with its tier and its call_form_only (DIFF_SCHEMA 21), are 152 KB.
+MAX_FIXTURE_BYTES = 160 * 1024
 
 
 def _changes(name: str) -> dict[tuple[str, str, str], APIChange]:
@@ -91,11 +92,11 @@ def test_httpx_0_28_removed_proxies_and_app() -> None:
         "`Client()` no longer accepts `proxies`; do not pass it. Use `proxy` or `mounts` "
         "instead of `proxies`. [diff + library]"
     )
-    # For `app` it gives advice ("Use the explicit style ..."), quoted, not a stated name.
+    # For `app` the sentence says more than the name ("Use the explicit style ..."): it is
+    # quoted, and `WSGITransport` is the replacement it states.
     assert diff_note([changes[(PARAM_REMOVED, client, "app")]]).line == (
         "`Client()` no longer accepts `app`; do not pass it. On `app`, httpx 0.27.2 said: "
-        "\"Use the explicit style 'transport=WSGITransport(app=...)' instead.\" since-cutoff "
-        "found no replacement in httpx's deprecation text. [diff]"
+        "\"Use the explicit style 'transport=WSGITransport(app=...)' instead.\" [diff + library]"
     )
 
 

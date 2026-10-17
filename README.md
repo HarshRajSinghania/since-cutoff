@@ -696,6 +696,9 @@ passing them may run with a warning.
 
 ## Use in CI
 
+Problems with command output or an MCP client? See the
+[troubleshooting guide](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/troubleshooting.md).
+
 ### GitHub Action
 
 Scans the project on each pull request and adds a summary to the job page: the changed APIs your

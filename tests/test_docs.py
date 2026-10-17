@@ -42,6 +42,7 @@ PAGES = (
     "docs/es/index.md",
     "docs/fr/index.md",
     "docs/ai-stack.md",
+    "docs/troubleshooting.md",
     "PRIVACY.md",
     "CONTRIBUTING.md",
     "skills/since-cutoff/SKILL.md",
@@ -51,6 +52,7 @@ ENGLISH = (
     "docs/how-it-works.md",
     "docs/index.md",
     "docs/ai-stack.md",
+    "docs/troubleshooting.md",
     "PRIVACY.md",
     "CONTRIBUTING.md",
     "skills/since-cutoff/SKILL.md",
@@ -236,3 +238,30 @@ def test_the_slug_is_githubs() -> None:
     assert _slug("Mantener las notas al día: sync y status") == (
         "mantener-las-notas-al-día-sync-y-status"
     )
+
+
+@pytest.mark.parametrize(
+    "fragment",
+    (
+        "No dependency could be checked",
+        "MB download limit (--max-download-mb)",
+        "could not find importable modules in",
+        "Not written: there is no terminal to ask in",
+        "The since-cutoff block in",
+        "was edited by hand; sync would replace it",
+        "unknown model '",
+        "Pass its training cutoff explicitly",
+        "models.dev has no knowledge cutoff for '",
+        "the `claude` CLI was not found on PATH",
+        "ANTHROPIC_API_KEY is not set",
+        "basedpyright is not installed (pip install basedpyright)",
+        "CLAUDE.md does not import AGENTS.md, so Claude Code does not read the notes in AGENTS.md",
+    ),
+)
+def test_troubleshooting_quotes_current_source_text(fragment: str) -> None:
+    source = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((ROOT / "src/since_cutoff").rglob("*.py"))
+    )
+    assert fragment in source
+    assert fragment in _text("docs/troubleshooting.md")

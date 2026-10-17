@@ -110,14 +110,14 @@ uvx since-cutoff scan
 
 下面是 `since-cutoff scan` 针对 Claude Sonnet 4.5（训练截止 2025 年 7 月）在[示例项目](https://github.com/MohammadHijjawi97/since-cutoff/tree/main/examples/agent-app)中找到的部分变更。这个项目的 9 个依赖中有 6 个锁定在当前版本，另外 3 个没有锁定（工具使用它们的最新版本）：
 
-| 库 | 截止日期时的版本 | 锁定版本 | 变了什么 |
+| 库 | 对照版本 | 锁定版本 | 变了什么 |
 |---|---|---|---|
-| anthropic | 0.60.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` 不再被接受 |
-| huggingface-hub | 0.34.3 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)` 这些参数在 1.0 中已从函数签名里去掉（2.0.0 在运行时仍接受它们，但会忽略并发出警告） |
-| langchain-core | 0.3.72 | 1.6.5 | `retriever.get_relevant_documents()` 和 `llm.predict()` 已移除 |
-| openai | 1.98.0 | 3.19.2 | 19 个破坏性变更，6 个新的弃用（另有 3 个内部 API 变更） |
+| anthropic | 0.56.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` 不再被接受 |
+| huggingface-hub | 0.33.1 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)` 这些参数在 1.0 中已从函数签名里去掉（2.0.0 在运行时仍接受它们，但会忽略并发出警告） |
+| langchain-core | 0.3.67 | 1.6.5 | `retriever.get_relevant_documents()` 和 `llm.predict()` 已移除 |
+| openai | 1.93.0 | 3.19.2 | 24 个破坏性变更，6 个新的弃用（另有 5 个内部 API 变更） |
 
-在这个项目中，9 个依赖里有 7 个在截止日期之后改了公开 API。静态对比共标出公开 API 的 257 个破坏性变更和 23 个新的弃用，以及内部 API 的 71 个变更；项目代码用到了其中 2 个有变更的 API。
+每个库都从截止日期前至少 30 天发布的最新版本开始对比（扫描的默认间隔）。在这个项目中，9 个依赖里有 7 个在截止日期之后改了公开 API。静态对比共标出公开 API 的 331 个破坏性变更和 24 个新的弃用，以及内部 API 的 139 个变更；项目代码用到了其中 2 个有变更的 API。
 
 这不是某一个模型或某一家厂商的问题。在 36 个常用的 Python AI 库和来自 OpenAI、Anthropic、Google、xAI、DeepSeek、Qwen、Moonshot、Mistral 的 21 个模型上，即使是测试中最新的模型（Claude Opus 5.5，训练截止 2026 年 6 月），这 36 个库里也有 20 个在它的截止日期之后发生了公开 API 的破坏性变更（[完整结果](https://mohammadhijjawi97.github.io/since-cutoff/ai-stack.html)，英文）：
 
@@ -510,7 +510,7 @@ since-cutoff run --quick --fail-on-stale --json > since-cutoff.json
 
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works-dark.svg">
-  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="三个阶段。扫描（不调用模型）：从 lockfile 得到你的确切版本，找到模型截止日期时的版本，再用 griffe 做静态 API 对比。探测：给出需要用到该变更的简短任务，模型凭记忆作答，basedpyright 针对两个版本检查回答。写出并测试说明：模型写的说明只有示例能通过类型检查才保留，否则改用从 API 对比结果得出的变更陈述；留出任务在无说明和有说明时各回答一次，--apply 把一个区块写入 AGENTS.md。">
+  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="三个阶段。扫描（不调用模型）：从 lockfile 得到你的确切版本，找到模型截止日期前至少 30 天发布的最新版本，再用 griffe 做静态 API 对比。探测：给出需要用到该变更的简短任务，模型凭记忆作答，basedpyright 针对两个版本检查回答。写出并测试说明：模型写的说明只有示例能通过类型检查才保留，否则改用从 API 对比结果得出的变更陈述；留出任务在无说明和有说明时各回答一次，--apply 把一个区块写入 AGENTS.md。">
 </picture></p>
 
 | 结果 | 含义 |
@@ -574,7 +574,7 @@ AGENTS.md 中的区块包含带标签的说明条目，以及每个包的说明�
 - 目前仅支持 Python。下一步是 TypeScript（`.d.ts` 对比、`tsc`）（[#1](https://github.com/MohammadHijjawi97/since-cutoff/issues/1)）。
 - 类型检查器能发现错误的名称、错误的参数和 PEP 702 弃用，但看不到签名不变而行为改变的情况，也看不到只在运行时发出警告的弃用。`scan` 还会列出用库自己的装饰器（名称包含 "deprecat"）声明的弃用，以及已被移除、但模块仍通过 `__getattr__` 提供并发出警告的名称；不过 `run` 不会探测这些弃用。
 - 对比只覆盖公开 API：`_private` 名称，以及包内自带的测试、基准测试和示例，都会被跳过。
-- “Your code uses”（你的代码用到了）是逐个文件的静态匹配：导入（包括重新导出的名称）、调用、属性读取和关键字参数；方法调用的接收者会根据包自身的注解确定类型（`df = pd.read_csv(...)` 是一个 `DataFrame`；一个类连同它的基类一起计入，跨越你锁定的各个包）。它不追踪 `getattr` 这类动态访问，目前只指出文件，不指出行号（[#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)）。在代码没有显示其类的值上读取的方法，可以只按名称计入：这个名称仅属于一个有变更的 API，既不是常见名称，也不是内置类型或标准库类型的成员。除非给出 `--include-name-matches`（通过 MCP 时为 `include_name_matches`），这种 `[name match]` 不会出现在任何报告、说明、`--fail-on` 和 `--annotate` 中，因为它们大多是另一个库中同名的方法。变为必需、仅限关键字或仅限位置的参数，目前总是显示为“uses this API”，从不显示为“old form”。
+- “Your code uses”（你的代码用到了）是逐个文件的静态匹配：导入（包括重新导出的名称）、调用、属性读取和关键字参数；方法调用的接收者会根据包自身的注解确定类型（`df = pd.read_csv(...)` 是一个 `DataFrame`；一个类连同它的基类一起计入，跨越你锁定的各个包）。它不追踪 `getattr` 这类动态访问，目前只指出文件，不指出行号（[#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)）。在代码没有显示其类的值上读取的方法，可以只按名称计入：这个名称仅属于一个有变更的 API，既不是常见名称，也不是内置类型或标准库类型的成员。除非给出 `--include-name-matches`（通过 MCP 时为 `include_name_matches`），这种 `[name match]` 不会出现在任何报告、说明、`--fail-on` 和 `--annotate` 中，因为它们大多是另一个库中同名的方法；`scan` 和 `sync` 会说明隐藏了多少处这样的用法。变为必需、仅限关键字或仅限位置的参数，目前总是显示为“uses this API”，从不显示为“old form”。
 - 只有当库自己的弃用说明明确给出替代项时，说明才会写出替代项。只出现在迁移指南里的建议（anthropic 的 [MIGRATION.md](https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md) 建议对仍接受 `temperature` 的旧模型使用 `extra_body`）不会出现在说明中。
 - 探测的是破坏性变更中按优先级排序的一个**样本**（你的代码已经用到的符号优先），而不是全部。
 - “对照版本”指在截止日期至少 30 天之前发布的最新版本（`--cutoff-margin`；`0` 表示从截止日期当天算起）。模型对截止日期前几周的了解最少，所以实际的过时可能开始得更早；这个余量只是对“早多少”的一个估计。

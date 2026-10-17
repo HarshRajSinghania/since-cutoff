@@ -376,7 +376,7 @@ class Tools:
         self._engine(settings, reporter).diff_package(scan)
         if scan.status == SKIPPED:
             raise PackageIndexError(scan.reason or f"could not diff {name}")
-        if scan.status == NEW:  # the release at the cutoff was an empty placeholder
+        if scan.status == NEW:  # the comparison release was an empty placeholder
             return "\n".join([*head, "", _placeholder_note(old, new)]) + "\n"
         if scan.unread:  # compiled modules, unread bases: no changes found is not the same as none
             head.append(f"- Warning: {unread_warning(scan)}")
@@ -494,7 +494,7 @@ class Tools:
         code uses, and how many dependencies changed, were first released after the cutoff, are
         unchanged, or could not be checked; then "## Your code uses these changed APIs": each
         changed API the code uses, with what changed, "old form" (the code uses it as the
-        release at the cutoff allowed) or "uses this API", the files that use it (at most 3),
+        comparison release allowed) or "uses this API", the files that use it (at most 3),
         the note to follow with its tag ([diff]: from the static diff; [library]: the
         replacement is named in the library's own deprecation text), the runtime caveat when
         the pinned source still accepts a removed name, and similar names, not confirmed as
@@ -814,7 +814,7 @@ def _used_section(scan: ScanResult) -> list[str]:
     old = sum(u.form == OLD_FORM for u in used)
     out = [
         f"- Your code uses {_plural(len(used), 'API')} that changed after the cutoff, "
-        f"{old or 'none'} in the old form (as the release at the cutoff allowed; a static name "
+        f"{old or 'none'} in the old form (as the comparison release allowed; a static name "
         "match)",
         "",
         "## Your code uses these changed APIs",

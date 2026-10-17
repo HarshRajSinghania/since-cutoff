@@ -577,6 +577,22 @@ def diff_lines(p: Proposal) -> list[str]:
     )
 
 
+def hidden_name_match_lines(
+    proposals: Sequence[Proposal], scans: Mapping[tuple[str, date], ScanResult]
+) -> list[str]:
+    """``2 uses matched by name alone are hidden; --include-name-matches shows them``, once
+    per scan the proposals come from, as ``scan`` says it (:func:`report.hidden_name_matches`);
+    nothing for a scan with none."""
+    from since_cutoff.report import hidden_name_matches_text  # not for status --hook
+
+    out: list[str] = []
+    for key in dict.fromkeys((p.model, p.cutoff) for p in proposals):
+        text = hidden_name_matches_text(scans[key])
+        if text and text not in out:
+            out.append(text)
+    return out
+
+
 def up_to_date_text(p: Proposal, scan: ScanResult) -> str:
     """What sync says about a file it leaves as it is."""
     name = p.target.name

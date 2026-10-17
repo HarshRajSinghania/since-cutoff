@@ -74,6 +74,17 @@
   dependency first released within the margin counts as new to the model, and the scan, the
   MCP tools and `sync` say it was "first released 2025-07-15, within 30 days of the cutoff", not
   "after the cutoff"; one the model knows is "the latest release 30 days before the cutoff".
+  The rest of the text that called the comparison release "the release at the cutoff" says
+  what it is: the GitHub annotations ("fastapi 0.115.14 is the comparison release (the latest
+  one published at least 30 days before claude-sonnet-4-5's training cutoff, 2025-07-31)"; with
+  `--cutoff-margin 0`, "was the latest release at" as before), the dependency tables' column
+  ("compared from", was "at cutoff"), the old-form legend and the MCP `project_changes` answer
+  ("as the comparison release allowed"), an empty placeholder release ("the comparison release
+  0.0.1 was an empty placeholder"), `sync --help`, and in the docs the README's table of the
+  sample project (now its versions 30 days before the cutoff, as the Quick start shows: openai
+  1.93.0, 24 breaking changes; 331 breaking changes in all, was 257) and the "How it works"
+  diagram ("Release 30 days before the model's cutoff", in every language). A test fails on a
+  message that says "release at the cutoff" outside the text of a margin of 0.
 - A module that takes its names from another distribution with `from x import *` is compared
   with that distribution read next to the release: mcp 2.3.0's `mcp/types/__init__.py` is `from
   mcp_types import *` (mcp requires `mcp-types==2.3.0`), and the report had no entry under
@@ -124,6 +135,8 @@
   standard-library type, can count by its name alone. Such name matches are hidden from every
   report, the notes, `--fail-on` and `--annotate` unless `--include-name-matches` (`scan`,
   `sync`) or `include_name_matches` (MCP) asks for them; they are then tagged `[name match]`.
+  `scan` (the terminal and report.md) and `sync` say how many they hid ("2 uses matched by name
+  alone are hidden; --include-name-matches shows them"), and nothing when there is none.
 - A class that became a function, or the reverse, is no longer "old form" at a call site: with
   pandas 3.0.6, `with pd.option_context("mode.copy_on_write", True):` was labelled old form
   although `option_context` is called the same way as a class and as a function. The call is
@@ -176,11 +189,15 @@
 - The MCP tool `api_changes` carries the "older copy from the cache" warning also in its reply
   that a package had no release by the cutoff: the copy may not know an older release either.
   That reply was built before the check.
-- A metapackage is reported as information, not as a failure: "llama-index 0.14.25 is a
-  metapackage with no API of its own; its parts are dependencies of their own, checked like
-  any other: llama-index-core, ..." on a line of its own in `scan` and `run`, and with a `•`
-  in `sync`, in place of "1 of 3 dependencies could not be checked: llama-index 0.14.25 is a
-  metapackage without code of its own: it installs ...; check those packages instead".
+- A metapackage is reported as information, not as a failure, naming which of its parts the
+  scan checked: "llama-index 0.14.25 is a metapackage with no API of its own; checked like any
+  other dependency: llama-index-core; not checked, as the project does not depend on them
+  directly: llama-index-embeddings-openai and llama-index-llms-openai (--all-deps checks those
+  its lockfile pins)" on a line of its own in `scan` and `run`, and with a `•` in `sync`, in
+  place of "1 of 3 dependencies could not be checked: llama-index 0.14.25 is a metapackage
+  without code of its own: it installs ...; check those packages instead". Its row in the
+  dependency tables reads "metapackage (no API of its own; parts checked: llama-index-core; not
+  checked: ...)", not "not checked".
 - `sync --json`'s help says it needs `--yes`, `--check` or `--dry-run`, and the README that
   stdout stays empty whenever sync fails, not only on a usage error.
 - basedpyright, which only `run` uses, is an extra: `pip install "since-cutoff[run]"`, or

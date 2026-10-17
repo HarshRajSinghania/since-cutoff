@@ -175,16 +175,17 @@ A few of the changes `since-cutoff scan` finds for Claude Sonnet 4.5 (training c
 which pins six of its nine dependencies to current releases (for the other three, which are
 unpinned, the tool uses the latest release):
 
-| library | release at the cutoff | pinned | what changed |
+| library | compared from | pinned | what changed |
 |---|---|---|---|
-| anthropic | 0.60.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` is no longer accepted |
-| huggingface-hub | 0.34.3 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)` left the signature in 1.0 (2.0.0 still accepts them at run time, ignores them and warns) |
-| langchain-core | 0.3.72 | 1.6.5 | `retriever.get_relevant_documents()` and `llm.predict()` removed |
-| openai | 1.98.0 | 3.19.2 | 19 breaking changes, 6 new deprecations (+3 internal) |
+| anthropic | 0.56.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` is no longer accepted |
+| huggingface-hub | 0.33.1 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)` left the signature in 1.0 (2.0.0 still accepts them at run time, ignores them and warns) |
+| langchain-core | 0.3.67 | 1.6.5 | `retriever.get_relevant_documents()` and `llm.predict()` removed |
+| openai | 1.93.0 | 3.19.2 | 24 breaking changes, 6 new deprecations (+5 internal) |
 
-In that project, 7 of 9 dependencies changed their public API after the cutoff. The static diff
-flags 257 breaking changes and 23 new deprecations in public APIs, and 71 changes to internal
-ones; the project's code uses 2 of the changed APIs.
+Each library is compared from its latest release published at least 30 days before the cutoff
+(the scan's default margin). In that project, 7 of 9 dependencies changed their public API after
+the cutoff. The static diff flags 331 breaking changes and 24 new deprecations in public APIs, and
+139 changes to internal ones; the project's code uses 2 of the changed APIs.
 
 It is not one model or one vendor. Across 36 widely used Python AI libraries and 21 models from
 OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, Moonshot and Mistral, even the newest model
@@ -831,7 +832,7 @@ type checker scores every answer and checks every note the model writes:
 
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works-dark.svg">
-  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="Three stages. Scan, with no model calls: the lockfile gives your exact versions, then the release at the model's cutoff, then a static API diff with griffe. Probe: short tasks that need the change, the model answers from memory, basedpyright checks the answer against both versions. Write and test notes: a model-written note is kept only if its example type-checks, otherwise the change is stated from the API diff; held-out tasks are answered without and with the notes, and --apply writes a block into AGENTS.md.">
+  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="Three stages. Scan, with no model calls: the lockfile gives your exact versions, then the latest release published at least 30 days before the model's cutoff, then a static API diff with griffe. Probe: short tasks that need the change, the model answers from memory, basedpyright checks the answer against both versions. Write and test notes: a model-written note is kept only if its example type-checks, otherwise the change is stated from the API diff; held-out tasks are answered without and with the notes, and --apply writes a block into AGENTS.md.">
 </picture></p>
 
 | outcome | meaning |
@@ -970,7 +971,8 @@ meaning the same as `checks.example_type_checks`).
   changed API's and neither a common one nor a member of a built-in or standard-library type:
   such a `[name match]` is hidden from every report, the notes, `--fail-on` and `--annotate`
   unless `--include-name-matches` is given (`include_name_matches` over MCP), as most are
-  another library's method of the same name. A parameter that became
+  another library's method of the same name; `scan` and `sync` say how many uses they hid. A
+  parameter that became
   required, keyword-only or positional-only is always "uses this API", never "old form", for
   now.
 - A note names a replacement only when the library's own deprecation text states it. Advice that

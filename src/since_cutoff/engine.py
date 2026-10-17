@@ -1548,7 +1548,7 @@ class Engine:
             if self._placeholder(s, old):
                 # Nothing to compare with: the model has never seen this API.
                 s.status, s.import_names = NEW, list(new.import_names)
-                s.reason = f"{s.cutoff_version} at the cutoff was an empty placeholder"
+                s.reason = f"the comparison release {s.cutoff_version} was an empty placeholder"
                 self.reporter.advance(label=s.name)
                 continue
             if isinstance(old, PackageIndexError):

@@ -321,7 +321,7 @@ def test_the_rest_of_the_first_section(tmp_path) -> None:
     sdk = PackageScan("sdk", "2", "uv.lock", True, status=CHANGED, cutoff_version="1")
     hub.changes, sdk.changes = [gone], [removed]
     placeholder = PackageScan("zen", "0.5", "uv.lock", True, True, NEW, cutoff_version="0.0.0")
-    placeholder.reason = "0.0.0 at the cutoff was an empty placeholder"
+    placeholder.reason = "the comparison release 0.0.0 was an empty placeholder"
     unknown_day = PackageScan("fresh", "1.0", "uv.lock", True, status=NEW)
     skipped = PackageScan("big", "9", "uv.lock", True, reason="big==9 is 200 MB, above the limit")
     project = Project(tmp_path, [], "uv.lock", imported_modules={"fresh"})
@@ -343,13 +343,13 @@ def test_the_rest_of_the_first_section(tmp_path) -> None:
     assert "    Runtime: 2.0's source still handles resume (hub/_validators.py:187)" in text
     assert "    Similar names in 2.0, not confirmed as replacements: resumable" in text
     assert (
-        "old form: valid for the release at the cutoff; the pinned release removed, moved or "
+        "old form: valid for the comparison release; the pinned release removed, moved or "
         "deprecated what it uses" in text
     )
     assert "uses this API:" not in text
     assert (
-        "Your code imports zen 0.5 (0.0.0 at the cutoff was an empty placeholder): its whole API "
-        "is newer than the cutoff." in text
+        "Your code imports zen 0.5 (the comparison release 0.0.0 was an empty placeholder): its "
+        "whole API is newer than that release." in text
     )
     assert "Your code imports fresh 1.0 (first released after the cutoff)" in text
     assert "1 of 5 dependencies could not be checked: big==9 is 200 MB, above the limit" in text
@@ -725,14 +725,25 @@ def test_annotations_warn_on_the_old_form_and_note_the_rest(scan: ScanResult, ap
         "notice file=app/sub/other.py,title=since-cutoff%3A toylib 2.0",
         "notice file=app/main.py,title=since-cutoff%3A toylib 2.0",
     ]
-    assert lines[0].split("::", 2)[2] == (
-        "Client.send: temperature was removed; stream is now keyword-only. toylib 1.0 was the "
-        "latest release at claude-sonnet-4-5's training cutoff (2025-07-31); 2.0 is pinned. "
+    note = (
         "Note: `Client.send()` no longer accepts `temperature`; do not pass it. since-cutoff "
         "found no replacement in toylib's deprecation text. Pass `stream` to `Client.send()` by "
         "keyword. [diff] Static match; nothing was run."
     )
+    # The comparison release is the latest one 30 days before the cutoff, not the one at it.
+    assert lines[0].split("::", 2)[2] == (
+        "Client.send: temperature was removed; stream is now keyword-only. toylib 1.0 is the "
+        "comparison release (the latest one published at least 30 days before "
+        f"claude-sonnet-4-5's training cutoff, 2025-07-31); 2.0 is pinned. {note}"
+    )
     assert all("\n" not in line for line in lines)
+    # With a margin of 0 it is the latest release at the cutoff itself.
+    scan.target.margin = 0
+    assert github_annotations(scan)[0].split("::", 2)[2] == (
+        "Client.send: temperature was removed; stream is now keyword-only. toylib 1.0 was the "
+        "latest release at claude-sonnet-4-5's training cutoff (2025-07-31); 2.0 is pinned. "
+        f"{note}"
+    )
 
 
 def test_annotate_prints_to_stdout_and_needs_it_to_itself(app, capsys, fake_cli) -> None:
@@ -754,8 +765,8 @@ def test_project_changes_starts_with_the_used_apis(tmp_path, cache, fake_pypi) -
     tools = Tools(cache, registry=ModelRegistry(cache, offline=True), pypi=fake_pypi)
     out = tools.project_changes(str(root), model="claude-sonnet-4-5")
     assert (
-        "- Your code uses 2 APIs that changed after the cutoff, 1 in the old form (as the release "
-        "at the cutoff allowed; a static name match)" in out
+        "- Your code uses 2 APIs that changed after the cutoff, 1 in the old form (as the "
+        "comparison release allowed; a static name match)" in out
     )
     section = out.split("## Your code uses these changed APIs\n")[1].split("\n## ")[0]
     assert section.lstrip().startswith(
@@ -992,6 +1003,56 @@ def test_include_name_matches_on_scan_and_sync(tmp_path, cache, capsys, monkeypa
     assert cli.main(["sync", *argv, "--yes", "--include-name-matches"]) == 0
     block = (root / "AGENTS.md").read_text(encoding="utf-8")
     assert "`Frame.applymap` was removed; do not use it." in block
+
+
+HIDDEN_ONE = "1 use matched by name alone is hidden; --include-name-matches shows it"
+
+
+def test_scan_and_sync_say_how_many_name_matches_they_hid(tmp_path, cache, capsys, monkeypatch):
+    """The uses matched by a name alone are hidden by default, which said nothing: a project
+    whose only changed API was a name match read "Your code uses none of the APIs that changed"
+    with no hint that --include-name-matches would show one. One line, in scan (the terminal
+    and report.md) and sync, and none when nothing was hidden."""
+    pypi = _frames_pypi(tmp_path, cache)
+    monkeypatch.setenv("SINCE_CUTOFF_CACHE", str(tmp_path / "cli-cache"))
+    monkeypatch.setattr(cli, "Engine", lambda s, **kw: Engine(s, **{**kw, "pypi": pypi}))
+    root = write_tree(tmp_path / "app", {"requirements.txt": "frames==2.0\n", "main.py": LOOSE})
+    argv = [str(root), "--cutoff", "2025-07-31"]
+    assert cli.main(["scan", *argv]) == 0
+    assert HIDDEN_ONE in " ".join(capsys.readouterr().out.split())
+    report_md = (root / ".since-cutoff" / "report.md").read_text(encoding="utf-8")
+    assert f"\n{HIDDEN_ONE}.\n" in report_md
+    assert cli.main(["sync", *argv, "--dry-run"]) == 0
+    assert HIDDEN_ONE in " ".join(capsys.readouterr().out.split())
+    # Shown: nothing is hidden, and nothing is said.
+    for command in (["scan", *argv], ["sync", *argv, "--dry-run"]):
+        assert cli.main([*command, "--include-name-matches"]) == 0
+        assert "matched by name alone" not in capsys.readouterr().out
+    report_md = (root / ".since-cutoff" / "report.md").read_text(encoding="utf-8")
+    assert "matched by name alone" not in report_md
+    # Two hidden uses: the plural; a path match is never counted.
+    files = {
+        "requirements.txt": "frames==2.0\n",
+        "main.py": "import frames as fr\n\ndf = fr.read_csv('x')\ndf.swapaxes(0, 1)\n",
+        "generic.py": "import frames\n\ndef tidy(frame):\n    frame.swapaxes(0, 1)\n",
+        "loose.py": LOOSE,
+    }
+    scan = scan_app(write_tree(tmp_path / "two", files), cache, pypi, date(2025, 7, 31))
+    assert report.hidden_name_matches(scan) == 2
+    assert report.hidden_name_matches_text(scan) == (
+        "2 uses matched by name alone are hidden; --include-name-matches shows them"
+    )
+    scan.name_matches = True
+    assert report.hidden_name_matches(scan) == 0 and report.hidden_name_matches_text(scan) is None
+    plain = scan_app(
+        write_tree(tmp_path / "plain", {**files, "generic.py": "", "loose.py": ""}),
+        cache,
+        pypi,
+        date(2025, 7, 31),
+    )
+    assert report.hidden_name_matches(plain) == 0
+    assert "matched by name alone" not in text_of(scan_lines(plain, width=120))
+    assert "matched by name alone" not in render_markdown(plain)
 
 
 def test_annotations_and_fail_on_count_per_use_not_per_api(tmp_path, cache) -> None:

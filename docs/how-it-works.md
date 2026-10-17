@@ -12,7 +12,7 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
 
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works-dark.svg">
-  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="Three stages. Scan, with no model calls: the lockfile gives your exact versions, then the release at the model's cutoff, then a static API diff with griffe. Probe: short tasks that need the change, the model answers from memory, basedpyright checks the answer against both versions. Write and test notes: a model-written note is kept only if its example type-checks, otherwise the change is stated from the API diff; held-out tasks are answered without and with the notes, and --apply writes a block into AGENTS.md.">
+  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="Three stages. Scan, with no model calls: the lockfile gives your exact versions, then the latest release published at least 30 days before the model's cutoff, then a static API diff with griffe. Probe: short tasks that need the change, the model answers from memory, basedpyright checks the answer against both versions. Write and test notes: a model-written note is kept only if its example type-checks, otherwise the change is stated from the API diff; held-out tasks are answered without and with the notes, and --apply writes a block into AGENTS.md.">
 </picture></p>
 
 ## 1. Scan (no model calls)
@@ -121,8 +121,8 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
    place is one change, with the new name as a suggestion. A removed `*args` or `**kwargs` is
    reported as such (its parameter in results.json is `*args` or `**kwargs`), unless the new
    signature names the parameters it took. A `**kwargs` annotated `Unpack[SomeTypedDict]`
-   (PEP 692) takes the TypedDict's keys and no other keyword, so a keyword the release at the
-   cutoff took and the pinned release's TypedDict has not is a removed parameter (pandas 3.0's
+   (PEP 692) takes the TypedDict's keys and no other keyword, so a keyword the comparison
+   release took and the pinned release's TypedDict has not is a removed parameter (pandas 3.0's
    `read_csv(delim_whitespace=...)`, whose overloads end in `**kwds: Unpack[_read_shared]`),
    and so is a key of the old TypedDict that the new signature does not name; a key that moved
    to a base TypedDict is still a key, `self` and `cls` are no keywords, and a bare `**kwargs`
@@ -245,7 +245,9 @@ unpacking, `:=` and `except ... as err`.
 
 Such a name match is hidden by default: no report (the terminal, report.md, the JSON lists, the
 MCP answers), no note and no count of `--fail-on` or `--annotate github` has it, as on ordinary
-code most of them are another library's method of the same name. `--include-name-matches` (on
+code most of them are another library's method of the same name. `scan` (the terminal and
+report.md) and `sync` say how many they left out ("2 uses matched by name alone are hidden;
+--include-name-matches shows them"), and nothing when there is none. `--include-name-matches` (on
 `scan` and `sync`; `include_name_matches` for the MCP `project_changes`) shows them: the
 reports tag each such use `[name match]` (the terminal next to its label and its place, the
 Markdown summary in the form column, the JSON as `"match": "name_only"`), its note is written,
@@ -305,8 +307,8 @@ heading and `--all` name the form the same way. A stubs package's note (`pandas-
 declarations no longer have and that type checkers reject it. Text from a package (deprecation
 messages) is quoted as whole sentences and cannot close the block or open code.
 
-A dependency first released after the cutoff that the code imports has no release at the cutoff
-to compare with, so it gets one bullet from PyPI's metadata instead of a diff, tagged
+A dependency first released after the cutoff that the code imports has no release before the
+cutoff to compare with, so it gets one bullet from PyPI's metadata instead of a diff, tagged
 `[metadata]`: "httpx2 first appeared on PyPI on 2026-05-11, after the cutoff; the model has no
 training data on it. The project pins 2.13.1 (released 2026-09-23). Summary: The next generation
 HTTP client. Changelog: https://github.com/pydantic/httpx2/blob/main/src/httpx2/CHANGELOG.md".
@@ -520,8 +522,12 @@ What it prints, from the sample project:
 
 - up to date: "AGENTS.md is up to date: 2 notes for claude-sonnet-4-5 (cutoff 2025-07-31),
   versions from pyproject.toml, latest on PyPI for 3 unpinned. Nothing written."
-- `--check`, out of date: "AGENTS.md is out of date: anthropic 0.60.0 in pyproject.toml is the
-  latest release at the cutoff. Run `since-cutoff sync`."
+- `--check`, out of date: "AGENTS.md is out of date: anthropic 0.56.0 in pyproject.toml is the
+  latest release 30 days before the cutoff. Run `since-cutoff sync`."
+- with the uses matched by a method's name alone left out (the default), and at least one of
+  them in the code: "1 use matched by name alone is hidden; --include-name-matches shows it"
+  (`scan` prints the same line, and report.md has it under "Used by your code"; nothing when
+  there is none).
 - a hand edit: "The since-cutoff block in AGENTS.md was edited by hand; sync would replace it
   (diff above). Move your text below `<!-- since-cutoff:end -->`, or run
   `since-cutoff sync --force`."

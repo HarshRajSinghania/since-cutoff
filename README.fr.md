@@ -188,15 +188,17 @@ d'entraînement : juillet 2025) dans le [projet d'exemple](https://github.com/M
 qui épingle six de ses neuf dépendances sur les versions actuelles (pour les trois autres, non
 épinglées, l'outil utilise la dernière version) :
 
-| bibliothèque | version à la date limite | épinglée | ce qui a changé |
+| bibliothèque | version de comparaison | épinglée | ce qui a changé |
 |---|---|---|---|
-| anthropic | 0.60.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` n'est plus accepté |
-| huggingface-hub | 0.34.3 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)` : retirés de la signature en 1.0 (la 2.0.0 les accepte encore à l'exécution, les ignore et émet un avertissement) |
-| langchain-core | 0.3.72 | 1.6.5 | `retriever.get_relevant_documents()` et `llm.predict()` supprimés |
-| openai | 1.98.0 | 3.19.2 | 19 changements incompatibles, 6 nouvelles dépréciations (+3 internes) |
+| anthropic | 0.56.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` n'est plus accepté |
+| huggingface-hub | 0.33.1 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)` : retirés de la signature en 1.0 (la 2.0.0 les accepte encore à l'exécution, les ignore et émet un avertissement) |
+| langchain-core | 0.3.67 | 1.6.5 | `retriever.get_relevant_documents()` et `llm.predict()` supprimés |
+| openai | 1.93.0 | 3.19.2 | 24 changements incompatibles, 6 nouvelles dépréciations (+5 internes) |
 
-Dans ce projet, 7 dépendances sur 9 ont modifié leur API publique après la date limite. Le diff
-statique signale 257 changements incompatibles et 23 nouvelles dépréciations dans des API publiques, et 71 changements d'API internes ; le code du projet
+Chaque bibliothèque est comparée à partir de sa dernière version publiée au moins 30 jours avant
+la date limite (la marge par défaut de l'analyse). Dans ce projet, 7 dépendances sur 9 ont
+modifié leur API publique après la date limite. Le diff statique signale 331 changements
+incompatibles et 24 nouvelles dépréciations dans des API publiques, et 139 changements d'API internes ; le code du projet
 utilise 2 des API modifiées.
 
 Ce n'est pas l'affaire d'un seul modèle ni d'un seul fournisseur. Sur 36 bibliothèques Python
@@ -889,7 +891,7 @@ note rédigée par le modèle :
 
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works-dark.fr.svg">
-  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.fr.svg" width="640" alt="Trois étapes. Analyse (scan), sans appel au modèle : le fichier de verrouillage donne vos versions exactes, puis la version à la date limite du modèle, puis un diff statique de l'API avec griffe. Sonde : de courtes tâches qui nécessitent le changement, le modèle répond de mémoire, basedpyright vérifie la réponse par rapport aux deux versions. Rédaction et test des notes : une note rédigée par le modèle n'est conservée que si son exemple passe la vérification de types, sinon un constat du changement tiré du diff d'API la remplace ; le modèle répond aux tâches réservées sans puis avec les notes, et --apply écrit un bloc dans AGENTS.md.">
+  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.fr.svg" width="640" alt="Trois étapes. Analyse (scan), sans appel au modèle : le fichier de verrouillage donne vos versions exactes, puis la dernière version publiée au moins 30 jours avant la date limite du modèle, puis un diff statique de l'API avec griffe. Sonde : de courtes tâches qui nécessitent le changement, le modèle répond de mémoire, basedpyright vérifie la réponse par rapport aux deux versions. Rédaction et test des notes : une note rédigée par le modèle n'est conservée que si son exemple passe la vérification de types, sinon un constat du changement tiré du diff d'API la remplace ; le modèle répond aux tâches réservées sans puis avec les notes, et --apply écrit un bloc dans AGENTS.md.">
 </picture></p>
 
 | résultat | signification |
@@ -1043,7 +1045,8 @@ mesuré le test sur les tâches réservées ; `verified` est conservé et signi
   intégré ou de la bibliothèque standard : une telle correspondance `[name match]`
   n'apparaît dans aucun rapport, ni dans les notes, ni dans `--fail-on` ou `--annotate` sauf
   avec `--include-name-matches` (`include_name_matches` par MCP), car la plupart sont une
-  méthode homonyme d'une autre bibliothèque. Un paramètre devenu obligatoire, nommé seulement
+  méthode homonyme d'une autre bibliothèque ; `scan` et `sync` disent combien d'utilisations ils
+  ont masquées. Un paramètre devenu obligatoire, nommé seulement
   ou positionnel seulement est toujours marqué « uses this API », jamais « old form », pour l'instant.
 - Une note ne nomme un remplaçant que si le texte de dépréciation de la bibliothèque elle-même
   l'énonce. Un conseil qui ne figure que dans un guide de migration (le

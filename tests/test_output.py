@@ -3,8 +3,10 @@ the wording of the reports (reasons, labels, counts)."""
 
 from __future__ import annotations
 
+import ast
 import io
 import os
+import re
 import subprocess
 import sys
 import zipfile
@@ -410,19 +412,109 @@ def test_a_metapackage_is_information_not_a_dependency_that_could_not_be_checked
     tmp_path, cache, fake_pypi
 ) -> None:
     """``llama-index 0.14.25 is a metapackage ...`` read as an error after "1 of 3 dependencies
-    could not be checked": its parts are dependencies of their own, checked like any other."""
-    from since_cutoff.report import scan_lines
+    could not be checked": its parts are dependencies of their own, checked like any other when
+    the project depends on them. The line names the parts the scan checked and those it did not
+    (0.6.0 said "its parts are ... checked like any other" of parts it never checked), and the
+    table rows say the same, not "not checked"."""
+    from since_cutoff.report import render_markdown, render_scan_markdown, scan_lines
 
+    reason = (
+        "llama-index 0.14.25 is a metapackage with no API of its own; its parts are checked like "
+        "any other dependency when the project depends on them: toylib<3,>=1, "
+        "llama-index-llms-openai<0.7,>=0.6.0, llama-index-embeddings-openai>=0.5"
+    )
     meta = (
-        "llama-index 0.14.25 is a metapackage with no API of its own; its parts are dependencies "
-        "of their own, checked like any other: llama-index-core<0.15,>=0.14.25"
+        "llama-index 0.14.25 is a metapackage with no API of its own; checked like any other "
+        "dependency: toylib; not checked, as the project does not depend on them directly: "
+        "llama-index-llms-openai and llama-index-embeddings-openai (--all-deps checks those its "
+        "lockfile pins)"
     )
     scan = scan_app(make_app(tmp_path), cache, fake_pypi, date(2025, 7, 31))
-    scan.packages[0].status, scan.packages[0].reason = SKIPPED, meta
-    for lines in (headline(scan, None), scan_lines(scan, width=200)):
+    scan.packages.append(PackageScan("llama-index", "0.14.25", "uv.lock", True, reason=reason))
+    scan.packages[-1].status = SKIPPED
+    for lines in (headline(scan, None), scan_lines(scan, width=300)):
         assert meta in [t.plain for t in lines]
         assert [t.style for t in lines if t.plain == meta] == ["dim"]
         assert not any("could not be checked" in t.plain for t in lines)
+    row = (
+        "metapackage (no API of its own; parts checked: toylib; not checked: "
+        "llama-index-llms-openai, llama-index-embeddings-openai)"
+    )
+    assert f"| llama-index | 0.14.25 (-) | - | {row} |" in render_markdown(scan)
+    assert f"| llama-index | 0.14.25 | - | {row} |" in render_scan_markdown(scan)
+    console = Console(width=300, record=True)
+    render_console(console, scan)
+    assert row in console.export_text() and "not checked (" not in console.export_text()
+    # None of its parts checked, or all of them: one clause.
+    scan.packages[-1].reason = reason.replace("toylib<3,>=1, ", "")
+    assert report.metapackage_text(scan, scan.packages[-1]).endswith(
+        "no API of its own; its parts are not checked, as the project does not depend on them "
+        "directly: llama-index-llms-openai and llama-index-embeddings-openai (--all-deps checks "
+        "those its lockfile pins)"
+    )
+    scan.packages[-1].reason = reason.split(": toylib")[0] + ": toylib<3,>=1"
+    assert report.metapackage_text(scan, scan.packages[-1]).endswith(
+        "no API of its own; its part is checked like any other dependency: toylib"
+    )
+
+
+SRC = Path(__file__).resolve().parents[1] / "src" / "since_cutoff"
+# What a message may not call the release a scan compares from since 0.6: by default it is the
+# latest one published --cutoff-margin (30) days before the cutoff, not the one at it.
+AT_THE_CUTOFF = re.compile(
+    r"release at the (?:model's )?(?:training )?cutoff|\bat cutoff\b|\{\} at the cutoff\b", re.I
+)
+
+
+def _messages(path: Path) -> list[str]:
+    """The string literals of a module but its docstrings and other bare strings (comments are
+    not in the tree): an f-string with ``{}`` for each value, implicit concatenation joined."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    bare = {
+        id(node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
+    }
+    inner = {
+        id(v) for node in ast.walk(tree) if isinstance(node, ast.JoinedStr) for v in node.values
+    }
+    out = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.JoinedStr):
+            out.append(
+                "".join(v.value if isinstance(v, ast.Constant) else "{}" for v in node.values)
+            )
+        elif (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and id(node) not in bare | inner
+        ):
+            out.append(node.value)
+    return out
+
+
+def test_no_message_calls_the_comparison_release_the_release_at_the_cutoff() -> None:
+    """GitHub annotations said "fastapi 0.115.14 was the latest release at claude-sonnet-4-5's
+    training cutoff", the tables' column was "at cutoff", and the old-form legend "valid for
+    the release at the cutoff", of a release from 30 days before it. Only the text of a margin
+    of 0 may say so ("0 compares from the latest release at the cutoff itself")."""
+    found = [
+        f"{path.name}: {text}"
+        for path in sorted(SRC.rglob("*.py"))
+        for text in _messages(path)
+        if AT_THE_CUTOFF.search(text) and "at the cutoff itself" not in text
+    ]
+    assert found == []
+    # The check sees what it is for.
+    assert AT_THE_CUTOFF.search("0.60.0 was the latest release at the cutoff")
+    assert AT_THE_CUTOFF.search("| package | you use | at cutoff | status |")
+    assert AT_THE_CUTOFF.search("{} at the cutoff was an empty placeholder")
+    assert not AT_THE_CUTOFF.search("first released after the cutoff")
+    assert any(
+        AT_THE_CUTOFF.search(text)
+        for text in _messages(SRC / "cli.py")
+        if "at the cutoff itself" in text
+    )
 
 
 def test_a_git_reference_is_named_in_the_skip_reason(tmp_path) -> None:
@@ -606,8 +698,8 @@ def test_a_metapackage_says_where_its_code_is(tmp_path, monkeypatch) -> None:
     with pytest.raises(PackageIndexError) as info:
         _OneFile(DiskCache(tmp_path), "2.129.0", wheel).source("docling", "2.129.0")
     assert str(info.value) == (
-        "docling 2.129.0 is a metapackage with no API of its own; its part is a dependency of "
-        "its own, checked like any other: docling-slim==2.129.0"
+        "docling 2.129.0 is a metapackage with no API of its own; its part is checked like any "
+        "other dependency when the project depends on it: docling-slim==2.129.0"
     )
 
 
@@ -793,8 +885,8 @@ def test_a_placeholder_release_at_the_cutoff_means_the_api_is_new(tmp_path, cach
     got = {p.name: (p.status, p.cutoff_version, p.reason) for p in scan.packages}
     assert got == {
         "nvidia-cuda-runtime": (NEW, None, "first released after the cutoff"),
-        "reserved": (NEW, "0.0.1", "0.0.1 at the cutoff was an empty placeholder"),
-        "zensical": (NEW, "0.0.0", "0.0.0 at the cutoff was an empty placeholder"),
+        "reserved": (NEW, "0.0.1", "the comparison release 0.0.1 was an empty placeholder"),
+        "zensical": (NEW, "0.0.0", "the comparison release 0.0.0 was an empty placeholder"),
         "compiled": (UNCHANGED, "1.0", None),
     }
     tools = Tools(cache, registry=ModelRegistry(cache, offline=True), pypi=pypi)

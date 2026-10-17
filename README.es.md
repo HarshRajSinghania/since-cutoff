@@ -184,16 +184,18 @@ julio de 2025) en el [proyecto de ejemplo](https://github.com/MohammadHijjawi97/
 que fija seis de sus nueve dependencias en las versiones actuales (para las otras tres, que no
 están fijadas, la herramienta usa la versión más reciente):
 
-| biblioteca | versión en la fecha de corte | versión fijada | qué cambió |
+| biblioteca | versión de comparación | versión fijada | qué cambió |
 |---|---|---|---|
-| anthropic | 0.60.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` ya no se acepta |
-| huggingface-hub | 0.34.3 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)`: parámetros que salieron de la firma en la 1.0 (la 2.0.0 aún los acepta en tiempo de ejecución, los ignora y emite un aviso) |
-| langchain-core | 0.3.72 | 1.6.5 | se eliminaron `retriever.get_relevant_documents()` y `llm.predict()` |
-| openai | 1.98.0 | 3.19.2 | 19 cambios incompatibles, 6 obsolescencias nuevas (+3 internas) |
+| anthropic | 0.56.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` ya no se acepta |
+| huggingface-hub | 0.33.1 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)`: parámetros que salieron de la firma en la 1.0 (la 2.0.0 aún los acepta en tiempo de ejecución, los ignora y emite un aviso) |
+| langchain-core | 0.3.67 | 1.6.5 | se eliminaron `retriever.get_relevant_documents()` y `llm.predict()` |
+| openai | 1.93.0 | 3.19.2 | 24 cambios incompatibles, 6 obsolescencias nuevas (+5 internas) |
 
-En ese proyecto, 7 de las 9 dependencias cambiaron su API pública después de la fecha de corte.
-El diff estático señala 257 cambios incompatibles y 23 obsolescencias nuevas en API públicas, y
-71 cambios en API internas; el código del proyecto usa 2 de las API modificadas.
+Cada biblioteca se compara desde su última versión publicada al menos 30 días antes de la fecha
+de corte (el margen por defecto del análisis). En ese proyecto, 7 de las 9 dependencias
+cambiaron su API pública después de la fecha de corte. El diff estático señala 331 cambios
+incompatibles y 24 obsolescencias nuevas en API públicas, y 139 cambios en API internas; el
+código del proyecto usa 2 de las API modificadas.
 
 No es cosa de un modelo ni de un proveedor. En 36 bibliotecas de IA de Python muy usadas y 21
 modelos de OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, Moonshot y Mistral, incluso el modelo
@@ -876,7 +878,7 @@ modelo:
 
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works-dark.es.svg">
-  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.es.svg" width="640" alt="Tres etapas. Análisis (scan), sin llamadas al modelo: el lockfile da tus versiones exactas, después se busca la versión publicada en la fecha de corte del modelo y se hace un diff estático de la API con griffe. Sondeo: tareas breves que requieren el cambio, el modelo responde de memoria y basedpyright comprueba la respuesta con ambas versiones. Escribir y probar las notas: una nota escrita por el modelo solo se conserva si su ejemplo pasa la verificación de tipos; si no, se usa una descripción del cambio tomada del diff de la API. Las tareas reservadas se responden sin las notas y con ellas, y --apply escribe un bloque en AGENTS.md.">
+  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.es.svg" width="640" alt="Tres etapas. Análisis (scan), sin llamadas al modelo: el lockfile da tus versiones exactas, después se busca la última versión publicada al menos 30 días antes de la fecha de corte del modelo y se hace un diff estático de la API con griffe. Sondeo: tareas breves que requieren el cambio, el modelo responde de memoria y basedpyright comprueba la respuesta con ambas versiones. Escribir y probar las notas: una nota escrita por el modelo solo se conserva si su ejemplo pasa la verificación de tipos; si no, se usa una descripción del cambio tomada del diff de la API. Las tareas reservadas se responden sin las notas y con ellas, y --apply escribe un bloque en AGENTS.md.">
 </picture></p>
 
 | resultado | significado |
@@ -1023,7 +1025,7 @@ reservadas; `verified` se mantiene y significa lo mismo que `checks.example_type
   de un tipo integrado o de la biblioteca estándar: esa coincidencia `[name match]` no aparece
   en ningún informe, ni en las notas, ni en `--fail-on` ni en `--annotate` salvo que se indique
   `--include-name-matches` (`include_name_matches` por MCP), porque la mayoría son un método
-  homónimo de otra biblioteca. Un parámetro que pasó a ser obligatorio, solo por nombre o
+  homónimo de otra biblioteca; `scan` y `sync` dicen cuántos usos ocultaron. Un parámetro que pasó a ser obligatorio, solo por nombre o
   solo posicional aparece siempre como «uses this API», nunca como «old form», por ahora.
 - Una nota solo nombra un sustituto cuando el propio texto de obsolescencia de la biblioteca lo
   indica. Los consejos que solo están en una guía de migración (el

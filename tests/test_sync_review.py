@@ -616,11 +616,17 @@ def test_fail_on_may_be_given_twice(sc, tmp_path, capsys) -> None:
 
 def test_sync_says_a_metapackage_is_information_not_a_warning(sc, tmp_path, monkeypatch) -> None:
     """A metapackage's parts are dependencies of their own, checked like any other: sync says
-    so after a ``•``, not as a dependency that could not be checked, after a ``!``."""
+    so after a ``•``, not as a dependency that could not be checked, after a ``!``, naming the
+    parts it checked and those it did not."""
     root = make_app(tmp_path)
+    given = (
+        "meta 1.0 is a metapackage with no API of its own; its parts are checked like any other "
+        "dependency when the project depends on them: toylib>=1, other<2"
+    )
     reason = (
-        "meta 1.0 is a metapackage with no API of its own; its parts are dependencies of "
-        "their own, checked like any other: toylib"
+        "meta 1.0 is a metapackage with no API of its own; checked like any other dependency: "
+        "toylib; not checked, as the project does not depend on it directly: other (--all-deps "
+        "checks those its lockfile pins)"
     )
     make_engine = cli.Engine
 
@@ -630,7 +636,7 @@ def test_sync_says_a_metapackage_is_information_not_a_warning(sc, tmp_path, monk
 
         def with_a_metapackage(project: Project, target: ModelTarget) -> ScanResult:
             result = scan(project, target)
-            result.packages.append(PackageScan("meta", "1.0", "uv.lock", True, reason=reason))
+            result.packages.append(PackageScan("meta", "1.0", "uv.lock", True, reason=given))
             return result
 
         made.scan = with_a_metapackage  # type: ignore[method-assign]

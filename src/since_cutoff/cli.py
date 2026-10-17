@@ -496,7 +496,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Write the notes from the API diff for the changed APIs your code uses into "
         "the since-cutoff block of AGENTS.md / CLAUDE.md, or update them: notes for newly used "
         "APIs are added, those of a bumped package checked again, and those of a package that "
-        "is no longer a dependency, no longer newer than the release at the cutoff, or no "
+        "is no longer a dependency, no longer newer than the release it is compared from, or no "
         "longer used, dropped. Text outside the block stays byte for byte. It shows the diff "
         "and asks before writing (--yes writes without asking). It keeps the model and cutoff "
         "the block was written for unless --model or --cutoff is given, and the [type-checked] "
@@ -1144,6 +1144,7 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
         EXIT_OUT_OF_DATE,
         diff_lines,
         edited_text,
+        hidden_name_match_lines,
         out_of_date_text,
         propose,
         read_target,
@@ -1219,6 +1220,8 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
         for line in diff_lines(p):
             out.print(_diff_text(line))
     out.print()
+    for line in hidden_name_match_lines(proposals, scans):
+        out.print(f"[dim]{_escape(line)}[/dim]")
     if tip:
         out.print(f"[yellow]![/yellow] {_escape(tip)}.")
     edited = [p for p in changed if p.edited and not args.force]
@@ -1276,6 +1279,7 @@ def _sync_scans(
     from datetime import date
 
     from since_cutoff.engine import SKIPPED, Settings
+    from since_cutoff.report import metapackage_text
     from since_cutoff.sync import blocked_by, lockfile_changes, target_status
 
     settings = Settings(
@@ -1310,8 +1314,8 @@ def _sync_scans(
             )
     for scan in scans.values():
         for p in scan.skipped:
-            if p.reason and METAPACKAGE in p.reason:  # information: its parts are checked
-                reporter.info(p.reason)
+            if p.reason and METAPACKAGE in p.reason:  # information: which parts are checked
+                reporter.info(metapackage_text(scan, p))
             else:
                 reporter.warn(f"{p.name} could not be checked ({p.reason}), so it has no notes")
     return scans

@@ -83,7 +83,7 @@ def test_markdown_summary_lists_what_the_code_uses_first(tmp_path, cache, fake_p
     assert "- 1 of 1 dependency changed its API after the cutoff" in md
     assert "- Static diff: 5 breaking changes, 1 new deprecation" in md
     # The same columns, in the same order, as the terminal table and report.md.
-    assert "| package | you use | at cutoff | status | breaking | deprecated |" in md
+    assert "| package | you use | compared from | status | breaking | deprecated |" in md
     assert (
         "| toylib | 2.0 (2025-10-01) | 1.0 (2025-01-10) | API changed, imported by your code | 5 | 1 |"
         in md

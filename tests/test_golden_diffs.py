@@ -26,7 +26,6 @@ from since_cutoff.apidiff import (
     REMOVED,
     TIER_INTERNAL,
     TIER_PUBLIC,
-    WARNS_CONDITION,
     WARNS_PARAMETER,
     APIChange,
 )
@@ -118,9 +117,11 @@ def test_click_8_2_removed_helpoption_and_mix_stderr_and_deprecated_the_old_pars
     deprecated = {path for kind, path, _ in changes if kind == DEPRECATED}
     assert {"click.BaseCommand", "click.MultiCommand", "click.OptionParser"} <= deprecated
     assert {"click.parser.OptionParser", "click.parser.split_arg_string"} <= deprecated
+    # Served by __getattr__ with a DeprecationWarning: reading it warns (#113).
     assert diff_note([changes[(DEPRECATED, "click.BaseCommand", "")]]).line == (
-        "`click.BaseCommand` is deprecated; avoid it in new code. Use `click.Command` instead. "
-        "[diff + library]"
+        "`click.BaseCommand` is deprecated: click 8.2.0 warns at run time (DeprecationWarning) "
+        "when it is read; avoid it in new code. Use `click.Command` instead. "
+        "[diff + library; warning]"
     )
     # Not in the changelog, in the source: these methods now take the context.
     for method in ("click.core.Parameter.make_metavar", "click.types.ParamType.get_metavar"):
@@ -131,14 +132,15 @@ def test_httpx_0_28_deprecated_a_string_verify_and_cert() -> None:
     """httpx 0.28.0's changelog, under Deprecations: "The `verify` argument as a string argument
     is now deprecated and will raise warnings." and "The `cert` argument is now deprecated and
     will raise warnings." Both are a ``warnings.warn(message, DeprecationWarning)`` in
-    ``create_ssl_context`` (DIFF_SCHEMA 22): ``cert`` whenever it is passed (``if cert:``),
-    a string ``verify`` in some calls (``elif isinstance(verify, str):``, not ``verify``
-    itself)."""
+    ``create_ssl_context`` (DIFF_SCHEMA 22): ``cert`` whenever it is passed (``if cert:``;
+    the function returned earlier for a string ``verify``, on another path), ``verify`` when it
+    is passed as a string (``elif isinstance(verify, str):`` after ``if verify is True:`` and
+    ``elif verify is False:``, which a string implies), the test kept and quoted (#113)."""
     changes = _changes("httpx-0.27.2-0.28.1")
     warned = {k: c for k, c in changes.items() if c.kind == DEPRECATED}
     assert set(warned) == {
         (DEPRECATED, "httpx.create_ssl_context", "cert"),
-        (DEPRECATED, "httpx.create_ssl_context", ""),
+        (DEPRECATED, "httpx.create_ssl_context", "verify"),
     }
     cert = warned[(DEPRECATED, "httpx.create_ssl_context", "cert")]
     assert cert.deprecated_by == "warnings.warn"
@@ -148,15 +150,22 @@ def test_httpx_0_28_deprecated_a_string_verify_and_cert() -> None:
         "at": "httpx/_config.py:63",
     }
     assert cert.library_names == ["verify"]
-    verify = warned[(DEPRECATED, "httpx.create_ssl_context", "")]
+    verify = warned[(DEPRECATED, "httpx.create_ssl_context", "verify")]
     assert verify.warning == {
-        "when": WARNS_CONDITION,
+        "when": WARNS_PARAMETER,
         "category": "DeprecationWarning",
         "at": "httpx/_config.py:51",
         "condition": "isinstance(verify, str)",
+        "readable": True,
     }
     assert verify.deprecation == (
         "`verify=<str>` is deprecated. Use `verify=ssl.create_default_context(cafile=...)` or "
         "`verify=ssl.create_default_context(capath=...)` instead."
     )
-    assert diff_note([verify]).line.endswith("[diff; warning]")
+    assert diff_note([verify]).line == (
+        "`verify` is deprecated for `httpx.create_ssl_context()` in some calls: httpx 0.28.1 "
+        "warns at run time (DeprecationWarning) when it is passed and `isinstance(verify, str)`. "
+        "On `verify`, httpx 0.28.1 says: \"'verify=<str>' is deprecated. Use "
+        "'verify=ssl.create_default_context(cafile=...)' or "
+        "'verify=ssl.create_default_context(capath=...)' instead.\" [diff; warning]"
+    )

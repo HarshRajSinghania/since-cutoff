@@ -70,7 +70,11 @@ from since_cutoff.apidiff import (
     PARAM_REQUIRED,
     REMOVED,
     REQUEST_EXTRAS,
+    WARNS_ACCESS,
+    WARNS_ALWAYS,
     WARNS_CONDITION,
+    WARNS_DEFAULT,
+    WARNS_PARAMETER,
     APIChange,
     object_replacements,
     parameter_replacements,
@@ -602,8 +606,9 @@ def diff_note(
                         f"{subject()} no longer accept{s} extra {what} arguments (`{p}`)."
                     )
         elif kind == DEPRECATED:
-            warned = _unique(c.parameter for c in group if c.parameter and c.warning)
-            marked = [p for p in params if p not in warned]
+            warned = [c for c in group if c.parameter and c.warning]
+            warned_names = {c.parameter for c in warned}
+            marked = [p for p in params if p not in warned_names]
             if marked:
                 verb = "is" if len(marked) == 1 else "are"
                 pronoun = "it" if len(marked) == 1 else "them"
@@ -613,7 +618,7 @@ def diff_note(
                 )
                 said_what = True
             if warned:
-                sentences.append(_warned_parameters_sentence(group, warned, call))
+                sentences += _warned_parameter_sentences(warned, call)
                 said_what = True
             for c in group:
                 if c.parameter:
@@ -669,11 +674,43 @@ def diff_note(
     )
 
 
-def _categories(changes: Iterable[APIChange]) -> str:
-    """The warning categories of deprecations read from ``warnings.warn`` (APIChange.warning),
-    as a note names them: ``Pandas4Warning``, ``FutureWarning and DeprecationWarning``."""
+def _runtime(changes: Iterable[APIChange]) -> str:
+    """``warns at run time (Pandas4Warning)``, with the warning categories of deprecations read
+    from ``warnings.warn`` (APIChange.warning): ``FutureWarning and DeprecationWarning``; just
+    ``warns at run time`` when the code does not say which."""
     found = _unique(str((c.warning or {}).get("category") or "") for c in changes)
-    return _listed_plain([safe_text(f, 40) for f in found if f]) or "a warning"
+    categories = _listed_plain([safe_text(f, 40) for f in found if f])
+    return f"warns at run time ({categories})" if categories else "warns at run time"
+
+
+def _condition(warning: dict[str, Any]) -> str | None:
+    """The condition a warning is issued under, as a code span, when it reads nothing but the
+    function's parameters (``warning["readable"]``); else None: the library's other names
+    mean nothing to the reader, and the quoted message says when."""
+    condition = warning.get("condition")
+    if not condition or not warning.get("readable"):
+        return None
+    return f"`{safe_text(str(condition), 140)}`"
+
+
+def _plain_parameter(change: APIChange) -> bool:
+    """A parameter deprecated by a ``warnings.warn`` issued whenever it is passed."""
+    w = change.warning or {}
+    return w.get("when") == WARNS_PARAMETER and "condition" not in w and not w.get("behavior")
+
+
+def _warned_parameter_sentences(changes: Sequence[APIChange], call: str) -> list[str]:
+    """The sentences for parameters deprecated by a ``warnings.warn`` (APIChange.warning):
+    those it warns of whenever they are passed together (:func:`_warned_parameters_sentence`),
+    then each of the others (:func:`_warned_parameter_sentence`)."""
+    plain = [c for c in changes if _plain_parameter(c)]
+    out = []
+    if plain:
+        out.append(
+            _warned_parameters_sentence(plain, _unique(c.parameter or "" for c in plain), call)
+        )
+    out += [_warned_parameter_sentence(c, call) for c in changes if not _plain_parameter(c)]
+    return out + [s for c in changes if (s := _also_sentence(c))]
 
 
 def _warned_parameters_sentence(
@@ -687,28 +724,109 @@ def _warned_parameters_sentence(
     warned = [c for c in group if c.parameter in parameters and c.warning]
     return (
         f"{_listed(parameters, 'and')} {verb} deprecated for {call}: {first.package} "
-        f"{first.to_version} warns at run time ({_categories(warned)}) when {pronoun} {verb} "
-        f"passed; avoid {pronoun} in new code."
+        f"{first.to_version} {_runtime(warned)} when {pronoun} {verb} passed; avoid {pronoun} "
+        "in new code."
     )
+
+
+def _warned_parameter_sentence(change: APIChange, call: str) -> str:
+    """A parameter that a ``warnings.warn`` deprecates in some of the calls that pass it
+    (``errors != "raise"``), whose default it deprecates (WARNS_DEFAULT: "Calling `f()`
+    without `p` is deprecated"; "The default of `p` for `f()` will change" when the message
+    says the default changes), or whose behaviour changes: no "avoid it", which would be wrong
+    for the calls that do not warn."""
+    w = change.warning or {}
+    p = f"`{change.parameter}`"
+    pkg = f"{change.package} {change.to_version}"
+    runtime = _runtime([change])
+    condition = _condition(w)
+    partial = "condition" in w
+    if w.get("when") == WARNS_DEFAULT:
+        when = "when it is left out"
+        when += (
+            f" and {condition}" if condition else (", in some of those calls" if partial else "")
+        )
+        head = (
+            f"The default of {p} for {call} will change"
+            if w.get("behavior")
+            else f"Calling {call} without {p} is deprecated"
+        )
+        return f"{head}: {pkg} {runtime} {when}; pass `{change.parameter}=` explicitly."
+    when = "when it is passed"
+    when += f" and {condition}" if condition else (", in some of those calls" if partial else "")
+    if w.get("behavior"):
+        return f"Passing {p} to {call} will change behavior: {pkg} {runtime} {when}."
+    return f"{p} is deprecated for {call} in some calls: {pkg} {runtime} {when}."
+
+
+def _also_sentence(change: APIChange) -> str:
+    """``It also warns when it is left out.``: when the other warnings of the same API and
+    parameter (APIChange.warning["also"]) are issued, or "" when there are none."""
+    phrases = []
+    for other in (change.warning or {}).get("also") or ():
+        when, condition = other.get("when"), _condition(other)
+        partial = "condition" in other
+        if when == WARNS_PARAMETER:
+            phrase = "when it is passed"
+        elif when == WARNS_DEFAULT:
+            phrase = "when it is left out"
+        elif when == WARNS_ALWAYS:
+            phrase = "at every call"
+        elif when == WARNS_ACCESS:
+            phrase = "when it is " + {"set": "set", "delete": "deleted"}.get(
+                str(other.get("access")), "read"
+            )
+        else:
+            phrase = f"when {condition}" if condition else "in some other calls"
+            condition, partial = None, False
+        if condition:
+            phrase += f" and {condition}"
+        elif partial:
+            phrase += " (in some calls)"
+        phrases.append(phrase)
+    phrases = _unique(phrases)
+    return f"It also warns {_listed_plain(phrases)}." if phrases else ""
 
 
 def _warned_sentence(change: APIChange, names: Sequence[str]) -> str:
-    """A function or class deprecated by a ``warnings.warn`` (APIChange.warning): ``f`` is
-    deprecated: pkg 2.0 warns at run time (FutureWarning) at every call; avoid it in new
-    code. Under another condition, "in some calls" (the condition is the library's code, which
-    names its own variables: the quoted message says when)."""
+    """A function, class or attribute deprecated by a ``warnings.warn`` (APIChange.warning):
+    ``f`` is deprecated: pkg 2.0 warns at run time (FutureWarning) at every call; avoid it in
+    new code. Under another condition, "in some calls" (the condition only when it reads the
+    function's parameters alone: the quoted message says when). A message that says the
+    behaviour changes, not that the API goes, says "will change behavior", without "avoid
+    it". A property's getter or setter, or a name a module's ``__getattr__`` serves: "when it
+    is read" (or set)."""
     many = len(names) > 1
     be, it = ("are", "them") if many else ("is", "it")
     subject = _listed(names, "and")
-    category = _categories([change])
+    w = change.warning or {}
+    runtime = _runtime([change])
     pkg = f"{change.package} {change.to_version}"
-    if (change.warning or {}).get("when") == WARNS_CONDITION:
-        return f"{subject} {be} deprecated in some calls: {pkg} warns at run time ({category})."
+    behavior = bool(w.get("behavior"))
+    condition = _condition(w)
+    partial = "condition" in w
+    also = _also_sentence(change)
+    also = f" {also}" if also else ""
+    if w.get("when") == WARNS_ACCESS:
+        access = str(w.get("access") or "read")
+        done = {"set": "set", "delete": "deleted"}.get(access, "read")
+        some = (f" when {condition}" if condition else " in some cases") if partial else ""
+        if access != "read":
+            verb = {"set": "Setting", "delete": "Deleting"}.get(access, "Setting")
+            what = "will change behavior" if behavior else "is deprecated"
+            avoid = "" if behavior or partial else f"; do not {access} {it} in new code"
+            return f"{verb} {subject} {what}{some}: {pkg} {runtime} when {it} {be} {done}{avoid}.{also}"
+        what = "will change" if behavior else f"{be} deprecated"
+        avoid = "" if behavior or partial else f"; avoid {it} in new code"
+        return f"{subject} {what}{some}: {pkg} {runtime} when {it} {be} read{avoid}.{also}"
+    if w.get("when") == WARNS_CONDITION:
+        what = "will change behavior" if behavior else f"{be} deprecated"
+        some = f" when {condition}" if condition else " in some calls"
+        return f"{subject} {what}{some}: {pkg} {runtime}.{also}"
     when = "when one is created" if _is_class_change(change) else "at every call"
-    return (
-        f"{subject} {be} deprecated: {pkg} warns at run time ({category}) {when}; avoid {it} "
-        "in new code."
-    )
+    if behavior:
+        return f"{subject} will change behavior: {pkg} {runtime} {when}.{also}"
+    return f"{subject} {be} deprecated: {pkg} {runtime} {when}; avoid {it} in new code.{also}"
 
 
 def _is_class_change(change: APIChange) -> bool:
@@ -797,10 +915,12 @@ def _replacement_sentences(
         if c.kind == DEPRECATED:
             # The text of a warnings.warn says what the deprecation is about, a parameter's too.
             if (not c.parameter or c.warning) and found is None:
-                quote = _quote_text(c.deprecation or "")
-                if not quote and (c.warning or {}).get("when") == WARNS_CONDITION:
-                    # The bullet says "in some calls": the text's first sentence says which.
-                    quote = _whole_sentences(_sentences(c.deprecation or "")[:1], 200)
+                if _says_which(c):
+                    # The bullet says "in some calls", or that a behaviour or a default
+                    # changes: the sentence of the text that says which comes first.
+                    quote = _situation_quote(c.deprecation or "")
+                else:
+                    quote = _quote_text(c.deprecation or "")
                 on = f"On `{what}`, " if c.parameter else ""
                 if quote:
                     sentences.append(f'{on}{c.package} {c.to_version} says: "{quote}"')
@@ -1180,6 +1300,43 @@ def _quote_text(text: str, limit: int = 160) -> str:
     """A deprecation message worth quoting in a note: its sentences that say more than
     "deprecated", each whole, within ``limit`` characters; "" when none does."""
     return _whole_sentences([s for s in _sentences(text) if _worth_quoting(s)], limit)
+
+
+# A sentence of a warning's message that says what is deprecated or changes, and so in which
+# calls: "Passing X to Index.join is deprecated", "`verify=<str>` is deprecated.".
+_SITUATION = re.compile(
+    r"deprecat|will (?:change|raise|be|switch|return|stop|become)|\bdefault\b|behaviou?r"
+    r"|in (?:a |the )?future|no longer",
+    re.IGNORECASE,
+)
+
+
+def _says_which(change: APIChange) -> bool:
+    """A deprecation read from a ``warnings.warn`` whose bullet cannot say in which calls it
+    warns, or what changes: under a condition, of a default, of a behaviour."""
+    w = change.warning or {}
+    return bool(w) and (
+        w.get("when") in (WARNS_CONDITION, WARNS_DEFAULT)
+        or "condition" in w
+        or bool(w.get("behavior"))
+    )
+
+
+def _situation_quote(text: str, limit: int = 200) -> str:
+    """For a deprecation that warns in some calls, or of a behaviour: the sentence of its
+    message that says what is deprecated or changes (the first one, else), then those of the
+    others that say more (advice, a replacement), each whole, within ``limit`` characters
+    (the first alone up to 300). "Passing X to X.join is deprecated and will raise in a future
+    version. Pass an Index instead." keeps both: the advice alone says nothing of which calls."""
+    sentences = _sentences(text)
+    if not sentences:
+        return ""
+    first = next((i for i, s in enumerate(sentences) if _SITUATION.search(s)), 0)
+    chosen = sentences[: first + 1]  # what leads up to it too, when it fits
+    while len(chosen) > 1 and len(safe_text(" ".join(chosen), 10**6)) > limit:
+        chosen.pop(0)
+    chosen += [s for s in sentences[first + 1 :] if _worth_quoting(s)]
+    return _whole_sentences(chosen, limit) or _whole_sentences([sentences[first]], 300)
 
 
 def _mentions(text: str, name: str) -> bool:

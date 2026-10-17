@@ -21,8 +21,10 @@ from since_cutoff.apidiff import (
     TIER_INTERNAL,
     TIER_PUBLIC,
     UNREAD_BASE,
+    WARNS_ACCESS,
     WARNS_ALWAYS,
     WARNS_CONDITION,
+    WARNS_DEFAULT,
     WARNS_PARAMETER,
     APIChange,
     diff_sources,
@@ -218,6 +220,13 @@ def test_names_a_module_getattr_still_serves_are_deprecations(tmp_path):
     assert change.deprecation == (
         "'BaseCommand' is deprecated and will be removed in 9.0. Use 'Command' instead."
     )
+    # It warns when the name is read, as the deprecations read from warnings.warn say (#113).
+    assert change.warning == {
+        "when": WARNS_ACCESS,
+        "category": "DeprecationWarning",
+        "at": "pkg/__init__.py:7",
+        "access": "read",
+    }
 
 
 def test_names_served_lazily_without_a_warning_are_not_removed(tmp_path):
@@ -1683,7 +1692,8 @@ def test_a_helper_that_warns_for_its_callers_counts_as_their_warning(tmp_path):
             "DeprecationWarning",
             "a is deprecated; use `b` instead",
         ),
-        ("pkg.api.b", None): (WARNS_ALWAYS, "FutureWarning", "{...} is deprecated"),
+        # f"{name} is deprecated" with what the call gives the helper's name (#113)
+        ("pkg.api.b", None): (WARNS_ALWAYS, "FutureWarning", "b is deprecated"),
         ("pkg.api.Frame.astype", "copy"): (
             WARNS_PARAMETER,
             "FutureWarning",
@@ -1832,13 +1842,14 @@ def test_a_warning_in_init_at_entry_deprecates_the_class(tmp_path):
 def test_a_warning_under_another_condition_deprecates_the_function_under_it(tmp_path):
     """pandas 3's ``Index.join``: ``if not isinstance(other, Index): warnings.warn(...)``.
     The function is deprecated under that condition (``warning["condition"]``), and a call of
-    it is "uses this API", not the old form. A warning after an early ``return`` and one in a
-    loop are issued in some calls too (no ``if`` to quote: the condition is None); an early
-    ``raise`` does not make one conditional."""
+    it is "uses this API", not the old form. What follows an ``if <test>: return`` at the top
+    of the body is under ``not <test>`` (#113); a warning after a return in a nested block
+    and one in a loop are issued in some calls too (nothing to quote: the condition is None);
+    an early ``raise`` does not make one conditional."""
     old = {
         "pkg/__init__.py": "def join(other):\n    return other\n\n"
         "def at_time(t):\n    return t\n\ndef each(xs):\n    return xs\n\n"
-        "def checked(x):\n    return x\n"
+        "def checked(x):\n    return x\n\ndef late(t):\n    return t\n"
     }
     new = {
         "pkg/__init__.py": "import warnings\n\n"
@@ -1850,15 +1861,18 @@ def test_a_warning_under_another_condition_deprecates_the_function_under_it(tmp_
         "def each(xs):\n    for x in xs:\n"
         '        warnings.warn("each is deprecated", FutureWarning)\n    return xs\n\n'
         "def checked(x):\n    if x is None:\n        raise ValueError(x)\n"
-        '    warnings.warn("checked is deprecated", FutureWarning)\n    return x\n'
+        '    warnings.warn("checked is deprecated", FutureWarning)\n    return x\n\n'
+        "def late(t):\n    if t:\n        if t > 1:\n            return t\n"
+        '    warnings.warn("late is deprecated", FutureWarning)\n    return t\n'
     }
     changes = diff(tmp_path, old, new)
     found = warned(changes)
     assert {k[0]: (v["when"], v.get("condition")) for k, v in found.items()} == {
         "pkg.join": (WARNS_CONDITION, "not isinstance(other, list)"),
-        "pkg.at_time": (WARNS_CONDITION, None),
+        "pkg.at_time": (WARNS_CONDITION, "t is not None"),
         "pkg.each": (WARNS_CONDITION, None),
         "pkg.checked": (WARNS_ALWAYS, None),
+        "pkg.late": (WARNS_CONDITION, None),
     }
     join = next(c for c in changes if c.path == "pkg.join")
     assert join.describe(versioned=False) == (
@@ -1894,3 +1908,938 @@ def test_pandas_deprecate_kwarg_with_the_category_first_names_the_parameter(tmp_
         "def reindex_like(other, method=None):\n    return other\n",
     }
     assert found(diff(tmp_path, old, new)) == {(DEPRECATED, "pkg.reindex_like", "method")}
+
+
+# ---------------------------- deprecations announced by warnings.warn: review fixes (#113)
+def test_a_helper_that_hands_its_message_to_a_wrapper_taking_the_category(tmp_path):
+    """polars 1.44: ``issue_deprecation_warning(message, *, version="")`` calls
+    ``issue_warning(message, DeprecationWarning)``, whose ``category`` has no default. Neither
+    was a helper, so ``read_csv(rechunk=...)`` and 28 more were missed; and a helper warning
+    through another kept the inner one's message, ``f"{message} (Deprecated in version
+    {version})"``, not its caller's."""
+    old = {
+        "pkg/__init__.py": "",
+        "pkg/io.py": "def read_csv(source, rechunk=None):\n    return source\n\n"
+        "def scan_csv(source, retries=None):\n    return source\n",
+    }
+    new = {
+        **old,
+        "pkg/_warnings.py": "import warnings\n\n"
+        "def issue_warning(message, category, **kwargs):\n"
+        "    warnings.warn(message=message, category=category, stacklevel=2, **kwargs)\n",
+        "pkg/_deprecation.py": "from pkg._warnings import issue_warning\n\n"
+        'def issue_deprecation_warning(message, *, version=""):\n'
+        "    if version:\n"
+        '        message = f"{message.strip()}\\n(Deprecated in version {version})"\n'
+        "    issue_warning(message, DeprecationWarning)\n",
+        "pkg/io.py": "from pkg._deprecation import issue_deprecation_warning\n\n"
+        "def read_csv(source, rechunk=None):\n    if rechunk is not None:\n"
+        "        issue_deprecation_warning(\n"
+        '            "`rechunk` parameter on read_csv() will be removed.", version="1.43.2"\n'
+        "        )\n    return source\n\n"
+        "def scan_csv(source, retries=None):\n    if retries is not None:\n"
+        '        msg = "the `retries` parameter was deprecated in 1.37.1"\n'
+        "        issue_deprecation_warning(msg)\n    return source\n",
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v["category"], v["text"]) for k, v in found.items()} == {
+        ("pkg.io.read_csv", "rechunk"): (
+            WARNS_PARAMETER,
+            "DeprecationWarning",
+            "`rechunk` parameter on read_csv() will be removed.",
+        ),
+        ("pkg.io.scan_csv", "retries"): (
+            WARNS_PARAMETER,
+            "DeprecationWarning",
+            "the `retries` parameter was deprecated in 1.37.1",
+        ),
+    }
+
+
+def test_a_name_a_function_imports_itself_is_read(tmp_path):
+    """matplotlib 3.10's ``_api.warn_deprecated`` runs ``from . import warn_external`` in its
+    body, and polars' ``Enum.union`` imports its helper in the method: neither name was
+    resolved, so all of matplotlib 3.10's in-body deprecations were missed. ``from warnings
+    import warn as w`` in a function is ``warnings.warn`` too."""
+    old = {
+        "pkg/__init__.py": "from pkg.api import Enum, f, g\n",
+        "pkg/_api/__init__.py": "",
+        "pkg/api.py": "def f(x):\n    return x\n\ndef g(x):\n    return x\n\n"
+        "class Enum:\n    def union(self, other):\n        return other\n",
+    }
+    new = {
+        **old,
+        "pkg/_api/__init__.py": "import warnings\n\n"
+        "def warn_external(message, category=None):\n"
+        "    warnings.warn(message, category, stacklevel=3)\n",
+        "pkg/_api/deprecation.py": "class PkgDeprecationWarning(DeprecationWarning):\n"
+        '    pass\n\ndef warn_deprecated(since, message=""):\n'
+        "    from . import warn_external\n"
+        "    warn_external(message, category=PkgDeprecationWarning)\n",
+        "pkg/api.py": "from pkg._api.deprecation import warn_deprecated\n\n"
+        'def f(x):\n    warn_deprecated("3.10", message="f is deprecated")\n    return x\n\n'
+        "def g(x):\n    from warnings import warn as w\n\n"
+        '    w("g is deprecated", DeprecationWarning)\n    return x\n\n'
+        "class Enum:\n    def union(self, other):\n"
+        "        from pkg._api.deprecation import warn_deprecated as wd\n\n"
+        '        wd("1.38", message="`Enum.union()` is deprecated")\n        return other\n',
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v["category"], v["text"]) for k, v in found.items()} == {
+        ("pkg.api.f", None): (WARNS_ALWAYS, "PkgDeprecationWarning", "f is deprecated"),
+        ("pkg.api.g", None): (WARNS_ALWAYS, "DeprecationWarning", "g is deprecated"),
+        ("pkg.api.Enum.union", None): (
+            WARNS_ALWAYS,
+            "PkgDeprecationWarning",
+            "`Enum.union()` is deprecated",
+        ),
+    }
+
+
+def test_a_warning_the_release_at_the_cutoff_gave_in_another_category_is_not_new(tmp_path):
+    """scikit-learn 1.6 warned "The `cv='prefit'` option is deprecated in 1.6 ..." as a
+    UserWarning, 1.7 as a FutureWarning; statsmodels 0.14 warned "Argument %s not used by
+    MixedLM.fit" without a category, 0.15 the same text and "Future versions will raise". A
+    category that changed is no new deprecation; a UserWarning with another text, under
+    another test, does not hide one."""
+    prefit = "The `cv='prefit'` option is deprecated in 1.6 and will be removed in 1.8."
+    head = (
+        "import warnings\n\n"
+        "class Calibrated:\n    def __init__(self, cv=None):\n        self.cv = cv\n\n"
+        "    def fit(self, X):\n        if self.cv == 'prefit':\n"
+    )
+    old = {
+        "pkg/__init__.py": f"{head}            warnings.warn({prefit!r})\n        return self\n\n"
+        "def fit(X, **kwargs):\n    if kwargs:\n"
+        '        warnings.warn("Argument %s not used by fit" % list(kwargs))\n    return X\n\n'
+        "def g(x, y=None):\n    if x:\n"
+        '        warnings.warn("x is ignored", UserWarning)\n    return x\n'
+    }
+    new = {
+        "pkg/__init__.py": f"{head}            warnings.warn({prefit!r}, FutureWarning)\n"
+        "        return self\n\n"
+        "def fit(X, **kwargs):\n    disallowed = list(kwargs)\n    if disallowed:\n"
+        "        warnings.warn(\n"
+        '            "Argument %s not used by fit. Future versions will raise." % disallowed,\n'
+        "            FutureWarning,\n        )\n    return X\n\n"
+        "def g(x, y=None):\n    if x:\n"
+        '        warnings.warn("x is ignored", UserWarning)\n'
+        "    if y is not None:\n"
+        '        warnings.warn("y is deprecated", FutureWarning)\n    return x\n'
+    }
+    assert set(warned(diff(tmp_path, old, new))) == {("pkg.g", "y")}
+
+
+def test_a_warning_while_a_parameter_is_left_out_deprecates_its_default(tmp_path):
+    """scikit-learn 1.7's ``smacof(n_init="warn")`` warns under ``if n_init == "warn":`` "The
+    default value of `n_init` will change from 8 to 1 in 1.9.", and ``MDS.fit`` under ``if
+    self.n_init == "warn":`` for its constructor's; polars under ``if plan_stage is None:``;
+    statsmodels 0.15 under ``if result_object is None and not store:``, for a new
+    ``result_object``. Each read as "the function is deprecated in some calls": its default is
+    (WARNS_DEFAULT), and passing the parameter keeps the old behaviour."""
+    old = {
+        "pkg/__init__.py": "def smacof(X, n_init=8):\n    return X\n\n"
+        "class MDS:\n    def __init__(self, n_init=4):\n        self.n_init = n_init\n\n"
+        "    def fit(self, X):\n        return X\n\n"
+        "def show_graph(plan_stage=None):\n    return plan_stage\n\n"
+        "def acorr_lm(resid, store=False):\n    return resid\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def smacof(X, n_init='warn'):\n    if n_init == 'warn':\n"
+        "        warnings.warn(\n"
+        "            'The default value of `n_init` will change from 8 to 1 in 1.9.',\n"
+        "            FutureWarning,\n        )\n        n_init = 8\n    return X\n\n"
+        "class MDS:\n    def __init__(self, n_init='warn'):\n        self.n_init = n_init\n\n"
+        "    def fit(self, X):\n        if self.n_init == 'warn':\n"
+        "            warnings.warn(\n"
+        "                'The default value of `n_init` will change from 4 to 1 in 1.9.',\n"
+        "                FutureWarning,\n            )\n        return X\n\n"
+        "def show_graph(plan_stage=None):\n    if plan_stage is None:\n"
+        "        warnings.warn(\n"
+        "            \"The default value of `plan_stage` will change from 'ir' to 'physical'.\",\n"
+        "            FutureWarning,\n        )\n    return plan_stage\n\n"
+        "def acorr_lm(resid, store=False, result_object=None):\n"
+        "    if result_object is None and not store:\n"
+        "        warnings.warn(\n"
+        "            'acorr_lm currently returns a plain tuple. In 0.16 the default behavior '\n"
+        "            'will switch to a result object. Set result_object=True to switch now.',\n"
+        "            FutureWarning,\n        )\n    return resid\n"
+    }
+    changes = diff(tmp_path, old, new)
+    found = warned(changes)
+    assert {k: (v["when"], v.get("condition"), v.get("behavior")) for k, v in found.items()} == {
+        ("pkg.smacof", "n_init"): (WARNS_DEFAULT, None, True),
+        ("pkg.MDS.__init__", "n_init"): (WARNS_DEFAULT, None, True),
+        ("pkg.show_graph", "plan_stage"): (WARNS_DEFAULT, None, True),
+        ("pkg.acorr_lm", "result_object"): (WARNS_DEFAULT, "not store", True),
+    }
+    smacof = next(c for c in changes if c.path == "pkg.smacof")
+    assert form(smacof, ("pkg.smacof",)) == USES_API
+    assert form(smacof, ("pkg.smacof", "n_init")) == USES_API
+    assert smacof.describe(versioned=False) == (
+        "`pkg.smacof(n_init=...)`: the default of `n_init` will change, with a FutureWarning "
+        "at run time when it is left out: The default value of `n_init` will change from 8 to "
+        "1 in 1.9."
+    )
+
+
+def test_a_method_named_like_a_test_is_read(tmp_path):
+    """statsmodels 0.15's ``DescStatUV.test_mean`` and ``OLSResults.el_test`` warn of their
+    default: methods of a library class, never read because their names look like tests'."""
+    old = {
+        "pkg/__init__.py": "class DescStat:\n    def test_mean(self, mu):\n        return mu\n\n"
+        "    def el_test(self, b):\n        return b\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\nclass DescStat:\n"
+        "    def test_mean(self, mu):\n"
+        "        warnings.warn('test_mean is deprecated', FutureWarning)\n        return mu\n\n"
+        "    def el_test(self, b):\n"
+        "        warnings.warn('el_test is deprecated', FutureWarning)\n        return b\n"
+    }
+    assert set(warned(diff(tmp_path, old, new))) == {
+        ("pkg.DescStat.test_mean", None),
+        ("pkg.DescStat.el_test", None),
+    }
+
+
+def test_a_function_moved_into_a_private_module_is_compared_by_its_public_path(tmp_path):
+    """statsmodels 0.15 moved ``tsa/seasonal.py`` to ``tsa/seasonal/_seasonal.py`` and
+    re-exports ``seasonal_decompose`` where it was: the old function was looked up at the new
+    canonical path only, so its new warning was dropped as one of a new function."""
+    old = {
+        "pkg/__init__.py": "",
+        "pkg/seasonal.py": "def decompose(x, extrapolate_trend=0):\n    return x\n",
+    }
+    new = {
+        "pkg/__init__.py": "",
+        "pkg/seasonal/__init__.py": "from pkg.seasonal._seasonal import decompose\n\n"
+        "__all__ = ['decompose']\n",
+        "pkg/seasonal/_seasonal.py": "import warnings\n\n"
+        "def decompose(x, extrapolate_trend=0):\n    if extrapolate_trend == 'freq':\n"
+        "        warnings.warn(\"`extrapolate_trend='freq'` is deprecated\", FutureWarning)\n"
+        "    return x\n",
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: v.get("condition") for k, v in found.items()} == {
+        ("pkg.seasonal.decompose", "extrapolate_trend"): "extrapolate_trend == 'freq'"
+    }
+
+
+def test_an_alias_that_became_a_function_that_warns_is_deprecated(tmp_path):
+    """networkx 3.5: ``graph_could_be_isomorphic = could_be_isomorphic`` became a function
+    that warns at every call, "graph_could_be_isomorphic is deprecated, use
+    `could_be_isomorphic` instead.": the old object, an alias, was no function, so it was
+    skipped. A warning of such a name for a parameter is not read."""
+    old = {
+        "pkg/__init__.py": "def could_be(g1, g2):\n    return True\n\ngraph_could_be = could_be\n\n"
+        "def other(g1, g2):\n    return True\n\nalso_other = other\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\ndef could_be(g1, g2):\n    return True\n\n"
+        "def graph_could_be(g1, g2):\n"
+        "    warnings.warn(\n"
+        '        "graph_could_be is deprecated, use `could_be` instead.", DeprecationWarning\n'
+        "    )\n    return could_be(g1, g2)\n\n"
+        "def other(g1, g2):\n    return True\n\n"
+        "def also_other(g1, g2, strict=None):\n    if strict is not None:\n"
+        '        warnings.warn("strict is deprecated", DeprecationWarning)\n    return True\n'
+    }
+    assert set(warned(diff(tmp_path, old, new))) == {("pkg.graph_could_be", None)}
+
+
+def test_a_helper_that_warns_of_a_key_of_its_kwargs(tmp_path):
+    """Django 5.2's ``_check_deprecated_find_param(find_all=False, **kwargs)`` warns under ``if
+    "all" in kwargs:``, and ``find(path, find_all=False, **kwargs)`` hands it its own
+    ``**kwargs`` (the finders through a method of theirs): ``find(all=...)`` is deprecated,
+    which no change said, since ``all`` went into ``**kwargs``."""
+    old = {
+        "pkg/__init__.py": "def find(path, all=False):\n    return path\n\n"
+        "class Finder:\n    def find(self, path, all=False):\n        return path\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def _check_deprecated_find_param(find_all=False, **kwargs):\n"
+        "    if 'all' in kwargs:\n"
+        "        msg = 'Passing the `all` argument to find() is deprecated. Use `find_all`.'\n"
+        "        warnings.warn(msg, DeprecationWarning)\n"
+        "        find_all = kwargs.pop('all')\n"
+        "    return find_all\n\n"
+        "def find(path, find_all=False, **kwargs):\n    if kwargs:\n"
+        "        find_all = _check_deprecated_find_param(find_all=find_all, **kwargs)\n"
+        "    return path\n\n"
+        "class Finder:\n    def _check_deprecated_find_param(self, **kwargs):\n"
+        "        return _check_deprecated_find_param(**kwargs)\n\n"
+        "    def find(self, path, find_all=False, **kwargs):\n        if kwargs:\n"
+        "            find_all = self._check_deprecated_find_param(find_all=find_all, **kwargs)\n"
+        "        return path\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], "condition" in v) for k, v in found.items()} == {
+        ("pkg.find", "all"): (WARNS_PARAMETER, False),
+        ("pkg.Finder.find", "all"): (WARNS_PARAMETER, False),
+    }
+
+
+def test_a_code_generators_template_is_no_api(tmp_path):
+    """transformers' ``models/voxtral/modular_voxtral.py`` is the template its
+    ``modeling_voxtral.py`` is generated from (the generated file says so): its changes
+    doubled the real ones, under a path nobody imports. A ``modular_`` module with no
+    generated sibling stays API."""
+    model = "class Vox:\n    def embeds(self, x):\n        return x\n\n    def gone(self):\n        pass\n"
+    warn = (
+        "import warnings\n\nclass Vox:\n    def embeds(self, x):\n"
+        "        warnings.warn('embeds is deprecated', FutureWarning)\n        return x\n"
+    )
+    old = {
+        "pkg/__init__.py": "",
+        "pkg/models/__init__.py": "",
+        "pkg/models/vox/__init__.py": "",
+        "pkg/models/vox/modeling_vox.py": model,
+        "pkg/models/vox/modular_vox.py": model,
+        "pkg/models/other/__init__.py": "",
+        "pkg/models/other/modular_other.py": "def f(x):\n    return x\n",
+    }
+    new = {
+        **old,
+        "pkg/models/vox/modeling_vox.py": warn,
+        "pkg/models/vox/modular_vox.py": warn,
+        "pkg/models/other/modular_other.py": "import warnings\n\ndef f(x):\n"
+        "    warnings.warn('f is deprecated', FutureWarning)\n    return x\n",
+    }
+    changes = diff(tmp_path, old, new)
+    assert not [c.path for c in changes if "modular_vox" in c.path]
+    assert set(warned(changes)) == {
+        ("pkg.models.vox.modeling_vox.Vox.embeds", None),
+        ("pkg.models.other.modular_other.f", None),
+    }
+
+
+def test_every_test_a_warning_is_under_counts(tmp_path):
+    """statsmodels' internal ``check_random_state(seed, deprecated=False, warn=True)`` warns
+    under ``if deprecated:`` and ``if warn:``: a warning its caller asks for (opt-in), not a
+    deprecation; it was "deprecated in some calls" under ``warn``. scikit-learn's
+    ``LogisticRegression.fit`` warns under ``if solver == "liblinear":`` and ``if
+    len(classes) > 2:``: both are the condition, not the inner one alone."""
+    old = {
+        "pkg/__init__.py": "def check(seed=None, deprecated=False, warn=True):\n    return seed\n\n"
+        "def fit(X, solver='lbfgs'):\n    return X\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def check(seed=None, deprecated=False, warn=True):\n"
+        "    if deprecated:\n        if warn:\n"
+        "            warnings.warn('passing an integer will change in 0.16', FutureWarning)\n"
+        "    return seed\n\n"
+        "def fit(X, solver='lbfgs'):\n    classes = set(X)\n"
+        "    if solver == 'liblinear':\n        if len(classes) > 2:\n"
+        "            warnings.warn(\n"
+        "                \"Using the 'liblinear' solver for multiclass is deprecated.\",\n"
+        "                FutureWarning,\n            )\n    return X\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v.get("condition")) for k, v in found.items()} == {
+        ("pkg.fit", "solver"): (WARNS_PARAMETER, "solver == 'liblinear' and len(classes) > 2")
+    }
+
+
+def test_a_parameter_read_through_a_type_guard_or_through_self_is_the_parameter(tmp_path):
+    """scikit-learn 1.7's ``from_predictions(..., y_pred="deprecated")`` warns under ``if not
+    (isinstance(y_pred, str) and y_pred == "deprecated"):``, which holds whenever ``y_pred``
+    is passed; ``ColumnTransformer.fit_transform`` under ``if self.force_int_remainder_cols !=
+    "deprecated":``, a parameter of the constructor: ``ColumnTransformer(
+    force_int_remainder_cols=...)`` is deprecated, not ``fit_transform`` in some calls."""
+    old = {
+        "pkg/__init__.py": "def from_predictions(y_true, y_score=None, y_pred=None):\n"
+        "    return y_true\n\n"
+        "class ColumnTransformer:\n"
+        "    def __init__(self, transformers, force_int_remainder_cols=True):\n"
+        "        self.force_int_remainder_cols = force_int_remainder_cols\n\n"
+        "    def fit_transform(self, X):\n        return X\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def from_predictions(y_true, y_score=None, y_pred='deprecated'):\n"
+        "    if not (isinstance(y_pred, str) and y_pred == 'deprecated'):\n"
+        "        warnings.warn(\n"
+        "            'y_pred is deprecated in 1.7. Please use `y_score` instead.', FutureWarning\n"
+        "        )\n        y_score = y_pred\n    return y_true\n\n"
+        "class ColumnTransformer:\n"
+        "    def __init__(self, transformers, force_int_remainder_cols='deprecated'):\n"
+        "        self.force_int_remainder_cols = force_int_remainder_cols\n\n"
+        "    def fit_transform(self, X):\n"
+        "        if self.force_int_remainder_cols != 'deprecated':\n"
+        "            warnings.warn(\n"
+        "                'The parameter `force_int_remainder_cols` is deprecated.', FutureWarning\n"
+        "            )\n        return X\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], "condition" in v) for k, v in found.items()} == {
+        ("pkg.from_predictions", "y_pred"): (WARNS_PARAMETER, False),
+        ("pkg.ColumnTransformer.__init__", "force_int_remainder_cols"): (WARNS_PARAMETER, False),
+    }
+
+
+def test_a_warning_that_a_behaviour_changes_is_not_one_that_the_api_goes(tmp_path):
+    """pandas 3's ``to_pytimedelta`` warns "The behavior of X.to_pytimedelta is deprecated, in
+    a future version this will return a Series ...": the result changes, the method stays.
+    The change says so (``warning["behavior"]``), and a call of it only uses the API. A
+    message that deprecates a parameter and then says another default will change is about
+    the parameter (scikit-learn 1.7's ``n_alphas``)."""
+    old = {
+        "pkg/__init__.py": "def to_pytimedelta(x):\n    return x\n\ndef read(path):\n"
+        "    return path\n\ndef b(x):\n    return x\n\ndef gone(x):\n    return x\n\n"
+        "def fit(x, n_alphas=100):\n    return x\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def to_pytimedelta(x):\n    warnings.warn(\n"
+        "        'The behavior of to_pytimedelta is deprecated, in a future version this will '\n"
+        "        'return a Series instead of an ndarray. To retain the old behavior, call '\n"
+        "        '`np.array` on the result', FutureWarning\n    )\n    return x\n\n"
+        "def read(path):\n    warnings.warn(\n"
+        "        'In a future version, read will return a list instead of a tuple', FutureWarning\n"
+        "    )\n    return path\n\n"
+        "def b(x):\n"
+        "    warnings.warn('b will return a copy in the future', PendingDeprecationWarning)\n"
+        "    return x\n\n"
+        "def gone(x):\n"
+        "    warnings.warn('gone is deprecated and will be removed in 2.0', FutureWarning)\n"
+        "    return x\n\n"
+        "def fit(x, n_alphas='deprecated'):\n    if n_alphas != 'deprecated':\n"
+        "        warnings.warn(\n"
+        "            \"'n_alphas' was deprecated in 1.7 and will be removed in 1.9. The default \"\n"
+        "            \"value of 'alphas' will change from None to 100 in 1.9.\",\n"
+        "            FutureWarning,\n        )\n    return x\n"
+    }
+    changes = diff(tmp_path, old, new)
+    assert {k[0]: v.get("behavior", False) for k, v in warned(changes).items()} == {
+        "pkg.to_pytimedelta": True,
+        "pkg.read": True,
+        "pkg.b": True,
+        "pkg.gone": False,
+        "pkg.fit": False,
+    }
+    by = {c.path: c for c in changes}
+    assert form(by["pkg.to_pytimedelta"], ("pkg.to_pytimedelta",)) == USES_API
+    assert form(by["pkg.gone"], ("pkg.gone",)) == OLD_FORM
+    assert (
+        by["pkg.read"]
+        .describe(versioned=False)
+        .startswith("`pkg.read` will change behavior, with a FutureWarning at run time: ")
+    )
+
+
+def test_a_warning_with_the_text_of_another_parameters_warning_is_new(tmp_path):
+    """The release at the cutoff warned for ``a`` only: through ``_warn_kw("a")`` with
+    f"The {name!r} keyword is deprecated", the same text written inline, and "axis=0 is
+    deprecated". The pinned release's warning for ``b`` (or ``axis=2``) was taken for that
+    one: texts were compared whatever their parameter, and without their digits."""
+    helper = (
+        "import warnings\n\n"
+        "def _warn_kw(name):\n"
+        "    warnings.warn(f'The {name!r} keyword is deprecated', FutureWarning)\n\n"
+    )
+    old_f = "def f(x, a=None, b=None):\n    if a is not None:\n        _warn_kw('a')\n"
+    old_g = (
+        "def g(x, a=None, b=None):\n    if a is not None:\n"
+        "        warnings.warn(f\"The {'a'} keyword is deprecated\", FutureWarning)\n"
+    )
+    old_h = (
+        "def h(x, a=None, axis=1):\n    if a is not None:\n"
+        "        warnings.warn('axis=0 is deprecated', FutureWarning)\n"
+    )
+    old = {
+        "pkg/__init__.py": f"{helper}{old_f}    return x\n\n{old_g}    return x\n\n"
+        f"{old_h}    return x\n"
+    }
+    new = {
+        "pkg/__init__.py": f"{helper}{old_f}    if b is not None:\n        _warn_kw('b')\n"
+        f"    return x\n\n{old_g}    if b is not None:\n"
+        "        warnings.warn(f\"The {'b'} keyword is deprecated\", FutureWarning)\n"
+        f"    return x\n\n{old_h}    if axis != 1:\n"
+        "        warnings.warn('axis=2 is deprecated', FutureWarning)\n    return x\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: v["text"] for k, v in found.items()} == {
+        ("pkg.f", "b"): "The 'b' keyword is deprecated",
+        ("pkg.g", "b"): "The b keyword is deprecated",
+        ("pkg.h", "axis"): "axis=2 is deprecated",
+    }
+
+
+def test_the_parameter_a_message_names_is_the_deprecated_one(tmp_path):
+    """``if verbose and x is not None:`` with "The x keyword is deprecated" deprecated
+    ``verbose``; "Passing both a and b is deprecated" under ``b is not None and a is not
+    None`` deprecated ``b``; "The 'how' keyword is deprecated when axis is given" under ``axis
+    is not None`` deprecated ``axis``. The message decides among the tests' parameters, and
+    one that names another makes it a condition."""
+    old = {
+        "pkg/__init__.py": "def g(x=None, verbose=False):\n    return x\n\n"
+        "def h(a=None, b=None):\n    return a\n\ndef k(axis=None, how=None):\n    return axis\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def g(x=None, verbose=False):\n    if verbose and x is not None:\n"
+        "        warnings.warn('The x keyword is deprecated', FutureWarning)\n    return x\n\n"
+        "def h(a=None, b=None):\n    if b is not None and a is not None:\n"
+        "        warnings.warn('Passing both a and b is deprecated; pass only a', FutureWarning)\n"
+        "    return a\n\n"
+        "def k(axis=None, how=None):\n    if axis is not None:\n"
+        "        warnings.warn(\"The 'how' keyword is deprecated when axis is given\", FutureWarning)\n"
+        "    return axis\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v.get("condition")) for k, v in found.items()} == {
+        ("pkg.g", "x"): (WARNS_PARAMETER, "verbose"),
+        ("pkg.h", None): (WARNS_CONDITION, "b is not None and a is not None"),
+        ("pkg.k", None): (WARNS_CONDITION, "axis is not None"),
+    }
+
+
+def test_a_warning_for_some_values_of_a_parameter_keeps_its_test(tmp_path):
+    """``if errors != "raise":``, ``if axis:`` (default 0), pandas 3's ``if not future_stack:``
+    (default True) and ``if mode == "fast":`` then ``if y is not None:`` warn in some of the
+    calls that pass the parameter: the test is kept (``warning["condition"]``, readable), so
+    that no note says the parameter warns whenever it is passed."""
+    old = {
+        "pkg/__init__.py": "def b(x, errors='raise'):\n    return x\n\n"
+        "def c(x, axis=0):\n    return x\n\ndef stack(future_stack=False):\n    return 1\n\n"
+        "def d(x, mode='slow', y=None):\n    return x\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def b(x, errors='raise'):\n    if errors != 'raise':\n"
+        "        warnings.warn(\"errors='ignore' is deprecated\", FutureWarning)\n    return x\n\n"
+        "def c(x, axis=0):\n    if axis:\n"
+        "        warnings.warn('axis=1 is deprecated', FutureWarning)\n    return x\n\n"
+        "def stack(future_stack=True):\n    if not future_stack:\n"
+        "        warnings.warn('The previous implementation of stack is deprecated', FutureWarning)\n"
+        "    return 1\n\n"
+        "def d(x, mode='slow', y=None):\n    if mode == 'fast':\n        if y is not None:\n"
+        "            warnings.warn(\"The y keyword is deprecated when mode is 'fast'\", FutureWarning)\n"
+        "    return x\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v.get("condition"), v.get("readable")) for k, v in found.items()} == {
+        ("pkg.b", "errors"): (WARNS_PARAMETER, "errors != 'raise'", True),
+        ("pkg.c", "axis"): (WARNS_PARAMETER, "axis", True),
+        ("pkg.stack", "future_stack"): (WARNS_PARAMETER, "not future_stack", True),
+        ("pkg.d", "y"): (WARNS_PARAMETER, "mode == 'fast'", True),
+    }
+
+
+def test_a_keyword_read_into_a_local_or_past_an_early_return_is_the_parameter(tmp_path):
+    """transformers 5.20's ``from_pretrained``: ``tp_plan = kwargs.pop("tp_plan", None)``, then
+    ``if tp_plan is not None: warnings.warn(...)``, read as "from_pretrained is deprecated in
+    some calls" for every transformers project; ``self.x = kwargs.pop("x", None)`` in a
+    constructor; ``p = kwargs.pop("p", no_default)`` with a sentinel; ``if y is no_default:
+    return x`` before the warning. A fast path that returns first, and reads not the
+    parameter (polars' ``read_ipc`` for a Hugging Face path), or returns in a block, does not
+    make the parameter's warning conditional (httpx's ``create_ssl_context(cert=...)``)."""
+    old = {
+        "pkg/__init__.py": "no_default = object()\n\nclass Model:\n    @classmethod\n"
+        "    def from_pretrained(cls, name, **kwargs):\n        return cls()\n\n"
+        "class Config:\n    def __init__(self, **kwargs):\n        self.batching = None\n\n"
+        "def a(x, **kwargs):\n    return x\n\ndef e(x, y=no_default):\n    return x\n\n"
+        "def read_ipc(source, rechunk=None):\n    return source\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\nno_default = object()\n\nclass Model:\n"
+        "    @classmethod\n    def from_pretrained(cls, name, **kwargs):\n"
+        "        tp_plan = kwargs.pop('tp_plan', None)\n"
+        "        device = kwargs.pop('device', None)\n"
+        "        if tp_plan is not None:\n            warnings.warn(\n"
+        "                'Passing `tp_plan` directly to `from_pretrained` is deprecated.',\n"
+        "                FutureWarning,\n            )\n        return cls()\n\n"
+        "class Config:\n    def __init__(self, **kwargs):\n"
+        "        self.batching = kwargs.pop('batching', None)\n"
+        "        if self.batching is not None:\n"
+        "            warnings.warn('Passing batching is deprecated', FutureWarning)\n\n"
+        "def a(x, **kwargs):\n    p = kwargs.pop('p', no_default)\n"
+        "    if p is not no_default:\n"
+        "        warnings.warn('p is deprecated', FutureWarning)\n    return x\n\n"
+        "def e(x, y=no_default):\n    if y is no_default:\n        return x\n"
+        "    warnings.warn('y is deprecated', FutureWarning)\n    return x\n\n"
+        "def read_ipc(source, rechunk=None):\n"
+        "    if str(source).startswith('hf://'):\n        return source\n"
+        "    if source is None:\n        if rechunk:\n            return source\n"
+        "    if rechunk is not None:\n"
+        "        warnings.warn('`rechunk` parameter on read_ipc() will be removed.', FutureWarning)\n"
+        "    return source\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], "condition" in v) for k, v in found.items()} == {
+        ("pkg.Model.from_pretrained", "tp_plan"): (WARNS_PARAMETER, False),
+        ("pkg.Config.__init__", "batching"): (WARNS_PARAMETER, False),
+        ("pkg.a", "p"): (WARNS_PARAMETER, False),
+        ("pkg.e", "y"): (WARNS_PARAMETER, False),
+        ("pkg.read_ipc", "rechunk"): (WARNS_PARAMETER, False),
+    }
+
+
+def test_every_warning_of_one_api_is_kept(tmp_path):
+    """pandas 3's ``to_json`` warns when ``date_format`` is left out for datetimes, and when
+    it is "epoch": only the first was reported, and its text suggested that passing "epoch"
+    was fine. One change per API and parameter keeps each warning (``warning["also"]``) and
+    each message; so does one for several conditions of the function. A warning in the
+    ``except`` of a ``try`` under an ``if`` has no condition to quote: the ``if`` alone does
+    not make it warn."""
+    old = {
+        "pkg/__init__.py": "def to_json(obj, date_format=None, orient=None):\n    return obj\n\n"
+        "def shift(x, fill=None):\n    return x\n\ndef at(time):\n    return time\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def to_json(obj, date_format=None, orient=None):\n"
+        "    if date_format is None and orient == 'table':\n        date_format = 'iso'\n"
+        "    elif date_format is None:\n        if obj:\n"
+        "            warnings.warn(\"The default 'epoch' date format is deprecated.\", FutureWarning)\n"
+        "    elif date_format == 'epoch':\n"
+        "        warnings.warn(\"'epoch' date format is deprecated.\", FutureWarning)\n"
+        "    return obj\n\n"
+        "def shift(x, fill=None):\n    if x == 1:\n"
+        "        warnings.warn('shifting ones is deprecated.', FutureWarning)\n"
+        "    if x == 2:\n"
+        "        warnings.warn('shifting twos is deprecated.', FutureWarning)\n    return x\n\n"
+        "def at(time):\n    if isinstance(time, str):\n        try:\n            time = int(time)\n"
+        "        except ValueError:\n            warnings.warn(\n"
+        "                'The string cannot be parsed and in a future version will raise.',\n"
+        "                FutureWarning,\n            )\n    return time\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert set(found) == {("pkg.to_json", "date_format"), ("pkg.shift", None), ("pkg.at", None)}
+    to_json = found["pkg.to_json", "date_format"]
+    assert (to_json["when"], to_json["condition"]) == (WARNS_PARAMETER, "date_format == 'epoch'")
+    assert [(a["when"], a["condition"]) for a in to_json["also"]] == [
+        (WARNS_DEFAULT, "not (date_format is None and orient == 'table') and obj")
+    ]
+    assert to_json["text"] == (
+        "'epoch' date format is deprecated. The default 'epoch' date format is deprecated."
+    )
+    shift = found["pkg.shift", None]
+    assert shift["condition"] == "x == 1"
+    assert [a["condition"] for a in shift["also"]] == ["x == 2"]
+    assert found["pkg.at", None]["condition"] is None
+
+
+def test_a_property_that_warns_when_read_or_set_is_deprecated(tmp_path):
+    """pandas 3's ``BaseGroupBy.groups`` warns in its getter, matplotlib 3.10's
+    ``Figure.number`` in its setter: griffe loads a property as an attribute, so neither was
+    read. Reading (or setting) it warns (WARNS_ACCESS); only the old form of a getter is the
+    reading."""
+    old = {
+        "pkg/__init__.py": "class C:\n    @property\n    def p(self):\n        return 1\n\n"
+        "    @property\n    def q(self):\n        return 2\n\n"
+        "    @q.setter\n    def q(self, value):\n        self._q = value\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\nclass C:\n    @property\n    def p(self):\n"
+        "        warnings.warn('C.p is deprecated', FutureWarning)\n        return 1\n\n"
+        "    @property\n    def q(self):\n        return 2\n\n"
+        "    @q.setter\n    def q(self, value):\n"
+        "        warnings.warn('Setting C.q is deprecated', DeprecationWarning)\n"
+        "        self._q = value\n"
+    }
+    changes = diff(tmp_path, old, new)
+    found = warned(changes)
+    assert {k: (v["when"], v.get("access")) for k, v in found.items()} == {
+        ("pkg.C.p", None): (WARNS_ACCESS, "read"),
+        ("pkg.C.q", None): (WARNS_ACCESS, "set"),
+    }
+    by = {c.path: c for c in changes}
+    assert form(by["pkg.C.p"], ("pkg.C.p",)) == OLD_FORM
+    assert form(by["pkg.C.q"], ("pkg.C.q",)) == USES_API
+    assert by["pkg.C.q"].describe(versioned=False) == (
+        "setting `pkg.C.q` is deprecated, with a DeprecationWarning at run time: Setting C.q is "
+        "deprecated"
+    )
+
+
+def test_a_name_a_module_getattr_serves_with_a_new_warning_is_deprecated(tmp_path):
+    """A PEP 562 ``__getattr__`` that served ``Old`` in both releases (or a key of a table of
+    the module), and warns of it in the pinned one only, deprecates ``pkg.Old``; a
+    ``__new__`` that warns at every call deprecates its class, as an ``__init__`` does."""
+    old = {
+        "pkg/__init__.py": "class New:\n    pass\n\nclass Thing:\n"
+        "    def __new__(cls, *args):\n        return super().__new__(cls)\n\n"
+        "def __getattr__(name):\n    if name == 'Old':\n        return New\n"
+        "    if name in _ALIASES:\n        return New\n    raise AttributeError(name)\n\n"
+        "_ALIASES = {'Older': 'New'}\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\nclass New:\n    pass\n\nclass Thing:\n"
+        "    def __new__(cls, *args):\n"
+        "        warnings.warn('Thing is deprecated', DeprecationWarning)\n"
+        "        return super().__new__(cls)\n\n"
+        "def __getattr__(name):\n    if name == 'Old':\n"
+        "        warnings.warn('Old is deprecated, use New', DeprecationWarning)\n"
+        "        return New\n    if name in _ALIASES:\n"
+        "        warnings.warn(f'{name} is deprecated, use New', DeprecationWarning)\n"
+        "        return New\n    raise AttributeError(name)\n\n"
+        "_ALIASES = {'Older': 'New'}\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v["text"]) for k, v in found.items()} == {
+        ("pkg.Old", None): (WARNS_ACCESS, "Old is deprecated, use New"),
+        ("pkg.Older", None): (WARNS_ACCESS, "Older is deprecated, use New"),
+        ("pkg.Thing", None): (WARNS_ALWAYS, "Thing is deprecated"),
+    }
+
+
+def test_a_warning_the_release_at_the_cutoff_gave_another_way_is_not_new(tmp_path):
+    """A parameter the old release's ``@deprecate_kwarg("y")`` deprecated, and parameters a
+    helper of another name (``_check(y)``) and a private function the old one delegated to
+    warned of with the same text: the pinned release warning of them inline is no new
+    deprecation."""
+    decorators = {
+        "pkg/_decorators.py": "def deprecate_kwarg(*args, **kwargs):\n    return lambda f: f\n"
+    }
+    old = {
+        **decorators,
+        "pkg/__init__.py": "import warnings\n\nfrom pkg._decorators import deprecate_kwarg\n\n"
+        "@deprecate_kwarg('y', None)\ndef a(x, y=None):\n    return x\n\n"
+        "def _check(y):\n    if y is not None:\n"
+        "        warnings.warn('The y keyword is deprecated', FutureWarning)\n\n"
+        "def b(x, y=None):\n    _check(y)\n    return x\n\n"
+        "def _impl(x, z):\n    if z is not None:\n"
+        "        warnings.warn('The z keyword is deprecated', FutureWarning)\n    return x\n\n"
+        "def c(x, z=None):\n    return _impl(x, z)\n",
+    }
+    inline = (
+        "    if {p} is not None:\n"
+        "        warnings.warn('The {p} keyword is deprecated', FutureWarning)\n    return x\n\n"
+    )
+    new = {
+        **decorators,
+        "pkg/__init__.py": "import warnings\n\n"
+        "def a(x, y=None):\n"
+        + inline.format(p="y")
+        + "def b(x, y=None):\n"
+        + inline.format(p="y")
+        + "def c(x, z=None):\n"
+        + inline.format(p="z"),
+    }
+    assert warned(diff(tmp_path, old, new)) == {}
+
+
+def test_a_message_is_filled_from_the_constants_it_is_given(tmp_path):
+    """``"%s is deprecated" % "a"`` and ``"{name} ...".format(name="c")`` were quoted with
+    their placeholders; a template in a module constant (``_MSG.format(...)``, ``_PCT % "e"``)
+    gave no text, and ``msg += " Use `a` instead."`` was lost. A value nothing gives is
+    ``{...}``, as in an f-string."""
+    old = {"pkg/__init__.py": "".join(f"def {n}(x):\n    return x\n\n" for n in "acdefhk")}
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "_MSG = '{name} is deprecated; use {alt}'\n_PCT = '%s is deprecated'\n\n"
+        "def a(x):\n"
+        "    warnings.warn('%s is deprecated, use `new` instead' % 'a', DeprecationWarning)\n"
+        "    return x\n\n"
+        "def c(x):\n    warnings.warn(\n"
+        "        '{name} is deprecated; use {alt} instead'.format(name='c', alt='new'),\n"
+        "        DeprecationWarning,\n    )\n    return x\n\n"
+        "def h(x):\n"
+        "    warnings.warn('{} is deprecated, use {}'.format('h', 'a'), DeprecationWarning)\n"
+        "    return x\n\n"
+        "def d(x):\n"
+        "    warnings.warn(_MSG.format(name='d', alt='b'), DeprecationWarning)\n    return x\n\n"
+        "def e(x):\n    warnings.warn(_PCT % 'e', DeprecationWarning)\n    return x\n\n"
+        "def f(x):\n    msg = 'f is deprecated.'\n    msg += ' Use `a` instead.'\n"
+        "    warnings.warn(msg, DeprecationWarning)\n    return x\n\n"
+        "def k(x):\n"
+        "    warnings.warn('{} is deprecated'.format(type(x)), DeprecationWarning)\n"
+        "    return x\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k[0]: v["text"] for k, v in found.items()} == {
+        "pkg.a": "a is deprecated, use `new` instead",
+        "pkg.c": "c is deprecated; use new instead",
+        "pkg.h": "h is deprecated, use a",
+        "pkg.d": "d is deprecated; use b",
+        "pkg.e": "e is deprecated",
+        "pkg.f": "f is deprecated. Use `a` instead.",
+        "pkg.k": "{...} is deprecated",
+    }
+
+
+def test_more_ways_a_warning_is_written_are_read(tmp_path):
+    """A package's own ``AstroDeprecationWarning(AstroWarning)``, which derives from no
+    deprecation category (astropy's), counts by its name, as another package's does; a
+    message in ``textwrap.dedent(...)`` or in a constant made with ``.replace("\\n", " ")``
+    (scipy 1.18's ``anderson``) is read; a warning built before the call (``w =
+    SymDeprecationWarning(...); warnings.warn(w)``, sympy's helper) counts; one in ``p is not
+    None and warn(...)`` or ``warn(...) if p is not None else None`` is under that test."""
+    old = {
+        "pkg/__init__.py": "".join(f"def {n}(x, p=None):\n    return x\n\n" for n in "efgs")
+        + "def p1(x, p=None):\n    return x\n\ndef p2(x, p=None):\n    return x\n"
+    }
+    new = {
+        "pkg/__init__.py": "import textwrap\nimport warnings\n\n"
+        "from other import OtherDeprecationWarning\n\n"
+        "class AstroWarning(Warning):\n    pass\n\n"
+        "class AstroDeprecationWarning(AstroWarning):\n    pass\n\n"
+        "class SymDeprecationWarning(DeprecationWarning):\n"
+        "    def __init__(self, message, *, since):\n        super().__init__(message)\n\n"
+        "def sym_deprecation_warning(message, *, since):\n"
+        "    w = SymDeprecationWarning(message, since=since)\n"
+        "    warnings.warn(w, stacklevel=2)\n\n"
+        '_G = """g is\ndeprecated""".replace("\\n", " ")\n\n'
+        "def e(x, p=None):\n    warnings.warn('e is deprecated', AstroDeprecationWarning)\n"
+        "    return x\n\n"
+        "def f(x, p=None):\n    warnings.warn(\n        textwrap.dedent(\n"
+        '            """\n            f is deprecated, use h.\n            """\n'
+        "        ),\n        OtherDeprecationWarning,\n    )\n    return x\n\n"
+        "def g(x, p=None):\n    warnings.warn(_G, DeprecationWarning)\n    return x\n\n"
+        "def s(x, p=None):\n    sym_deprecation_warning('s is deprecated', since='1.14')\n"
+        "    return x\n\n"
+        "def p1(x, p=None):\n"
+        "    p is not None and warnings.warn('p is deprecated', DeprecationWarning)\n"
+        "    return x\n\n"
+        "def p2(x, p=None):\n"
+        "    warnings.warn('p is deprecated', DeprecationWarning) if p is not None else None\n"
+        "    return x\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v["category"], v["text"]) for k, v in found.items()} == {
+        ("pkg.e", None): (WARNS_ALWAYS, "AstroDeprecationWarning", "e is deprecated"),
+        ("pkg.f", None): (WARNS_ALWAYS, "OtherDeprecationWarning", "f is deprecated, use h."),
+        ("pkg.g", None): (WARNS_ALWAYS, "DeprecationWarning", "g is deprecated"),
+        ("pkg.s", None): (WARNS_ALWAYS, "SymDeprecationWarning", "s is deprecated"),
+        ("pkg.p1", "p"): (WARNS_PARAMETER, "DeprecationWarning", "p is deprecated"),
+        ("pkg.p2", "p"): (WARNS_PARAMETER, "DeprecationWarning", "p is deprecated"),
+    }
+
+
+def test_a_method_that_hands_its_call_to_its_base_and_chained_helpers(tmp_path):
+    """scikit-learn 1.7's ``LassoCV.fit`` is ``return super().fit(X, ...)``, and the private
+    base's ``fit`` warns of the constructor's ``n_alphas``: ``LassoCV(n_alphas=...)`` is
+    deprecated. sqlalchemy's ``warn_deprecated(msg, version)`` calls
+    ``_warn_with_version(msg, version, SADeprecationWarning)``, which builds ``type_(msg)`` and
+    hands it to ``_warnings_warn(message, category=None)``; that one warns under ``if category
+    is not None:``, a test of its own category, which is no guard. Three helpers deep is read;
+    four are not."""
+    old = {
+        "pkg/__init__.py": "from pkg._base import _LinearModelCV\n"
+        "from pkg.util import SADeprecationWarning\n\n"
+        "class LassoCV(_LinearModelCV):\n    def __init__(self, n_alphas=100):\n"
+        "        super().__init__(n_alphas)\n\n    def fit(self, X):\n"
+        '        """Fit."""\n        return super().fit(X)\n\n'
+        "def aliased(x):\n    return x\n\ndef direct(x):\n    return x\n\ndef deep(x):\n"
+        "    return x\n",
+        "pkg/_base.py": "class _LinearModelCV:\n    def __init__(self, n_alphas=100):\n"
+        "        self.n_alphas = n_alphas\n\n    def fit(self, X):\n        return self\n",
+        "pkg/util.py": "class SADeprecationWarning(DeprecationWarning):\n    pass\n",
+    }
+    new = {
+        "pkg/__init__.py": "from pkg._base import _LinearModelCV\n"
+        "from pkg.util import SADeprecationWarning, _warnings_warn, warn_deprecated, warn_1\n\n"
+        "class LassoCV(_LinearModelCV):\n    def __init__(self, n_alphas='deprecated'):\n"
+        "        super().__init__(n_alphas)\n\n    def fit(self, X):\n"
+        '        """Fit."""\n        return super().fit(X)\n\n'
+        "def aliased(x):\n"
+        "    warn_deprecated('aliased() on a select is deprecated', '2.0.52')\n    return x\n\n"
+        "def direct(x):\n"
+        "    _warnings_warn('direct is deprecated', SADeprecationWarning)\n    return x\n\n"
+        "def deep(x):\n    warn_1('deep is deprecated')\n    return x\n",
+        "pkg/_base.py": "import warnings\n\nclass _LinearModelCV:\n"
+        "    def __init__(self, n_alphas='deprecated'):\n        self.n_alphas = n_alphas\n\n"
+        "    def fit(self, X):\n        if self.n_alphas != 'deprecated':\n"
+        "            warnings.warn(\"'n_alphas' was deprecated in 1.7\", FutureWarning)\n"
+        "        return self\n",
+        "pkg/util.py": "import warnings\n\n"
+        "class SADeprecationWarning(DeprecationWarning):\n    pass\n\n"
+        "def _warnings_warn(message, category=None, stacklevel=2):\n"
+        "    if category is not None:\n"
+        "        warnings.warn(message, category, stacklevel=stacklevel)\n"
+        "    else:\n        warnings.warn(message, stacklevel=stacklevel)\n\n"
+        "def _warn_with_version(msg, version, type_, stacklevel):\n"
+        "    warn = type_(msg)\n    warn.deprecated_since = version\n"
+        "    _warnings_warn(warn, stacklevel=stacklevel + 1)\n\n"
+        "def warn_deprecated(msg, version, stacklevel=3):\n"
+        "    _warn_with_version(msg, version, SADeprecationWarning, stacklevel)\n\n"
+        "def warn_4(msg):\n    warnings.warn(msg, DeprecationWarning)\n\n"
+        "def warn_3(msg):\n    warn_4(msg)\n\n"
+        "def warn_2(msg):\n    warn_3(msg)\n\n"
+        "def warn_1(msg):\n    warn_2(msg)\n",
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v["category"], v["text"]) for k, v in found.items()} == {
+        ("pkg.LassoCV.__init__", "n_alphas"): (
+            WARNS_PARAMETER,
+            "FutureWarning",
+            "'n_alphas' was deprecated in 1.7",
+        ),
+        ("pkg.aliased", None): (
+            WARNS_ALWAYS,
+            "SADeprecationWarning",
+            "aliased() on a select is deprecated",
+        ),
+        ("pkg.direct", None): (WARNS_ALWAYS, "SADeprecationWarning", "direct is deprecated"),
+    }
+
+
+def test_the_guards_on_what_is_new_hold(tmp_path):
+    """The same text under another condition, with only its version changed, is not new; a
+    function a decorator deprecates and whose body warns too is one change; a parameter a
+    decorator deprecates and the body warns of is one; a warning's names of the API itself
+    are no replacement (APIChange.library_names)."""
+    decorators = (
+        "def deprecated_function(message):\n    return lambda f: f\n\n"
+        "def deprecate_kwarg(*args, **kwargs):\n    return lambda f: f\n"
+    )
+    old = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def f(a=0):\n    if a > 1:\n"
+        "        warnings.warn('f with a large a is deprecated, removed in 3.0', FutureWarning)\n"
+        "    return a\n\ndef g(x):\n    return x\n\ndef h(x, y=None):\n    return x\n\n"
+        "def k(x):\n    return x\n\ndef m(x):\n    return x\n",
+        "pkg/_decorators.py": decorators,
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "from pkg._decorators import deprecate_kwarg, deprecated_function\n\n"
+        "def f(a=0):\n    if a > 2:\n"
+        "        warnings.warn('f with a large a is deprecated, removed in 4.0', FutureWarning)\n"
+        "    return a\n\n"
+        "@deprecated_function('use k')\ndef g(x):\n"
+        "    warnings.warn('g is deprecated', FutureWarning)\n    return x\n\n"
+        "@deprecate_kwarg('y')\ndef h(x, y=None):\n    if y is not None:\n"
+        "        warnings.warn('y is deprecated', FutureWarning)\n    return x\n\n"
+        "def k(x):\n    return x\n\n"
+        "def m(x):\n    warnings.warn('`pkg.m` is deprecated, use `k` instead', FutureWarning)\n"
+        "    return x\n",
+        "pkg/_decorators.py": decorators,
+    }
+    changes = diff(tmp_path, old, new)
+    assert found(changes) == {
+        (DEPRECATED, "pkg.g", None),
+        (DEPRECATED, "pkg.h", "y"),
+        (DEPRECATED, "pkg.m", None),
+    }
+    assert {c.path: c.deprecated_by for c in changes if c.path in ("pkg.g", "pkg.h")} == {
+        "pkg.g": "deprecated_function",
+        "pkg.h": "deprecate_kwarg",
+    }
+    m = next(c for c in changes if c.path == "pkg.m")
+    assert m.library_names == ["pkg.k"]
+
+
+def test_a_method_whose_docstring_has_a_less_indented_line_is_read(tmp_path):
+    """matplotlib 3.10's ``Axes.bxp`` has a docstring line at the start of its line: the
+    method's source could not be dedented, so it was not parsed at all, and its ``vert``
+    deprecation (``else: _api.warn_deprecated(...)``) was missed."""
+    old = {"pkg/__init__.py": "class Axes:\n    def bxp(self, x, vert=None):\n        return x\n"}
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "class Axes:\n    @staticmethod\n    def _check(x):\n        return x\n\n"
+        "    @_check\n    def bxp(self, x, vert=None):\n"
+        '        """Draw a box plot.\n\nmeanprops : dict, optional\n        """\n'
+        "        if vert is None:\n            vert = True\n        else:\n"
+        "            warnings.warn('vert is deprecated', DeprecationWarning)\n"
+        "        return x\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v["at"]) for k, v in found.items()} == {
+        ("pkg.Axes.bxp", "vert"): (WARNS_PARAMETER, "pkg/__init__.py:17")
+    }

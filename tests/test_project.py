@@ -167,6 +167,49 @@ def test_requirement_include_cycles_terminate(tmp_path):
     assert [r.name for r in parse_requirements(tmp_path / "a.txt")] == ["attrs"]
 
 
+def test_requirement_includes_in_each_form_pip_takes(tmp_path):
+    # pip's option parser takes the name after -r with or without a space, and after
+    # --requirement with a space or `=`; after -r, `=` is part of the name. --require-hashes
+    # is another option, and -r or --requirement with no name includes nothing.
+    names = ["attrs", "rich", "httpx", "anthropic", "click", "idna"]
+    files = ["base.txt", "one.txt", "two.txt", "three.txt", "four.txt", "=five.txt"]
+    for name, file in zip(names, files, strict=True):
+        write(tmp_path, file, f"{name}==1.0\n")
+    write(tmp_path, "five.txt", "wrong==1.0\n")
+    write(
+        tmp_path,
+        "requirements.txt",
+        "-r base.txt\n-rone.txt\n--requirement two.txt\n--requirement=three.txt  # docs\n"
+        "-r\tfour.txt\n-r=five.txt\n--require-hashes\n-r\n--requirement\n--requirement=\n"
+        "flask==3.1.1 --hash=sha256:abc\n",
+    )
+    read = sorted(r.name for r in parse_requirements(tmp_path / "requirements.txt"))
+    assert read == sorted([*names, "flask"])
+
+
+@pytest.mark.parametrize(
+    ("line", "included"),
+    [
+        ("-r base.txt", "base.txt"),
+        ("-rbase.txt", "base.txt"),
+        ("--requirement=base.txt", "base.txt"),
+        ("-r=base.txt", "=base.txt"),
+        ("-r base.txt --pre", "base.txt"),
+        ('-r "my reqs.txt" --pre', "my reqs.txt"),
+        (r"-r reqs\base.txt", r"reqs\base.txt"),
+        ("--require-hashes", None),
+        ("--requirementx.txt", None),
+        ("--requirement=", None),
+        ("-r", None),
+        ('-r ""', None),
+        ('-r "unclosed', None),
+        ("types-requests==2.32.0", None),
+    ],
+)
+def test_the_file_a_line_includes_is_the_first_word_after_the_option(line, included):
+    assert project_module._included_file(line) == included
+
+
 def test_installed_versions_come_from_the_virtualenv(tmp_path):
     write(tmp_path, "requirements.txt", "rich\n")
     site = tmp_path / ".venv" / "lib" / "python3.12" / "site-packages"
@@ -243,6 +286,357 @@ def test_unknown_lockfile_content_is_reported(tmp_path):
     write(tmp_path, "uv.lock", "this is = = not toml")
     with pytest.raises(ProjectError, match=r"could not parse uv\.lock"):
         parse_lockfile(tmp_path / "uv.lock")
+
+
+def pins(project) -> dict[str, str | None]:
+    return {d.name: d.pinned_in for d in project.dependencies}
+
+
+def test_conda_environment_yml_pip_pins(tmp_path, caplog):
+    write(
+        tmp_path,
+        "environment.yml",
+        """
+        name: app
+        dependencies:
+          - python=3.12
+          - pandas=2.2.3
+          - pip:
+            - anthropic==1.8.0
+            - "huggingface_hub==0.30.2"
+            - requests>=2  # any 2.x
+            - my-extra[socks]==1.1.1
+            - pkg @ git+https://github.com/x/pkg.git
+            - -r extra.txt
+            - git+https://github.com/x/y.git
+            - ./local-package
+        """,
+    )
+    write(tmp_path, "extra.txt", "flask==3.1.1\n")
+    with caplog.at_level("DEBUG", logger="since_cutoff.project"):
+        project = load_project(tmp_path)
+    v = versions(project)
+    assert project.version_source == "environment.yml, latest on PyPI for 1 unpinned"
+    assert v["anthropic"] == ("1.8.0", True, "pinned")
+    assert v["huggingface-hub"] == ("0.30.2", True, "pinned")
+    assert v["my-extra"] == ("1.1.1", True, "pinned")
+    assert pins(project)["anthropic"] == "environment.yml"
+    # An unpinned line is declared like one in requirements.txt: its range is looked up.
+    [requests] = [d for d in project.dependencies if d.name == "requests"]
+    assert (requests.version, requests.specifier) == (None, ">=2")
+    # A direct reference is not looked up on PyPI by name.
+    [pkg] = [d for d in project.dependencies if d.name == "pkg"]
+    assert pkg.non_pypi == "git+https://github.com/x/pkg.git"
+    # An include is followed; its packages are labelled with the environment file.
+    assert v["flask"] == ("3.1.1", True, "pinned")
+    assert pins(project)["flask"] == "environment.yml"
+    # Local paths and bare URLs are not packages.
+    assert not {"extra", "r", "y", "local-package"} & set(v)
+    # Conda packages are not Python dependencies from PyPI.
+    assert "pandas" not in v and "python" not in v
+    assert "environment.yml: 2 conda packages are not read, as they do not" in caplog.text
+    assert "environment.yml: './local-package' in the pip block is not read" in caplog.text
+    assert project.warnings == []
+
+
+def test_a_quoted_comment_in_the_pip_block_is_a_comment(tmp_path):
+    # Quoted, `#` is part of the YAML string; pip still reads `  # ...` as a comment.
+    write(
+        tmp_path,
+        "environment.yml",
+        """
+        dependencies:
+          - pip:
+            - "anthropic==1.8.0  # the version the API notes are for"
+            - 'rich==13.7.1 # pinned'
+            - "x  # note"
+        """,
+    )
+    project = load_project(tmp_path)
+    assert versions(project) == {
+        "anthropic": ("1.8.0", True, "pinned"),
+        "rich": ("13.7.1", True, "pinned"),
+        "x": (None, True, "unpinned"),
+    }
+
+
+def test_a_file_the_pip_block_includes_is_read_relative_to_the_environment_file(tmp_path):
+    # The pip block installs only through includes, in each form pip takes, here of files
+    # that are not requirements*.txt and so not read on their own; the include's own includes
+    # are relative to it, as in any requirements file.
+    write(
+        tmp_path,
+        "environment.yml",
+        """
+        dependencies:
+          - python=3.12
+          - pip:
+            - -r envs/pip.txt
+            - --requirement envs/test.txt
+            - --requirement=envs/docs.txt
+            - -renvs/lint.txt
+        """,
+    )
+    write(tmp_path, "envs/pip.txt", "-r base.txt\nanthropic==1.8.0\n")
+    write(tmp_path, "envs/base.txt", "rich==13.7.1\n")
+    write(tmp_path, "envs/test.txt", "pytest>=8\n")
+    write(tmp_path, "envs/docs.txt", "mkdocs==1.6.1\n")
+    write(tmp_path, "envs/lint.txt", "ruff==0.14.0\n")
+    project = load_project(tmp_path)
+    assert versions(project) == {
+        "anthropic": ("1.8.0", True, "pinned"),
+        "mkdocs": ("1.6.1", True, "pinned"),
+        "pytest": (None, True, "unpinned"),
+        "rich": ("13.7.1", True, "pinned"),
+        "ruff": ("0.14.0", True, "pinned"),
+    }
+    assert pins(project) == {
+        "anthropic": "environment.yml",
+        "mkdocs": "environment.yml",
+        "pytest": None,
+        "rich": "environment.yml",
+        "ruff": "environment.yml",
+    }
+    assert project.version_source == "environment.yml, latest on PyPI for 1 unpinned"
+    assert project.warnings == []
+
+
+def test_a_file_the_pip_block_includes_that_does_not_exist_is_one_warning(tmp_path):
+    write(
+        tmp_path,
+        "environment.yml",
+        """
+        dependencies:
+          - pip:
+            - -r requirements-x.txt
+            - rich==13.7.1
+            - -r requirements-x.txt  # named twice, warned about once
+            - -r https://example.com/requirements.txt
+        """,
+    )
+    project = load_project(tmp_path)
+    assert versions(project) == {"rich": ("13.7.1", True, "pinned")}
+    assert project.warnings == [
+        "the pip block of environment.yml includes requirements-x.txt, which does not exist"
+    ]
+
+
+def test_a_pip_block_that_only_includes_a_missing_file_says_so(tmp_path):
+    write(tmp_path, "environment.yml", "dependencies:\n  - pip:\n    - -r requirements-x.txt\n")
+    with pytest.raises(ProjectError) as error:
+        load_project(tmp_path)
+    assert str(error.value).endswith(
+        " environment.yml has no package in its pip block, and its conda packages are not read: "
+        "they do not come from PyPI. The pip block of environment.yml includes "
+        "requirements-x.txt, which does not exist."
+    )
+
+
+def test_includes_that_go_round_in_a_circle_are_read_once(tmp_path):
+    # a.txt and b.txt include each other, and b.txt the environment file, which is not read as
+    # a requirements file: the line of its description would be a requirement.
+    write(
+        tmp_path,
+        "environment.yml",
+        """
+        description: |
+          attrs==21.1.0
+        dependencies:
+          - pip:
+            - -r a.txt
+            - -r b.txt
+            - -r c.txt
+        """,
+    )
+    write(tmp_path, "a.txt", "-r b.txt\nanthropic==1.8.0\n")
+    write(tmp_path, "b.txt", "-r a.txt\n-r environment.yml\nrich==13.7.1\n")
+    # An include of a name the system cannot hold (which Python 3.10 refuses to resolve) is
+    # skipped like a missing one.
+    (tmp_path / "c.txt").write_bytes(b"-r d\x00e.txt\nhttpx==0.28.1\n")
+    project = load_project(tmp_path)
+    assert versions(project) == {
+        "anthropic": ("1.8.0", True, "pinned"),
+        "httpx": ("0.28.1", True, "pinned"),
+        "rich": ("13.7.1", True, "pinned"),
+    }
+    assert project.warnings == []
+
+
+def test_conda_environment_yaml_also_works(tmp_path):
+    write(tmp_path, "environment.yaml", "name: app\ndependencies:\n  - pip:\n    - rich==13.7.1\n")
+    project = load_project(tmp_path)
+    assert versions(project)["rich"] == ("13.7.1", True, "pinned")
+    assert pins(project)["rich"] == "environment.yaml"
+    assert project.version_source == "environment.yaml"
+    # environment.yml, conda's default name, is the one read when both are there.
+    write(tmp_path, "environment.yml", "dependencies:\n  - pip:\n    - attrs==25.1.0\n")
+    assert set(versions(load_project(tmp_path))) == {"attrs"}
+
+
+def test_a_pip_pin_next_to_an_empty_venv_is_labelled_with_the_environment_file(tmp_path):
+    (tmp_path / ".venv").mkdir()
+    write(tmp_path, "environment.yml", "dependencies:\n  - pip:\n    - anthropic==1.8.0\n")
+    project = load_project(tmp_path)
+    assert versions(project) == {"anthropic": ("1.8.0", True, "pinned")}
+    assert pins(project) == {"anthropic": "environment.yml"}
+    assert project.version_source == "environment.yml"
+    assert project.versions_word == "environment.yml"
+
+
+def test_a_pip_pin_missing_from_the_venv_is_labelled_with_the_environment_file(tmp_path):
+    write(
+        tmp_path,
+        "environment.yml",
+        "dependencies:\n  - pip:\n    - rich==13.7.1\n    - anthropic==1.8.0\n",
+    )
+    write(tmp_path, ".venv/pyvenv.cfg", "home = /usr\n")
+    write(
+        tmp_path / ".venv" / "lib" / "python3.12" / "site-packages",
+        "rich-14.0.0.dist-info/METADATA",
+        "Metadata-Version: 2.1\nName: rich\nVersion: 14.0.0\n\nbody\n",
+    )
+    project = load_project(tmp_path)
+    assert versions(project) == {
+        "anthropic": ("1.8.0", True, "pinned"),
+        "rich": ("14.0.0", True, "installed"),
+    }
+    assert pins(project) == {"anthropic": "environment.yml", "rich": None}
+    assert project.version_source == ".venv, environment.yml for 1 not in it"
+
+
+def test_a_requirements_file_the_pip_block_includes_keeps_its_own_label(tmp_path):
+    # requirements.txt is read on its own too, first: its pin keeps its name.
+    write(tmp_path, "requirements.txt", "attrs==25.1.0\n")
+    write(
+        tmp_path,
+        "environment.yml",
+        "dependencies:\n  - pip:\n    - -r requirements.txt\n    - rich==13.7.1\n",
+    )
+    project = load_project(tmp_path)
+    assert pins(project) == {"attrs": "requirements.txt", "rich": "environment.yml"}
+    assert project.version_source == "environment.yml, requirements.txt"
+
+
+def test_conda_environment_without_pip_pins_is_a_clear_error(tmp_path):
+    write(
+        tmp_path,
+        "environment.yml",
+        "name: app\ndependencies:\n  - python=3.12\n  - numpy=1.26\n",
+    )
+    with pytest.raises(ProjectError) as error:
+        load_project(tmp_path)
+    assert "reads pyproject.toml, requirements*.txt, Pipfile, the pip block of a conda " in str(
+        error.value
+    )
+    assert str(error.value).endswith(
+        " environment.yml has no package in its pip block, and its conda packages are not read: "
+        "they do not come from PyPI."
+    )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "",
+        "just text\n",
+        "- a list\n",
+        "dependencies: 3\n",
+        "dependencies:\n  - pip:\n",
+        "dependencies:\n  - pip: rich==13.7.1\n",
+        "dependencies:\n  - pip:\n    - 3\n    - [rich==13.7.1]\n",
+    ],
+)
+def test_a_conda_environment_without_a_pip_list_has_no_dependencies(tmp_path, text):
+    write(tmp_path, "environment.yml", text)
+    with pytest.raises(ProjectError, match="no dependencies found"):
+        load_project(tmp_path)
+
+
+def test_the_entries_of_a_conda_environment_are_not_expanded(tmp_path, caplog):
+    # Aliases nested four deep: an entry that is a list of 9**4 strings. Nested nine deep, a
+    # reader that turned the entries into text would build 9**9 and never finish; four deep it
+    # finishes at once, and counts 2 conda packages (or 6562), not the 1 there is.
+    lines = ['a0: &a0 ["x", "x", "x", "x", "x", "x", "x", "x", "x"]']
+    lines += [f"a{i}: &a{i} [{', '.join([f'*a{i - 1}'] * 9)}]" for i in range(1, 4)]
+    lines.append('dependencies: ["python=3.12", *a3, {pip: ["rich==13.7.1"]}]')
+    write(tmp_path, "environment.yml", "\n".join(lines) + "\n")
+    with caplog.at_level("DEBUG", logger="since_cutoff.project"):
+        project = load_project(tmp_path)
+    assert versions(project) == {"rich": ("13.7.1", True, "pinned")}
+    assert (
+        "environment.yml: 1 conda package is not read, as it does not come from PyPI: "
+        "python=3.12\n" in caplog.text
+    )
+
+
+def test_a_pip_block_its_aliases_repeat_is_read_once(tmp_path):
+    # 2,000 aliases of an entry with a 1,000-line pip block, and 1,000 entries that alias its
+    # list, in 38 KiB: read once for each, they were 3,000,000 requirements, built in 35 s.
+    pip = ", ".join(f"p{i}==1.0" for i in range(1000))
+    text = f"base: &e {{pip: &l [{pip}]}}\ndependencies:\n"
+    text += "  - *e\n" * 2000 + "  - {pip: *l}\n" * 1000 + "  - pip: [rich==13.7.1]\n"
+    (tmp_path / "environment.yml").write_text(text, encoding="utf-8")
+    reqs, notices = project_module._conda_pip(tmp_path / "environment.yml")
+    assert len(reqs) == 1001
+    assert {r.name for r in reqs} == {*(f"p{i}" for i in range(1000)), "rich"}
+    assert notices == []
+
+
+def test_a_pip_block_is_read_up_to_its_cap_with_a_warning(tmp_path, monkeypatch):
+    monkeypatch.setattr(project_module, "CONDA_PIP_LINES", 3)
+    write(
+        tmp_path,
+        "environment.yml",
+        "dependencies:\n  - pip: [attrs==25.1.0, rich==13.7.1]\n"
+        "  - pip: [httpx==0.28.1, anthropic==1.8.0]\n",
+    )
+    project = load_project(tmp_path)
+    assert set(versions(project)) == {"attrs", "httpx", "rich"}
+    assert project.warnings == [
+        "the pip block of environment.yml has more than 3 lines, and only the first 3 are read"
+    ]
+
+
+def test_a_pip_block_of_exactly_its_cap_is_read_whole(tmp_path, monkeypatch):
+    monkeypatch.setattr(project_module, "CONDA_PIP_LINES", 3)
+    write(
+        tmp_path,
+        "environment.yml",
+        "dependencies:\n  - pip: [attrs==25.1.0, rich==13.7.1]\n  - pip: [httpx==0.28.1]\n",
+    )
+    project = load_project(tmp_path)
+    assert set(versions(project)) == {"attrs", "httpx", "rich"}
+    assert project.warnings == []
+
+
+@pytest.mark.parametrize(
+    ("text", "problem"),
+    [
+        (
+            "dependencies:\n  - pip:\n   - unpinned\n - bad\n",
+            "expected <block end>, but found '<block sequence start>' (line 3, column 4)",
+        ),
+        ("created: 2026-13-01\n", "month must be in 1..12"),
+        ("dependencies: !!int x\n", "invalid literal for int() with base 10: 'x'"),
+    ],
+)
+def test_conda_environment_malformed_yml_is_reported(tmp_path, text, problem):
+    write(tmp_path, "environment.yml", text)
+    with pytest.raises(ProjectError) as error:
+        load_project(tmp_path)
+    assert str(error.value) == f"could not parse environment.yml: {problem}"
+
+
+def test_lockfile_wins_over_conda_environment(tmp_path):
+    write(tmp_path, "requirements.txt", "attrs\n")
+    write(tmp_path, "environment.yml", "dependencies:\n  - pip:\n    - attrs==21.1.0\n")
+    write(tmp_path, "pylock.toml", '[[packages]]\nname = "attrs"\nversion = "25.1.0"\n')
+    project = load_project(tmp_path)
+    assert versions(project)["attrs"] == ("25.1.0", True, "pylock.toml")
+    assert project.warnings == [
+        "1 versions in pylock.toml disagree with the pinned requirements (attrs 25.1.0 vs "
+        "==21.1.0); the versions from pylock.toml are checked"
+    ]
 
 
 # A poetry.lock from 2020 next to pip-compile's requirements.txt (pypistats.org): the project

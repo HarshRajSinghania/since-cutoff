@@ -1,8 +1,9 @@
 """Discover a Python project's dependencies and the exact versions it uses.
 
 Version sources, most authoritative first: a lockfile (uv.lock, poetry.lock, pdm.lock,
-pylock.toml, Pipfile.lock), the project's virtual environment, pinned requirement files, and
-finally "latest release on PyPI" for anything that is declared but not pinned.
+pylock.toml, Pipfile.lock), the project's virtual environment, pinned requirement files (and
+the pip block of a conda environment file), and finally "latest release on PyPI" for anything
+that is declared but not pinned.
 
 Dependencies that do not come from PyPI (git, local paths, workspace members, private indexes)
 are recorded but never looked up on PyPI by name.
@@ -14,6 +15,7 @@ import ast
 import builtins
 import codecs
 import json
+import logging
 import re
 import sys
 import warnings
@@ -41,6 +43,8 @@ if sys.version_info >= (3, 11):
 else:  # pragma: no cover
     import tomli as tomllib
 
+log = logging.getLogger(__name__)
+
 SKIP_DIRS = {
     ".git",
     ".hg",
@@ -62,6 +66,11 @@ SKIP_DIRS = {
 }
 LOCKFILES = ("uv.lock", "poetry.lock", "pdm.lock", "pylock.toml", "Pipfile.lock")
 VENV_DIRS = (".venv", "venv", "env", ".env")
+# The conda environment files: the first one found is read, its pip block only (_conda_pip).
+CONDA_ENV_FILES = ("environment.yml", "environment.yaml")
+# The most lines of a conda environment file's pip block that are read; the rest are not,
+# with a warning. A real block has tens; YAML aliases let a short file hold millions.
+CONDA_PIP_LINES = 10_000
 PYPI_HOSTS = ("pypi.org", "files.pythonhosted.org", "pypi.python.org")
 # The version source of a project where nothing pins a version: the scan takes each
 # dependency's latest release on PyPI.
@@ -186,7 +195,7 @@ def load_project(root: Path, *, python: str | None = None) -> Project:
     local = {name: reason for name, reason in found.local.items() if name not in workspace}
     lock = _Lock()
     version_source = ""
-    notices: list[str] = []
+    notices = list(found.warnings)
     lockfile = next((root / n for n in LOCKFILES if (root / n).is_file()), None)
     if lockfile is None:
         pylocks = sorted(root.glob("pylock.*.toml"))
@@ -224,7 +233,7 @@ def load_project(root: Path, *, python: str | None = None) -> Project:
     if not direct_names and installed:
         direct_names = set(installed)
     if not direct_names and not local:
-        raise ProjectError(_no_dependencies(root))
+        raise ProjectError(_no_dependencies(root, found.warnings))
 
     deps: list[Dependency] = []
     for key in sorted(
@@ -294,14 +303,23 @@ def _mixed_source(main: str, deps: list[Dependency], pinned_in: dict[str, str]) 
     return ", ".join(parts)
 
 
-def _no_dependencies(root: Path) -> str:
+def _no_dependencies(root: Path, notices: list[str]) -> str:
     """The error for a project without dependencies it can read, naming what it can read and
-    the setup.py or setup.cfg it does not (running setup.py would run the project's code)."""
+    the setup.py or setup.cfg it does not (running setup.py would run the project's code), the
+    conda packages of an environment.yml without a pip block, and what the scan would have
+    warned about (a file the pip block includes that does not exist)."""
     text = (
         f"no dependencies found in {root}. since-cutoff reads pyproject.toml, requirements*.txt, "
-        "Pipfile, a lockfile (uv.lock, poetry.lock, pdm.lock, pylock.toml, Pipfile.lock) or a "
-        "virtual environment (.venv)."
+        "Pipfile, the pip block of a conda environment.yml, a lockfile (uv.lock, poetry.lock, "
+        "pdm.lock, pylock.toml, Pipfile.lock) or a virtual environment (.venv)."
     )
+    conda_env = _conda_env_file(root)
+    if conda_env is not None:
+        text += (
+            f" {conda_env.name} has no package in its pip block, and its conda packages are not "
+            "read: they do not come from PyPI."
+        )
+    text += "".join(f" {n[:1].upper()}{n[1:]}." for n in notices)
     legacy = [name for name in ("setup.py", "setup.cfg") if (root / name).is_file()]
     if legacy:
         text += (
@@ -573,6 +591,9 @@ class _Declared(NamedTuple):
     indirect: set[str]
     # Whether a requirements file is pip-compile output, which pins the whole tree.
     compiled: bool
+    # What the scan should say about the files read: a file that the pip block of
+    # environment.yml includes and that does not exist, a pip block too long to read whole.
+    warnings: list[str]
 
 
 def _declared_dependencies(root: Path, python: str | None = None) -> _Declared:
@@ -631,6 +652,16 @@ def _declared_dependencies(root: Path, python: str | None = None) -> _Declared:
             is_direct = roles is None or roles.get(canonicalize_name(req.name), True)
             add(req, req_file.relative_to(root).as_posix(), is_direct)
 
+    notices: list[str] = []
+    conda_env = _conda_env_file(root)
+    if conda_env is not None:
+        # The packages of a file the pip block includes are labelled with the environment
+        # file, as those a requirements file includes are with the requirements file; a
+        # requirements*.txt read above keeps its own name, as the first of equal pins wins.
+        reqs, notices = _conda_pip(conda_env)
+        for req in reqs:
+            add(req, conda_env.name)
+
     out: dict[str, str | None] = {}
     pinned_in: dict[str, str] = {}
     ranges: dict[str, str] = {}
@@ -652,7 +683,7 @@ def _declared_dependencies(root: Path, python: str | None = None) -> _Declared:
             allowed &= r.specifier
         if str(allowed):
             ranges[key] = str(allowed)
-    return _Declared(out, local, pinned_in, ranges, set(found) - direct, compiled)
+    return _Declared(out, local, pinned_in, ranges, set(found) - direct, compiled, notices)
 
 
 # The Python that environment markers are evaluated for when the project names none: newer
@@ -795,7 +826,10 @@ def _requirement_files(root: Path) -> list[Path]:
 def parse_requirements(path: Path, _seen: set[Path] | None = None) -> list[Requirement]:
     """Parse a pip requirements file, following ``-r`` includes. Unsupported lines are skipped."""
     seen = _seen if _seen is not None else set()
-    path = path.resolve()
+    try:
+        path = path.resolve()
+    except (OSError, ValueError):  # a name the system cannot hold: ``-r a<NUL>b`` on 3.10
+        return []
     if path in seen or not path.is_file():
         return []
     seen.add(path)
@@ -805,17 +839,148 @@ def parse_requirements(path: Path, _seen: set[Path] | None = None) -> list[Requi
         line = re.sub(r"(^|\s+)#.*$", "", raw).strip()  # pip's comment rule
         if not line:
             continue
-        if line.startswith(("-r ", "--requirement ", "-r\t")):
-            out += parse_requirements(path.parent / line.split(None, 1)[1].strip(), seen)
+        include = _included_file(line)
+        if include is not None:
+            out += parse_requirements(path.parent / include, seen)
             continue
-        if line.startswith("-") or line.startswith((".", "/")):
-            continue
-        line = re.split(r"\s+--hash", line, maxsplit=1)[0].strip()
-        try:
-            out.append(Requirement(line))
-        except InvalidRequirement:
-            continue
+        req = _requirement_line(line)
+        if req is not None:
+            out.append(req)
     return out
+
+
+# An include in a requirements file: ``-r`` with or without a space (``-r base.txt``,
+# ``-rbase.txt``) and ``--requirement`` with a space or ``=``. As for pip, what follows ``-r``
+# is the name (``-r=base.txt`` names ``=base.txt``), the name is the first word after the
+# option, quoted if it has spaces (``-r base.txt --pre`` names base.txt), and
+# ``--require-hashes`` is another option. pip's abbreviations (``--requirem``) are not read.
+_INCLUDE = re.compile(r"(?:-r\s*|--requirement(?:=|\s+))(\S.*)")
+
+
+def _included_file(line: str) -> str | None:
+    """The file a line of a requirements file, its comment removed, includes (``-r
+    base.txt``, ``--requirement=base.txt``), or None for any other line."""
+    match = _INCLUDE.fullmatch(line)
+    if not match:
+        return None
+    rest = match.group(1)
+    if not rest.startswith(("'", '"')):
+        return rest.split(None, 1)[0]  # a Windows path keeps its backslashes
+    import shlex
+
+    try:
+        return shlex.split(rest)[0] or None
+    except ValueError:  # an unclosed quote: pip refuses the line
+        return None
+
+
+def _requirement_line(line: str) -> Requirement | None:
+    """A line of a requirements file, its comment removed, as a requirement: None for an option
+    (``-e .``, ``--index-url ...``), a local path or a line that is no requirement."""
+    if line.startswith("-") or line.startswith((".", "/")):
+        return None
+    line = re.split(r"\s+--hash", line, maxsplit=1)[0].strip()
+    try:
+        return Requirement(line)
+    except InvalidRequirement:
+        return None
+
+
+def _conda_env_file(root: Path) -> Path | None:
+    """The project's conda environment file: environment.yml, else environment.yaml."""
+    return next((root / name for name in CONDA_ENV_FILES if (root / name).is_file()), None)
+
+
+def _conda_pip(path: Path) -> tuple[list[Requirement], list[str]]:
+    """The requirements in the pip block of a conda environment file (``- pip:`` under
+    ``dependencies:``), each line read as a line of a requirements file, and what the scan
+    should say about the block: each file it includes that does not exist, and that only its
+    first CONDA_PIP_LINES lines are read when it has more.
+
+    An include (``-r requirements-x.txt``) is followed relative to the environment file, next
+    to which conda writes the block for pip to read, and the file is read like a requirements
+    file, its own includes too; an include of a file already read, the environment file among
+    them, is not read again. The conda packages around it (``python=3.12``, ``numpy=1.26``)
+    are not read: they come from conda's channels, not PyPI. Nor are other options (``-e .``),
+    an include from a URL, local paths and lines that are no requirement (a bare
+    ``git+https://...`` URL). A pip block that YAML aliases repeat (``- *e``) is read once. A
+    document that is no mapping, or has no pip block, holds none; a file that is not YAML is
+    refused like a broken lockfile.
+    """
+    import yaml  # only a project with a conda environment file pays for PyYAML
+
+    try:
+        data = yaml.safe_load(_read_text(path))
+    except (yaml.YAMLError, ValueError, RecursionError) as exc:
+        # ValueError: a scalar its tag cannot hold (``2026-13-01``, ``!!int x``).
+        raise ProjectError(f"could not parse {path.name}: {_yaml_problem(exc)}") from exc
+    conda: list[str] = []
+    pip_lines: list[str] = []
+    # The id() of each pip list read. An alias is the object its anchor made, not a copy, so
+    # 2,000 aliases of a 1,000-line block would be read as 2,000,000 lines; an aliased entry
+    # holds the same list, and the lists stay alive in ``data``, so no id is reused.
+    read: set[int] = set()
+    for entry in _array(_table(data).get("dependencies")):
+        if not isinstance(entry, dict):
+            # Only a string is a conda package (``numpy=1.26``); anything else, such as a list
+            # its aliases make huge, is not turned into text.
+            if isinstance(entry, str):
+                conda.append(entry)
+            continue
+        pip = entry.get("pip")
+        if not isinstance(pip, list) or id(pip) in read:
+            continue
+        read.add(id(pip))
+        pip_lines += (raw for raw in pip if isinstance(raw, str))
+        if len(pip_lines) > CONDA_PIP_LINES:
+            break
+    notices: list[str] = []
+    if len(pip_lines) > CONDA_PIP_LINES:
+        del pip_lines[CONDA_PIP_LINES:]
+        notices.append(
+            f"the pip block of {path.name} has more than {CONDA_PIP_LINES:,} lines, and only "
+            f"the first {CONDA_PIP_LINES:,} are read"
+        )
+    out: list[Requirement] = []
+    missing: dict[str, None] = {}  # in the order they are named, each once
+    seen = {path.resolve()}
+    for raw in pip_lines:
+        line = re.sub(r"(^|\s+)#.*$", "", raw).strip()  # pip's comment rule
+        include = _included_file(line)
+        if include is not None and "://" not in include:
+            if (path.parent / include).is_file():
+                out += parse_requirements(path.parent / include, seen)
+            else:
+                missing[include] = None
+            continue
+        req = _requirement_line(line) if line else None
+        if req is not None:
+            out.append(req)
+        elif line:
+            log.debug("%s: %r in the pip block is not read", path.name, line)
+    notices += [
+        f"the pip block of {path.name} includes {name}, which does not exist" for name in missing
+    ]
+    if conda:
+        log.debug(
+            "%s: %d conda %s not read, as %s not come from PyPI: %s%s",
+            path.name,
+            len(conda),
+            "package is" if len(conda) == 1 else "packages are",
+            "it does" if len(conda) == 1 else "they do",
+            ", ".join(conda[:10]),
+            ", ..." if len(conda) > 10 else "",
+        )
+    return out, notices
+
+
+def _yaml_problem(exc: Exception) -> str:
+    """What is wrong with a YAML document, on one line: ``expected <block end>, but found
+    '<block sequence start>' (line 3, column 4)``."""
+    problem, mark = getattr(exc, "problem", None), getattr(exc, "problem_mark", None)
+    if problem and mark is not None:
+        return f"{problem} (line {mark.line + 1}, column {mark.column + 1})"
+    return " ".join(str(exc).split()) or type(exc).__name__
 
 
 _VIA = re.compile(r"#\s*via\b:?\s*(.*)")

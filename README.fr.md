@@ -853,7 +853,10 @@ entière, avec un lien vers le résumé du job. Le commentaire est retrouvé gr�
 caché, `<!-- since-cutoff:pr-comment -->` pour la racine du projet et
 `<!-- since-cutoff:pr-comment:DIR -->` pour un `working-directory`, si bien que deux étapes qui
 analysent deux projets gardent chacune leur commentaire ; s'il y en a deux pour un même projet,
-c'est le plus récent qui est modifié.
+c'est le plus récent qui est modifié. Le texte des bibliothèques elles-mêmes dans le résumé (un
+message de dépréciation, par exemple) ne mentionne personne et ne lie aucune issue : hors du
+code, un `@nom` ou un `#N` reçoit une espace de largeur nulle, et un lien vers une issue ou une
+pull request GitHub passe par redirect.github.com.
 
 Sorties : `changed-packages` (liste séparée par des virgules), `changes` (changements
 incompatibles), `deprecations`, `markdown` (le chemin du résumé, par exemple pour une étape à

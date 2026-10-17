@@ -488,7 +488,7 @@ jobs:
           pr-comment: true
 ```
 
-来自 fork 的 pull request 的 token 只能读取，这时这一步只打印一条提示（notice），摘要只出现在任务摘要中；在其他事件（例如 push）上它不发布任何内容。不要为了在 fork 的 pull request 上也得到评论而在 `pull_request_target` 上检出 pull request 的 head 来运行它：那样会用一个能写入你仓库的 token 运行 fork 的代码（而且对 fork 的 pull request，这一步在那里同样不发布任何内容）。超过评论长度上限（65,536 个字符）的摘要会在完整的一行之后截断，并附上指向任务摘要的链接。评论通过一个隐藏标记来识别：项目根目录是 `<!-- since-cutoff:pr-comment -->`，`working-directory` 是 `<!-- since-cutoff:pr-comment:DIR -->`，所以扫描两个项目的两个步骤各自保留一条评论；同一个项目有两条时，编辑最新的那条。
+来自 fork 的 pull request 的 token 只能读取，这时这一步只打印一条提示（notice），摘要只出现在任务摘要中；在其他事件（例如 push）上它不发布任何内容。不要为了在 fork 的 pull request 上也得到评论而在 `pull_request_target` 上检出 pull request 的 head 来运行它：那样会用一个能写入你仓库的 token 运行 fork 的代码（而且对 fork 的 pull request，这一步在那里同样不发布任何内容）。超过评论长度上限（65,536 个字符）的摘要会在完整的一行之后截断，并附上指向任务摘要的链接。评论通过一个隐藏标记来识别：项目根目录是 `<!-- since-cutoff:pr-comment -->`，`working-directory` 是 `<!-- since-cutoff:pr-comment:DIR -->`，所以扫描两个项目的两个步骤各自保留一条评论；同一个项目有两条时，编辑最新的那条。摘要中库自己的文字（例如弃用消息）不会提及任何人，也不会链接任何 issue：在代码之外，`@名字` 或 `#N` 会加上一个零宽空格，指向 GitHub issue 或 pull request 的链接会经由 redirect.github.com。
 
 输出：`changed-packages`（逗号分隔）、`changes`（破坏性变更数）、`deprecations`、`markdown`（摘要文件的路径，例如供你自己的步骤使用）、`report`（完整报告的路径），以及设置 `check-notes` 时的 `notes`（`up-to-date`、`out-of-date`、`edited-by-hand` 或 `error`）。能通过多个导入路径访问的同一个变更只计一次。
 

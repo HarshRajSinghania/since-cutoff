@@ -14,8 +14,13 @@
   that says why, never a failed job. A summary longer than a comment can be (65,536 characters)
   is cut after a whole line, a code fence it was cut in closed, then its open `<details>`, with a
   link to the job summary. The step runs before the one that fails the job, so a failing scan
-  still updates the comment. CI posts and edits the comment for real on this repository's own
-  pull requests.
+  still updates the comment. The Markdown summary (`--markdown`, so the job summary and the
+  comment) quotes the libraries' text without pinging anyone: outside code spans and fences, an
+  `@name`, a `#N` and a `GH-N` get a zero-width space, as Dependabot's do, and links to GitHub
+  issues, pull requests and discussions go through redirect.github.com, so that a deprecation
+  message that links an issue of PyTorch's adds nothing to that issue. CI posts and edits the
+  comment for real on this repository's own pull requests, with the token in the env of the steps
+  that call `gh` only and not kept by checkout.
 - A Docker image on each release (#35): `ghcr.io/mohammadhijjawi97/since-cutoff:X.Y.Z` and
   `:latest`, for linux/amd64 and linux/arm64, for GitLab CI, Jenkins, Buildkite and other CI that
   runs tools from containers (`docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/src" IMAGE scan

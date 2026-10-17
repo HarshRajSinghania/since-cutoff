@@ -800,7 +800,10 @@ there for a fork either). A summary longer than a comment can be (65,536 charact
 after a whole line, with a link to the job summary. The comment is found again by a hidden
 marker, `<!-- since-cutoff:pr-comment -->` for the project root and
 `<!-- since-cutoff:pr-comment:DIR -->` for a `working-directory`, so two steps scanning two
-projects keep a comment each; if there are two for one project, the newest is edited.
+projects keep a comment each; if there are two for one project, the newest is edited. The
+libraries' own text in the summary (a deprecation message, say) mentions no one and links no
+issue: outside code, an `@name` or a `#N` gets a zero-width space, and a link to a GitHub issue
+or pull request goes through redirect.github.com.
 
 Outputs: `changed-packages` (comma-separated), `changes` (breaking changes), `deprecations`,
 `markdown` (the summary's path, for example for a step of your own), `report` (the full

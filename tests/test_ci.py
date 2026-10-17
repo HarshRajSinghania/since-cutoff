@@ -675,6 +675,53 @@ def test_pr_comment_dry_run_writes_the_call_and_the_comment_to_a_file(tmp_path) 
     assert not step.body.exists()
 
 
+def test_pr_comment_mentions_no_one_and_links_no_issue(tmp_path, cache, fake_pypi) -> None:
+    # A library's deprecation text, posted on someone's pull request by github-actions[bot]:
+    # its @name would notify that GitHub user, its #N link the pull request's own issue N, and
+    # its link to a GitHub issue add "mentioned this" to that issue (torch.testing's
+    # assert_allclose links pytorch#61844). In code, GitHub links nothing, so it stays as it is.
+    scan = scan_app(make_app(tmp_path), cache, fake_pypi, date(2025, 7, 31))
+    deprecated = next(c for p in scan.packages for c in p.distinct if c.kind == DEPRECATED)
+    deprecated.deprecation = (
+        "use @field_validator instead (`@validator` in 1.x), see #1234, GH-12, pytorch/pytorch#7 "
+        "and https://github.com/pytorch/pytorch/issues/61844, or mail dev@example.com"
+    )
+    step = _CommentStep(tmp_path)
+    step.summary(render_scan_markdown(scan))
+    step.run()
+    posted = step.posted()
+    assert (
+        "use @&#8203;field_validator instead (`@validator` in 1.x), see #&#8203;1234, "
+        "GH-&#8203;12, pytorch/pytorch#&#8203;7 and "
+        "https://redirect.github.com/pytorch/pytorch/issues/61844, or mail dev@example.com"
+    ) in posted
+    assert "github.com/pytorch" not in posted.replace("redirect.github.com/pytorch", "")
+    # The marker, the links to the repository and the footer are as they were.
+    assert posted.startswith(MARKER + "\n## since-cutoff scan\n")
+    assert f"({RUN_URL})).</sub>" in posted
+
+
+def test_markdown_summary_leaves_code_and_links_as_they_are() -> None:
+    from since_cutoff.report import quiet_on_github
+
+    kept = [
+        "```markdown\n- @inside a #1 fence\n```",
+        "`@code #1` and ``a ` @b #2`` and https://pypi.org/project/x/@y#1 and a@b.com",
+        "https://github.com/o/r/blob/abc/main.py and https://notgithub.com/o/r/issues/1",
+        "## since-cutoff scan, &#8203; &#x27;, C#, #x",
+    ]
+    for text in kept:
+        assert quiet_on_github(text) == text
+    assert quiet_on_github("`open @a and [@b](https://www.github.com/o/r/pull/3#c)") == (
+        "`open @&#8203;a and [@&#8203;b](https://redirect.github.com/o/r/pull/3#c)"
+    )
+    assert quiet_on_github("~~~\n@a\n~~~~\n@b #9 www.github.com/o/r/discussions/9") == (
+        "~~~\n@a\n~~~~\n@&#8203;b #&#8203;9 https://redirect.github.com/o/r/discussions/9"
+    )
+    once = quiet_on_github("@a #1 https://github.com/o/r/issues/1")
+    assert quiet_on_github(once) == once
+
+
 def test_the_image_is_pinned_and_runs_as_a_user() -> None:
     dockerfile = _read("Dockerfile")
     # The base image by digest (Dependabot updates it), the release by version, no [run] extra.
@@ -779,6 +826,19 @@ def test_pr_comment_posts_for_real_only_on_this_repositorys_pull_requests() -> N
     ) in live
     assert "secrets." not in live and "pull_request_target" not in _workflows()["ci.yml"]
     assert live.count("uses: ./\n") == 2 and live.count('pr-comment: "true"') == 2
+    # The token that can write is in the env of the three steps that call gh, not of the job
+    # (whose scans build and run packages from PyPI), and checkout does not save it.
+    steps = live.split("\n    steps:\n", 1)[1].split("\n      - ")
+    with_token = [s.splitlines()[0] for s in steps if "GH_TOKEN: ${{ github.token }}" in s]
+    assert with_token == [
+        "name: The comment before this run",
+        "name: Check that there is one comment, created or edited",
+        "name: Check that the same comment was edited",
+    ]
+    assert all(("gh api" in s) == (s.splitlines()[0] in with_token) for s in steps)
+    assert live.count("GH_TOKEN") == 3 and "github.token" not in live.split("\n    steps:\n")[0]
+    assert "uses: actions/checkout@" in steps[0]
+    assert "\n          persist-credentials: false\n" in steps[0] + "\n"
     assert "SINCE_CUTOFF_COMMENT_DRY_RUN" not in live
     assert "SINCE_CUTOFF_COMMENT_DRY_RUN" in jobs["action"]
     assert "\n      pull-requests: read\n" in jobs["action"]

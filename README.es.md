@@ -841,7 +841,10 @@ con un enlace al resumen del trabajo. El comentario se vuelve a encontrar por un
 `<!-- since-cutoff:pr-comment -->` para la raíz del proyecto y
 `<!-- since-cutoff:pr-comment:DIR -->` para un `working-directory`, así que dos pasos que
 analizan dos proyectos conservan un comentario cada uno; si hay dos para un mismo proyecto, se
-edita el más reciente.
+edita el más reciente. El texto de las propias bibliotecas en el resumen (un mensaje de
+obsolescencia, por ejemplo) no menciona a nadie ni enlaza ninguna issue: fuera del código, un
+`@nombre` o un `#N` lleva un espacio de ancho cero, y un enlace a una issue o pull request de
+GitHub pasa por redirect.github.com.
 
 Salidas: `changed-packages` (separados por comas), `changes` (cambios incompatibles),
 `deprecations`, `markdown` (la ruta del resumen, por ejemplo para un paso propio), `report` (la

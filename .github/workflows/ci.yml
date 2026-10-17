@@ -167,7 +167,9 @@ jobs:
   pr-comment:
     # pr-comment for real, on this repository's own pull requests only (a fork's token cannot
     # write, and the job has no secret but its token): the first run on a pull request creates
-    # the comment, and each later run, and the second scan below, edits that comment.
+    # the comment, and each later run, and the second scan below, edits that comment. Only the
+    # steps that call gh have the token (the action's comment step sets its own), and checkout
+    # does not keep it in .git/config: the scans build and run packages from PyPI.
     name: action (pr-comment)
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
@@ -176,7 +178,6 @@ jobs:
       contents: read
       pull-requests: write
     env:
-      GH_TOKEN: ${{ github.token }}
       PR: ${{ github.event.pull_request.number }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       MARKER: "<!-- since-cutoff:pr-comment:examples/agent-app -->"
@@ -185,7 +186,11 @@ jobs:
         .[] | select(.user.login == "github-actions[bot]" and (.body | startswith(env.MARKER))) | .id
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: The comment before this run
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           before="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --jq "$MARKED")"
@@ -200,6 +205,8 @@ jobs:
           pr-comment: "true"
           since-cutoff-version: local
       - name: Check that there is one comment, created or edited
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           ids="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --jq "$MARKED")"
@@ -225,6 +232,8 @@ jobs:
           pr-comment: "true"
           since-cutoff-version: local
       - name: Check that the same comment was edited
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           ids="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --jq "$MARKED")"

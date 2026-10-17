@@ -261,8 +261,8 @@ que se comprobó), y `.since-cutoff/report.md` empieza por «Used by your code»
 ### Mantener las notas al día: sync y status
 
 `since-cutoff sync` (desde la versión 0.4.0) escribe las notas que muestra `scan` en un bloque
-delimitado: en AGENTS.md, o en CLAUDE.md si solo existe ese archivo, y, si ya hay un bloque, en
-ese (`--target` indica otro archivo). Muestra un diff unificado y pregunta
+delimitado: en AGENTS.md, o en CLAUDE.md si solo existe ese archivo, o en los dos cuando
+CLAUDE.md no importa AGENTS.md, y, si ya hay un bloque, en ese (`--target` indica otro archivo). Muestra un diff unificado y pregunta
 `Write this to AGENTS.md? [y/N]`; `--yes` escribe sin preguntar, y si no hay una terminal en la
 que preguntar no escribe nada. El texto fuera del bloque conserva sus bytes, incluidos los saltos
 de línea CRLF, y `since-cutoff unapply` elimina el bloque. El bloque del proyecto de ejemplo está en
@@ -295,8 +295,10 @@ con el código 4; `sync --force` lo sustituye. Si no se puede comprobar un paque
 las notas (PyPI inaccesible), `sync` no escribe nada y sale con el código 1.
 
 `sync --json` requiere `--yes`, `--check` o `--dry-run`; sin uno de ellos sale con el código 2 sin
-preguntar. La salida estándar contiene solo JSON (y queda vacía en los errores de uso); el
-progreso, los diffs y los errores van a stderr. El objeto contiene `exit_code` y `targets`. Cada
+preguntar. La salida estándar contiene solo JSON, y queda vacía cuando sync falla (un error de
+uso, código 2, o un error como PyPI inaccesible, código 1); el progreso, los diffs y los
+errores van a stderr. El objeto contiene `exit_code`, `tip` (lo que sync dice sobre
+AGENTS.md y CLAUDE.md, o null) y `targets`. Cada
 destino informa de `target`, `action`, `changed`, `edited`, `written`, `model`, `cutoff`, `scope`,
 `notes`, `changes` (`package`, `done` y `state` de cada paquete), `retest` y `diff_lines`.
 `written` distingue una propuesta aplicada de una vista previa o de una edición a mano rechazada.
@@ -327,9 +329,15 @@ Más opciones:
 
 Claude Code lee CLAUDE.md, y solo lee AGENTS.md cuando no hay CLAUDE.md o cuando CLAUDE.md lo
 importa con una línea `@AGENTS.md` ([documentación sobre la memoria](https://code.claude.com/docs/en/memory),
-en inglés). Si las notas van a AGENTS.md y CLAUDE.md no lo importa, `scan` y `sync` lo avisan.
-Escribir en ambos archivos es el
-[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13).
+en inglés); Codex, Cursor y Copilot leen AGENTS.md. Con ambos archivos y todavía sin bloque,
+las notas van solo a AGENTS.md cuando CLAUDE.md lo importa, y a los dos archivos cuando no
+([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)); `scan`, `sync` y
+`status` indican entonces cómo quedarse con una sola copia: añade la línea `@AGENTS.md` a
+CLAUDE.md y ejecuta `since-cutoff unapply --target CLAUDE.md`. Un bloque que ya está solo en
+AGENTS.md se queda ahí, y lo avisan cuando CLAUDE.md no lo importa. Cuando los dos archivos
+tienen un bloque y CLAUDE.md pasa a importar AGENTS.md, avisan de que CLAUDE.md tiene una
+segunda copia, con el mismo comando `unapply`. Un `@AGENTS.md` dentro de código en línea o
+de un bloque de código no es una importación.
 
 ### Medir tu modelo
 
@@ -437,7 +445,13 @@ otro servicio (GitHub Copilot, Amazon Bedrock, Vertex AI) se nombra según su fa
 modelo para el que se escribió un bloque, sea cual sea el que use ahora tu agente.
 
 Las fechas de corte de entrenamiento se obtienen de [models.dev](https://models.dev) (el paquete
-incluye una instantánea para usarla sin conexión). `since-cutoff models sonnet` las lista;
+incluye una instantánea para usarla sin conexión). `since-cutoff models sonnet` las lista
+(`--makers` deja fuera las pasarelas y los revendedores, `--json` es para scripts). Un modelo que
+listan varios proveedores toma la fecha de corte de la entrada del proveedor pedido
+(`opencode:glm-5.1`), si no la de su fabricante, y si no la más temprana que liste una
+pasarela o un revendedor: más notas, el lado seguro. La línea del modelo nombra una entrada
+que no es la del fabricante, y `since-cutoff models <id>` termina con la que toma
+`--model <id>`.
 `--cutoff 2025-07` fija la fecha manualmente, y `since-cutoff scan --cutoff 2025-07` sin `--model`
 analiza tomando solo esa fecha como referencia. `--cutoff-margin 30` (el valor por defecto;
 `SINCE_CUTOFF_CUTOFF_MARGIN` también lo fija) compara desde la última versión publicada 30 días o
@@ -486,13 +500,15 @@ argumento `extra_body` o `extra_query`, como `Messages.create()` de anthropic, l
 porque un parámetro de la petición que salió de la firma puede seguir siendo aceptado por la API.
 
 **¿AGENTS.md o CLAUDE.md?** `sync` escribe en AGENTS.md; en CLAUDE.md si solo existe ese
-archivo; y en el que ya tenga un bloque (`--target` indica cualquier archivo). Claude Code lee
-CLAUDE.md, y AGENTS.md solo cuando CLAUDE.md lo importa con una línea `@AGENTS.md`; cuando las
-notas van a AGENTS.md y CLAUDE.md no lo importa, `scan` y `sync` lo avisan. Para tener una sola
-copia, añade `@AGENTS.md` a CLAUDE.md. Para tener un bloque en ambos archivos, escribe el segundo
-una vez con `sync --target CLAUDE.md --model <el mismo modelo>`; a partir de entonces `sync`
-actualiza los dos y `status` informa de los dos. Escribir en ambos por defecto es el
-[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13).
+archivo; en los dos cuando CLAUDE.md no importa AGENTS.md
+([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)); y en el que ya tenga un
+bloque (`--target` indica cualquier archivo). Claude Code lee CLAUDE.md, y AGENTS.md solo
+cuando CLAUDE.md lo importa con una línea `@AGENTS.md`; Codex, Cursor y Copilot leen
+AGENTS.md. Para tener una sola copia, añade `@AGENTS.md` a CLAUDE.md y ejecuta
+`since-cutoff unapply --target CLAUDE.md`; `scan`, `sync` y `status` lo avisan mientras los
+dos archivos tengan el bloque, y avisan cuando un bloque solo en AGENTS.md no se importa. A
+partir de entonces `sync` actualiza cada archivo que tenga un bloque, y `status` informa de
+cada uno.
 
 **¿Cuánto cuestan las notas en tokens?** El agente lee el bloque en cada turno. Para el proyecto
 de ejemplo ocupa unos 420 tokens, de los cuales las dos notas son unos 160; el resto es la

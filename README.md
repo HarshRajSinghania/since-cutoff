@@ -249,8 +249,9 @@ and `.since-cutoff/report.md` starts with "Used by your code".
 ### Keep the notes current: sync and status
 
 `since-cutoff sync` (0.4.0 and later) writes the notes that `scan` shows into a marked block: in
-AGENTS.md, or in CLAUDE.md when only that file exists, and where a block already is, into that
-one (`--target` names another file). It prints a unified diff and asks
+AGENTS.md, or in CLAUDE.md when only that file exists, or in both when CLAUDE.md does not import
+AGENTS.md, and where a block already is, into that one (`--target` names another file). It
+prints a unified diff and asks
 `Write this to AGENTS.md? [y/N]`; `--yes` writes without asking, and with no terminal to ask in
 it writes nothing. Text outside the block keeps its bytes, CRLF line breaks included, and
 `since-cutoff unapply` removes the block. The block for the sample project is in
@@ -281,8 +282,10 @@ exit with code 4; `sync --force` replaces it. When a package the notes are about
 checked (PyPI unreachable), `sync` writes nothing and exits with code 1.
 
 `sync --json` requires `--yes`, `--check` or `--dry-run`; without one it exits with code 2
-without prompting. Stdout contains only JSON (and stays empty for usage errors); progress,
-diffs and errors go to stderr. The object contains `exit_code` and `targets`. Each target
+without prompting. Stdout contains only JSON, and stays empty when sync fails (a usage error,
+exit code 2, or an error such as PyPI being unreachable, exit code 1); progress, diffs and
+errors go to stderr. The object contains `exit_code`, `tip` (what sync says about
+AGENTS.md and CLAUDE.md, or null) and `targets`. Each target
 reports `target`, `action`, `changed`, `edited`, `written`, `model`, `cutoff`, `scope`,
 `notes`, `changes` (each package's `package`, `done` and `state`), `retest` and `diff_lines`.
 `written` distinguishes an applied proposal from a preview or a refused hand edit. The usual
@@ -311,9 +314,15 @@ More options:
 
 Claude Code reads CLAUDE.md, and reads AGENTS.md only when there is no CLAUDE.md or when
 CLAUDE.md imports it with a line `@AGENTS.md`
-([memory docs](https://code.claude.com/docs/en/memory)). When the notes go to AGENTS.md and
-CLAUDE.md does not import it, `scan` and `sync` say so. Writing to both files is
-[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13).
+([memory docs](https://code.claude.com/docs/en/memory)); Codex, Cursor and Copilot read
+AGENTS.md. With both files and no block yet, the notes go to AGENTS.md alone when CLAUDE.md
+imports it, and to both files when it does not
+([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)); `scan`, `sync` and
+`status` then say how to keep one copy: add the line `@AGENTS.md` to CLAUDE.md and run
+`since-cutoff unapply --target CLAUDE.md`. A block already in AGENTS.md alone stays there, and
+they say so when CLAUDE.md does not import it. When both files have a block and CLAUDE.md
+then imports AGENTS.md, they say CLAUDE.md holds a second copy, with the same `unapply`
+command. An `@AGENTS.md` in a code span or a fenced block is not an import.
 
 ### Measure your model
 
@@ -415,9 +424,13 @@ Vertex AI) is named after its maker, so `run` calls the maker's API (`openai:` n
 `OPENAI_API_KEY`). `sync` keeps the model a block was written for, whatever your agent uses now.
 
 Training cutoffs come from [models.dev](https://models.dev) (a snapshot is bundled for offline
-use). `since-cutoff models sonnet` lists them; `--cutoff 2025-07` overrides the date, and
-`since-cutoff scan --cutoff 2025-07` without `--model` scans against that date alone.
-`--cutoff-margin 30` (the default; `SINCE_CUTOFF_CUTOFF_MARGIN` sets it too) compares from the
+use). `since-cutoff models sonnet` lists them (`--makers` leaves out gateways and resellers,
+`--json` is for scripts). A model that several providers list takes the cutoff of the
+requested provider's listing (`opencode:glm-5.1`), else of its maker's, else the earliest
+that a gateway or reseller lists: more notes, the safe side. The model line names a listing
+that is not the maker's, and `since-cutoff models <id>` ends with the one `--model <id>`
+takes. `--cutoff 2025-07` overrides the date, and `since-cutoff scan --cutoff 2025-07` without `--model` scans against that
+date alone. `--cutoff-margin 30` (the default; `SINCE_CUTOFF_CUTOFF_MARGIN` sets it too) compares from the
 latest release published 30 days or more before the cutoff, since models know the weeks before
 their cutoff least; `--cutoff-margin 0` compares from the latest release at the cutoff itself.
 The model line shows both days. `scan` and
@@ -460,13 +473,14 @@ note points to it, since a request parameter that left the signature may still b
 API.
 
 **AGENTS.md or CLAUDE.md?** `sync` writes to AGENTS.md; to CLAUDE.md when only that file
-exists; and into whichever of the two already has a block (`--target` names any file). Claude
-Code reads CLAUDE.md, and AGENTS.md only when CLAUDE.md imports it with a line `@AGENTS.md`;
-when the notes go to AGENTS.md and CLAUDE.md does not import it, `scan` and `sync` say so. To
-keep one copy, add `@AGENTS.md` to CLAUDE.md. To keep a block in both files, write the second
-one once with `sync --target CLAUDE.md --model <the same model>`; from then on `sync` updates
-both and `status` reports both. Writing to both by default is
-[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13).
+exists; to both when CLAUDE.md does not import AGENTS.md
+([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)); and into whichever of the two
+already has a block (`--target` names any file). Claude Code reads CLAUDE.md, and AGENTS.md
+only when CLAUDE.md imports it with a line `@AGENTS.md`; Codex, Cursor and Copilot read
+AGENTS.md. To keep one copy, add `@AGENTS.md` to CLAUDE.md and run
+`since-cutoff unapply --target CLAUDE.md`; `scan`, `sync` and `status` say so while both
+files have the block, and say when a block in AGENTS.md alone is not imported. From then on
+`sync` updates every file that has a block, and `status` reports each.
 
 **How much do the notes cost in tokens?** The agent reads the block on every turn. For the
 sample project it is about 420 tokens, of which the two notes are about 160; the rest is the

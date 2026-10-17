@@ -66,6 +66,7 @@ from since_cutoff.models import (
     ModelInfo,
     ModelRegistry,
     compare_date,
+    listing_note,
     parse_cutoff,
     parse_margin,
 )
@@ -330,7 +331,7 @@ class Tools:
             target = self._target(model, cutoff, needs="`from_version`", margin=cutoff_margin)
             at_cutoff = self.pypi.version_at(name, target.compare_date)
             if at_cutoff is None:
-                return _newer_than_cutoff(name, new, target)
+                return _newer_than_cutoff(name, new, target, self._stale_of(name))
             old = at_cutoff
             if target.margin:
                 old_role = (
@@ -348,7 +349,7 @@ class Tools:
         ]
         if target is not None and target.note:
             head.append(f"- {target.note}")
-        stale = {k: v for k, v in self.pypi.stale.items() if k == canonicalize_name(name)}
+        stale = self._stale_of(name)
         if stale:  # releases after the cached copy are unknown, so "to" may not be the latest
             head.append(f"- Warning: {stale_warning(stale)}")
         if new.parsed <= old.parsed:
@@ -537,6 +538,11 @@ class Tools:
             processes=self.processes,
         )
 
+    def _stale_of(self, name: str) -> dict[str, date]:
+        """``name``'s entry in :attr:`PyPI.stale`: the day of the older cached release list a
+        reply rests on when PyPI could not be reached, for its warning."""
+        return {k: v for k, v in self.pypi.stale.items() if k == canonicalize_name(name)}
+
     def _margin(self, given: int | None) -> int:
         """The tools' ``cutoff_margin``: as given, else ``SINCE_CUTOFF_CUTOFF_MARGIN`` (the
         server's environment), else the default."""
@@ -573,7 +579,10 @@ class Tools:
             info, note = self._resolve_model(model)
             assert info.knowledge is not None
             source = self.registry.source.split(" (")[0]
-            label = f"training cutoff of {info.id}, from {source}"
+            listing = listing_note(info)
+            label = f"training cutoff of {info.id}, from {source}" + (
+                f" ({listing})" if listing else ""
+            )
             return Target(info.knowledge, label, info.id, note, margin=days)
         alternatives = f", or {needs}" if needs else ""
         raise SinceCutoffError(
@@ -916,20 +925,28 @@ def _placeholder_note(old: Release, new: Release) -> str:
     )
 
 
-def _newer_than_cutoff(name: str, latest: Release, target: Target) -> str:
+def _newer_than_cutoff(
+    name: str, latest: Release, target: Target, stale: dict[str, date] | None = None
+) -> str:
+    """The reply when the package had no release by the cutoff; with ``stale`` (the day of the
+    older cached release list it rests on, see :meth:`Tools._stale_of`), the same warning as
+    the other replies, since a release that copy does not know may be older than the cutoff."""
     before = (
         f"{target.compare_date.isoformat()}, {target.margin} days before the cutoff "
         f"{target.cutoff.isoformat()}"
         if target.margin
         else target.cutoff.isoformat()
     )
-    return (
+    text = (
         f"# {name}: no release on or before the cutoff\n\n"
         f"{name} had no release on or before {before} "
         f"({target.label}); {latest.version} was published {_day(latest)}. Its whole API was "
         "released after, or shortly before, your reported training cutoff, so it may be "
         "missing from your training data: read its documentation or source before using it.\n"
     )
+    if stale:
+        text += f"\n- Warning: {stale_warning(stale)}\n"
+    return text
 
 
 def _share(changes: list[APIChange], limit: int) -> list[APIChange]:

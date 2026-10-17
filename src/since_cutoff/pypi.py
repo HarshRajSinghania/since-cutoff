@@ -43,7 +43,7 @@ from since_cutoff.cache import (
     touch,
     tree_size,
 )
-from since_cutoff.errors import NoCodeError, PackageIndexError
+from since_cutoff.errors import METAPACKAGE, NoCodeError, PackageIndexError
 
 log = logging.getLogger(__name__)
 
@@ -503,7 +503,11 @@ def _supports(release: Release, python: str) -> bool:
 
 def _metapackage(name: str, version: str, requires: list[str]) -> str | None:
     """Why a release without modules has nothing to diff, when it is a metapackage (docling,
-    griffe 2): no code of its own, only requirements on the packages that have it."""
+    griffe 2, llama-index): no API of its own, only requirements on the packages that have one.
+    Those are dependencies of their own, which the scan checks under the same rules as any
+    other (direct, imported by the code, or ``--all-deps``): the text is information, not a
+    failure, and the report shows it so (:data:`errors.METAPACKAGE`); the list comes last,
+    where the terminal clips it."""
     installs = []
     for line in requires:
         try:
@@ -514,11 +518,13 @@ def _metapackage(name: str, version: str, requires: list[str]) -> str | None:
             installs.append(f"{req.name}{req.specifier}")
     if not installs:
         return None
-    what = "that package" if len(installs) == 1 else "those packages"
-    return (
-        f"{name} {version} is a metapackage without code of its own: it installs "
-        f"{', '.join(installs[:3])}{', ...' if len(installs) > 3 else ''}; check {what} instead"
+    parts = f"{', '.join(installs[:3])}{', ...' if len(installs) > 3 else ''}"
+    these = (
+        "its part is a dependency of its own, checked like any other"
+        if len(installs) == 1
+        else "its parts are dependencies of their own, checked like any other"
     )
+    return f"{name} {version} {METAPACKAGE}; {these}: {parts}"
 
 
 def _read_marker(

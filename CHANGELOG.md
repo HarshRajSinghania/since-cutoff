@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+- `sync --target claude-rules`, `cursor-rules` or `copilot-instructions` writes the notes as
+  path-scoped rule files, one per changed package, that the agent loads only while it works on
+  the files that use that package's changed APIs, instead of one block in AGENTS.md that every
+  request pays for (#16): `.claude/rules/since-cutoff-<package>.md` with `paths:` (Claude Code),
+  `.cursor/rules/since-cutoff-<package>.mdc` with `globs:` and `alwaysApply: false` (Cursor),
+  `.github/instructions/since-cutoff-<package>.instructions.md` with `applyTo:` (Copilot cloud
+  agent and code review), as each agent documents them. The globs are the files of the scan's
+  locations (with `--scope imported`, and for a package first released after the cutoff, the
+  files that import it), and the file holds the same block as AGENTS.md would, for its package,
+  with the files and a hash of the front matter in its meta line: `sync`, `sync --check`,
+  `status` and `unapply` handle it, a hand edit of the notes or of the front matter shows, a
+  file that starts using the package is added on the next sync ("now loaded for 3 files (1
+  added)"), and a package with no notes left loses its file. Only files named
+  `since-cutoff-<package>` with since-cutoff's markers are written or removed; any other rule
+  file, and a file of that name without the markers, is left alone. AGENTS.md / CLAUDE.md stay
+  the default; once rule files exist, a plain `sync` keeps them in step without writing
+  AGENTS.md, and says how to remove a block AGENTS.md or CLAUDE.md still has. A plain `unapply`
+  now also removes the rule files since-cutoff wrote; `unapply --target cursor-rules` removes
+  one format's. Windsurf (one glob per rule) and Codex (no path scoping) have no format.
+- `since-cutoff explain <API>` and the MCP tool `explain_api` say everything since-cutoff knows
+  about one API, from the scan `sync` runs and with no model call (#28): the note as the block
+  writes it and which files' blocks have it, the pinned release and the one compared from, each
+  change with both signatures, the library's own deprecation text and the file it is in, the
+  replacement and its evidence (a move's kept names, a switched dependency's Requires-Dist), the
+  Runtime line, the changelog, every place the code uses it and in which form, and what the tag
+  does not check; a `[type-checked]` bullet points to results.json. The API can be named as the
+  note names it, by the end of the name or as `package.API`; an unknown name lists the closest
+  ones (exit code 1). `--package P --from A --to B` explains a change between two releases, and
+  `--json` prints the same as JSON. The MCP server has four tools.
 - Notes from the diff say what to use instead in more cases, and point somewhere useful when they
   cannot (an audit of 36 libraries found 25 of 36 notes ending in "since-cutoff found no
   replacement in X's deprecation text", several although the text named one; #14). A replacement

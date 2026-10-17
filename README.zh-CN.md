@@ -173,6 +173,8 @@ uvx --with basedpyright since-cutoff run
 | `since-cutoff sync --json --check` | 以 JSON 输出提议；不写入任何内容 | 0 已是最新；3 已过时 |
 | `since-cutoff sync --json --dry-run` | 以 JSON 输出提议；不写入任何内容 | 0 |
 | `since-cutoff status` | 离线比较区块与 lockfile | 0 已是最新，或没有区块；3 已过时；1 标记损坏 |
+| `since-cutoff sync --target claude-rules` | 每个包一个规则文件，Agent 只在处理用到它的文件时才加载（[规则文件](#用规则文件按路径加载说明)） | 与 `sync` 相同 |
+| `since-cutoff explain Messages.create` | 关于一个 API 的说明的全部信息（[explain](#解释一条说明)） | 0 找到；1 没有这个 API |
 
 区块被手动修改过时，`sync` 和 `sync --check` 会显示 diff，不写入任何内容，并以退出码 4 结束；`sync --force` 会替换它。说明所涉及的某个包无法检查时（例如 PyPI 无法访问），`sync` 不写入任何内容，并以退出码 1 结束。
 
@@ -191,6 +193,58 @@ since-cutoff: the library notes in AGENTS.md are out of date: anthropic 1.8.0 in
 - `since-cutoff run --apply` 写入的说明带有 `[type-checked]` 标签。只要它所在的包版本不变、你的代码仍在用那个 API，`sync` 就会保留它，代替同一 API 由 diff 得出的说明。
 
 Claude Code 会读取 CLAUDE.md；只有在没有 CLAUDE.md，或者 CLAUDE.md 用一行 `@AGENTS.md` 导入了 AGENTS.md 时，才会读取 AGENTS.md（[记忆文档](https://code.claude.com/docs/en/memory)，英文）；Codex、Cursor 和 Copilot 读取 AGENTS.md。两个文件都在、还没有说明块时，如果 CLAUDE.md 导入了 AGENTS.md，说明只写进 AGENTS.md；没有导入时，两个文件都写（[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)），`scan`、`sync` 和 `status` 会说明怎样只保留一份：在 CLAUDE.md 中加一行 `@AGENTS.md`，再运行 `since-cutoff unapply --target CLAUDE.md`。已经只在 AGENTS.md 中的说明块会留在那里；CLAUDE.md 没有导入它时，它们会给出提示。两个文件都有说明块、之后 CLAUDE.md 又导入了 AGENTS.md 时，它们会提示 CLAUDE.md 中是第二份副本，并给出同样的 `unapply` 命令。代码片段或代码块中的 `@AGENTS.md` 不算导入。
+
+### 用规则文件按路径加载说明
+
+无论 Agent 在处理哪个文件，AGENTS.md 和 CLAUDE.md 在每次请求时都会被加载。`sync --target` 加上一种规则格式（0.7.0 及以后）时，会为每个有变更的包写一个文件，放在该 Agent 读取按路径生效的规则的目录中，并在 front matter 中列出用到这个包有变更 API 的文件：只有当 Agent 读取或编辑其中某个文件时，才会加载这些说明。
+
+| `--target` | 每个包的文件 | front matter | 读取者 |
+|---|---|---|---|
+| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:`，glob 列表 | Claude Code（[文档](https://code.claude.com/docs/en/memory#path-specific-rules)，英文） |
+| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:`（逗号分隔）和 `alwaysApply: false` | Cursor（[文档](https://cursor.com/docs/context/rules)，英文） |
+| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `applyTo:`（逗号分隔的 glob） | GitHub Copilot 的 cloud agent 和 code review（[文档](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions)，英文） |
+
+对示例项目，`since-cutoff sync --target claude-rules` 会写出 `.claude/rules/since-cutoff-anthropic.md`（这里省略了头部）：
+
+```markdown
+---
+paths:
+  - "app/main.py"
+---
+<!-- since-cutoff:start -->
+<!-- since-cutoff:meta {"v":2,...,"scope":"used","paths":["app/main.py"],"front":"sha256:..."} -->
+## Library changes after the model's training cutoff
+
+Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, ...) ...
+
+**anthropic 1.8.0** (compared from 0.56.0)
+- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
+<!-- since-cutoff:end -->
+```
+
+`.claude/rules/since-cutoff-huggingface-hub.md` 也是如此。front matter 之后，每个文件包含的是 AGENTS.md 中会有的同一个区块，只针对它自己的包，所以 `sync`、`sync --check`、`status` 和 `unapply` 对它的处理和对 AGENTS.md 一样；它的元数据行还记录了这些文件（`paths`）和 front matter 的哈希，因此手动修改其中任何一处都能看出来。某个文件开始用到一个包有变更的 API 时，下一次 `sync` 会把它加进去（“now loaded for 3 files (1 added)”）；一个包不再有说明时，它的文件会被删除。使用 `--scope imported` 时，以及对于截止日期之后才首次发布的包，这些文件是导入了这个包的文件；一个文件也不知道时，规则对所有文件生效（没有 `paths`、`alwaysApply: true`、`applyTo: "**"`）。since-cutoff 只写入和删除名为 `since-cutoff-<package>` 且带有它的标记的文件：你自己的规则文件，以及同名但没有标记的文件，永远不会被改动。
+
+规则格式需要显式选择，默认仍然是 AGENTS.md / CLAUDE.md。项目中有了规则文件之后，不带参数的 `sync` 会让它们保持最新，并且不写 AGENTS.md；如果 AGENTS.md 或 CLAUDE.md 中还留有区块，`sync` 会说明如何移除它（`since-cutoff unapply --target AGENTS.md`）。`unapply --target cursor-rules` 删除一种格式的文件；不带参数的 `unapply` 会移除 AGENTS.md 和 CLAUDE.md 中的区块，以及 since-cutoff 写过的所有规则文件。glob 相对于项目目录；当项目就是仓库根目录时，Agent 正是在那里查找这些目录。Windsurf 的文档中每个规则文件只有一个 glob，Codex 没有按路径生效的规则（它读取从项目根目录到启动目录路径上的 AGENTS.md），所以两者暂时都没有对应的格式。`run --apply` 只把一个区块写进一个文件；规则文件请用 `sync --target`。
+
+### 解释一条说明
+
+`since-cutoff explain <API>`（0.7.0 及以后）给出 since-cutoff 关于一个 API 所知道的全部信息。它运行与 `sync` 相同的扫描（使用区块的模型和截止日期，除非传入 `--model` 或 `--cutoff`），不调用模型，也不写入任何内容：区块中写出的说明以及哪些文件有它、锁定版本和对照版本、每项变更及其新旧签名、库自己的弃用文本及其所在文件、替代项及其出处（或者移动保留了什么，或者被替换的依赖的 Requires-Dist）、Runtime 一行、changelog、你的代码中用到它的每个位置（“old form” 或 “uses this API”），以及这个标签没有检查什么。API 的写法与说明中的名称相同（`Messages.create`、`huggingface_hub.hf_hub_download`），也可以只写名称的末尾（`create`）或写成 `package.API`；什么都匹配不到的名称会列出最接近的名称（退出码 1）。
+
+```console
+$ uvx since-cutoff explain Messages.create
+## Messages.create (anthropic)
+
+Note:
+- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
+Written in: AGENTS.md (from the diff).
+
+Package: anthropic 1.8.0 (...), from pyproject.toml; compared from 0.56.0 (...), the latest release 30 days before the cutoff.
+...
+Where your code uses it:
+- app/main.py: uses this API, calls create
+```
+
+`--package anthropic --from 0.60.0 --to 1.8.0` 解释两个指定版本之间的变更，`--json` 以 JSON 输出同样的内容。MCP 服务器通过工具 `explain_api` 提供同样的信息。
 
 ### 测量你的模型
 
@@ -335,12 +389,13 @@ huggingface-hub 那条说明并不完全准确：`resume_download` 是在 1.0 �
 
 ## 在任意 Agent 中使用（MCP）
 
-`since-cutoff mcp` 是一个 MCP 服务器，让编程 Agent 可以在写代码之前先问一句“这个库在我的训练截止日期之后改了什么？”。它提供三个只读工具：
+`since-cutoff mcp` 是一个 MCP 服务器，让编程 Agent 可以在写代码之前先问一句“这个库在我的训练截止日期之后改了什么？”。它提供四个只读工具：
 
 | 工具 | 回答什么 |
 |---|---|
 | `api_changes(package, model, symbol=...)` | 一个库从默认在模型截止日期至少 30 天之前发布的版本到最新（或指定）版本之间改了什么，破坏性变更排在最前 |
 | `project_changes(project_dir, model)` | 对项目的每个依赖按锁定版本做同样的检查，从你的代码用到的有变更 API 开始：每个 API 列出用到它的文件（最多 3 个）、它的说明、运行时提示，以及相似但未确认为替代项的名称 |
+| `explain_api(api, project_dir)` | 项目依赖中的一个 API，与 [`since-cutoff explain`](#解释一条说明) 的输出相同：它的说明及其依据、新旧签名、替代项，以及代码在哪里用到它（0.7.0 及以后） |
 | `model_cutoff(model)` | 模型的训练截止日期，来自 [models.dev](https://models.dev) |
 
 Agent 传入自己的模型 id，所以结果涵盖的是这个模型训练截止日期之后的变更。这些工具只静态读取 PyPI 和包的源码：不调用模型，不需要 API key，不执行任何包代码。

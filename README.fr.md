@@ -295,6 +295,8 @@ changé, il n'écrit rien, et le fichier garde ses octets et sa date de modifica
 | `since-cutoff sync --json --check` | imprime en JSON les propositions ; n'écrit rien | 0 à jour ; 3 pas à jour |
 | `since-cutoff sync --json --dry-run` | imprime en JSON les propositions ; n'écrit rien | 0 |
 | `since-cutoff status` | compare le bloc au fichier de verrouillage, hors ligne | 0 à jour, ou aucun bloc ; 3 pas à jour ; 1 marqueurs cassés |
+| `since-cutoff sync --target claude-rules` | un fichier de règles par paquet, que l'agent ne charge que pour les fichiers qui l'utilisent ([fichiers de règles](#les-fichiers-de-règles-des-notes-là-où-elles-servent)) | comme `sync` |
+| `since-cutoff explain Messages.create` | tout ce qui est connu de la note d'une API ([explain](#expliquer-une-note)) | 0 trouvée ; 1 aucune API de ce nom |
 
 Si le bloc a été modifié à la main, `sync` et `sync --check` affichent le diff, n'écrivent rien et
 sortent avec le code 4 ; `sync --force` le remplace. Si un paquet dont parlent les notes ne peut
@@ -344,6 +346,95 @@ y reste, et ils le signalent quand CLAUDE.md ne l'importe pas. Quand les deux fi
 bloc et que CLAUDE.md importe ensuite AGENTS.md, ils signalent que CLAUDE.md en contient une
 deuxième copie, avec la même commande `unapply`. Un `@AGENTS.md` dans du code en ligne ou un
 bloc de code n'est pas une importation.
+
+### Les fichiers de règles, des notes là où elles servent
+
+AGENTS.md et CLAUDE.md sont chargés à chaque requête, quel que soit le fichier sur lequel
+travaille l'agent. `sync --target` avec un format de règles (à partir de la 0.7.0) écrit les
+notes dans un fichier par paquet modifié, dans le dossier où cet agent lit les règles par
+chemin, et leur front matter nomme les fichiers qui utilisent les API modifiées du paquet :
+l'agent ne charge les notes que lorsqu'il lit ou modifie l'un de ces fichiers.
+
+| `--target` | fichier par paquet | front matter | lu par |
+|---|---|---|---|
+| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:`, une liste de globs | Claude Code ([documentation](https://code.claude.com/docs/en/memory#path-specific-rules), en anglais) |
+| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:` (séparés par des virgules) et `alwaysApply: false` | Cursor ([documentation](https://cursor.com/docs/context/rules), en anglais) |
+| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `applyTo:` (globs séparés par des virgules) | Copilot cloud agent et code review de GitHub Copilot ([documentation](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions), en anglais) |
+
+Pour le projet d'exemple, `since-cutoff sync --target claude-rules` écrit
+`.claude/rules/since-cutoff-anthropic.md` (l'en-tête est raccourci ici) :
+
+```markdown
+---
+paths:
+  - "app/main.py"
+---
+<!-- since-cutoff:start -->
+<!-- since-cutoff:meta {"v":2,...,"scope":"used","paths":["app/main.py"],"front":"sha256:..."} -->
+## Library changes after the model's training cutoff
+
+Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, ...) ...
+
+**anthropic 1.8.0** (compared from 0.56.0)
+- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
+<!-- since-cutoff:end -->
+```
+
+et `.claude/rules/since-cutoff-huggingface-hub.md` de la même façon. Après le front matter,
+chaque fichier contient le même bloc qu'AGENTS.md aurait, pour son seul paquet : `sync`,
+`sync --check`, `status` et `unapply` le traitent donc comme AGENTS.md ; sa ligne de
+métadonnées enregistre aussi les fichiers (`paths`) et un hash du front matter, si bien qu'une
+modification à la main de l'un ou de l'autre se voit. Un fichier qui se met à utiliser les API
+modifiées d'un paquet est ajouté au `sync` suivant (« now loaded for 3 files (1 added) »), et un
+paquet qui n'a plus de notes perd son fichier. Avec `--scope imported`, et pour un paquet publié
+pour la première fois après la date limite, les fichiers sont ceux qui importent le paquet ;
+quand aucun n'est connu, la règle s'applique partout (pas de `paths`, `alwaysApply: true`,
+`applyTo: "**"`). since-cutoff n'écrit et ne supprime que les fichiers nommés
+`since-cutoff-<package>` qui portent ses marqueurs : vos propres fichiers de règles, et un
+fichier de ce nom sans les marqueurs, ne sont jamais touchés.
+
+Les formats de règles sont facultatifs, et AGENTS.md / CLAUDE.md restent la cible par défaut.
+Dès qu'un projet a des fichiers de règles, un `sync` sans option les tient à jour et n'écrit pas
+d'AGENTS.md ; quand AGENTS.md ou CLAUDE.md garde aussi un bloc, `sync` dit comment l'enlever
+(`since-cutoff unapply --target AGENTS.md`). `unapply --target cursor-rules` supprime les
+fichiers d'un format, et un `unapply` sans option retire le bloc d'AGENTS.md et de CLAUDE.md et
+tous les fichiers de règles écrits par since-cutoff. Les globs sont relatifs au projet, là où
+les agents cherchent ces dossiers quand le projet est la racine du dépôt. Windsurf documente un
+seul glob par fichier de règles, et Codex aucune règle par chemin (il lit les AGENTS.md sur le
+chemin du dossier où il démarre) : aucun des deux n'a encore de format. `run --apply` écrit un
+seul bloc dans un fichier ; pour des fichiers de règles, utilisez `sync --target`.
+
+### Expliquer une note
+
+`since-cutoff explain <API>` (à partir de la 0.7.0) dit tout ce que since-cutoff sait d'une API,
+à partir de l'analyse que fait `sync` (avec le modèle et la date limite du bloc, sauf si vous
+passez `--model` ou `--cutoff`), sans appeler de modèle et sans rien écrire : la note telle que
+le bloc l'écrit et les fichiers qui l'ont, la version épinglée et la version de comparaison,
+chaque changement avec les deux signatures, le texte d'obsolescence de la bibliothèque elle-même
+avec le fichier où il se trouve, le remplaçant et l'endroit où il est nommé (ou ce qu'un
+déplacement a conservé, ou le Requires-Dist d'une dépendance remplacée), la ligne Runtime, le
+changelog, chaque endroit où votre code l'utilise (« old form » ou « uses this API ») et ce que
+l'étiquette ne vérifie pas. L'API se nomme comme la note la nomme (`Messages.create`,
+`huggingface_hub.hf_hub_download`), par la fin de ce nom (`create`) ou sous la forme
+`package.API` ; un nom qui ne correspond à rien liste les plus proches (code de sortie 1).
+
+```console
+$ uvx since-cutoff explain Messages.create
+## Messages.create (anthropic)
+
+Note:
+- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
+Written in: AGENTS.md (from the diff).
+
+Package: anthropic 1.8.0 (...), from pyproject.toml; compared from 0.56.0 (...), the latest release 30 days before the cutoff.
+...
+Where your code uses it:
+- app/main.py: uses this API, calls create
+```
+
+`--package anthropic --from 0.60.0 --to 1.8.0` explique le changement entre deux versions
+données, et `--json` imprime la même chose en JSON. Le serveur MCP propose la même chose avec
+l'outil `explain_api`.
 
 ### Mesurer votre modèle
 
@@ -656,12 +747,13 @@ Le fonctionnement de la mesure, et ce que ces chiffres montrent ou non, en déta
 
 `since-cutoff mcp` est un serveur MCP qui permet à un agent de code de demander « qu'est-ce qui
 a changé dans cette bibliothèque depuis ma date limite d'entraînement ? » avant d'écrire du code.
-Il propose trois outils en lecture seule :
+Il propose quatre outils en lecture seule :
 
 | outil | répond à |
 |---|---|
 | `api_changes(package, model, symbol=...)` | ce qui a changé dans une bibliothèque entre la version publiée au moins 30 jours avant la date limite du modèle (par défaut) et la dernière version (ou une version donnée), incompatibilités franches en premier |
 | `project_changes(project_dir, model)` | la même chose pour chaque dépendance d'un projet, à sa version épinglée, en commençant par les API modifiées qu'utilise votre code : pour chacune, les fichiers qui l'utilisent (3 au plus), sa note, la mise en garde sur l'exécution et les noms qui lui ressemblent, non confirmés comme remplaçants |
+| `explain_api(api, project_dir)` | une API des dépendances du projet, telle que l'imprime [`since-cutoff explain`](#expliquer-une-note) : sa note et les éléments qui la fondent, les deux signatures, le remplaçant et l'endroit où le code l'utilise (à partir de la 0.7.0) |
 | `model_cutoff(model)` | la date limite d'entraînement d'un modèle, d'après [models.dev](https://models.dev) |
 
 L'agent transmet son propre identifiant de modèle : la réponse couvre donc ce qui a changé

@@ -73,7 +73,7 @@ def _options() -> dict[str, set[str]]:
 
 
 _CODE = re.compile(r"```[^\n]*\n(.*?)```|`([^`\n]+)`", re.S)
-_SUBCOMMANDS = "run|scan|sync|status|unapply|models|cache|mcp"
+_SUBCOMMANDS = "run|scan|sync|status|explain|unapply|models|cache|mcp"
 # ``since-cutoff sync --check`` anywhere in code; in an inline code span, also ``scan -v``
 # (not the `mcp` of `claude mcp add --scope user ...`).
 _COMMAND = re.compile(rf"since-cutoff(?:@\S+|==\S+)?\s+({_SUBCOMMANDS})\b([^\n#|;&`]*)")

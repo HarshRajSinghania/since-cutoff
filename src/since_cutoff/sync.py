@@ -27,6 +27,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from packaging.utils import canonicalize_name
 from packaging.version import InvalidVersion, Version
 
 from since_cutoff import __version__
@@ -56,17 +57,36 @@ from since_cutoff.notes import (
     ParsedBlock,
     agents_import_tip,
     api_id,
+    apply_block,
+    block_targets,
     block_text,
     deps_hash,
+    has_markers,
     model_names,
     parse_block,
     read_text,
+    remove_block,
     render_block,
     tag_text,
     with_block,
     without_block,
 )
 from since_cutoff.project import VENV_DIRS, Project
+from since_cutoff.rules import (
+    FRONT_KEY,
+    PATHS_KEY,
+    RuleFormat,
+    check_ours,
+    delete,
+    format_of,
+    front_edited,
+    front_hash,
+    present,
+    rule_format,
+    with_rule,
+    without_rule,
+    write_rule,
+)
 
 # Exit codes of sync and status (0 and 1 as everywhere; 3 is the CLI's "found something").
 EXIT_OK = 0
@@ -121,6 +141,13 @@ class TargetFile:
     text: str | None  # None: there is no such file yet
     block: ParsedBlock | None
     written: str | None  # the block as written, with LF line breaks
+    # A path-scoped rule file (since_cutoff.rules): its format; None for AGENTS.md and the like.
+    rule: RuleFormat | None = None
+
+    @property
+    def package(self) -> str | None:
+        """The package a rule file is for (from its name); None for any other file."""
+        return self.rule.package_of(self.path) if self.rule is not None else None
 
     @property
     def meta(self) -> dict[str, Any]:
@@ -151,23 +178,105 @@ class TargetFile:
 
     @property
     def edited(self) -> bool:
-        """Edited by hand since since-cutoff wrote it (a 0.3 block has no hash to tell)."""
-        return self.block is not None and self.block.edited is True
+        """Edited by hand since since-cutoff wrote it (a 0.3 block has no hash to tell); for a
+        rule file, its front matter too (the meta line's ``front`` hash)."""
+        if self.block is None:
+            return False
+        if self.block.edited is True:
+            return True
+        return (
+            self.rule is not None and self.text is not None and front_edited(self.text, self.meta)
+        )
 
 
 def read_target(root: Path, path: Path) -> TargetFile:
-    """The file and its block (NotesFileError for markers that cannot be read)."""
+    """The file and its block (NotesFileError for markers that cannot be read). A rule file's
+    path (since_cutoff.rules) that holds a file since-cutoff did not write is refused."""
     try:
         name = path.relative_to(root).as_posix()
     except ValueError:
         name = str(path)
+    rule = format_of(root, path)
+    if rule is not None:
+        check_ours(path)
     text = read_text(path)
     if text is None:
-        return TargetFile(path, name, None, None, None)
-    return TargetFile(path, name, text, parse_block(text, path.name), block_text(text, path.name))
+        return TargetFile(path, name, None, None, None, rule)
+    block = parse_block(text, path.name)
+    return TargetFile(path, name, text, block, block_text(text, path.name), rule)
 
 
-def sticky_target(target: TargetFile, margin: int = DEFAULT_CUTOFF_MARGIN) -> ModelTarget | None:
+@dataclass
+class RuleTargets:
+    """The path-scoped rule files of one format (``sync --target cursor-rules``): those
+    since-cutoff wrote in the project, one per package. ``sync`` writes one for each package
+    with notes and removes the others (:func:`propose_rules`)."""
+
+    rule: RuleFormat
+    root: Path
+    files: list[TargetFile]
+
+    @property
+    def placeholder(self) -> TargetFile:
+        """The folder, standing for files there are none of yet."""
+        return TargetFile(
+            self.root / self.rule.folder, self.rule.folder, None, None, None, self.rule
+        )
+
+    @property
+    def first(self) -> TargetFile:
+        """The file whose block says the model, cutoff and scope the others share (they are
+        written together), else :attr:`placeholder`."""
+        return next((t for t in self.files if t.block is not None), self.placeholder)
+
+    @property
+    def name(self) -> str:
+        return self.first.name
+
+    @property
+    def basis(self) -> tuple[str, date] | None:
+        return self.first.basis
+
+    @property
+    def scope(self) -> str | None:
+        return self.first.scope
+
+    @property
+    def meta(self) -> dict[str, Any]:
+        return self.first.meta
+
+
+Target = TargetFile | RuleTargets
+
+
+def read_rules(root: Path, rule: RuleFormat) -> RuleTargets:
+    return RuleTargets(rule, root, [read_target(root, p) for p in rule.files(root)])
+
+
+def read_targets(root: Path, explicit: str | None = None) -> list[Target]:
+    """What ``sync``, ``status`` and ``explain`` work on: ``--target``, a file or a rule
+    format (``cursor-rules``); otherwise the files of notes.block_targets and the rule
+    formats that have files since-cutoff wrote (rules.present). When only rule files have
+    notes, AGENTS.md and CLAUDE.md are left alone: the notes stay where they were written."""
+    rule = rule_format(explicit)
+    if rule is not None:
+        return [read_rules(root, rule)]
+    formats = [] if explicit else present(root)
+    files = block_targets(root, explicit)
+    if formats and not any(has_markers(p) for p in files):
+        files = []
+    found: list[Target] = [read_target(root, p) for p in files]
+    return found + [read_rules(root, f) for f in formats]
+
+
+def target_files(target: Target) -> list[TargetFile]:
+    """The files of a target: itself, or a format's rule files (none yet: its folder)."""
+    if isinstance(target, RuleTargets):
+        return target.files or [target.placeholder]
+    return [target]
+
+
+def sticky_target(target: Target, margin: int = DEFAULT_CUTOFF_MARGIN) -> ModelTarget | None:
     """The model and cutoff of the block in ``target``, as sync keeps them, or None. The margin
     is not the block's: it is the scan's setting (``--cutoff-margin``), the same for everyone,
     and ``status`` says when a block was compared from another day."""
@@ -249,7 +358,9 @@ def propose(
     per_package: int | None = None,
 ) -> Proposal:
     """The block sync writes into ``target`` for ``scan`` (its model and cutoff), the file's
-    text after that, and why it changes.
+    text after that, and why it changes. For a rule file (TargetFile.rule), only the notes for
+    its package, under the front matter that names the files they apply to
+    (:func:`rule_paths`); a rule file left with no notes goes (action "deleted").
 
     The notes are :meth:`ScanResult.scope_notes` (``per_package``: how many APIs a package
     gets with SCOPE_IMPORTED; :data:`IMPORTED_APIS` by default). The ``[type-checked]`` notes of the block in
@@ -266,7 +377,15 @@ def propose(
     same = target.basis == (model, cutoff)
     old = target.block
     per_package = per_package or IMPORTED_APIS
-    notes = scan.scope_notes(scope, suggestions=suggestions, per_package=per_package)
+    rule, package = target.rule, target.package
+
+    def scoped(exclude: set[str] | None = None) -> list[Note]:
+        found = scan.scope_notes(
+            scope, suggestions=suggestions, per_package=per_package, exclude=exclude or set()
+        )
+        return found if rule is None else [n for n in found if n.change.package == package]
+
+    notes = scoped()
     kept: list[Note] = []
     retest: dict[str, str] = {}
     replaced: set[str] = set()
@@ -275,9 +394,7 @@ def propose(
     if replaced:
         # A [type-checked] note replaces the note from the diff for its API: the others' notes
         # again, without it (a merged bullet names only the APIs left to it).
-        notes = scan.scope_notes(
-            scope, suggestions=suggestions, per_package=per_package, exclude=replaced
-        )
+        notes = scoped(replaced)
     notes += kept
     versions_from = scan.project.version_source
     block: str | None = None
@@ -294,13 +411,24 @@ def propose(
             "per_package": per_package,
             "margin": scan.target.margin,
         }
+        front = ""
+        if rule is not None and package is not None:
+            paths = rule_paths(scan, package, scope)
+            front = rule.front_matter(paths, package, notes[0].change.to_version)
+            options["extra"] = {PATHS_KEY: paths, FRONT_KEY: front_hash(front)}
         block = render_block(notes, **options)
         tool = target.meta.get("tool")
         if old is not None and old.version >= BLOCK_VERSION and isinstance(tool, str):
             earlier = render_block(notes, **options, tool=tool)
             if earlier == target.written:
                 block = earlier  # the same notes: as that version of since-cutoff wrote them
-        new_text, action = with_block(target.text, block, target.name)
+        if rule is not None:
+            new_text, action = with_rule(target.text, front, block, target.path.name)
+        else:
+            new_text, action = with_block(target.text, block, target.name)
+    elif target.text is not None and old is not None and rule is not None:
+        new_text = without_rule(target.text, target.path.name)
+        action = "deleted" if new_text is None else "removed from"
     elif target.text is not None and old is not None:
         new_text, action = without_block(target.text, target.name), "removed from"
     else:
@@ -317,6 +445,76 @@ def propose(
     else:
         proposal.changes = _changes(scan, target, proposal, same=same)
     return proposal
+
+
+def rule_paths(scan: ScanResult, package: str, scope: str = SCOPE_USED) -> list[str]:
+    """The files a rule file for ``package`` applies to (relative to the project, with "/",
+    sorted): those that use its changed APIs (the scan's locations, UsedAPI.files); for
+    SCOPE_IMPORTED, whose notes are also about APIs the code does not use, and for a package
+    first released after the cutoff, those that import it. [] when no file is known: the rule
+    then applies everywhere (rules.RuleFormat.front_matter)."""
+    p = next((s for s in scan.packages if s.name == package), None)
+    if p is None:
+        return []
+    if scope != SCOPE_IMPORTED:
+        used = {f for u in scan.used_apis() if u.package.name == package for f in u.files}
+        if used:
+            return sorted(used)
+    if p.import_names:
+        files = scan.uses(p)
+    else:  # first released after the cutoff: its import names are those that name it
+        modules = [m for m in scan.project.imported_modules if canonicalize_name(m) == package]
+        files = scan.project.code_use(modules) if modules else ()
+    return sorted({f.file for f in files if f.file})
+
+
+def propose_rules(
+    scan: ScanResult,
+    targets: RuleTargets,
+    *,
+    scope: str = SCOPE_USED,
+    suggestions: bool = False,
+    per_package: int | None = None,
+) -> list[Proposal]:
+    """What sync writes into a format's rule files (:func:`propose` for each): the files
+    there now, each for its package (one whose package has no notes left goes), then a new
+    file for each package with notes that has none, in the order of the packages' names.
+    With no file and no notes, one proposal for the folder that writes nothing (sync says
+    why)."""
+    out = [
+        propose(scan, t, scope=scope, suggestions=suggestions, per_package=per_package)
+        for t in targets.files
+    ]
+    have = {t.package for t in targets.files}
+    notes = scan.scope_notes(scope, suggestions=suggestions, per_package=per_package or None)
+    for package in sorted({n.change.package for n in notes} - have):
+        t = read_target(targets.root, targets.rule.path(targets.root, package))
+        out.append(propose(scan, t, scope=scope, suggestions=suggestions, per_package=per_package))
+    if not out:
+        out.append(
+            propose(
+                scan,
+                targets.placeholder,
+                scope=scope,
+                suggestions=suggestions,
+                per_package=per_package,
+            )
+        )
+    return out
+
+
+def write_proposal(p: Proposal) -> None:
+    """Write what sync proposes into its file: the file's new text, or, for a rule file left
+    with nothing of its own, no file (NotesFileError when that fails)."""
+    if p.target.rule is not None:
+        if p.new_text is None:
+            delete(p.target.path)
+        else:
+            write_rule(p.target.path, p.new_text)
+    elif p.block is None:
+        remove_block(p.target.path)
+    else:
+        apply_block(p.target.path, p.block)
 
 
 def _kept_notes(old: ParsedBlock, notes: list[Note]) -> tuple[list[Note], dict[str, str], set[str]]:
@@ -510,6 +708,18 @@ def _changes(scan: ScanResult, target: TargetFile, p: Proposal, *, same: bool) -
                 f"the notes would be for up to {p.per_package} APIs per package (--per-package)",
             )
         )
+    was_paths, now_paths = old.meta.get(PATHS_KEY), new.meta.get(PATHS_KEY)
+    if p.target.rule is not None and was_paths != now_paths and isinstance(now_paths, list):
+        had = {str(f) for f in was_paths} if isinstance(was_paths, list) else set()
+        has = {str(f) for f in now_paths}
+        counts = _counts(sorted(has - had), sorted(had - has))
+        out.append(
+            Change(
+                None,
+                f"now loaded for {_plural(len(now_paths), 'file')} ({counts})",
+                f"the files it is loaded for would change ({counts})",
+            )
+        )
     if not out:
         out.append(
             Change(
@@ -624,6 +834,8 @@ def written_text(p: Proposal) -> str:
         return f"Added the notes block to the end of {name}: {count}."
     if p.action == "removed from":
         return f"Removed the notes block from {name}: {done or 'no notes left'}."
+    if p.action == "deleted":
+        return f"Removed {name}: {done or 'no notes left'}."
     return f"Updated {name}: {done or count}."
 
 

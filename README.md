@@ -275,6 +275,8 @@ nothing, and the file keeps its bytes and modification time.
 | `since-cutoff sync --json --check` | prints JSON proposals; writes nothing | 0 up to date; 3 out of date |
 | `since-cutoff sync --json --dry-run` | prints JSON proposals; writes nothing | 0 |
 | `since-cutoff status` | compares the block with the lockfile, offline | 0 current, or no block; 3 out of date; 1 broken markers |
+| `since-cutoff sync --target claude-rules` | one rule file per package, loaded only for the files that use it ([rule files](#notes-only-where-they-apply-rule-files)) | as `sync` |
+| `since-cutoff explain Messages.create` | everything known about one API's note ([explain](#explain-one-note)) | 0 found; 1 no such API |
 
 When the block was edited by hand, `sync` and `sync --check` show the diff, write nothing and
 exit with code 4; `sync --force` replaces it. When a package the notes are about cannot be
@@ -322,6 +324,90 @@ imports it, and to both files when it does not
 they say so when CLAUDE.md does not import it. When both files have a block and CLAUDE.md
 then imports AGENTS.md, they say CLAUDE.md holds a second copy, with the same `unapply`
 command. An `@AGENTS.md` in a code span or a fenced block is not an import.
+
+### Notes only where they apply: rule files
+
+AGENTS.md and CLAUDE.md are loaded on every request, whichever file the agent is working on.
+`sync --target` with a rule format (0.7.0 and later) writes the notes as one file per changed
+package instead, in the folder where that agent reads path-scoped rules, and names in its front
+matter the files that use the package's changed APIs: the agent loads the notes only while it
+reads or edits one of those files.
+
+| `--target` | file per package | front matter | read by |
+|---|---|---|---|
+| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:`, a list of globs | Claude Code ([docs](https://code.claude.com/docs/en/memory#path-specific-rules)) |
+| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:` (comma-separated) and `alwaysApply: false` | Cursor ([docs](https://cursor.com/docs/context/rules)) |
+| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `applyTo:` (comma-separated globs) | GitHub Copilot cloud agent and code review ([docs](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions)) |
+
+For the sample project, `since-cutoff sync --target claude-rules` writes
+`.claude/rules/since-cutoff-anthropic.md` (the header is trimmed here):
+
+```markdown
+---
+paths:
+  - "app/main.py"
+---
+<!-- since-cutoff:start -->
+<!-- since-cutoff:meta {"v":2,...,"scope":"used","paths":["app/main.py"],"front":"sha256:..."} -->
+## Library changes after the model's training cutoff
+
+Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, ...) ...
+
+**anthropic 1.8.0** (compared from 0.56.0)
+- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
+<!-- since-cutoff:end -->
+```
+
+and `.claude/rules/since-cutoff-huggingface-hub.md` the same way. After the front matter each
+file holds the same block as AGENTS.md would, for its package alone, so `sync`, `sync --check`,
+`status` and `unapply` handle it as they handle AGENTS.md; its meta line also records the files
+(`paths`) and a hash of the front matter, so a hand edit of either shows. A file that starts
+using a package's changed APIs is added on the next `sync` ("now loaded for 3 files (1
+added)"), and a package with no notes left loses its file. With `--scope imported`, and for a
+package first released after the cutoff, the files are those that import the package; when no
+file is known, the rule applies everywhere (no `paths`, `alwaysApply: true`, `applyTo: "**"`).
+since-cutoff only writes and removes files named `since-cutoff-<package>` that have its markers:
+your own rule files, and a file of that name without the markers, are never touched.
+
+The rule formats are opt-in, and the default stays AGENTS.md / CLAUDE.md. Once a project has
+rule files, a plain `sync` keeps them in step and writes no AGENTS.md; when AGENTS.md or
+CLAUDE.md still has a block too, `sync` says how to remove it (`since-cutoff unapply --target
+AGENTS.md`). `unapply --target cursor-rules` removes one format's files, and a plain `unapply`
+removes the block from AGENTS.md and CLAUDE.md and every rule file since-cutoff wrote. The
+globs are relative to the project, which is where the agents look for these folders when the
+project is the repository root. Windsurf documents one glob per rule file, and Codex no path
+scoping (it reads the AGENTS.md files on the way to the folder it starts in), so neither has a
+format yet. `run --apply` writes one block into a file; use `sync --target` for rule files.
+
+### Explain one note
+
+`since-cutoff explain <API>` (0.7.0 and later) says everything since-cutoff knows about one API,
+from the scan `sync` runs (the block's model and cutoff unless `--model` or `--cutoff` is
+given), with no model call and nothing written: the note as the block writes it and which
+files have it, the pinned release and the one compared from, each change with both signatures,
+the library's own deprecation text with the file it is in, the replacement and where it is
+named (or what a move kept, or a switched dependency's Requires-Dist), the Runtime line, the
+changelog, every place your code uses it ("old form" or "uses this API"), and what the tag does
+not check. The API is named as the note names it (`Messages.create`,
+`huggingface_hub.hf_hub_download`), by the end of that name (`create`), or as
+`package.API`; a name that matches nothing lists the closest ones (exit code 1).
+
+```console
+$ uvx since-cutoff explain Messages.create
+## Messages.create (anthropic)
+
+Note:
+- `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
+Written in: AGENTS.md (from the diff).
+
+Package: anthropic 1.8.0 (...), from pyproject.toml; compared from 0.56.0 (...), the latest release 30 days before the cutoff.
+...
+Where your code uses it:
+- app/main.py: uses this API, calls create
+```
+
+`--package anthropic --from 0.60.0 --to 1.8.0` explains the change between two given releases,
+and `--json` prints the same as JSON. The MCP server has the same as the tool `explain_api`.
 
 ### Measure your model
 
@@ -605,12 +691,13 @@ How the measurement works and what these numbers do and do not show, in more det
 ## Use it from any agent (MCP)
 
 `since-cutoff mcp` is an MCP server that lets a coding agent ask "what changed in this library
-since my training cutoff?" before it writes code. It has three read-only tools and two prompts:
+since my training cutoff?" before it writes code. It has four read-only tools and two prompts:
 
 | tool | answers |
 |---|---|
 | `api_changes(package, model, symbol=...)` | what changed in one library between the release published at least 30 days before the model's cutoff (by default) and the latest (or a given) version, hard breaks first |
 | `project_changes(project_dir, model)` | the same for every dependency of a project at its pinned version, starting with the changed APIs your code uses: for each, the files that use it (at most 3), its note, the runtime caveat and names that look similar, not confirmed as replacements |
+| `explain_api(api, project_dir)` | one API of the project's dependencies, as [`since-cutoff explain`](#explain-one-note) prints it: its note and the evidence behind it, both signatures, the replacement and where the code uses it (0.7.0 and later) |
 | `model_cutoff(model)` | a model's training cutoff, from [models.dev](https://models.dev) |
 
 | prompt | asks the agent to |

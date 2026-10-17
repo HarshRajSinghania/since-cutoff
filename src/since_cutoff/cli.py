@@ -36,12 +36,12 @@ if TYPE_CHECKING:
     from since_cutoff.models import ModelInfo
     from since_cutoff.progress import RichReporter
     from since_cutoff.project import Project
-    from since_cutoff.sync import DetectedModel, TargetFile
+    from since_cutoff.sync import DetectedModel, Target
     from since_cutoff.taskfile import write_tasks
 
-    # A target file, the model and cutoff its block is written for, its scope, --suggestions
-    # and --per-package.
-    _Plan = tuple[TargetFile, ModelTarget, str, bool, int]
+    # A target file (or a format's rule files), the model and cutoff its block is written for,
+    # its scope, --suggestions and --per-package.
+    _Plan = tuple[Target, ModelTarget, str, bool, int]
 
 
 class _LazyImport:
@@ -63,7 +63,7 @@ if not TYPE_CHECKING:
     detect_model = _LazyImport("since_cutoff.hosts", "detect_model")
     write_tasks = _LazyImport("since_cutoff.taskfile", "write_tasks")
 
-COMMANDS = ("run", "scan", "sync", "status", "models", "cache", "unapply", "mcp")
+COMMANDS = ("run", "scan", "sync", "status", "explain", "models", "cache", "unapply", "mcp")
 # ``scan --fail-on``: what makes it exit with code 3 (report.fail_reason).
 FAIL_ON = ("changes", "used", "old-form")
 # ``sync --per-package``'s default: since_cutoff.notes.IMPORTED_APIS, copied so that building
@@ -74,6 +74,13 @@ IMPORTED_APIS = 5
 # import models (and the network code with it); test_startup.py keeps them equal.
 DEFAULT_CUTOFF_MARGIN = 30
 CUTOFF_MARGIN_VAR = "SINCE_CUTOFF_CUTOFF_MARGIN"
+# The rule formats ``--target`` takes besides a file: since_cutoff.rules.FORMATS' names, copied
+# so that building the parser does not import notes; test_startup.py keeps them equal.
+RULE_TARGETS = ("claude-rules", "cursor-rules", "copilot-instructions")
+_RULES_HELP = (
+    f"; or {', '.join(RULE_TARGETS[:-1])} or {RULE_TARGETS[-1]}: one path-scoped rule file "
+    "per package, which the agent loads only for the files that use it"
+)
 EXAMPLES = """examples:
   since-cutoff                          probe your coding agent's model on this project
   since-cutoff scan                     the changed APIs your code uses, with a note for each
@@ -85,6 +92,11 @@ EXAMPLES = """examples:
                                         first) and keep them in step with the lockfile
   since-cutoff sync --check             exit 3 when the notes are out of date (CI, pre-commit)
   since-cutoff status                   are the notes current for the lockfile? (offline)
+  since-cutoff sync --target cursor-rules   one rule file per package, loaded only for the
+                                        files that use it (also claude-rules,
+                                        copilot-instructions)
+  since-cutoff explain Client.send      everything known about one API: the note, the
+                                        evidence, both signatures, where your code uses it
   since-cutoff run --apply              probe the model, then write notes (model-written ones
                                         only if their example type-checks)
   since-cutoff run --quick --model openai:gpt-5.4
@@ -520,7 +532,10 @@ def build_parser() -> argparse.ArgumentParser:
     sync.add_argument(
         "--target",
         help="file to write notes into (default: AGENTS.md and CLAUDE.md where they already have "
-        "a since-cutoff block; else AGENTS.md, or CLAUDE.md if only that one exists)",
+        "a since-cutoff block, and the rule files sync wrote; else AGENTS.md, or CLAUDE.md if "
+        f"only that one exists){_RULES_HELP}: .claude/rules/since-cutoff-<package>.md, "
+        ".cursor/rules/since-cutoff-<package>.mdc, "
+        ".github/instructions/since-cutoff-<package>.instructions.md",
     )
     sync.add_argument(
         "--check",
@@ -591,7 +606,8 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument(
         "--target",
         help="file to check (default: AGENTS.md and CLAUDE.md where they have a since-cutoff "
-        "block; else AGENTS.md, or CLAUDE.md if only that one exists)",
+        "block, and the rule files sync wrote; else AGENTS.md, or CLAUDE.md if only that one "
+        f"exists), or a rule format: {', '.join(RULE_TARGETS)}",
     )
     status.add_argument(
         "--hook",
@@ -602,6 +618,66 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("--json", action="store_true", help="print the status as JSON")
     _margin_flag(status)
     status.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
+
+    explain = sub.add_parser(
+        "explain",
+        help="everything since-cutoff knows about one changed API: its note, the evidence, "
+        "both signatures and where your code uses it (no model calls)",
+        description="Explain one note: run the scan sync runs (with the model and cutoff the "
+        "notes block was written for, unless --model or --cutoff is given) and print, for the "
+        "API, the note as the block writes it and which files' blocks have it, the package's "
+        "pinned release, the release it is compared from and where the version comes from, "
+        "each change with both signatures, the evidence behind the tag (the library's own "
+        "deprecation text and the file it is in, a replacement and where it is named, what a "
+        "move kept, a switched dependency's Requires-Dist), the Runtime line, the changelog, "
+        "every place your code uses it and in which form, and what the tag does not check. "
+        "No model is called and nothing is written. Exit code 1 when no changed API has that "
+        "name (the closest are listed).",
+    )
+    explain.add_argument(
+        "api",
+        help="the API as a note names it (Client.send, huggingface_hub.hf_hub_download), the "
+        "end of that name (send), or package.API",
+    )
+    explain.add_argument(
+        "path", nargs="?", default=".", help="project directory (default: current directory)"
+    )
+    explain.add_argument(
+        "--package", metavar="PKG", help="only this package's APIs (the one --from/--to diff)"
+    )
+    explain.add_argument(
+        "--from",
+        dest="from_version",
+        metavar="VERSION",
+        help="with --package: compare from this release instead of the one at the cutoff",
+    )
+    explain.add_argument(
+        "--to",
+        dest="to_version",
+        metavar="VERSION",
+        help="with --package: compare to this release instead of the one the project pins (or "
+        "the latest on PyPI)",
+    )
+    explain.add_argument(
+        "--model",
+        action="extend",
+        type=_csv,
+        default=[],
+        metavar="PROVIDER:MODEL[,...]",
+        help="the model whose training cutoff to compare from (default: the notes block's, else "
+        "the model your coding agent is set up with)",
+    )
+    explain.add_argument("--cutoff", help="the training cutoff instead (YYYY-MM or YYYY-MM-DD)")
+    _margin_flag(explain)
+    explain.add_argument("--json", action="store_true", help="print the explanation as JSON")
+    explain.add_argument("--include-name-matches", action="store_true", help=_NAME_MATCHES_HELP)
+    explain.add_argument(
+        "--max-download-mb",
+        type=float,
+        default=80.0,
+        help="skip packages whose wheel is larger (default: 80)",
+    )
+    explain.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
 
     models = sub.add_parser("models", help="list known models and their training cutoffs")
     models.add_argument(
@@ -632,10 +708,17 @@ def build_parser() -> argparse.ArgumentParser:
     cache.add_argument("--pypi", action="store_true", help="clear: only the PyPI metadata")
 
     unapply = sub.add_parser(
-        "unapply", help="remove the since-cutoff block from AGENTS.md / CLAUDE.md"
+        "unapply",
+        help="remove the since-cutoff block from AGENTS.md / CLAUDE.md, and the rule files it "
+        "wrote",
     )
     unapply.add_argument("path", nargs="?", default=".")
-    unapply.add_argument("--target", help="file to clean (default: AGENTS.md and CLAUDE.md)")
+    unapply.add_argument(
+        "--target",
+        help="file to clean, or a rule format whose files to remove "
+        f"({', '.join(RULE_TARGETS)}) (default: AGENTS.md, CLAUDE.md and every rule file "
+        "since-cutoff wrote)",
+    )
 
     mcp = sub.add_parser(
         "mcp",
@@ -736,7 +819,7 @@ def _main(argv: list[str] | None) -> int:
     ]
     if len(to_stdout) > 1:
         return _usage_error(f"{' and '.join(to_stdout)} cannot both write to stdout")
-    problem = _compare_problem(args) or _cache_problem(args)
+    problem = _compare_problem(args) or _cache_problem(args) or _rules_problem(args)
     if problem:
         return _usage_error(problem)
     try:
@@ -754,6 +837,8 @@ def _main(argv: list[str] | None) -> int:
         ui = _console(STDERR) if json_mode or markdown == "-" else out
         if args.command == "sync":
             return _cmd_sync(args, ui)
+        if args.command == "explain":
+            return _cmd_explain(args, ui)
         return _cmd_run(args, ui, json_mode)
     except SinceCutoffError as exc:
         _error(str(exc))
@@ -783,6 +868,17 @@ def _cache_problem(args: argparse.Namespace) -> str | None:
     if not flags:
         return None
     return f"cache {args.action} takes no {', '.join(flags)}: the kinds go with clear"
+
+
+def _rules_problem(args: argparse.Namespace) -> str | None:
+    """``run --target cursor-rules``: the rule files are sync's; run writes one block."""
+    target = (getattr(args, "target", None) or "").strip().lower()
+    if args.command != "run" or target not in RULE_TARGETS:
+        return None
+    return (
+        f"run --apply writes one notes block, into a file; to write the notes as {target}, "
+        f"run `since-cutoff sync --target {target}`"
+    )
 
 
 def _cutoff_margin(args: argparse.Namespace) -> int:
@@ -1129,27 +1225,26 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     """``since-cutoff sync``: write or update the notes block (see :mod:`since_cutoff.sync`)."""
     from since_cutoff.cache import DiskCache
     from since_cutoff.models import parse_cutoff
-    from since_cutoff.notes import (
-        IMPORTED_APIS,
-        SCOPE_USED,
-        agents_import_tip,
-        apply_block,
-        block_targets,
-        remove_block,
-    )
+    from since_cutoff.notes import IMPORTED_APIS, SCOPE_USED, agents_import_tip
     from since_cutoff.project import load_project
+    from since_cutoff.rules import rules_tip
     from since_cutoff.sync import (
         EXIT_EDITED,
         EXIT_OK,
         EXIT_OUT_OF_DATE,
+        Proposal,
+        RuleTargets,
         diff_lines,
         edited_text,
         out_of_date_text,
         propose,
-        read_target,
+        propose_rules,
+        read_targets,
         sticky_target,
         sync_json,
+        target_files,
         up_to_date_text,
+        write_proposal,
         written_text,
     )
 
@@ -1159,7 +1254,7 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
         raise SinceCutoffError(str(exc)) from exc
     margin = _cutoff_margin(args)
     project = load_project(Path(args.path))
-    targets = [read_target(project.root, p) for p in block_targets(project.root, args.target)]
+    targets = read_targets(project.root, args.target)
     store = DiskCache()
     reporter = RichReporter(out)
     plans: list[_Plan] = []
@@ -1190,23 +1285,30 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
             )
         )
     scans = _sync_scans(args, project, plans, store, reporter, out)
-    proposals = [
-        propose(
-            scans[(basis.model_id, basis.cutoff)],
-            t,
-            scope=scope,
-            suggestions=suggestions,
-            per_package=per_package,
-        )
-        for t, basis, scope, suggestions, per_package in plans
-    ]
+    proposals: list[Proposal] = []
+    for t, basis, scope, suggestions, per_package in plans:
+        options: dict[str, Any] = {
+            "scope": scope,
+            "suggestions": suggestions,
+            "per_package": per_package,
+        }
+        scan = scans[(basis.model_id, basis.cutoff)]
+        if isinstance(t, RuleTargets):  # one file per package (issue #16)
+            proposals += propose_rules(scan, t, **options)
+        else:
+            proposals.append(propose(scan, t, **options))
     changed = [p for p in proposals if p.changed]
     written: set[str] = set()
     # Both AGENTS.md and CLAUDE.md, and no `@AGENTS.md` in CLAUDE.md: how to keep one copy, or
     # what Claude Code needs to read a block in AGENTS.md alone; or a second copy (issue #13).
-    tip = agents_import_tip(project.root, [t.path for t in targets])
+    files = [f.path for t in targets for f in target_files(t)]
+    tip = agents_import_tip(project.root, files)
     if not any(p.block for p in proposals):
         tip = None
+    # Rule files written while AGENTS.md or CLAUDE.md keeps its block: two copies, one of them
+    # loaded on every request.
+    if not tip and any(p.block and p.target.rule for p in proposals):
+        tip = rules_tip(project.root, [t.rule for t in targets if isinstance(t, RuleTargets)])
 
     def finish(code: int) -> int:
         if args.json:
@@ -1251,10 +1353,7 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
             out.print("Nothing written.")
             return EXIT_OUT_OF_DATE
     for p in changed:
-        if p.block is None:
-            remove_block(p.target.path)
-        else:
-            apply_block(p.target.path, p.block)
+        write_proposal(p)
         written.add(p.target.name)
         out.print(f"[green]✓[/green] {_escape(written_text(p))}")
     if any(p.target.text for p in changed):
@@ -1276,7 +1375,7 @@ def _sync_scans(
     from datetime import date
 
     from since_cutoff.engine import SKIPPED, Settings
-    from since_cutoff.sync import blocked_by, lockfile_changes, target_status
+    from since_cutoff.sync import blocked_by, lockfile_changes, target_files, target_status
 
     settings = Settings(
         max_download_mb=args.max_download_mb,
@@ -1292,8 +1391,10 @@ def _sync_scans(
             continue
         out.print(_model_line(basis))
         for t, *_ in plans:
-            if t.basis == key:
-                moved = lockfile_changes(project, target_status(project, t))
+            if t.basis != key:
+                continue
+            for f in target_files(t):
+                moved = lockfile_changes(project, target_status(project, f))
                 if moved:
                     reporter.info(moved)
         scans[key] = engine.scan(project, basis)
@@ -1303,11 +1404,12 @@ def _sync_scans(
             first = next((p.reason for p in scan.skipped if p.reason), "")
             raise SinceCutoffError(f"no dependency could be checked: {first} (is PyPI reachable?)")
     for t, basis, *_ in plans:
-        for p in blocked_by(scans[(basis.model_id, basis.cutoff)], [t]):
-            raise SinceCutoffError(
-                f"cannot tell whether the notes for {p.name} in {t.name} still hold: it could "
-                f"not be checked ({p.reason}). Nothing written."
-            )
+        for f in target_files(t):
+            for p in blocked_by(scans[(basis.model_id, basis.cutoff)], [f]):
+                raise SinceCutoffError(
+                    f"cannot tell whether the notes for {p.name} in {f.name} still hold: it "
+                    f"could not be checked ({p.reason}). Nothing written."
+                )
     for scan in scans.values():
         for p in scan.skipped:
             if p.reason and METAPACKAGE in p.reason:  # information: its parts are checked
@@ -1356,6 +1458,66 @@ def _sync_model(
     )
 
 
+def _cmd_explain(args: argparse.Namespace, ui: Console) -> int:
+    """``since-cutoff explain API``: everything known about one API (see
+    :mod:`since_cutoff.explain`); no model call, nothing written."""
+    from datetime import date
+
+    from since_cutoff.cache import DiskCache
+    from since_cutoff.engine import Settings
+    from since_cutoff.explain import blocks_of, explain_json, lookup, lookup_lines, version_scan
+    from since_cutoff.models import parse_cutoff
+    from since_cutoff.project import load_project
+    from since_cutoff.sync import read_targets, sticky_target, target_files
+
+    versions = bool(args.from_version or args.to_version)
+    if versions and not args.package:
+        return _usage_error("explain --from and --to need --package")
+    try:
+        cutoff = parse_cutoff(args.cutoff) if args.cutoff else None
+    except ValueError as exc:
+        raise SinceCutoffError(str(exc)) from exc
+    margin = _cutoff_margin(args)
+    project = load_project(Path(args.path))
+    files = [f for t in read_targets(project.root) for f in target_files(t)]
+    store = DiskCache()
+    reporter = RichReporter(ui)
+    # As sync: the model and cutoff the notes were written for, unless --model or --cutoff.
+    basis = None
+    if not args.model and cutoff is None:
+        basis = next((b for f in files if (b := sticky_target(f, margin)) is not None), None)
+    if basis is None:
+        basis = _sync_model(args.model, cutoff, project.root, store, reporter, margin)
+    ui.print(_model_line(basis))
+    settings = Settings(
+        cutoff=basis.cutoff,
+        cutoff_margin=margin,
+        include=[args.package] if args.package and not versions else [],
+        max_download_mb=args.max_download_mb,
+        python_version=project.python_version,
+        today=date.today(),
+        include_name_matches=args.include_name_matches,
+    )
+    engine = Engine(settings, store=store, llm_cache=store, reporter=reporter)
+    if versions:
+        scan = version_scan(
+            engine, project, basis, args.package, args.from_version, args.to_version
+        )
+    else:
+        scan = engine.scan(project, basis)
+    reporter.done()
+    result = lookup(scan, args.api, args.package)
+    blocks = blocks_of(files)
+    code = 0 if result.found else 1
+    if args.json:
+        STDOUT.write(json.dumps(explain_json(scan, result, blocks), indent=2, default=str) + "\n")
+        return code
+    ui.print()
+    for line in lookup_lines(scan, result, blocks):
+        ui.print(line, markup=False, highlight=False)
+    return code
+
+
 def _confirm(question: str, out: Console) -> bool | None:
     """Ask a yes/no question on the terminal; None when stdin is not one (a pipe, CI, a coding
     agent's shell), where nobody can answer."""
@@ -1400,7 +1562,6 @@ def _cmd_status(args: argparse.Namespace) -> int:
 
 
 def _status(args: argparse.Namespace, out: Console | None) -> int:
-    from since_cutoff.notes import block_targets
     from since_cutoff.project import load_project
     from since_cutoff.sync import (
         EXIT_OK,
@@ -1408,14 +1569,15 @@ def _status(args: argparse.Namespace, out: Console | None) -> int:
         exit_code,
         hook_line,
         note_import_tip,
-        read_target,
+        read_targets,
         status_json,
         status_lines,
+        target_files,
         target_status,
     )
 
     project = load_project(Path(args.path))
-    targets = [read_target(project.root, p) for p in block_targets(project.root, args.target)]
+    targets = [f for t in read_targets(project.root, args.target) for f in target_files(t)]
     detected = _detected_offline(project.root)
     deps = current_deps_hash(project)
     margin = _cutoff_margin(args)
@@ -1624,17 +1786,26 @@ def _cmd_mcp(args: argparse.Namespace) -> int:
 
 
 def _cmd_unapply(args: argparse.Namespace, out: Console) -> int:
+    """Remove the block from AGENTS.md and CLAUDE.md, and the rule files since-cutoff wrote
+    (issue #16), or from ``--target`` only: a file, or a rule format (``cursor-rules``)."""
     from since_cutoff.notes import remove_block
+    from since_cutoff.rules import FORMATS, remove_rule, rule_format
 
     root = Path(args.path).resolve()
     if not root.is_dir():
         raise SinceCutoffError(f"{root} is not a directory")
-    targets = [Path(args.target)] if args.target else [root / "AGENTS.md", root / "CLAUDE.md"]
-    removed = [t for t in targets if remove_block(t if t.is_absolute() else root / t)]
+    rule = rule_format(args.target)
+    if rule is not None:
+        files, formats = [], [rule]
+    elif args.target:
+        files, formats = [Path(args.target)], []
+    else:
+        files, formats = [root / "AGENTS.md", root / "CLAUDE.md"], list(FORMATS.values())
+    removed = [t.name for t in files if remove_block(t if t.is_absolute() else root / t)]
+    for f in formats:
+        removed += [p.relative_to(root).as_posix() for p in f.files(root) if remove_rule(p)]
     if removed:
-        out.print(
-            "removed the since-cutoff block from " + ", ".join(_escape(t.name) for t in removed)
-        )
+        out.print("removed the since-cutoff block from " + ", ".join(_escape(n) for n in removed))
     else:
         out.print("no since-cutoff block found")
     return 0

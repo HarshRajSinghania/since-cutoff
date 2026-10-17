@@ -1662,8 +1662,11 @@ def render_block(
     suggestions: bool = False,
     per_package: int | None = None,
     margin: int = DEFAULT_CUTOFF_MARGIN,
+    extra: dict[str, Any] | None = None,
 ) -> str:
-    """The notes block (format 2) for AGENTS.md / CLAUDE.md.
+    """The notes block (format 2) for AGENTS.md / CLAUDE.md, or for a rule file
+    (:mod:`since_cutoff.rules`), whose meta line also has ``extra``: the files it applies to
+    and a hash of its front matter.
 
     ``deps`` is :func:`deps_hash` of every dependency scanned (by default, of the packages and
     versions the notes are about); ``scope`` what the notes cover (SCOPE_*); ``margin`` how many
@@ -1723,6 +1726,8 @@ def render_block(
         meta["suggestions"] = True
     if scope == SCOPE_IMPORTED and per_package and per_package != IMPORTED_APIS:
         meta["per_package"] = per_package
+    if extra:
+        meta.update(extra)
     if checked:
         meta["checked"] = checked
     return f"{BLOCK_START}\n{_meta_line(meta)}\n{text}{BLOCK_END}\n"

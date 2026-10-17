@@ -690,6 +690,24 @@ def test_the_image_is_pinned_and_runs_as_a_user() -> None:
     assert "SINCE_CUTOFF_CACHE=/cache" in dockerfile
 
 
+def test_the_release_checks_the_image_before_it_pushes_and_moves_latest_only_forward() -> None:
+    docker = _jobs(_workflows()["release.yml"])["docker"]
+    assert re.search(r"^    timeout-minutes: \d+$", docker, re.M)
+    check = docker.index("run: python3 scripts/check_image.py since-cutoff:check ")
+    load, push = docker.index("\n          load: true\n"), docker.index("\n          push: true\n")
+    assert load < check < docker.index("uses: docker/login-action@") < push
+    assert "platforms: linux/amd64\n" in docker[docker.index("Build the linux/amd64 image") : load]
+    assert "platforms: linux/amd64,linux/arm64\n" in docker[check:]
+    # :latest only when this release is the newest on PyPI, never metadata-action's automatic one.
+    assert "flavor: latest=false\n" in docker
+    assert "type=raw,value=latest,enable=${{ steps.release.outputs.latest }}\n" in docker
+    assert 'sort -V | tail -n 1)" = "$version" ]' in docker
+    # CI's docker job runs the same check on the image it builds.
+    assert (
+        "python3 scripts/check_image.py since-cutoff:ci " in _jobs(_workflows()["ci.yml"])["docker"]
+    )
+
+
 # ------------------------------------------ workflows (OpenSSF Scorecard checks)
 _USES = re.compile(r"^ *(?:- )?uses: ([^@\s]+)@?(\S*)(.*)$", re.M)  # action, ref, comment
 

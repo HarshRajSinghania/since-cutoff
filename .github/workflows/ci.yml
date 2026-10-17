@@ -267,41 +267,10 @@ jobs:
           fi
           docker build --build-arg "SINCE_CUTOFF_VERSION=$version" -t since-cutoff:ci .
           echo "IMAGE_VERSION=$version" >> "$GITHUB_ENV"
-      - name: since-cutoff --version
-        run: |
-          set -euxo pipefail
-          [ "$(docker run --rm since-cutoff:ci --version)" = "since-cutoff $IMAGE_VERSION" ]
-          [ "$(docker run --rm --entrypoint id since-cutoff:ci -u)" = "10001" ]
-      - name: The default command answers MCP tools/list
-        shell: python
-        run: |
-          import json
-          import subprocess
-
-          messages = [
-              {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
-                  "protocolVersion": "2025-06-18", "capabilities": {},
-                  "clientInfo": {"name": "ci", "version": "0"}}},
-              {"jsonrpc": "2.0", "method": "notifications/initialized"},
-              {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
-          ]
-          server = subprocess.Popen(
-              ["docker", "run", "--rm", "-i", "--network", "none", "since-cutoff:ci"],
-              stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
-          )
-          for message in messages:
-              server.stdin.write(json.dumps(message) + "\n")
-              server.stdin.flush()
-          tools = None
-          for line in server.stdout:
-              reply = json.loads(line)
-              if reply.get("id") == 2:
-                  tools = {tool["name"] for tool in reply["result"]["tools"]}
-                  break
-          server.stdin.close()
-          server.wait(timeout=60)
-          print(sorted(tools or ()))
-          assert tools == {"model_cutoff", "api_changes", "project_changes"}, tools
+      # The check release.yml runs before it pushes: --version, the user, and MCP tools/list from
+      # the default command with --network none.
+      - name: Check the image
+        run: python3 scripts/check_image.py since-cutoff:ci "$IMAGE_VERSION"
       - name: Scan examples/agent-app
         run: |
           set -euxo pipefail

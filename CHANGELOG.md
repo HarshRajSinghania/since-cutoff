@@ -24,8 +24,9 @@
   runs as a non-root user with its cache in `/cache`, and still starts the MCP server without
   arguments (`ENTRYPOINT ["since-cutoff"]`, `CMD ["mcp"]`), as MCP directories expect. CI builds
   it on every pull request, checks `--version`, MCP `tools/list` and a scan of
-  `examples/agent-app`; `release.yml` pushes it after PyPI has the release, with
-  `packages: write` for that job only.
+  `examples/agent-app`; `release.yml` builds it for linux/amd64 and checks `--version`, the user
+  and MCP `tools/list` first, then pushes both platforms after PyPI has the release, with
+  `packages: write` for that job only, and moves `:latest` only when the release is the newest.
 - Notes from the diff say what to use instead in more cases, and point somewhere useful when they
   cannot (an audit of 36 libraries found 25 of 36 notes ending in "since-cutoff found no
   replacement in X's deprecation text", several although the text named one; #14). A replacement

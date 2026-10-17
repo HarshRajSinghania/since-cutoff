@@ -159,9 +159,12 @@ CI runs the same checks on Linux, macOS and Windows with Python 3.10 to 3.13, so
    - checks that every version field equals the tag (`scripts/check_versions.py`), and builds;
    - publishes to PyPI with trusted publishing (configure the pending publisher on pypi.org once);
    - publishes `server.json` to the MCP Registry;
-   - builds the Docker image from the release on PyPI, for linux/amd64 and linux/arm64, and
-     pushes it as `ghcr.io/mohammadhijjawi97/since-cutoff:X.Y.Z` and `:latest` (the first push
-     creates a private package: make it public once, under the package's settings);
+   - builds the Docker image from the release on PyPI for linux/amd64 and checks it
+     (`scripts/check_image.py`: `--version`, the user, MCP `tools/list` with no network), then
+     builds it for linux/amd64 and linux/arm64 and pushes it as
+     `ghcr.io/mohammadhijjawi97/since-cutoff:X.Y.Z`, and as `:latest` when no newer release is on
+     PyPI (the first push creates a private package: make it public once, under the package's
+     settings);
    - creates the GitHub release with the changelog entry and the built files.
 3. Once the release is on PyPI, move the major tag by hand, so that
    `uses: MohammadHijjawi97/since-cutoff@v0` picks it up (the workflow never moves it, and

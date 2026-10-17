@@ -494,14 +494,16 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="FILE",
         help="also write a SARIF 2.1.0 report to FILE, relative to the current directory ('-' "
         "for stdout), for GitHub code scanning (github/codeql-action/upload-sarif): a result "
-        "on each file that uses a changed API, a warning for the old form, a note otherwise",
+        "on each file that uses a changed API, a warning for the old form, a note otherwise; "
+        "not written when no dependency could be checked",
     )
     scan.add_argument(
         "--gitlab-codequality",
         metavar="FILE",
         help="also write a GitLab Code Quality report to FILE, relative to the current "
         "directory ('-' for stdout), for merge requests (artifacts: reports: codequality): an "
-        "issue on each file that uses a changed API, major for the old form, info otherwise",
+        "issue on each file that uses a changed API, major for the old form, info otherwise; "
+        "not written when no dependency could be checked",
     )
     scan.add_argument("--include-name-matches", action="store_true", help=_NAME_MATCHES_HELP)
 
@@ -754,7 +756,7 @@ def _main(argv: list[str] | None) -> int:
     ]
     if len(to_stdout) > 1:
         return _usage_error(f"{' and '.join(to_stdout)} cannot both write to stdout")
-    problem = _compare_problem(args) or _cache_problem(args)
+    problem = _compare_problem(args) or _cache_problem(args) or _report_files_problem(args)
     if problem:
         return _usage_error(problem)
     try:
@@ -779,6 +781,32 @@ def _main(argv: list[str] | None) -> int:
     except KeyboardInterrupt:
         _console(STDERR).print("[yellow]interrupted[/yellow]")
         return 130
+
+
+def _report_files_problem(args: argparse.Namespace) -> str | None:
+    """Why the report files of ``scan`` cannot be written as asked, if they cannot: ``--sarif``
+    or ``--gitlab-codequality`` with no file name (which would write nothing, silently), or two
+    reports in the same file (the second would overwrite the first)."""
+    reports = [
+        (flag, getattr(args, dest, None))
+        for flag, dest in (
+            ("--markdown", "markdown"),
+            ("--sarif", "sarif"),
+            ("--gitlab-codequality", "gitlab_codequality"),
+        )
+    ]
+    for flag, target in reports[1:]:
+        if target is not None and not target.strip():
+            return f"{flag} needs a file name, or '-' for stdout"
+    seen: dict[str, str] = {}
+    for flag, target in reports:
+        if not target or target == "-":
+            continue
+        key = os.path.normcase(Path(target).resolve())
+        if key in seen:
+            return f"{seen[key]} and {flag} cannot both write to {target}"
+        seen[key] = flag
+    return None
 
 
 def _compare_problem(args: argparse.Namespace) -> str | None:
@@ -932,10 +960,21 @@ def _cmd_run(args: argparse.Namespace, ui: Console, json_mode: bool) -> int:
     summary_md = getattr(args, "markdown", None)
     if summary_md:
         _write_markdown(summary_md, render_scan_markdown(scan, limit=args.limit, env=os.environ))
-    sarif = getattr(args, "sarif", None)
+    # With no dependency checked (PyPI unreachable), the exit code is 1 (below) and neither CI
+    # report is written: an empty one would close every open alert when uploaded.
+    nothing_checked = bool(scan.packages) and all(p.status == "skipped" for p in scan.packages)
+    withheld = [
+        what
+        for what, target in (
+            ("the SARIF report", getattr(args, "sarif", None)),
+            ("the GitLab Code Quality report", getattr(args, "gitlab_codequality", None)),
+        )
+        if target and nothing_checked
+    ]
+    sarif = None if nothing_checked else getattr(args, "sarif", None)
     if sarif:
         _write_json(sarif, sarif_report(scan, env=os.environ), "the SARIF report")
-    codequality = getattr(args, "gitlab_codequality", None)
+    codequality = None if nothing_checked else getattr(args, "gitlab_codequality", None)
     if codequality:
         issues = gitlab_codequality(scan, env=os.environ)
         _write_json(codequality, issues, "the GitLab Code Quality report")
@@ -995,11 +1034,15 @@ def _cmd_run(args: argparse.Namespace, ui: Console, json_mode: bool) -> int:
         STDOUT.write("".join(line + "\n" for line in github_annotations(scan, env=os.environ)))
         STDOUT.flush()
 
-    checked = [p for p in scan.packages if p.status != "skipped"]
-    if not checked and scan.packages:
+    if nothing_checked:
         ui.print(
             "[red]No dependency could be checked[/red] (see the reasons above; is PyPI reachable?)."
         )
+        if withheld:
+            ui.print(
+                f"[dim]Not written: {' and '.join(withheld)} (empty, an upload would show every "
+                "open finding as fixed).[/dim]"
+            )
         return 1
     if args.command == "run" and not scan.changed:
         ui.print(

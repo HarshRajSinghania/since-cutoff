@@ -286,11 +286,41 @@ pinned one, and the note from the API diff.
   paths relative to `CI_PROJECT_DIR`.
 - **Locations**: the line and column once the scan records them
   ([#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)); until then line 1 of the
-  file, and the message says the finding is file-level.
-- **Fingerprints** (SARIF `partialFingerprints`, Code Quality `fingerprint`): a hash of the
-  package, the API and the path, without the versions, so that a run after a version bump
-  updates the same alerts instead of opening new ones. With nothing to report, the SARIF log
-  has no result (an upload of it closes the open alerts) and the Code Quality report is `[]`.
+  file, and the message says the finding is file-level. A pull request shows a code scanning
+  alert only when the lines it points at are in the pull request's diff, so until then it
+  shows mostly those of new files; the Security tab has them all.
+- **Fingerprints** (SARIF `partialFingerprints.primaryLocationLineHash` and
+  `sinceCutoffFinding/v1`, Code Quality `fingerprint`): a hash of the package, the API and the
+  path, without the versions, so that a run after a version bump, or after an edit to the
+  file, updates the same alerts instead of opening new ones. Code scanning matches alerts by
+  the rule and `primaryLocationLineHash` only. upload-sarif fills that in only when it is
+  missing (codeql-action's `src/fingerprints.ts`, as of `upload-sarif@v4`): a rolling hash of
+  the first 100 characters from the start of the result's line, spaces and tabs left out,
+  numbered when the same hash comes again in the file. On line 1 every result in a file would
+  get the same one, so the alerts of two APIs with the same kind of change in one file would
+  merge, and an edit near the top of the file would close and reopen them all. When the
+  result has a hash, upload-sarif keeps it, and logs a warning when its own differs. Once
+  lines are recorded, a second place of an API in the same file adds its rank among them to
+  the hash, so a new use above it moves the alerts below it to new ones.
+- **Rules**: one per kind of change, not per API. The fingerprint already tells the APIs
+  apart; a rule is what code scanning filters by and describes, and a rule per API would fill
+  the rule filter with every API, with a description that repeats the result's message. A
+  change of kind (deprecated, then removed) is a new problem, so it is a new alert.
+- **Nothing to report, or not everything checked**: with nothing to report, the SARIF log has
+  no result (an upload of it closes the open alerts) and the Code Quality report is `[]`. With
+  no dependency checked, `scan` writes neither and exits with code 1. With some skipped, the
+  SARIF run's `invocations[0]` has `executionSuccessful: false` and one error-level
+  `toolExecutionNotifications` entry per skipped package, with why. Code scanning does not act
+  on them: an upload closes the alerts of the skipped packages as fixed, and they reopen when
+  a later upload checks them again; the README's "Use in CI" shows how to upload only a
+  complete log. The Code Quality format has no such field, and a merge request shows those
+  issues as fixed.
+- **Limits**: one upload to code scanning takes at most 25,000 results in a run and 10 MB
+  (gzip-compressed and base64-encoded, as upload-sarif sends it), and shows the 5,000 most
+  severe results of a run. Above the limits, the `note` results are left out first, then the
+  `warning` ones, and a warning-level notification says how many.
+- **Version**: `driver.version` is since-cutoff's; `semanticVersion` is the same release in
+  Semantic Versioning (`0.7.0rc1` is `0.7.0-rc.1`).
 
 ### The note for each API
 
@@ -777,10 +807,11 @@ The package ships JSON Schemas (draft 2020-12) for them, in `since_cutoff/schema
 [results.schema.json](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/schemas/results.schema.json)
 for results.json, `scan --json` and `run --json` (`report_schema` 3), and
 [status.schema.json](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/schemas/status.schema.json)
-for `status --json`. Each field has a one-line description. The tests check the reports
-against them, and fail on a top-level key (or a key of `used_apis`, its locations and notes)
-that the schema does not describe; the changes under `scan[].changes` follow `diff_schema`, and
-the schema lists the fields integrations read.
+for `status --json`. Each field has a one-line description, and each schema's `$id` is its
+file at the release's tag (`.../v0.7.0/...`), so it never changes once released. The tests
+check the reports against them, and fail on a top-level key (or a key of `used_apis`, its
+locations and notes, or of `settings`) that the schema does not describe; the changes under
+`scan[].changes` follow `diff_schema`, and the schema lists the fields integrations read.
 
 ## What the numbers mean (and do not mean)
 

@@ -827,13 +827,22 @@ plusieurs chemins d'import n'est compté qu'une fois.
 
 `scan --sarif FICHIER` écrit un rapport SARIF 2.1.0, que `github/codeql-action/upload-sarif`
 envoie à code scanning : chaque fichier qui utilise une API modifiée devient une alerte dans
-l'onglet Security du dépôt et dans les checks de la pull request, un avertissement (*warning*)
-pour l'ancienne forme et une note (*note*) sinon, avec le changement, les deux versions et la
-note dans son message. Chaque type de changement est une règle (`removed`, `moved`,
-`param_removed`, `deprecated`, ...). Une alerte reste la même d'une exécution et d'une montée de
-version à l'autre (son empreinte est le paquet, l'API et le fichier), et un envoi sans rien à
-signaler ferme celles qui sont ouvertes. Tant que l'analyse n'enregistre pas les lignes
-([#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), une alerte est sur la ligne 1 de son fichier et le dit.
+l'onglet Security du dépôt, un avertissement (*warning*) pour l'ancienne forme et une note
+(*note*) sinon, avec le changement, les deux versions et la note dans son message. Chaque type
+de changement est une règle (`removed`, `moved`, `param_removed`, `deprecated`, ...). Tant que
+l'analyse n'enregistre pas les lignes ([#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), une alerte est sur la ligne 1 de son
+fichier et le dit. Une pull request ne montre une alerte que si sa ligne est dans le diff
+de la pull request : jusque-là, elle montre surtout celles des nouveaux fichiers ; l'onglet
+Security les a toutes.
+
+Code scanning reconnaît une alerte d'une exécution à l'autre à sa règle et à son
+`primaryLocationLineHash`, que le rapport fixe à un hash du paquet, de l'API et du fichier,
+sans les versions : une alerte reste la même d'une exécution, d'une montée de version et d'une
+modification du fichier à l'autre, et deux API dans un même fichier font deux alertes.
+upload-sarif garde ce hash au lieu d'en calculer un à partir du texte de la ligne de l'alerte
+(que toutes les alertes de la ligne 1 d'un fichier partageraient), et journalise un
+avertissement pour chaque résultat où les deux diffèrent (« found existing inconsistent
+fingerprint value ») : cet avertissement est normal.
 
 ```yaml
 # .github/workflows/since-cutoff-sarif.yml
@@ -848,6 +857,7 @@ jobs:
     permissions:
       contents: read
       security-events: write  # pour envoyer le rapport
+      actions: read  # pour upload-sarif dans un dépôt privé
     steps:
       - uses: actions/checkout@v7
       - uses: MohammadHijjawi97/since-cutoff@v0
@@ -855,7 +865,8 @@ jobs:
           model: anthropic:claude-sonnet-4-5
           args: --sarif since-cutoff.sarif
       - uses: github/codeql-action/upload-sarif@v4
-        if: ${{ !cancelled() }}
+        # aussi quand --fail-on a fait échouer le job, mais pas sans fichier (rien de vérifié)
+        if: ${{ !cancelled() && hashFiles('since-cutoff.sarif') != '' }}
         with:
           sarif_file: since-cutoff.sarif
           category: since-cutoff
@@ -864,8 +875,42 @@ jobs:
 Exécutez-le sur la branche par défaut comme sur les pull requests, pour que code scanning sache
 quelles alertes ajoute une pull request. Code scanning est gratuit pour les dépôts publics ;
 les dépôts privés ont besoin de GitHub Code Security. `--sarif` demande since-cutoff 0.7.0 ou
-plus récent (`since-cutoff-version`). Hors de l'Action : `since-cutoff scan --model ... --sarif
-since-cutoff.sarif`, puis la même étape d'envoi.
+plus récent, que `@v0` utilise par défaut depuis la v0.7.0 de l'Action ; avec une étiquette
+plus ancienne de l'Action, indiquez `since-cutoff-version: 0.7.0`. Hors de l'Action :
+`since-cutoff scan --model ... --sarif since-cutoff.sarif`, puis la même étape d'envoi.
+
+Code scanning lit chaque envoi comme l'analyse complète de sa `category` sur cette branche :
+il ferme comme corrigée (*fixed*) chaque alerte ouverte que l'envoi n'a pas, et la rouvre
+quand un envoi ultérieur l'a de nouveau. Ainsi :
+
+- Quand aucune dépendance n'a pu être vérifiée (PyPI injoignable), l'analyse se termine avec le
+  code 1 sans écrire de fichier SARIF : la condition `hashFiles` saute l'envoi, et les alertes
+  restent telles quelles.
+- Quand certaines n'ont pas pu l'être (code 0, les raisons dans le journal), le rapport le
+  dit : `runs[0].invocations[0].executionSuccessful` vaut `false`, et ses
+  `toolExecutionNotifications` nomment chaque paquet ignoré et pourquoi. Code scanning ne tient
+  compte ni de l'un ni de l'autre : l'envoi ferme comme corrigées les alertes ouvertes de ces
+  paquets, et le prochain envoi qui les vérifie les rouvre. Elles ne restent ouvertes que si ce
+  rapport n'est pas envoyé ; pour n'envoyer qu'un rapport où toutes les dépendances ont été
+  vérifiées, remplacez l'étape d'envoi ci-dessus par ces deux étapes :
+
+  ```yaml
+        - id: sarif  # complete=true quand toutes les dépendances ont été vérifiées
+          if: ${{ !cancelled() && hashFiles('since-cutoff.sarif') != '' }}
+          run: echo "complete=$(jq '.runs[0].invocations[0].executionSuccessful' since-cutoff.sarif)" >> "$GITHUB_OUTPUT"
+        - uses: github/codeql-action/upload-sarif@v4
+          if: ${{ !cancelled() && steps.sarif.outputs.complete == 'true' }}
+          with:
+            sarif_file: since-cutoff.sarif
+            category: since-cutoff
+  ```
+
+  Une dépendance qui n'est jamais vérifiée (une qui n'est pas sur PyPI) empêche alors tout
+  envoi : laissez-la de côté avec l'entrée `exclude` de l'Action.
+- Quand plusieurs dossiers sont analysés (un monorepo), donnez à chaque envoi sa propre
+  `category` (`since-cutoff-api`, `since-cutoff-web`) : upload-sarif refuse un deuxième envoi
+  d'une même catégorie dans le même job, et un envoi dans un autre job remplace le premier et
+  ferme ses alertes.
 
 ### pre-commit
 
@@ -909,7 +954,11 @@ Pour les merge requests GitLab, `--gitlab-codequality FICHIER` écrit un rapport
 un problème par fichier qui utilise une API modifiée (`major` pour l'ancienne forme, `info`
 sinon ; vérification `since-cutoff/<kind>`), avec son chemin relatif à `CI_PROJECT_DIR` et la
 note dans sa description. Ses empreintes laissent les versions de côté, si bien qu'une montée
-de version ne rouvre pas tous les problèmes. Ajoutez-le comme artefact :
+de version ne rouvre pas tous les problèmes. GitLab montre comme corrigé un problème du rapport
+de la branche cible qui manque dans celui de la merge request : quand aucune dépendance n'a pu
+être vérifiée, l'analyse se termine avec le code 1 sans écrire de rapport, mais après un saut
+partiel les problèmes des paquets ignorés apparaissent comme corrigés. Ajoutez-le comme
+artefact :
 
 ```yaml
 # .gitlab-ci.yml

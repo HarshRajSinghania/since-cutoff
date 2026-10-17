@@ -43,7 +43,7 @@ from since_cutoff.engine import (
     Settings,
     UsedAPI,
 )
-from since_cutoff.errors import SinceCutoffError
+from since_cutoff.errors import PackageIndexError, SinceCutoffError
 from since_cutoff.mcp_server import PROJECT_BUDGET, Target, Tools, _render_project
 from since_cutoff.models import ModelRegistry
 from since_cutoff.notes import diff_note
@@ -776,6 +776,91 @@ def test_sarif_has_a_rule_per_kind_and_a_result_per_place(scan: ScanResult, app:
     assert first["properties"]["api"] == "toylib.Client.send"
     assert first["properties"]["changeKinds"] == [PARAM_REMOVED, PARAM_KEYWORD_ONLY]
     assert len({r["partialFingerprints"]["sinceCutoffFinding/v1"] for r in results}) == 3
+    # Every dependency was checked, and the version is SemVer's.
+    assert run["invocations"] == [{"executionSuccessful": True}]
+    assert driver["semanticVersion"] == report.semantic_version(report.__version__)
+
+
+def test_code_scanning_keys_each_alert_on_package_api_and_file(scan: ScanResult) -> None:
+    """GitHub code scanning reads only partialFingerprints.primaryLocationLineHash, and
+    upload-sarif fills it in only when it is missing (codeql-action's fingerprints.ts), from
+    the text of the result's first line: every result on line 1 of main.py would get the
+    same one and merge into one alert. since-cutoff's own hash is there, so each stays its own
+    alert, and edits to line 1 do not move it."""
+    results = report.sarif_report(scan)["runs"][0]["results"]
+    hashes = [r["partialFingerprints"]["primaryLocationLineHash"] for r in results]
+    assert hashes == [r["partialFingerprints"]["sinceCutoffFinding/v1"] for r in results]
+    in_main = [
+        r["partialFingerprints"]["primaryLocationLineHash"]
+        for r in results
+        if r["locations"][0]["physicalLocation"]["artifactLocation"]["uri"] == "main.py"
+    ]
+    assert len(in_main) == 2 and len(set(in_main)) == 2
+    assert len(set(hashes)) == len(results)
+
+
+def test_sarif_names_each_dependency_it_could_not_check(scan: ScanResult) -> None:
+    """A skipped dependency has no result, so an upload closes its alerts: the invocation
+    says the run is incomplete and why, for whoever reads the log (code scanning does not)."""
+    scan.packages += [
+        PackageScan("big", "9", "uv.lock", True, reason="big==9 is 200 MB, above the limit"),
+        PackageScan("odd", None, "requirements.txt", True),
+    ]
+    [run] = report.sarif_report(scan)["runs"]
+    [invocation] = run["invocations"]
+    assert invocation["executionSuccessful"] is False
+    assert [
+        (n["level"], n["message"]["text"]) for n in invocation["toolExecutionNotifications"]
+    ] == [
+        (
+            "error",
+            "big 9 was not checked: big==9 is 200 MB, above the limit. Its findings are not in "
+            "this log.",
+        ),
+        ("error", "odd was not checked: no reason given. Its findings are not in this log."),
+    ]
+    assert invocation["toolExecutionNotifications"][0]["properties"]["package"] == "big"
+    assert len(run["results"]) == 3  # the checked ones are all there
+
+
+def test_sarif_keeps_within_what_one_upload_takes(scan: ScanResult, monkeypatch) -> None:
+    """Code scanning rejects a run of more than 25,000 results, or an upload above 10 MB: the
+    notes go first, and a notification says how many were left out."""
+    monkeypatch.setattr(report, "SARIF_MAX_RESULTS", 2)
+    [run] = report.sarif_report(scan)["runs"]
+    assert [r["level"] for r in run["results"]] == ["warning", "note"]
+    [left_out] = run["invocations"][0]["toolExecutionNotifications"]
+    assert left_out["level"] == "warning"
+    assert left_out["message"]["text"].startswith(
+        "1 of 3 results were left out, those of level note first"
+    )
+    assert run["invocations"][0]["executionSuccessful"] is True
+    # By size: the most that fit.
+    monkeypatch.setattr(report, "SARIF_MAX_RESULTS", 25_000)
+    one = report._upload_size(report.sarif_report(scan)) - 1
+    monkeypatch.setattr(report, "SARIF_MAX_UPLOAD", one)
+    log = report.sarif_report(scan)
+    assert 0 < len(log["runs"][0]["results"]) < 3 and report._upload_size(log) <= one
+    assert log["runs"][0]["results"][0]["level"] == "warning"
+
+
+@pytest.mark.parametrize(
+    ("version", "semantic"),
+    [
+        ("0.7.0", "0.7.0"),
+        ("1.2", "1.2.0"),
+        ("0.7.0rc1", "0.7.0-rc.1"),
+        ("0.7.0a2", "0.7.0-alpha.2"),
+        ("0.7.0b1.dev3", "0.7.0-beta.1.dev.3"),
+        ("0.7.0.dev02", "0.7.0-dev.2"),
+        ("0.7.0.post1", "0.7.0+post.1"),
+        ("0.7.0.dev3+g1a2b3c.d20261017", "0.7.0-dev.3+g1a2b3c.d20261017"),
+        ("1!2.0", None),
+        ("unknown", None),
+    ],
+)
+def test_semantic_version_says_a_pep_440_version_as_semver(version, semantic) -> None:
+    assert report.semantic_version(version) == semantic
 
 
 def test_sarif_and_codequality_point_at_the_line_once_it_is_known(
@@ -819,7 +904,7 @@ def test_fingerprints_are_stable_across_runs_and_version_bumps(
     def prints(s: ScanResult, env: dict[str, str] | None = None) -> list[str]:
         sarif = report.sarif_report(s, env=env)["runs"][0]["results"]
         issues = report.gitlab_codequality(s, env=env)
-        assert [r["partialFingerprints"]["sinceCutoffFinding/v1"] for r in sarif] == [
+        assert [r["partialFingerprints"]["primaryLocationLineHash"] for r in sarif] == [
             i["fingerprint"] for i in issues
         ]
         return [i["fingerprint"] for i in issues]
@@ -866,6 +951,46 @@ def test_sarif_and_codequality_files_and_stdout(app, capsys, fake_cli, tmp_path,
             assert "cannot both write to stdout" in capsys.readouterr().err
     with pytest.raises(SinceCutoffError, match="cannot write the SARIF report to"):
         cli._write_json(str(tmp_path / "gl.json" / "x.sarif"), {}, "the SARIF report")
+
+
+def test_a_report_file_must_be_named_and_its_own(app, capsys, fake_cli, tmp_path, monkeypatch):
+    """No file name would write nothing, silently; two reports in one file would leave only
+    the second. Both are usage errors, before anything is scanned."""
+    monkeypatch.chdir(tmp_path)
+    argv = ["scan", str(app), *CUTOFF]
+    for flag in ("--sarif", "--gitlab-codequality"):
+        assert cli.main([*argv, flag, ""]) == 2
+        assert f"{flag} needs a file name, or '-' for stdout" in capsys.readouterr().err
+    for first, second in (
+        ("--sarif", "--gitlab-codequality"),
+        ("--markdown", "--sarif"),
+        ("--markdown", "--gitlab-codequality"),
+    ):
+        assert cli.main([*argv, first, "out/r.json", second, "out/../out/r.json"]) == 2
+        err = capsys.readouterr().err
+        assert f"{first} and {second} cannot both write to out/../out/r.json" in err
+    assert not (tmp_path / "out").exists()
+
+
+def test_no_ci_report_when_no_dependency_could_be_checked(
+    app, capsys, fake_cli, tmp_path, monkeypatch
+):
+    """With PyPI unreachable, an empty SARIF log uploaded would close every open alert, and an
+    empty Code Quality report would show every issue fixed: the scan fails without them."""
+    monkeypatch.chdir(tmp_path)
+
+    def unreachable(self: Any, name: str) -> Any:
+        raise PackageIndexError(f"cannot reach PyPI for {name}")
+
+    monkeypatch.setattr(FakePyPI, "releases", unreachable)
+    argv = ["scan", str(app), *CUTOFF, "--sarif", "sc.sarif", "--gitlab-codequality", "gl.json"]
+    assert cli.main(argv) == 1
+    out = " ".join(capsys.readouterr().out.split())
+    assert "No dependency could be checked" in out
+    assert "Not written: the SARIF report and the GitLab Code Quality report" in out
+    assert not (tmp_path / "sc.sarif").exists() and not (tmp_path / "gl.json").exists()
+    assert cli.main([*argv[:-4], "--sarif", "-"]) == 1
+    assert capsys.readouterr().out == ""  # nothing on stdout either
 
 
 # -------------------------------------------------------------------------- MCP

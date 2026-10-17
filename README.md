@@ -776,12 +776,20 @@ Outputs: `changed-packages` (comma-separated), `changes` (breaking changes), `de
 
 `scan --sarif FILE` writes a SARIF 2.1.0 report, which `github/codeql-action/upload-sarif`
 uploads to code scanning: each file that uses a changed API becomes an alert in the
-repository's Security tab and in the pull request's checks, a warning for the old form and a
-note otherwise, with the change, both versions and the note in its message. Each kind of change
-is a rule (`removed`, `moved`, `param_removed`, `deprecated`, ...). An alert stays the same alert
-across runs and version bumps (its fingerprint is the package, the API and the file), and an
-upload with nothing to report closes the open ones. Until the scan records lines
-([#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), an alert is on line 1 of its file and says so.
+repository's Security tab, a warning for the old form and a note otherwise, with the change,
+both versions and the note in its message. Each kind of change is a rule (`removed`, `moved`,
+`param_removed`, `deprecated`, ...). Until the scan records lines
+([#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), an alert is on line 1 of its file and says so. A pull
+request shows an alert only when the line it is on is in the pull request's diff, so until
+then it shows mostly those of new files; the Security tab has them all.
+
+Code scanning matches an alert across runs by its rule and its `primaryLocationLineHash`, which
+the report sets to a hash of the package, the API and the file, without the versions: an alert
+stays the same across runs, version bumps and edits to the file, and two APIs in one file are
+two alerts. upload-sarif keeps that hash rather than computing one from the text at the
+alert's line (which every alert on line 1 of a file would share), and logs a warning for each
+result that the two differ ("found existing inconsistent fingerprint value"): that warning is
+expected.
 
 ```yaml
 # .github/workflows/since-cutoff-sarif.yml
@@ -796,6 +804,7 @@ jobs:
     permissions:
       contents: read
       security-events: write  # to upload the report
+      actions: read  # for upload-sarif in a private repository
     steps:
       - uses: actions/checkout@v7
       - uses: MohammadHijjawi97/since-cutoff@v0
@@ -803,7 +812,8 @@ jobs:
           model: anthropic:claude-sonnet-4-5
           args: --sarif since-cutoff.sarif
       - uses: github/codeql-action/upload-sarif@v4
-        if: ${{ !cancelled() }}
+        # also when --fail-on failed the job; not when no dependency could be checked (no file)
+        if: ${{ !cancelled() && hashFiles('since-cutoff.sarif') != '' }}
         with:
           sarif_file: since-cutoff.sarif
           category: since-cutoff
@@ -811,9 +821,42 @@ jobs:
 
 Run it on the default branch as well as on pull requests, so that code scanning can tell which
 alerts a pull request adds. Code scanning is free for public repositories; private ones need
-GitHub Code Security. `--sarif` needs since-cutoff 0.7.0 or later (`since-cutoff-version`).
+GitHub Code Security. `--sarif` needs since-cutoff 0.7.0 or later, which `@v0` runs by default
+from the action's v0.7.0 on; with an older tag of the action, set `since-cutoff-version: 0.7.0`.
 Outside the Action: `since-cutoff scan --model ... --sarif since-cutoff.sarif`, then the same
 upload step.
+
+Code scanning reads each upload as the whole analysis of its `category` on that branch: it
+closes as fixed each open alert that the upload does not have, and reopens it when a later
+upload has it again. So:
+
+- When no dependency could be checked (PyPI unreachable), the scan exits with code 1 and
+  writes no SARIF file: the `hashFiles` condition skips the upload, and the alerts stay as
+  they were.
+- When some could not be checked (exit code 0, the reasons in the job's log), the report
+  says so: `runs[0].invocations[0].executionSuccessful` is `false`, and its
+  `toolExecutionNotifications` name each skipped package and why. Code scanning does not act
+  on either: the upload closes the open alerts of those packages as fixed, and the next upload
+  that checks them reopens them. They stay open only if that report is not uploaded; to upload
+  only a report in which every dependency was checked, use these two steps in place of the
+  upload step above:
+
+  ```yaml
+        - id: sarif  # complete=true when every dependency was checked
+          if: ${{ !cancelled() && hashFiles('since-cutoff.sarif') != '' }}
+          run: echo "complete=$(jq '.runs[0].invocations[0].executionSuccessful' since-cutoff.sarif)" >> "$GITHUB_OUTPUT"
+        - uses: github/codeql-action/upload-sarif@v4
+          if: ${{ !cancelled() && steps.sarif.outputs.complete == 'true' }}
+          with:
+            sarif_file: since-cutoff.sarif
+            category: since-cutoff
+  ```
+
+  A dependency that is never checked (one that is not on PyPI) then stops every upload: leave
+  it out with the action's `exclude` input.
+- When several folders are scanned (a monorepo), give each upload its own `category`
+  (`since-cutoff-api`, `since-cutoff-web`): upload-sarif refuses a second upload of a category
+  in the same job, and one in another job replaces the first and closes its alerts.
 
 ### pre-commit
 
@@ -854,7 +897,10 @@ For GitLab merge requests, `--gitlab-codequality FILE` writes a Code Quality rep
 for each file that uses a changed API (`major` for the old form, `info` otherwise; check
 `since-cutoff/<kind>`), with its path relative to `CI_PROJECT_DIR` and the note in its
 description. Its fingerprints leave the versions out, so a version bump does not reopen every
-issue. Add it as an artifact:
+issue. GitLab shows an issue of the target branch's report that the merge request's lacks as
+fixed: when no dependency could be checked, the scan exits with code 1 and writes no report,
+but after a partial skip the issues of the skipped packages show as fixed. Add it as an
+artifact:
 
 ```yaml
 # .gitlab-ci.yml

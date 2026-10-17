@@ -816,13 +816,21 @@ de importación se cuenta una sola vez.
 
 `scan --sarif ARCHIVO` escribe un informe SARIF 2.1.0, que `github/codeql-action/upload-sarif`
 sube a code scanning: cada archivo que usa una API modificada se convierte en una alerta en la
-pestaña Security del repositorio y en los checks de la pull request, un aviso (*warning*) para
-la forma antigua y una nota (*note*) en los demás casos, con el cambio, las dos versiones y la
-nota en su mensaje. Cada tipo de cambio es una regla (`removed`, `moved`, `param_removed`,
-`deprecated`, ...). Una alerta sigue siendo la misma entre ejecuciones y subidas de versión (su
-huella es el paquete, la API y el archivo), y una subida sin nada que informar cierra las que
-estén abiertas. Hasta que el análisis registre las líneas ([#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), cada alerta está en la
-línea 1 de su archivo y lo dice.
+pestaña Security del repositorio, un aviso (*warning*) para la forma antigua y una nota
+(*note*) en los demás casos, con el cambio, las dos versiones y la nota en su mensaje. Cada
+tipo de cambio es una regla (`removed`, `moved`, `param_removed`, `deprecated`, ...). Hasta que
+el análisis registre las líneas ([#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), cada alerta está en la
+línea 1 de su archivo y lo dice. Una pull request solo muestra una alerta cuando su línea está
+en el diff de la pull request, así que hasta entonces muestra sobre todo las de los archivos
+nuevos; la pestaña Security las tiene todas.
+
+Code scanning reconoce una alerta entre ejecuciones por su regla y su
+`primaryLocationLineHash`, que el informe fija en un hash del paquete, la API y el archivo, sin
+las versiones: una alerta sigue siendo la misma entre ejecuciones, subidas de versión y
+ediciones del archivo, y dos API en un mismo archivo son dos alertas. upload-sarif conserva ese
+hash en lugar de calcular uno a partir del texto de la línea de la alerta (que todas las
+alertas de la línea 1 de un archivo compartirían), y registra un aviso por cada resultado en el
+que los dos difieren ("found existing inconsistent fingerprint value"): ese aviso es normal.
 
 ```yaml
 # .github/workflows/since-cutoff-sarif.yml
@@ -837,6 +845,7 @@ jobs:
     permissions:
       contents: read
       security-events: write  # para subir el informe
+      actions: read  # para upload-sarif en un repositorio privado
     steps:
       - uses: actions/checkout@v7
       - uses: MohammadHijjawi97/since-cutoff@v0
@@ -844,7 +853,8 @@ jobs:
           model: anthropic:claude-sonnet-4-5
           args: --sarif since-cutoff.sarif
       - uses: github/codeql-action/upload-sarif@v4
-        if: ${{ !cancelled() }}
+        # también si --fail-on hizo fallar el job; no si no se pudo comprobar ninguna dependencia
+        if: ${{ !cancelled() && hashFiles('since-cutoff.sarif') != '' }}
         with:
           sarif_file: since-cutoff.sarif
           category: since-cutoff
@@ -852,9 +862,42 @@ jobs:
 
 Ejecútalo en la rama principal además de en las pull requests, para que code scanning sepa qué
 alertas añade cada pull request. Code scanning es gratuito en los repositorios públicos; los
-privados necesitan GitHub Code Security. `--sarif` requiere since-cutoff 0.7.0 o posterior
-(`since-cutoff-version`). Fuera de la Action: `since-cutoff scan --model ... --sarif
+privados necesitan GitHub Code Security. `--sarif` requiere since-cutoff 0.7.0 o posterior, que
+`@v0` usa por defecto desde la v0.7.0 de la Action; con una etiqueta anterior de la Action,
+pon `since-cutoff-version: 0.7.0`. Fuera de la Action: `since-cutoff scan --model ... --sarif
 since-cutoff.sarif`, y después el mismo paso de subida.
+
+Code scanning toma cada subida como el análisis completo de su `category` en esa rama: cierra
+como corregida (*fixed*) cada alerta abierta que la subida no tiene, y la reabre cuando una
+subida posterior vuelve a tenerla. Por eso:
+
+- Cuando no se pudo comprobar ninguna dependencia (PyPI inaccesible), el análisis termina con
+  código 1 y no escribe ningún archivo SARIF: la condición `hashFiles` omite la subida, y las
+  alertas quedan como estaban.
+- Cuando algunas no se pudieron comprobar (código 0, con los motivos en el registro), el
+  informe lo dice: `runs[0].invocations[0].executionSuccessful` es `false`, y sus
+  `toolExecutionNotifications` nombran cada paquete omitido y el motivo. Code scanning no tiene
+  en cuenta ninguno de los dos: la subida cierra como corregidas las alertas abiertas de esos
+  paquetes, y la siguiente subida que los compruebe las reabre. Solo siguen abiertas si ese
+  informe no se sube; para subir solo un informe en el que se comprobaron todas las
+  dependencias, usa estos dos pasos en lugar del paso de subida de arriba:
+
+  ```yaml
+        - id: sarif  # complete=true cuando se comprobaron todas las dependencias
+          if: ${{ !cancelled() && hashFiles('since-cutoff.sarif') != '' }}
+          run: echo "complete=$(jq '.runs[0].invocations[0].executionSuccessful' since-cutoff.sarif)" >> "$GITHUB_OUTPUT"
+        - uses: github/codeql-action/upload-sarif@v4
+          if: ${{ !cancelled() && steps.sarif.outputs.complete == 'true' }}
+          with:
+            sarif_file: since-cutoff.sarif
+            category: since-cutoff
+  ```
+
+  Una dependencia que nunca se comprueba (una que no está en PyPI) impide entonces todas las
+  subidas: déjala fuera con la entrada `exclude` de la Action.
+- Cuando se analizan varias carpetas (un monorepo), da a cada subida su propia `category`
+  (`since-cutoff-api`, `since-cutoff-web`): upload-sarif rechaza una segunda subida de una
+  categoría en el mismo job, y una en otro job reemplaza a la primera y cierra sus alertas.
 
 ### pre-commit
 
@@ -897,7 +940,11 @@ Para las merge requests de GitLab, `--gitlab-codequality ARCHIVO` escribe un inf
 Quality: una incidencia por cada archivo que usa una API modificada (`major` para la forma
 antigua, `info` en los demás casos; comprobación `since-cutoff/<kind>`), con su ruta relativa a
 `CI_PROJECT_DIR` y la nota en su descripción. Sus huellas no incluyen las versiones, así que una
-subida de versión no reabre todas las incidencias. Añádelo como artefacto:
+subida de versión no reabre todas las incidencias. GitLab muestra como corregida una incidencia
+del informe de la rama de destino que falta en el de la merge request: cuando no se pudo
+comprobar ninguna dependencia, el análisis termina con código 1 y no escribe ningún informe,
+pero tras una omisión parcial las incidencias de los paquetes omitidos aparecen como
+corregidas. Añádelo como artefacto:
 
 ```yaml
 # .gitlab-ci.yml

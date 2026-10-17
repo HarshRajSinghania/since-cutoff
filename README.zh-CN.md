@@ -469,7 +469,9 @@ jobs:
 
 ### GitHub 代码扫描（SARIF）
 
-`scan --sarif 文件` 写出一份 SARIF 2.1.0 报告，由 `github/codeql-action/upload-sarif` 上传到代码扫描（code scanning）：每个用到有变更 API 的文件都成为一条警报，显示在仓库的 Security 标签页和 pull request 的检查中；旧写法为警告（warning），其他情况为提示（note），消息中包含变更、两个版本和说明。每种变更是一条规则（`removed`、`moved`、`param_removed`、`deprecated` 等）。同一条警报在多次运行和版本升级之间保持不变（它的指纹由包、API 和文件组成），没有任何结果的上传会关闭仍然打开的警报。在扫描记录行号之前（[#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)），警报位于文件的第 1 行，并在消息中说明。
+`scan --sarif 文件` 写出一份 SARIF 2.1.0 报告，由 `github/codeql-action/upload-sarif` 上传到代码扫描（code scanning）：每个用到有变更 API 的文件都成为一条警报，显示在仓库的 Security 标签页中；旧写法为警告（warning），其他情况为提示（note），消息中包含变更、两个版本和说明。每种变更是一条规则（`removed`、`moved`、`param_removed`、`deprecated` 等）。在扫描记录行号之前（[#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)），警报位于文件的第 1 行，并在消息中说明。pull request 只显示所在行在其 diff 中的警报，所以在此之前它主要显示新文件的警报；Security 标签页中有全部警报。
+
+代码扫描根据规则和 `primaryLocationLineHash` 在多次运行之间识别同一条警报，而报告把它设为包、API 和文件的哈希，不含版本：同一条警报在多次运行、版本升级和文件修改之间保持不变，同一文件中的两个 API 是两条警报。upload-sarif 保留这个哈希，而不是根据警报所在行的文本计算哈希（文件第 1 行上的所有警报都会得到同一个哈希），并对两者不同的每个结果记录一条警告（"found existing inconsistent fingerprint value"）：这条警告是正常的。
 
 ```yaml
 # .github/workflows/since-cutoff-sarif.yml
@@ -484,6 +486,7 @@ jobs:
     permissions:
       contents: read
       security-events: write  # 上传报告需要此权限
+      actions: read  # 私有仓库中的 upload-sarif 需要此权限
     steps:
       - uses: actions/checkout@v7
       - uses: MohammadHijjawi97/since-cutoff@v0
@@ -491,13 +494,33 @@ jobs:
           model: anthropic:claude-sonnet-4-5
           args: --sarif since-cutoff.sarif
       - uses: github/codeql-action/upload-sarif@v4
-        if: ${{ !cancelled() }}
+        # --fail-on 使任务失败时也上传；没有任何依赖能检查时没有文件，不上传
+        if: ${{ !cancelled() && hashFiles('since-cutoff.sarif') != '' }}
         with:
           sarif_file: since-cutoff.sarif
           category: since-cutoff
 ```
 
-请在默认分支和 pull request 上都运行它，这样代码扫描才能分辨 pull request 新增了哪些警报。代码扫描对公开仓库免费；私有仓库需要 GitHub Code Security。`--sarif` 需要 since-cutoff 0.7.0 或更高版本（`since-cutoff-version`）。不使用 Action 时：先运行 `since-cutoff scan --model ... --sarif since-cutoff.sarif`，再执行同样的上传步骤。
+请在默认分支和 pull request 上都运行它，这样代码扫描才能分辨 pull request 新增了哪些警报。代码扫描对公开仓库免费；私有仓库需要 GitHub Code Security。`--sarif` 需要 since-cutoff 0.7.0 或更高版本，`@v0` 从 Action 的 v0.7.0 起默认使用它；使用更早标签的 Action 时，请设置 `since-cutoff-version: 0.7.0`。不使用 Action 时：先运行 `since-cutoff scan --model ... --sarif since-cutoff.sarif`，再执行同样的上传步骤。
+
+代码扫描把每次上传视为该分支上其 `category` 的完整分析：上传中没有的每条打开的警报会被关闭为已修复（fixed），之后的上传再次包含它时会重新打开。因此：
+
+- 没有任何依赖能检查时（无法访问 PyPI），扫描以退出码 1 结束，不写 SARIF 文件：`hashFiles` 条件会跳过上传，警报保持原样。
+- 部分依赖无法检查时（退出码为 0，原因在日志中），报告会说明：`runs[0].invocations[0].executionSuccessful` 为 `false`，其 `toolExecutionNotifications` 列出每个被跳过的包及原因。代码扫描不理会这两项：这次上传会把这些包仍然打开的警报关闭为已修复，下一次检查到它们的上传会重新打开这些警报。只有不上传这份报告，它们才会保持打开；若只想上传每个依赖都检查过的报告，请用下面两个步骤代替上面的上传步骤：
+
+  ```yaml
+        - id: sarif  # 每个依赖都检查过时 complete=true
+          if: ${{ !cancelled() && hashFiles('since-cutoff.sarif') != '' }}
+          run: echo "complete=$(jq '.runs[0].invocations[0].executionSuccessful' since-cutoff.sarif)" >> "$GITHUB_OUTPUT"
+        - uses: github/codeql-action/upload-sarif@v4
+          if: ${{ !cancelled() && steps.sarif.outputs.complete == 'true' }}
+          with:
+            sarif_file: since-cutoff.sarif
+            category: since-cutoff
+  ```
+
+  这样一来，一个永远无法检查的依赖（不在 PyPI 上的包）会阻止每次上传：请用 Action 的 `exclude` 输入把它排除。
+- 扫描多个文件夹时（monorepo），请给每次上传一个不同的 `category`（`since-cutoff-api`、`since-cutoff-web`）：在同一个任务中，upload-sarif 会拒绝同一 category 的第二次上传；在另一个任务中，后一次上传会取代前一次，并关闭它的警报。
 
 ### pre-commit
 
@@ -527,7 +550,7 @@ since-cutoff sync --check
 since-cutoff run --quick --fail-on-stale --json > since-cutoff.json
 ```
 
-对于 GitLab 的 merge request，`--gitlab-codequality 文件` 写出一份 Code Quality 报告：每个用到有变更 API 的文件对应一个问题（旧写法为 `major`，其他情况为 `info`；检查名为 `since-cutoff/<kind>`），路径相对于 `CI_PROJECT_DIR`，说明写在描述中。它的指纹不包含版本，所以版本升级不会重新打开所有问题。把它加为 artifact：
+对于 GitLab 的 merge request，`--gitlab-codequality 文件` 写出一份 Code Quality 报告：每个用到有变更 API 的文件对应一个问题（旧写法为 `major`，其他情况为 `info`；检查名为 `since-cutoff/<kind>`），路径相对于 `CI_PROJECT_DIR`，说明写在描述中。它的指纹不包含版本，所以版本升级不会重新打开所有问题。目标分支的报告中有、而 merge request 的报告中没有的问题，GitLab 会显示为已修复：没有任何依赖能检查时，扫描以退出码 1 结束，不写报告；但部分依赖被跳过后，被跳过的包的问题会显示为已修复。把它加为 artifact：
 
 ```yaml
 # .gitlab-ci.yml

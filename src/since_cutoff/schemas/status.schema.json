@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/src/since_cutoff/schemas/status.schema.json",
+  "$id": "https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/v0.5.0/src/since_cutoff/schemas/status.schema.json",
   "title": "since-cutoff status",
   "description": "What `since-cutoff status --json` prints: whether the notes blocks in AGENTS.md / CLAUDE.md are current for the project's dependency files, decided offline (no network, no scan).",
   "type": "object",

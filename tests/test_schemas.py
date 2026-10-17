@@ -16,7 +16,7 @@ from typing import Any
 
 import pytest
 
-from since_cutoff import cli, net
+from since_cutoff import __version__, cli, net
 from since_cutoff.engine import CHANGED, NEW, ModelTarget, PackageScan, ScanResult
 from since_cutoff.project import Dependency, Project, scan_file
 from since_cutoff.report import REPORT_SCHEMA, SARIF_SCHEMA, sarif_report, to_json
@@ -70,7 +70,8 @@ def test_the_schemas_are_draft_2020_12_and_describe_every_key(name: str) -> None
     s = schema(name)
     jsonschema.Draft202012Validator.check_schema(s)
     assert s["$schema"] == "https://json-schema.org/draft/2020-12/schema"
-    assert s["$id"].endswith(f"/main/src/since_cutoff/schemas/{name}")
+    # At the release's tag, not main: the id of a released schema never changes.
+    assert s["$id"].endswith(f"/since-cutoff/v{__version__}/src/since_cutoff/schemas/{name}")
     assert s["additionalProperties"] is False
     undescribed = [
         k for k, p in s["properties"].items() if "description" not in p and "$ref" not in p
@@ -115,6 +116,17 @@ def test_a_key_the_schema_does_not_describe_fails(scan: ScanResult) -> None:
     del data["used_apis"][0]["locations"][0]["surprise"]
     data["report_schema"] = REPORT_SCHEMA + 1
     assert errors(data) == [f"report_schema: {REPORT_SCHEMA} was expected"]
+    data["report_schema"] = REPORT_SCHEMA
+    # The settings are closed too, with the keys a run adds only sometimes.
+    data["settings"]["surprise_setting"] = 1
+    assert errors(data) == [
+        "settings: Additional properties are not allowed ('surprise_setting' was unexpected)"
+    ]
+    del data["settings"]["surprise_setting"]
+    data["settings"] |= {"model_source": "Claude Code", "heldout_used": {"fewest": 1, "most": 2}}
+    assert errors(data) == []
+    data["settings"]["heldout_used"]["surprise"] = 3
+    assert len(errors(data)) == 1
 
 
 def test_lines_name_matches_and_switched_dependencies_match_the_schema(
@@ -189,3 +201,9 @@ def test_the_sarif_report_matches_the_official_schema(tmp_path: Path, cache, fak
     for root in (make_app(tmp_path), make_app(tmp_path / "unused", main="import toylib\n")):
         report = sarif_report(scan_app(root, cache, fake_pypi, CUTOFF_DAY))
         jsonschema.validate(json.loads(json.dumps(report)), official)
+    # A dependency that could not be checked: the invocation says so, with a notification.
+    partial = scan_app(make_app(tmp_path / "partial"), cache, fake_pypi, CUTOFF_DAY)
+    partial.packages.append(PackageScan("big", "9", "uv.lock", True, reason="200 MB"))
+    report = sarif_report(partial)
+    assert report["runs"][0]["invocations"][0]["executionSuccessful"] is False
+    jsonschema.validate(json.loads(json.dumps(report)), official)

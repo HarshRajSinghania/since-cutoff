@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import gzip
 import json
 import re
 import textwrap
@@ -1421,8 +1423,11 @@ class Finding:
     form: str  # OLD_FORM when a use there is the old form (place_form), else USES_API
     kind: str  # the kind of change it is filed under (finding_kind): the SARIF rule
     message: str  # the API, its change, the versions and the note, as the annotation says it
-    # Stable across runs and version bumps: package, API and path (stable_hash), and the place's
-    # rank among the API's places in that file once the scan records lines (issue #8).
+    # Stable across runs, version bumps and edits elsewhere in the file: package, API and path
+    # (stable_hash). Once the scan records lines (issue #8), a second place of the API in the
+    # same file adds its rank among them, so a new use above it moves the alerts below it.
+    # SARIF primaryLocationLineHash (what code scanning matches alerts by) and the Code
+    # Quality fingerprint.
     fingerprint: str
 
 
@@ -1496,6 +1501,61 @@ CODE_SCANNING_HELP = (
     "the release at the cutoff allowed and the pinned one no longer does); a note is a use "
     "of the API that is fine today. Found by a static match of names; nothing was run."
 )
+# What GitHub code scanning takes in one upload ("SARIF support for code scanning"): it rejects
+# a run with more results (and shows the 5,000 most severe of one), and an upload larger than
+# 10 MB. upload-sarif sends the log gzip-compressed and base64-encoded (codeql-action's
+# upload-lib.ts), which is what is measured.
+SARIF_MAX_RESULTS = 25_000
+SARIF_MAX_UPLOAD = 10_000_000
+# PEP 440 versions that SARIF's semanticVersion (Semantic Versioning 2.0.0) can say.
+_PEP440 = re.compile(
+    r"(\d+)\.(\d+)(?:\.(\d+))?(?:(a|b|rc)(\d+))?(?:\.post(\d+))?(?:\.dev(\d+))?"
+    r"(?:\+([a-z0-9]+(?:\.[a-z0-9]+)*))?"
+)
+_PRE_RELEASE = {"a": "alpha", "b": "beta", "rc": "rc"}
+
+
+def semantic_version(version: str) -> str | None:
+    """``version`` (PEP 440) as Semantic Versioning 2.0.0 has it, or None when it cannot say
+    it (an epoch): ``0.7.0rc1`` is ``0.7.0-rc.1``, ``0.7.0.dev2`` is ``0.7.0-dev.2``, and a
+    post-release or local version is build metadata (``0.7.0+post.1``)."""
+    found = _PEP440.fullmatch(version.lower())
+    if found is None:
+        return None
+    major, minor, patch, pre, pre_n, post, dev, local = found.groups()
+    out = f"{int(major)}.{int(minor)}.{int(patch or 0)}"
+    tags = [_PRE_RELEASE[pre], str(int(pre_n))] if pre else []
+    if dev is not None:
+        tags += ["dev", str(int(dev))]
+    build = [*(["post", post] if post is not None else []), *([local] if local else [])]
+    return out + ("-" + ".".join(tags) if tags else "") + ("+" + ".".join(build) if build else "")
+
+
+def _upload_size(log: dict[str, Any]) -> int:
+    """The size of ``log`` as upload-sarif sends it: compact JSON (``JSON.stringify``), gzip
+    at zlib's default level 6 (Node's ``zlib.gzipSync``; Python's default 9 would measure it
+    smaller), base64."""
+    raw = json.dumps(log, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return len(base64.b64encode(gzip.compress(raw, compresslevel=6, mtime=0)))
+
+
+def _within_limits(
+    results: list[dict[str, Any]], log: Callable[[list[dict[str, Any]]], dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """``results``, or as many of them as one upload to code scanning takes
+    (SARIF_MAX_RESULTS, SARIF_MAX_UPLOAD), the old form first: ``log`` makes the log of the
+    results it is given."""
+    if len(results) <= SARIF_MAX_RESULTS and _upload_size(log(results)) <= SARIF_MAX_UPLOAD:
+        return results
+    ranked = sorted(results, key=lambda r: r["level"] != "warning")
+    low, high = 0, min(len(ranked), SARIF_MAX_RESULTS)
+    while low < high:  # the most results that fit
+        mid = (low + high + 1) // 2
+        if _upload_size(log(ranked[:mid])) <= SARIF_MAX_UPLOAD:
+            low = mid
+        else:
+            high = mid - 1
+    return ranked[:low]
 
 
 def sarif_report(scan: ScanResult, env: Mapping[str, str] | None = None) -> dict[str, Any]:
@@ -1504,9 +1564,17 @@ def sarif_report(scan: ScanResult, env: Mapping[str, str] | None = None) -> dict
     place where the code uses a changed API (:func:`findings`): ``warning`` for the old form,
     ``note`` otherwise, on the line and column once the scan records them (issue #8), else on
     line 1 with the message saying so. Paths are relative to ``GITHUB_WORKSPACE`` when the
-    project is inside it. ``partialFingerprints`` keep a result the same alert across runs and
-    version bumps. With no finding, ``results`` is empty: an upload then closes the alerts of
-    the previous one."""
+    project is inside it.
+
+    ``partialFingerprints.primaryLocationLineHash``, the only fingerprint code scanning reads,
+    is the finding's own (:class:`Finding`): the package, the API and the path. upload-sarif
+    keeps a hash that is there (and logs a warning that it differs from its own), instead of
+    hashing the text of line 1, which every finding in the file would share. With no finding,
+    ``results`` is empty: an upload then closes the alerts of the previous one. The invocation
+    says whether every dependency was checked (``executionSuccessful``), and names each one
+    that was not, with why (``toolExecutionNotifications``): their findings are not in the
+    log. Above what one upload takes, the ``note`` results are left out first, and a
+    notification says how many."""
     prefix = _workspace_prefix(scan.project.root, env)
     found = findings(scan, prefix)
     known = {**SARIF_RULES}
@@ -1550,7 +1618,10 @@ def sarif_report(scan: ScanResult, env: Mapping[str, str] | None = None) -> dict
                         }
                     }
                 ],
-                "partialFingerprints": {"sinceCutoffFinding/v1": f.fingerprint},
+                "partialFingerprints": {
+                    "primaryLocationLineHash": f.fingerprint,
+                    "sinceCutoffFinding/v1": f.fingerprint,
+                },
                 "properties": {
                     "package": p.name,
                     "locked": p.locked,
@@ -1563,29 +1634,63 @@ def sarif_report(scan: ScanResult, env: Mapping[str, str] | None = None) -> dict
                 },
             }
         )
-    return {
-        "$schema": SARIF_SCHEMA,
-        "version": "2.1.0",
-        "runs": [
-            {
-                "tool": {
-                    "driver": {
-                        "name": "since-cutoff",
-                        "version": __version__,
-                        "semanticVersion": __version__,
-                        "informationUri": REPO_URL,
-                        "rules": rules,
-                    }
-                },
-                "results": results,
-                "properties": {
-                    "model": scan.target.model_id or None,
-                    "cutoff": scan.target.cutoff.isoformat(),
-                    "compareFrom": scan.target.compare_date.isoformat(),
-                },
-            }
-        ],
-    }
+    not_checked = [
+        {
+            "level": "error",
+            "message": {
+                "text": f"{_name_version(p)} was not checked: "
+                f"{(p.reason or 'no reason given').rstrip('.')}. Its findings are not in this log."
+            },
+            "properties": {"package": p.name, "locked": p.locked, "reason": p.reason},
+        }
+        for p in scan.skipped
+    ]
+    driver: dict[str, Any] = {"name": "since-cutoff", "version": __version__}
+    semantic = semantic_version(__version__)
+    if semantic:
+        driver["semanticVersion"] = semantic
+    driver |= {"informationUri": REPO_URL, "rules": rules}
+
+    def log(kept: list[dict[str, Any]]) -> dict[str, Any]:
+        notifications = list(not_checked)
+        if len(kept) < len(results):
+            notifications.append(
+                {
+                    "level": "warning",
+                    "message": {
+                        "text": f"{len(results) - len(kept)} of {len(results)} results were "
+                        "left out, those of level note first: one upload to GitHub code "
+                        f"scanning takes at most {SARIF_MAX_RESULTS:,} results and "
+                        f"{SARIF_MAX_UPLOAD // 1_000_000} MB."
+                    },
+                }
+            )
+        invocation: dict[str, Any] = {"executionSuccessful": not not_checked}
+        if notifications:
+            invocation["toolExecutionNotifications"] = notifications
+        return {
+            "$schema": SARIF_SCHEMA,
+            "version": "2.1.0",
+            "runs": [
+                {
+                    "tool": {"driver": driver},
+                    "invocations": [invocation],
+                    "results": kept,
+                    "properties": {
+                        "model": scan.target.model_id or None,
+                        "cutoff": scan.target.cutoff.isoformat(),
+                        "compareFrom": scan.target.compare_date.isoformat(),
+                    },
+                }
+            ],
+        }
+
+    return log(_within_limits(results, log))
+
+
+def _name_version(p: PackageScan) -> str:
+    """``httpx 0.28.1``, or the name alone when the version is unknown."""
+    return f"{p.name} {p.locked}" if p.locked else p.name
 
 
 def gitlab_codequality(scan: ScanResult, env: Mapping[str, str] | None = None) -> list[Any]:
@@ -1595,7 +1700,9 @@ def gitlab_codequality(scan: ScanResult, env: Mapping[str, str] | None = None) -
     ``info`` otherwise; ``check_name`` ``since-cutoff/<kind>``; the line once the scan records
     it (issue #8), else line 1 with the description saying so. Paths are relative to
     ``CI_PROJECT_DIR`` when the project is inside it. The fingerprint is the package, the API
-    and the file (not the versions), so a version bump does not reopen every finding."""
+    and the file (not the versions), so a version bump does not reopen every finding. GitLab
+    shows an issue of the target branch's report that this one lacks as fixed, also when its
+    package was skipped: the format has no place to say a package was not checked."""
     prefix = _workspace_prefix(scan.project.root, env, "CI_PROJECT_DIR")
     out: list[Any] = []
     for f in findings(scan, prefix):

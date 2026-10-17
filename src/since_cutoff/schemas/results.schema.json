@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/src/since_cutoff/schemas/results.schema.json",
+  "$id": "https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/v0.5.0/src/since_cutoff/schemas/results.schema.json",
   "title": "since-cutoff results",
   "description": "The document that `since-cutoff scan --json` and `run --json` print and that .since-cutoff/results.json holds, for report_schema 3. Every count rests on the static API diff and the scan of the project's imports; nothing of the libraries is run.",
   "type": "object",
@@ -242,6 +242,7 @@
     "settings": {
       "description": "What the numbers depend on: the tool, the diff, the margin and, after `run`, the run's settings.",
       "type": "object",
+      "additionalProperties": false,
       "required": ["tool_version", "diff_schema", "griffe_version", "cutoff_margin", "date"],
       "properties": {
         "tool_version": {"description": "since-cutoff's version.", "type": "string"},
@@ -250,11 +251,22 @@
         "cutoff_margin": {"description": "Days before the cutoff that the comparison release had to be published by.", "$ref": "#/$defs/count"},
         "date": {"description": "The day of the scan (UTC).", "type": "string", "format": "date"},
         "model": {"description": "`run`: the tested model, as provider:model.", "type": ["string", "null"]},
+        "model_source": {"description": "`run` without `--model`: the agent setting the model was read from.", "type": "string"},
         "task_model": {"description": "`run`: the model that wrote the tasks and notes.", "type": ["string", "null"]},
         "effort": {"description": "`run`: the thinking effort of the model calls.", "type": ["string", "null"]},
         "prompt_version": {"description": "`run`: the version of the task, solver and note prompts; cached tasks and answers of another version are not reused.", "type": "integer"},
         "max_probes": {"description": "`run --max-probes`.", "type": "integer"},
         "heldout": {"description": "`run --heldout`: held-out tasks per failure.", "type": "integer"},
+        "heldout_used": {
+          "description": "`run`: the held-out tasks per failure there were, when fewer than `heldout` asked for.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fewest", "most"],
+          "properties": {
+            "fewest": {"description": "The fewest of any failure.", "$ref": "#/$defs/count"},
+            "most": {"description": "The most of any failure.", "$ref": "#/$defs/count"}
+          }
+        },
         "regression": {"description": "`run --regression`: previously correct APIs checked again with the notes.", "type": "integer"},
         "python_version": {"description": "`run`: the Python version the answers were type-checked for.", "type": ["string", "null"]},
         "tasks_from": {"description": "`run --tasks-from`: the tasks file; null when the run's task writer wrote the tasks.", "type": ["string", "null"]},

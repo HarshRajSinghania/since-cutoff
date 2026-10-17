@@ -35,6 +35,7 @@ from since_cutoff.apidiff import (
     PARAM_REQUIRED,
     RECEIVERS_SCHEMA,
     REMOVED,
+    WARNS_CONDITION,
     APIChange,
     griffe_version,
     is_beta_segment,
@@ -703,7 +704,10 @@ def form(change: APIChange, names: tuple[str, ...], kind: str | None = None) -> 
     API": whether a call passes it the new way is not something a name match can tell. A
     function whose deprecation covers one of its call forms (an ``@overload``) only is in the
     old form where the call passes a parameter only that form takes (APIChange.call_form_only),
-    and "uses this API" otherwise.
+    and "uses this API" otherwise. A function that warns of its deprecation only under a
+    condition of its own (APIChange.warning, WARNS_CONDITION: pandas 3's ``Index.join`` when
+    ``other`` is not an Index) is "uses this API": the call is in the old form only when that
+    condition holds, which a name match cannot tell.
 
     A switched dependency (:func:`dependency_names`) is in the old form where the file hands
     a value of the old distribution, by keyword or by position, to a switched parameter of a
@@ -717,13 +721,19 @@ def form(change: APIChange, names: tuple[str, ...], kind: str | None = None) -> 
     if change.kind == DEPENDENCY_SWITCHED:
         handed = any("(" in n or n.startswith(CATCHES) for n in names[1:])
         return OLD_FORM if handed else USES_API
-    if not names or change.kind in _NEVER_OLD_FORM:
+    if not names or change.kind in _NEVER_OLD_FORM or _warns_in_some_calls(change):
         return USES_API
     if same_call_shape(change) and kind in (USE_MEMBER, USE_REFERENCE):
         return OLD_FORM
     if change.parameter or change.call_form or same_call_shape(change):
         return OLD_FORM if len(names) == 2 else USES_API
     return OLD_FORM
+
+
+def _warns_in_some_calls(change: APIChange) -> bool:
+    """A deprecation that a ``warnings.warn`` issues under a condition of the function's own
+    (APIChange.warning), not at every call nor for a parameter."""
+    return change.kind == DEPRECATED and (change.warning or {}).get("when") == WARNS_CONDITION
 
 
 def same_call_shape(change: APIChange) -> bool:

@@ -12,6 +12,7 @@ import pytest
 
 from since_cutoff.apidiff import (
     DEPRECATED,
+    HINT_WARNING,
     KIND_CHANGED,
     MOVED,
     PARAM_REMOVED,
@@ -20,12 +21,15 @@ from since_cutoff.apidiff import (
     TIER_INTERNAL,
     TIER_PUBLIC,
     UNREAD_BASE,
+    WARNS_ALWAYS,
+    WARNS_CONDITION,
+    WARNS_PARAMETER,
     APIChange,
     diff_sources,
     diff_sources_with_unread,
     unread_text,
 )
-from since_cutoff.selection import collapse
+from since_cutoff.selection import OLD_FORM, USES_API, collapse, form
 from tests.conftest import write_tree
 
 
@@ -1519,3 +1523,374 @@ def test_a_value_made_of_a_documented_function_is_public(tmp_path):
         "pkg.utils.convert": TIER_PUBLIC,
         "pkg.utils.plain": TIER_INTERNAL,
     }
+
+
+# ------------------------------------------ deprecations announced by warnings.warn (#53)
+def warned(changes: list[APIChange]) -> dict[tuple[str, str | None], dict]:
+    """The deprecations read from a ``warnings.warn``, by path and parameter: when they warn,
+    with their category, and their text."""
+    return {
+        (c.path, c.parameter): {**(c.warning or {}), "text": c.deprecation}
+        for c in changes
+        if c.kind == DEPRECATED and c.deprecated_by == HINT_WARNING
+    }
+
+
+def test_a_warning_at_function_entry_deprecates_the_function(tmp_path):
+    """issue #53: ``warnings.warn("f is deprecated, use g", DeprecationWarning)`` at the top of
+    the pinned release's ``f`` gave an empty diff."""
+    old = {"pkg/__init__.py": "def f(x):\n    return x\n\ndef g(x):\n    return x\n"}
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        'def f(x):\n    """Old."""\n'
+        '    warnings.warn("f is deprecated, use `g` instead", DeprecationWarning, stacklevel=2)\n'
+        "    return g(x)\n\n"
+        "def g(x):\n    return x\n"
+    }
+    changes = diff(tmp_path, old, new)
+    assert warned(changes) == {
+        ("pkg.f", None): {
+            "when": WARNS_ALWAYS,
+            "category": "DeprecationWarning",
+            "at": "pkg/__init__.py:5",
+            "text": "f is deprecated, use `g` instead",
+        }
+    }
+    [f] = changes
+    assert f.deprecation_file == "pkg/__init__.py"
+    assert f.library_names == ["pkg.g"]  # the stated-replacement logic, as for @deprecated
+    assert f.describe(versioned=False) == (
+        "`pkg.f` is deprecated, with a DeprecationWarning at run time: f is deprecated, use `g` "
+        "instead"
+    )
+
+
+def test_a_warning_under_a_sentinel_guard_deprecates_the_parameter(tmp_path):
+    """pandas 3.0.6 ``DataFrame.set_index``: ``if verify_integrity is not lib.no_default:
+    warnings.warn(..., Pandas4Warning, stacklevel=find_stack_level())``; the release at the
+    cutoff took the parameter without a warning. The ``else`` of ``is <default>`` and
+    ``is not None`` for a None default are the same shape; a warning when a parameter is
+    passed that the old release did not take is not reported."""
+    lib = "no_default = object()\n"
+    old = {
+        "pkg/__init__.py": "from pkg.frame import Frame\n",
+        "pkg/_lib.py": lib,
+        "pkg/frame.py": "from pkg import _lib as lib\n\nclass Frame:\n"
+        "    def set_index(self, keys, verify_integrity=lib.no_default, axis=None, how=None):\n"
+        "        return keys\n",
+    }
+    new = {
+        **old,
+        "pkg/_exceptions.py": "def find_stack_level():\n    return 2\n",
+        "pkg/frame.py": "import warnings\n\nfrom pkg import _lib as lib\n"
+        "from pkg._exceptions import find_stack_level\n\nclass Frame:\n"
+        "    def set_index(\n        self, keys, verify_integrity=lib.no_default, axis=None,\n"
+        "        how=None, later=None,\n    ):\n"
+        "        if verify_integrity is not lib.no_default:\n"
+        "            warnings.warn(\n"
+        "                \"The 'verify_integrity' keyword in Frame.set_index is deprecated.\",\n"
+        "                FutureWarning,\n                stacklevel=find_stack_level(),\n"
+        "            )\n"
+        "        if axis is lib.no_default:\n            pass\n        else:\n"
+        "            pass\n"
+        "        if axis is not None:\n"
+        '            warnings.warn("axis= is deprecated", FutureWarning)\n'
+        "        if how is None:\n            how = 'left'\n        else:\n"
+        '            warnings.warn("how= is deprecated", FutureWarning)\n'
+        "        if later is not None:\n"
+        '            warnings.warn("later= is deprecated", FutureWarning)\n'
+        "        return keys\n",
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert set(found) == {
+        ("pkg.frame.Frame.set_index", "verify_integrity"),
+        ("pkg.frame.Frame.set_index", "axis"),
+        ("pkg.frame.Frame.set_index", "how"),
+    }
+    assert found["pkg.frame.Frame.set_index", "verify_integrity"] == {
+        "when": WARNS_PARAMETER,
+        "category": "FutureWarning",
+        "at": "pkg/frame.py:12",
+        "text": "The 'verify_integrity' keyword in Frame.set_index is deprecated.",
+    }
+
+
+def test_a_warning_when_a_keyword_is_in_kwargs_deprecates_that_keyword(tmp_path):
+    """``if "limit" in kwargs:`` (and ``kwargs.get("limit") is not None``) warn when the
+    caller passes ``limit=``; the release at the cutoff took it through its ``**kwargs``."""
+    old = {"pkg/__init__.py": "def fill(value, **kwargs):\n    return value\n"}
+    new = {
+        "pkg/__init__.py": "import warnings\n\ndef fill(value, **kwargs):\n"
+        '    if "limit" in kwargs:\n'
+        '        warnings.warn("limit is deprecated", PendingDeprecationWarning)\n'
+        '    if kwargs.get("axis") is not None:\n'
+        '        warnings.warn("axis is deprecated", FutureWarning)\n'
+        "    return value\n"
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v["category"]) for k, v in found.items()} == {
+        ("pkg.fill", "limit"): (WARNS_PARAMETER, "PendingDeprecationWarning"),
+        ("pkg.fill", "axis"): (WARNS_PARAMETER, "FutureWarning"),
+    }
+
+
+def test_a_helper_that_warns_for_its_callers_counts_as_their_warning(tmp_path):
+    """A module-local ``_deprecate(msg)``, a helper the module imports from the package
+    (``warn_deprecated(name, alternative)`` with its own message), and pandas 3's method
+    ``self._check_copy_deprecation(copy)``, which warns while ``copy`` is not the sentinel: the
+    caller's ``copy`` is deprecated. A helper whose name says neither "deprecat" nor "warn"
+    is not followed, and neither is a helper that warns only on some paths."""
+    lib = "no_default = object()\n"
+    old = {
+        "pkg/__init__.py": "from pkg.api import *\n",
+        "pkg/_lib.py": lib,
+        "pkg/api.py": "from pkg import _lib as lib\n\n__all__ = ['a', 'b', 'c', 'd', 'Frame']\n\n"
+        "def a(x):\n    return x\n\ndef b(x):\n    return x\n\n"
+        "def c(x):\n    return x\n\ndef d(x, flag=False):\n    return x\n\n"
+        "class Frame:\n    def astype(self, dtype, copy=lib.no_default):\n        return dtype\n"
+        "    def other(self, copy=None):\n        return copy\n",
+    }
+    new = {
+        **old,
+        "pkg/_compat.py": "import warnings\n\n"
+        "def warn_deprecated(name, alternative=None):\n"
+        '    warnings.warn(f"{name} is deprecated", category=FutureWarning, stacklevel=3)\n',
+        "pkg/api.py": "import warnings\n\nfrom pkg import _lib as lib\n"
+        "from pkg._compat import warn_deprecated\n\n"
+        "__all__ = ['a', 'b', 'c', 'd', 'Frame']\n\n"
+        "def _deprecate(msg, category=DeprecationWarning):\n"
+        "    warnings.warn(msg, category, stacklevel=3)\n\n"
+        "def _notify(msg):\n    warnings.warn(msg, DeprecationWarning)\n\n"
+        "def _maybe_warn(msg, flag):\n"
+        "    if flag:\n        warnings.warn(msg, DeprecationWarning)\n\n"
+        'def a(x):\n    _deprecate("a is deprecated; use `b` instead")\n    return x\n\n'
+        'def b(x):\n    warn_deprecated("b", "c")\n    return x\n\n'
+        'def c(x):\n    _notify("c is deprecated")\n    return x\n\n'
+        'def d(x, flag=False):\n    _maybe_warn("d is deprecated", flag)\n    return x\n\n'
+        "class Frame:\n"
+        "    @staticmethod\n    def _check_copy_deprecation(copy):\n"
+        "        if copy is not lib.no_default:\n"
+        '            warnings.warn("The copy keyword is deprecated.", FutureWarning)\n\n'
+        "    def astype(self, dtype, copy=lib.no_default):\n"
+        "        self._check_copy_deprecation(copy)\n        return dtype\n\n"
+        "    def other(self, copy=None):\n"
+        "        self._check_copy_deprecation(copy)\n        return copy\n",
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k: (v["when"], v["category"], v["text"]) for k, v in found.items()} == {
+        ("pkg.api.a", None): (
+            WARNS_ALWAYS,
+            "DeprecationWarning",
+            "a is deprecated; use `b` instead",
+        ),
+        ("pkg.api.b", None): (WARNS_ALWAYS, "FutureWarning", "{...} is deprecated"),
+        ("pkg.api.Frame.astype", "copy"): (
+            WARNS_PARAMETER,
+            "FutureWarning",
+            "The copy keyword is deprecated.",
+        ),
+    }  # other() hands the helper a parameter whose default is not its sentinel
+
+
+def test_the_message_is_read_from_an_f_string_or_a_constant(tmp_path):
+    """An f-string's literal parts (each value as ``{...}``), a name assigned the message
+    earlier in the function, a constant of the module, and one imported from elsewhere in the
+    package."""
+    old = {
+        "pkg/__init__.py": "from pkg.api import f, g, h, k\n",
+        "pkg/api.py": "def f(x):\n    return x\n\ndef g(x):\n    return x\n\n"
+        "def h(x):\n    return x\n\ndef k(x):\n    return x\n",
+    }
+    new = {
+        **old,
+        "pkg/_messages.py": 'K_MESSAGE = "k is deprecated; use `f` instead"\n',
+        "pkg/api.py": "import warnings\nfrom warnings import warn\n\n"
+        "from pkg._messages import K_MESSAGE\n\n"
+        '_H_MESSAGE = (\n    "h is deprecated "\n    "and will be removed."\n)\n\n'
+        "def f(x):\n"
+        '    warn(f"Passing {type(x).__name__} to f is deprecated", FutureWarning)\n'
+        "    return x\n\n"
+        "def g(x):\n"
+        '    msg = "g is deprecated"\n'
+        '    msg2 = "g: " + msg\n'
+        "    warnings.warn(msg, DeprecationWarning)\n    return x\n\n"
+        "def h(x):\n    warnings.warn(_H_MESSAGE, DeprecationWarning)\n    return x\n\n"
+        "def k(x):\n    warnings.warn(K_MESSAGE, DeprecationWarning)\n    return x\n",
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k[0]: v["text"] for k, v in found.items()} == {
+        "pkg.api.f": "Passing {...} to f is deprecated",
+        "pkg.api.g": "g is deprecated",
+        "pkg.api.h": "h is deprecated and will be removed.",
+        "pkg.api.k": "k is deprecated; use `f` instead",
+    }
+
+
+def test_a_warning_that_is_not_a_deprecation_does_not_count(tmp_path):
+    """A UserWarning, a ``warnings.warn`` without a category (a UserWarning), a RuntimeWarning
+    and a warning class of the package that derives from UserWarning are not deprecations;
+    nor is a call of another ``warn`` (a logger's)."""
+    old = {"pkg/__init__.py": "def f(x):\n    return x\n"}
+    new = {
+        "pkg/__init__.py": "import logging\nimport warnings\n\n"
+        "log = logging.getLogger(__name__)\n\n"
+        "class PkgWarning(UserWarning):\n    pass\n\n"
+        "def f(x):\n"
+        '    warnings.warn("f returns a copy", UserWarning)\n'
+        '    warnings.warn("f is slow")\n'
+        '    warnings.warn("overflow", RuntimeWarning)\n'
+        '    warnings.warn("f is deprecated", PkgWarning)\n'
+        '    log.warn("f is deprecated")\n'
+        "    return x\n"
+    }
+    assert diff(tmp_path, old, new) == []
+
+
+def test_a_warning_the_release_at_the_cutoff_issued_already_does_not_count(tmp_path):
+    """The same warning in both releases (its version number changed), a parameter whose
+    warning the old release issued already, and a function the old release warned of at every
+    call are not new; nor is a function new in the pinned release."""
+    old = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def f(x):\n"
+        '    warnings.warn("f is deprecated and will be removed in 3.0", FutureWarning)\n'
+        "    return x\n\n"
+        "def g(x, y=None):\n    if y is not None:\n"
+        '        warnings.warn("y is deprecated", FutureWarning)\n    return x\n\n'
+        "def h(x, y=None):\n"
+        '    warnings.warn("h is deprecated", FutureWarning)\n    return x\n'
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def f(x):\n"
+        '    warnings.warn("f is deprecated and will be removed in 4.0", FutureWarning)\n'
+        "    return x\n\n"
+        "def g(x, y=None):\n    if y is not None:\n"
+        '        warnings.warn("y= is deprecated: use x", FutureWarning)\n    return x\n\n'
+        "def h(x, y=None):\n"
+        '    warnings.warn("h is deprecated", FutureWarning)\n'
+        "    if y is not None:\n"
+        '        warnings.warn("y is deprecated", FutureWarning)\n    return x\n\n'
+        "def brand_new(x):\n"
+        '    warnings.warn("brand_new is deprecated", FutureWarning)\n    return x\n'
+    }
+    assert diff(tmp_path, old, new) == []
+
+
+def test_a_package_subclass_of_a_deprecation_warning_counts(tmp_path):
+    """pandas 3: ``class Pandas4Warning(PandasDeprecationWarning)`` and
+    ``PandasDeprecationWarning(PandasChangeWarning, DeprecationWarning)``, imported from
+    ``pkg.errors``; also through a module alias (``errors.Pandas4Warning``) and a name bound
+    to a built-in category."""
+    old = {"pkg/__init__.py": "from pkg.api import f, g, h\n"} | {
+        "pkg/api.py": "def f(x):\n    return x\n\ndef g(x):\n    return x\n\n"
+        "def h(x):\n    return x\n"
+    }
+    new = {
+        "pkg/__init__.py": old["pkg/__init__.py"],
+        "pkg/errors.py": "class PkgChangeWarning(Warning):\n    pass\n\n"
+        "class PkgDeprecationWarning(PkgChangeWarning, DeprecationWarning):\n    pass\n\n"
+        "class Pkg4Warning(PkgDeprecationWarning):\n    pass\n\n"
+        "_DEPRECATION = FutureWarning\n",
+        "pkg/api.py": "import warnings\n\nfrom pkg import errors\n"
+        "from pkg.errors import Pkg4Warning, _DEPRECATION\n\n"
+        'def f(x):\n    warnings.warn("f is deprecated", Pkg4Warning)\n    return x\n\n'
+        'def g(x):\n    warnings.warn("g is deprecated", errors.Pkg4Warning)\n    return x\n\n'
+        'def h(x):\n    warnings.warn("h is deprecated", _DEPRECATION)\n    return x\n',
+    }
+    found = warned(diff(tmp_path, old, new))
+    assert {k[0]: v["category"] for k, v in found.items()} == {
+        "pkg.api.f": "Pkg4Warning",
+        "pkg.api.g": "Pkg4Warning",
+        "pkg.api.h": "FutureWarning",
+    }
+
+
+def test_a_warning_in_init_at_entry_deprecates_the_class(tmp_path):
+    """``Client.__init__`` warning at every call deprecates ``Client``; under a guard on one
+    of its parameters, that parameter of ``Client.__init__``."""
+    old = {
+        "pkg/__init__.py": "class Client:\n    def __init__(self, url):\n        self.url = url\n\n"
+        "class Session:\n    def __init__(self, url, proxies=None):\n        self.url = url\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "class Client:\n    def __init__(self, url):\n"
+        '        warnings.warn("Client is deprecated", DeprecationWarning)\n'
+        "        self.url = url\n\n"
+        "class Session:\n    def __init__(self, url, proxies=None):\n"
+        "        if proxies is not None:\n"
+        '            warnings.warn("proxies is deprecated", DeprecationWarning)\n'
+        "        self.url = url\n"
+    }
+    changes = diff(tmp_path, old, new)
+    assert set(warned(changes)) == {("pkg.Client", None), ("pkg.Session.__init__", "proxies")}
+    client = next(c for c in changes if c.path == "pkg.Client")
+    assert client.owner is None and client.new_signature == "class Client(self, url)"
+
+
+def test_a_warning_under_another_condition_deprecates_the_function_under_it(tmp_path):
+    """pandas 3's ``Index.join``: ``if not isinstance(other, Index): warnings.warn(...)``.
+    The function is deprecated under that condition (``warning["condition"]``), and a call of
+    it is "uses this API", not the old form. A warning after an early ``return`` and one in a
+    loop are issued in some calls too (no ``if`` to quote: the condition is None); an early
+    ``raise`` does not make one conditional."""
+    old = {
+        "pkg/__init__.py": "def join(other):\n    return other\n\n"
+        "def at_time(t):\n    return t\n\ndef each(xs):\n    return xs\n\n"
+        "def checked(x):\n    return x\n"
+    }
+    new = {
+        "pkg/__init__.py": "import warnings\n\n"
+        "def join(other):\n    if not isinstance(other, list):\n"
+        '        warnings.warn("Passing non-lists to join is deprecated", FutureWarning)\n'
+        "    return other\n\n"
+        "def at_time(t):\n    if t is None:\n        return t\n"
+        '    warnings.warn("at_time is deprecated", FutureWarning)\n    return t\n\n'
+        "def each(xs):\n    for x in xs:\n"
+        '        warnings.warn("each is deprecated", FutureWarning)\n    return xs\n\n'
+        "def checked(x):\n    if x is None:\n        raise ValueError(x)\n"
+        '    warnings.warn("checked is deprecated", FutureWarning)\n    return x\n'
+    }
+    changes = diff(tmp_path, old, new)
+    found = warned(changes)
+    assert {k[0]: (v["when"], v.get("condition")) for k, v in found.items()} == {
+        "pkg.join": (WARNS_CONDITION, "not isinstance(other, list)"),
+        "pkg.at_time": (WARNS_CONDITION, None),
+        "pkg.each": (WARNS_CONDITION, None),
+        "pkg.checked": (WARNS_ALWAYS, None),
+    }
+    join = next(c for c in changes if c.path == "pkg.join")
+    assert join.describe(versioned=False) == (
+        "`pkg.join` is deprecated when `not isinstance(other, list)`, with a FutureWarning at "
+        "run time: Passing non-lists to join is deprecated"
+    )
+    assert form(join, ("pkg.join",)) == USES_API
+    checked = next(c for c in changes if c.path == "pkg.checked")
+    assert form(checked, ("pkg.checked",)) == OLD_FORM
+
+
+def test_a_function_without_a_body_or_a_source_is_read_without_error(tmp_path):
+    """A stub (``.pyi``) has no body to warn in; a function that only re-raises reads as
+    nothing."""
+    old = {"pkg/__init__.pyi": "def f(x: int) -> int: ...\n"}
+    new = {"pkg/__init__.pyi": "import warnings\n\ndef f(x: int) -> int: ...\n"}
+    assert diff(tmp_path, old, new) == []
+
+
+def test_pandas_deprecate_kwarg_with_the_category_first_names_the_parameter(tmp_path):
+    """pandas 3's ``@deprecate_kwarg(Pandas4Warning, "method", new_arg_name=None)`` passes the
+    category before the parameter's name: the parameter was read as the category (not a
+    string) and the deprecation dropped (``reindex_like(method=...)``)."""
+    old = {
+        "pkg/__init__.py": "from pkg._decorators import deprecate_kwarg\n\n"
+        "def reindex_like(other, method=None):\n    return other\n",
+        "pkg/_decorators.py": "def deprecate_kwarg(*args, **kwargs):\n    return lambda f: f\n",
+    }
+    new = {
+        **old,
+        "pkg/__init__.py": "from pkg._decorators import deprecate_kwarg\n\n"
+        '@deprecate_kwarg(FutureWarning, "method", new_arg_name=None)\n'
+        "def reindex_like(other, method=None):\n    return other\n",
+    }
+    assert found(diff(tmp_path, old, new)) == {(DEPRECATED, "pkg.reindex_like", "method")}

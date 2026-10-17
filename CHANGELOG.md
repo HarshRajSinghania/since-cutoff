@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+- Deprecations that a library announces with `warnings.warn` in a function's body are reported
+  (diff schema 22, #53): the 0.6 audit found "pandas 2.3.1 -> 3.0.6: 0 deprecated", and the scan
+  now lists 42 in pandas' public API, among them the `copy` keyword of `DataFrame.astype`,
+  `reindex`, `rename` and the other methods pandas 3.0's release notes list,
+  `DataFrame.set_index(verify_integrity=...)`, `Series.map(arg=...)` and
+  `DataFrameGroupBy.corrwith`; for httpx 0.28.1, `create_ssl_context(cert=...)` and a string
+  `verify`, as its changelog says. The source is read, not run: a `warnings.warn` (or `warn`
+  imported from it) with a DeprecationWarning, PendingDeprecationWarning or FutureWarning, or a
+  subclass the package defines (pandas 3's `Pandas4Warning`), called directly or through a
+  helper of the package whose name says "deprecat" or "warn" (`_deprecate(msg)`, pandas'
+  `self._check_copy_deprecation(copy)`), and not issued by the release at the cutoff. At every
+  call it deprecates the function (the class, for its `__init__`); under `if p is not
+  <default>:`, `if "p" in kwargs:` and the like, the parameter; under another condition, the
+  function in some calls, which a call site is "uses this API" for, not the old form. The
+  message is read from a literal, an f-string's literal parts or a constant, and a replacement
+  it states is named as before. These count with the deprecations, never as breaking changes,
+  `run` does not probe them (no type checker reports them), and their notes say the call warns
+  at run time, tagged `[diff; warning]` (`results.json` has `deprecated_by: "warnings.warn"`
+  and `warning`: when, the category and the file and line). Also, pandas 3's
+  `@deprecate_kwarg(Pandas4Warning, "method", ...)` passes the category before the parameter's
+  name, and is read again (`reindex_like(method=...)`, `assert_frame_equal(
+  check_datetimelike_compat=...)`), and a sentence-initial "Use `x()` to ..." is advice, not a
+  stated replacement ("Use .copy() to make an eager copy if necessary.").
 - Notes from the diff say what to use instead in more cases, and point somewhere useful when they
   cannot (an audit of 36 libraries found 25 of 36 notes ending in "since-cutoff found no
   replacement in X's deprecation text", several although the text named one; #14). A replacement

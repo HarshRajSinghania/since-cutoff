@@ -13,6 +13,9 @@ not know, each tagged with what was checked, and nothing else claimed.
                                 text and exists in the pinned version (``use `stop```)
   ``[diff + move checked]``     the object at the new path keeps the old one's public names
                                 or parameters (:func:`apidiff._Differ.find_moved`)
+  ``[diff; warning]``           a deprecation announced by a ``warnings.warn`` in the pinned
+                                release's code (APIChange.warning): it shows at run time, and
+                                type checkers do not report it
   ``[diff; probable rename]``   a parameter in the same position, with the same annotation,
                                 has a new name: a guess, labelled as one
   ``[diff + metadata]``         the older release's Requires-Dist lists a distribution the
@@ -67,6 +70,7 @@ from since_cutoff.apidiff import (
     PARAM_REQUIRED,
     REMOVED,
     REQUEST_EXTRAS,
+    WARNS_CONDITION,
     APIChange,
     object_replacements,
     parameter_replacements,
@@ -91,6 +95,7 @@ TAG_PROBABLE_RENAME = "probable_rename"
 TAG_TYPE_CHECKED = "type_checked"
 TAG_NOT_CONFIRMED = "not_confirmed"
 TAG_METADATA = "metadata"
+TAG_WARNING = "warning"
 TAG_WORDS = {
     TAG_DIFF: "diff",
     TAG_LIBRARY: "library",
@@ -99,8 +104,11 @@ TAG_WORDS = {
     TAG_PROBABLE_RENAME: "probable rename",
     TAG_NOT_CONFIRMED: "not confirmed",
     TAG_METADATA: "metadata",
+    TAG_WARNING: "warning",
 }
-_GUESSES = (TAG_PROBABLE_RENAME, TAG_NOT_CONFIRMED)  # after a "; " in the tag: not evidence
+# After a "; " in the tag: what the evidence is not. A deprecation that only warns at run time
+# (TAG_WARNING: no type checker reports it), and the guesses.
+_GUESSES = (TAG_WARNING, TAG_PROBABLE_RENAME, TAG_NOT_CONFIRMED)
 # The header's legend: the first three always (a reader meets them in every block); the others
 # only in a block that uses them.
 _LEGEND = {
@@ -116,6 +124,10 @@ _LEGEND = {
     TAG_METADATA: (
         "[metadata] PyPI metadata: the two releases' Requires-Dist (in their wheels' METADATA), "
         "or a package's release dates, summary and changelog URL"
+    ),
+    TAG_WARNING: (
+        "[warning] the deprecation is a warnings.warn in the pinned release's code: it shows at "
+        "run time, and type checkers do not report it"
     ),
     TAG_PROBABLE_RENAME: "[probable rename] a guess from the parameter's position and type",
     TAG_NOT_CONFIRMED: "[not confirmed] names that look similar, not confirmed as replacements",
@@ -590,19 +602,28 @@ def diff_note(
                         f"{subject()} no longer accept{s} extra {what} arguments (`{p}`)."
                     )
         elif kind == DEPRECATED:
-            if params:
-                verb = "is" if len(params) == 1 else "are"
-                pronoun = "it" if len(params) == 1 else "them"
+            warned = _unique(c.parameter for c in group if c.parameter and c.warning)
+            marked = [p for p in params if p not in warned]
+            if marked:
+                verb = "is" if len(marked) == 1 else "are"
+                pronoun = "it" if len(marked) == 1 else "them"
                 sentences.append(
-                    f"{_listed(params, 'and')} {verb} deprecated for {call}; avoid {pronoun} in "
+                    f"{_listed(marked, 'and')} {verb} deprecated for {call}; avoid {pronoun} in "
                     "new code."
                 )
+                said_what = True
+            if warned:
+                sentences.append(_warned_parameters_sentence(group, warned, call))
                 said_what = True
             for c in group:
                 if c.parameter:
                     continue
-                sentences.append(_deprecated_sentence(c, names))
+                sentences.append(
+                    _warned_sentence(c, names) if c.warning else _deprecated_sentence(c, names)
+                )
                 said_what = True
+            if any(c.warning for c in group):
+                tags.append(TAG_WARNING)
         elif kind == PARAM_REQUIRED:
             sentences.append(f"{subject()} now require{s} {_listed(params, 'and')}.")
         elif kind == PARAM_KEYWORD_ONLY:
@@ -646,6 +667,53 @@ def diff_note(
         replacements=replacements,
         not_confirmed=similar,
     )
+
+
+def _categories(changes: Iterable[APIChange]) -> str:
+    """The warning categories of deprecations read from ``warnings.warn`` (APIChange.warning),
+    as a note names them: ``Pandas4Warning``, ``FutureWarning and DeprecationWarning``."""
+    found = _unique(str((c.warning or {}).get("category") or "") for c in changes)
+    return _listed_plain([safe_text(f, 40) for f in found if f]) or "a warning"
+
+
+def _warned_parameters_sentence(
+    group: Sequence[APIChange], parameters: Sequence[str], call: str
+) -> str:
+    """``x`` is deprecated for ``f()``: pkg 2.0 warns at run time (FutureWarning) when it is
+    passed; avoid it in new code."""
+    first = group[0]
+    one = len(parameters) == 1
+    verb, pronoun = ("is", "it") if one else ("are", "them")
+    warned = [c for c in group if c.parameter in parameters and c.warning]
+    return (
+        f"{_listed(parameters, 'and')} {verb} deprecated for {call}: {first.package} "
+        f"{first.to_version} warns at run time ({_categories(warned)}) when {pronoun} {verb} "
+        f"passed; avoid {pronoun} in new code."
+    )
+
+
+def _warned_sentence(change: APIChange, names: Sequence[str]) -> str:
+    """A function or class deprecated by a ``warnings.warn`` (APIChange.warning): ``f`` is
+    deprecated: pkg 2.0 warns at run time (FutureWarning) at every call; avoid it in new
+    code. Under another condition, "in some calls" (the condition is the library's code, which
+    names its own variables: the quoted message says when)."""
+    many = len(names) > 1
+    be, it = ("are", "them") if many else ("is", "it")
+    subject = _listed(names, "and")
+    category = _categories([change])
+    pkg = f"{change.package} {change.to_version}"
+    if (change.warning or {}).get("when") == WARNS_CONDITION:
+        return f"{subject} {be} deprecated in some calls: {pkg} warns at run time ({category})."
+    when = "when one is created" if _is_class_change(change) else "at every call"
+    return (
+        f"{subject} {be} deprecated: {pkg} warns at run time ({category}) {when}; avoid {it} "
+        "in new code."
+    )
+
+
+def _is_class_change(change: APIChange) -> bool:
+    """A change to a class (whose ``__init__`` warns), by its recorded signature."""
+    return (change.new_signature or "").startswith("class ")
 
 
 def _deprecated_sentence(change: APIChange, names: Sequence[str]) -> str:
@@ -727,10 +795,15 @@ def _replacement_sentences(
             tags.append(TAG_PROBABLE_RENAME)
             continue
         if c.kind == DEPRECATED:
-            if not c.parameter and found is None:
+            # The text of a warnings.warn says what the deprecation is about, a parameter's too.
+            if (not c.parameter or c.warning) and found is None:
                 quote = _quote_text(c.deprecation or "")
+                if not quote and (c.warning or {}).get("when") == WARNS_CONDITION:
+                    # The bullet says "in some calls": the text's first sentence says which.
+                    quote = _whole_sentences(_sentences(c.deprecation or "")[:1], 200)
+                on = f"On `{what}`, " if c.parameter else ""
                 if quote:
-                    sentences.append(f'{c.package} {c.to_version} says: "{quote}"')
+                    sentences.append(f'{on}{c.package} {c.to_version} says: "{quote}"')
             continue  # still works: nothing to replace yet
         unnamed.append(what)
         similar += [s for s in c.suggestions if s not in similar]
@@ -1012,7 +1085,7 @@ def _stated_by(cue: re.Pattern[str], sentences: list[str], names: list[str]) -> 
         ((i, m) for i, sentence in enumerate(sentences) for m in cue.finditer(sentence)),
         key=lambda im: (im[0], im[1].start("rest")),
     )
-    for _, m in matches:
+    for i, m in matches:
         tokens = [t.strip(".") for t in _TOKEN.findall(m.group("rest"))]
         said = [(t, _named_as(t, names)) for t in tokens if t]
         found = _unique(n for _, n in said if n is not None)
@@ -1022,6 +1095,10 @@ def _stated_by(cue: re.Pattern[str], sentences: list[str], names: list[str]) -> 
         weak = m.groupdict().get("weak")
         if weak is None:
             return _Stated(found, direct, True)
+        # The weak cues' names stop at a "(": "Use .copy() to make an eager copy if necessary."
+        # says more after the call (pandas 3's copy keyword), and is advice.
+        after = re.sub(r"^\s*\([^()]*\)", "", sentences[i][m.end("rest") :])
+        direct = direct and not re.search(r"\w", after)
         # A sentence-initial "Use" that names nothing else states it; "see" never does.
         return _Stated(found, direct, direct and weak.lower() != "see")
     return None

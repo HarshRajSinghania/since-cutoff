@@ -33,6 +33,7 @@ from since_cutoff.apidiff import (
     PARAM_REQUIRED,
     REMOVED,
     TIER_INTERNAL,
+    WARNS_CONDITION,
     APIChange,
     griffe_version,
 )
@@ -1066,7 +1067,7 @@ def changes_text(changes: Sequence[APIChange], *, code: bool = False) -> tuple[b
         elif kind == PARAM_POSITIONAL_ONLY:
             text = f"{names} {'is' if one else 'are'} now positional-only"
         elif kind == CHANGE_DEPRECATED and params:
-            text = f"{names} {'is' if one else 'are'} deprecated"
+            text = f"{names} {'is' if one else 'are'} deprecated" + _warns(group)
         elif kind == DEPENDENCY_SWITCHED:
             text = group[0].describe() if code else group[0].describe().replace("`", "")
         else:  # a change to the API itself
@@ -1090,11 +1091,19 @@ def changes_text(changes: Sequence[APIChange], *, code: bool = False) -> tuple[b
                 text = f"is deprecated when called as {q(' '.join(c.call_form.split()))}"
             elif c.call_form:
                 text = "is deprecated in one call form (an overload)"
+            elif (c.warning or {}).get("when") == WARNS_CONDITION:
+                text = "is deprecated in some calls" + _warns(group)
             else:
-                text = "is deprecated"
+                text = "is deprecated" + _warns(group)
             first_is_api = first_is_api or not parts
         parts.append(text)
     return first_is_api, "; ".join(parts)
+
+
+def _warns(changes: Sequence[APIChange]) -> str:
+    """` (warns at run time)` for deprecations read from a ``warnings.warn`` (APIChange.warning),
+    which no type checker reports; "" for the others."""
+    return " (warns at run time)" if any(c.warning for c in changes) else ""
 
 
 def api_head(u: UsedAPI, *, code: bool = False) -> str:

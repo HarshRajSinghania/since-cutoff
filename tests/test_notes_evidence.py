@@ -23,6 +23,9 @@ from since_cutoff.apidiff import (
     PARAM_KEYWORD_ONLY,
     PARAM_REMOVED,
     REMOVED,
+    WARNS_ALWAYS,
+    WARNS_CONDITION,
+    WARNS_PARAMETER,
     APIChange,
 )
 from since_cutoff.cache import DiskCache
@@ -30,9 +33,11 @@ from since_cutoff.notes import (
     EVIDENCE_LIBRARY,
     TAG_DIFF,
     TAG_LIBRARY,
+    TAG_WARNING,
     diff_note,
     render_block,
     runtime_text,
+    split_tags,
 )
 from since_cutoff.pypi import SourceTree
 from since_cutoff.report import render_markdown, render_scan_markdown, to_json
@@ -605,3 +610,107 @@ def test_results_json_lists_a_few_import_paths_per_change(tmp_path, cache, fake_
     assert entry["import_paths"] == [f"toylib.m{i}.fetch" for i in range(5)]
     assert entry["import_paths_total"] == 40
     assert len(fetch.import_paths) == 40  # the change itself keeps them all
+
+
+# ------------------------------------- deprecations announced by warnings.warn (#53)
+def warned(when: str, **kw: Any) -> APIChange:
+    """A deprecation of pandas 3.0.6 read from a ``warnings.warn`` (DIFF_SCHEMA 22)."""
+    kw.setdefault("owner", "DataFrame")
+    kw.setdefault("param", None)
+    return change(
+        DEPRECATED,
+        pkg="pandas",
+        old="2.3.1",
+        new="3.0.6",
+        deprecated_by=HINT_WARNING,
+        warning={"when": when, "category": "Pandas4Warning", "at": "pandas/core/frame.py:1"},
+        **kw,
+    )
+
+
+def test_a_note_for_a_warned_parameter_says_it_warns_at_run_time() -> None:
+    """The note says the call warns at run time, never that type checkers reject it, quotes
+    the library's text and is tagged [diff; warning]."""
+    note = diff_note(
+        [
+            warned(
+                WARNS_PARAMETER,
+                name="set_index",
+                param="verify_integrity",
+                deprecation="The 'verify_integrity' keyword in DataFrame.set_index is "
+                "deprecated and will be removed in a future version. Directly check the "
+                "result.index.is_unique instead.",
+            )
+        ]
+    )
+    assert note.line == (
+        "`verify_integrity` is deprecated for `DataFrame.set_index()`: pandas 3.0.6 warns at run "
+        "time (Pandas4Warning) when it is passed; avoid it in new code. On `verify_integrity`, "
+        'pandas 3.0.6 says: "Directly check the result.index.is_unique instead." [diff; warning]'
+    )
+    assert note.tag_list == (TAG_DIFF, TAG_WARNING)
+    assert "type checker" not in note.line
+    assert split_tags(note.line)[1] == (TAG_DIFF, TAG_WARNING)
+
+
+def test_a_note_for_a_warned_function_says_when_it_warns() -> None:
+    """At every call; when a class is created; in some calls, with the text's first sentence
+    when nothing else in it is worth quoting. A replacement the text states is named, and the
+    tag says both: [diff + library; warning]."""
+    always = warned(
+        WARNS_ALWAYS,
+        name="corrwith",
+        owner="DataFrameGroupBy",
+        deprecation="DataFrameGroupBy.corrwith is deprecated",
+    )
+    assert diff_note([always]).line == (
+        "`DataFrameGroupBy.corrwith` is deprecated: pandas 3.0.6 warns at run time "
+        "(Pandas4Warning) at every call; avoid it in new code. [diff; warning]"
+    )
+    cls = warned(
+        WARNS_ALWAYS,
+        name="Store",
+        owner=None,
+        path="pandas.Store",
+        new_signature="class Store(self, path)",
+        deprecation="Store is deprecated, use `Table` instead",
+        library_names=["pandas.Table"],
+    )
+    note = diff_note([cls])
+    assert note.line == (
+        "`pandas.Store` is deprecated: pandas 3.0.6 warns at run time (Pandas4Warning) when one "
+        "is created; avoid it in new code. Use `pandas.Table` instead. [diff + library; warning]"
+    )
+    some = warned(
+        WARNS_CONDITION,
+        name="astype",
+        owner="Categorical",
+        deprecation="Constructing a Categorical with values not in its categories is "
+        "deprecated and will raise in a future version.",
+    )
+    assert diff_note([some]).line == (
+        "`Categorical.astype` is deprecated in some calls: pandas 3.0.6 warns at run time "
+        '(Pandas4Warning). pandas 3.0.6 says: "Constructing a Categorical with values not in its '
+        'categories is deprecated and will raise in a future version." [diff; warning]'
+    )
+    block = render_block(
+        [diff_note([some])], model="claude-sonnet-4-5", cutoff=CUTOFF, version_source="uv.lock"
+    )
+    assert "[warning] the deprecation is a warnings.warn" in block
+
+
+def test_use_a_call_to_do_something_is_advice_not_a_replacement() -> None:
+    """pandas 3's copy keyword: "Use .copy() to make an eager copy if necessary." The
+    sentence-initial "Use" stopped at the "(", so ``copy`` looked stated outright, and the
+    note said "Use `DataFrame.copy` instead of `copy`"."""
+    copy = warned(
+        WARNS_PARAMETER,
+        name="astype",
+        param="copy",
+        deprecation="The copy keyword is deprecated. Use .copy() to make an eager copy if "
+        "necessary.",
+        library_names=["pandas.core.frame.DataFrame.copy"],
+    )
+    note = diff_note([copy])
+    assert note.replacements == [] and TAG_LIBRARY not in note.tag_list
+    assert "instead of `copy`" not in note.line

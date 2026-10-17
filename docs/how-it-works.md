@@ -106,7 +106,7 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
    | positional-only | `f(a=a)` must now be `f(a)` |
    | changed kind | `pkg.Grammar` was a class and is now an attribute |
    | dependency switched | openai 3.19.2 requires `httpx2` instead of `httpx`, and `OpenAI(http_client=...)` takes an `httpx2.Client` ([below](#a-dependency-the-pinned-release-switched)) |
-   | deprecated | `@deprecated` (PEP 702, also when the library imports it through a compatibility module of its own) added since the cutoff, a library's own decorator whose name contains "deprecat", or a removed name the module still serves with a warning through `__getattr__`, a table of deprecated aliases or a metaclass property (`scan` lists all of them, with the library's message; `run` probes only the PEP 702 ones). A deprecation on some overloads only is a deprecated call form (`call_form` in results.json) |
+   | deprecated | `@deprecated` (PEP 702, also when the library imports it through a compatibility module of its own) added since the cutoff, a library's own decorator whose name contains "deprecat", or a removed name the module still serves with a warning through `__getattr__`, a table of deprecated aliases or a metaclass property, or a `warnings.warn` with a deprecation category that a public function or method now issues ([below](#deprecations-that-warn-at-run-time)) (`scan` lists all of them, with the library's message; `run` probes only the PEP 702 ones). A deprecation on some overloads only is a deprecated call form (`call_form` in results.json) |
 
    Default values, attribute values and return annotations are ignored. Objects are reported
    under their shortest public path (`cryptography.hazmat.primitives.ciphers.aead.AESGCM`, not
@@ -161,6 +161,65 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
    - kind changes that do not break a call: a callable alias (`namedtuple(...)`,
      `X = ValueError`) becoming a function or class or the reverse, an attribute becoming a type
      alias, and definitions that depend on the Python version or `TYPE_CHECKING`.
+
+### Deprecations that warn at run time
+
+Many libraries deprecate in the body of a function rather than with a decorator: pandas 3.0
+warns with `Pandas4Warning` when `DataFrame.set_index` is passed `verify_integrity`, numpy
+and scikit-learn call `warnings.warn(..., DeprecationWarning)` or `FutureWarning`. The scan
+reads those calls in the pinned release's public functions and methods, statically (nothing is
+imported or run), and reports the ones the release at the cutoff did not issue:
+
+- **The call.** `warnings.warn` or `warnings.warn_explicit`, resolved through the module's
+  imports (`import warnings`, `from warnings import warn`), with a DeprecationWarning,
+  PendingDeprecationWarning or FutureWarning as its category (second argument, `category=`, or
+  the warning itself: `warn(FutureWarning("..."))`), or a class of the package that derives
+  from one, however many classes deep (pandas 3's `Pandas4Warning(PandasDeprecationWarning)`,
+  `PandasDeprecationWarning(PandasChangeWarning, DeprecationWarning)`), or a name bound to one.
+  No category is a UserWarning, and a UserWarning, a RuntimeWarning or a logger's `warn` is
+  not a deprecation. A helper of the package counts as the warning it issues: a function or
+  method whose name says "deprecat" or "warn" (`_deprecate(msg)`, `warn_deprecated(name)`)
+  and that warns at every call, with its own message or the one it is given, or whenever one
+  of its parameters is not a sentinel (pandas 3's `self._check_copy_deprecation(copy)`, which
+  warns `if copy is not lib.no_default`: the caller's `copy` is deprecated when its default is
+  that sentinel too). `stacklevel=find_stack_level()` and the like change nothing.
+- **What is deprecated.** A warning at every call deprecates the function (the class, for its
+  `__init__`). A warning issued only when the caller passes a parameter deprecates the
+  parameter: under `if p is not <its default>:` or `if p != <its default>:` (pandas'
+  `lib.no_default`, `None`), in the `else` of `if p is <its default>:`, under
+  `if "p" in kwargs:` or `if kwargs.get("p") is not None:`, `if p:` for a parameter whose
+  default is false and `if not p:` for one whose default is `True` (pandas 3's `if not
+  future_stack:`), alone or joined with `and`. Any other condition (`if not isinstance(other,
+  Index):`, a loop, an `except`, a `return` earlier in the body) deprecates the function in
+  some calls: `warning["condition"]` in results.json has the `if` test as code, the note says
+  "in some calls" and quotes the message, and a call of it is "uses this API", not the old
+  form, since a name match cannot tell whether the condition holds.
+- **The message.** A literal, the literal parts of an f-string (each value as `{...}`), strings
+  joined with `+`, a `%` or `.format` template, a name assigned one of them earlier in the
+  function, or a module-level constant (of the module, or imported from elsewhere in the
+  package). A replacement it states is named as for any deprecation text
+  (`[diff + library]`): pandas 3's "The parameter `arg` has been renamed to `func`" for
+  `Series.map` gives "Use `func` instead of `arg`."
+- **New since the cutoff.** Not reported: a function new in the pinned release, one the release
+  at the cutoff deprecated already (a warning at every call, PEP 702, the library's decorator),
+  a warning that release issued already (the same parameter, the same condition, or the same
+  text once version numbers are left out), a parameter it did not take, and a parameter the
+  diff reports as removed.
+
+Each is a deprecation (`deprecated_by` is `warnings.warn`, `warning` says when, with the
+category and `pkg/module.py:line`), counted with the deprecations, never with the breaking
+changes, and tagged `[diff; warning]`: a type checker does not report it, so `run` does not
+probe it, and the note says the call warns at run time ("`verify_integrity` is deprecated for
+`DataFrame.set_index()`: pandas 3.0.6 warns at run time (Pandas4Warning) when it is passed;
+avoid it in new code."). For pandas 2.3.1 -> 3.0.6 the scan found 0 deprecations before; it
+finds 42 in public APIs now, 39 of them read from `warnings.warn` (the other 3 are pandas 3's
+`@deprecate_kwarg(Pandas4Warning, "method", ...)`, whose category now comes before the
+parameter's name), among them the `copy` keyword of `DataFrame.astype`,
+`reindex`, `rename` and the other methods pandas' release notes list, `Series.map(arg=...)`,
+`DataFrame.set_index(verify_integrity=...)`, `DataFrameGroupBy.corrwith` and the epoch date
+format of `to_json`. What a static reading cannot see is not reported: a warning in compiled
+code (pandas' `Timestamp.utcnow`), a helper called on another object (`left._check_...(copy)`),
+or a category or message built at run time.
 
 ### What the training cutoff is used for
 
@@ -700,12 +759,14 @@ was checked, and nothing else is claimed:
 | `[diff + library]` | As `[diff]`, and the library's own deprecation text (a docstring, a parameter's docstring entry, an `@deprecated` message or a `warnings.warn` text, in the older release or, for a deprecation, in the pinned one) states the replacement ("Use `stop` instead"), and that name exists in your pinned version. Text that only mentions a name as advice is quoted under `[diff]`, not taken as a replacement. | That the replacement behaves the same. |
 | `[diff + move checked]` | As `[diff]`, and the object at the new path is the same object as far as can be counted: a class or module keeps at least half of the old one's public names, a function keeps its parameters, a value is the same. | Behaviour. |
 | `[diff + metadata]` | The older release's Requires-Dist (its wheel's METADATA) lists a library the pinned one does not, and places in the public API that named that library's types (parameters, return types, attributes, base classes, re-exports) name the types of another library the pinned release requires, or of a copy of the old one it ships, with none of the old library left: openai 3.x, anthropic 1.8, huggingface-hub 2.0 and mcp 2.2 take `httpx2` objects where they took `httpx` ones. `[metadata]` alone marks the one bullet for a package first released after the cutoff (or within the margin before it) that your code imports: there is no release to compare from, so the note gives the date of its first release, its PyPI summary and its changelog URL. | Behaviour: whether the pinned release still accepts the old library's objects (openai 3 converts some, anthropic 1.8 raises `TypeError`, according to their sources). The terminal, report.md, the MCP tools and the JSON add an "Installed:" line (whether your project, its virtual environment included, still has the old library) and a "Runtime:" line that points to where the pinned source still names it. |
+| `[diff; warning]` | As `[diff]`, for a deprecation the pinned release announces with `warnings.warn` in a public function's or method's body and the release at the cutoff did not: a DeprecationWarning, PendingDeprecationWarning or FutureWarning, or a subclass the package defines (pandas 3's `Pandas4Warning`), issued directly or through a helper of the package. At every call the function is deprecated; when a parameter is passed (`if copy is not lib.no_default:`, `if "limit" in kwargs:`) the parameter is; under another condition the function is, in some calls. The source is read, not run. With `+ library` (`[diff + library; warning]`), the warning's text states the replacement. | Whether your call warns: a type checker reports none of these, so `run` does not probe them, and "in some calls" depends on the library's own condition. |
 | `[diff; probable rename]` | A parameter in the same position, with the same annotation, has a new name, and no version note in the pinned release's docstring (`.. versionadded::`, `.. versionchanged::`) says that one was added or the other removed. A guess, labelled as one. | That it is the same parameter. |
 | `[type-checked]` | Written by a model during `since-cutoff run` and kept because its example passed the type check below. | Behaviour; that the bullet's explanation is true beyond the names it shows. |
 | `[not confirmed]` | Only with `sync --suggestions`: names in the pinned version that look similar to what was removed (the bullet's tag then reads `[diff; not confirmed]`). | That any of them replaces it. |
 
-Tags combine: evidence is joined with `+` (`[diff + library]`), and a guess comes after `;`
-(`[diff; probable rename]`, `[diff; not confirmed]`).
+Tags combine: evidence is joined with `+` (`[diff + library]`), and what the evidence is not
+comes after `;`: a run-time warning (`[diff; warning]`) or a guess (`[diff; probable rename]`,
+`[diff; not confirmed]`).
 
 Names that merely look similar are never written into the notes by default. The terminal,
 report.md and the MCP tools show them as "not confirmed as replacements", and not at all where
@@ -799,7 +860,8 @@ meaning the same as `checks.example_type_checks`).
   task writer. Runs that each write their own tasks also differ in the tasks.
 - The type checker catches wrong names, wrong parameters and PEP 702 deprecations. It cannot see
   behaviour changes (same signature, different semantics) or deprecations that only warn at run
-  time.
+  time; the scan reads the latter from the source (`[diff; warning]`, [Deprecations that warn
+  at run time](#deprecations-that-warn-at-run-time)), and `run` does not probe them.
 - Everything is cached. Re-running gives the same result; `--fresh` asks the model again.
   `since-cutoff cache info` shows where the cache is and its size by kind; `cache clear
   --sources` (or `--diffs`, `--pypi`) removes one kind and keeps the model's answers, which

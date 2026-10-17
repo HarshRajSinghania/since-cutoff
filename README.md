@@ -151,7 +151,8 @@ It does not:
   need no API key;
 - run package code or model-written code: packages are read statically, and answers are only
   type-checked;
-- see behaviour changes behind an unchanged signature, or deprecations that only warn at run time;
+- see behaviour changes behind an unchanged signature, or run anything: a deprecation that only
+  warns at run time is read from the library's `warnings.warn` calls (tagged `[diff; warning]`);
 - name a replacement unless the library's own deprecation text states it;
 - say what the model memorised: the cutoff picks the comparison release, and only `run` asks the
   model;
@@ -871,12 +872,14 @@ was checked, and nothing else is claimed:
 | `[diff + library]` | As `[diff]`, and the library's own deprecation text (a docstring, a parameter's docstring entry, an `@deprecated` message or a `warnings.warn` text, in the older release or, for a deprecation, in the pinned one) states the replacement ("Use `stop` instead"), and that name exists in your pinned version. Text that only mentions a name as advice is quoted under `[diff]`, not taken as a replacement. | That the replacement behaves the same. |
 | `[diff + move checked]` | As `[diff]`, and the object at the new path is the same object as far as can be counted: a class or module keeps at least half of the old one's public names, a function keeps its parameters, a value is the same. | Behaviour. |
 | `[diff + metadata]` | The older release's Requires-Dist (its wheel's METADATA) lists a library the pinned one does not, and places in the public API that named that library's types (parameters, return types, attributes, base classes, re-exports) name the types of another library the pinned release requires, or of a copy of the old one it ships, with none of the old library left: openai 3.x, anthropic 1.8, huggingface-hub 2.0 and mcp 2.2 take `httpx2` objects where they took `httpx` ones. `[metadata]` alone marks the one bullet for a package first released after the cutoff (or within the margin before it) that your code imports: there is no release to compare from, so the note gives the date of its first release, its PyPI summary and its changelog URL. | Behaviour: whether the pinned release still accepts the old library's objects (openai 3 converts some, anthropic 1.8 raises `TypeError`, according to their sources). The terminal, report.md, the MCP tools and the JSON add an "Installed:" line (whether your project, its virtual environment included, still has the old library) and a "Runtime:" line that points to where the pinned source still names it. |
+| `[diff; warning]` | As `[diff]`, for a deprecation the pinned release announces with `warnings.warn` in a public function's or method's body and the release at the cutoff did not: a DeprecationWarning, PendingDeprecationWarning or FutureWarning, or a subclass the package defines (pandas 3's `Pandas4Warning`), issued directly or through a helper of the package. At every call the function is deprecated; when a parameter is passed (`if copy is not lib.no_default:`, `if "limit" in kwargs:`) the parameter is; under another condition the function is, in some calls. The source is read, not run. With `+ library` (`[diff + library; warning]`), the warning's text states the replacement. | Whether your call warns: a type checker reports none of these, so `run` does not probe them, and "in some calls" depends on the library's own condition. |
 | `[diff; probable rename]` | A parameter in the same position, with the same annotation, has a new name, and no version note in the pinned release's docstring (`.. versionadded::`, `.. versionchanged::`) says that one was added or the other removed. A guess, labelled as one. | That it is the same parameter. |
 | `[type-checked]` | Written by a model during `since-cutoff run` and kept because its example passed the type check below. | Behaviour; that the bullet's explanation is true beyond the names it shows. |
 | `[not confirmed]` | Only with `sync --suggestions`: names in the pinned version that look similar to what was removed (the bullet's tag then reads `[diff; not confirmed]`). | That any of them replaces it. |
 
-Tags combine: evidence is joined with `+` (`[diff + library]`), and a guess comes after `;`
-(`[diff; probable rename]`, `[diff; not confirmed]`).
+Tags combine: evidence is joined with `+` (`[diff + library]`), and what the evidence is not
+comes after `;`: a run-time warning (`[diff; warning]`) or a guess (`[diff; probable rename]`,
+`[diff; not confirmed]`).
 
 Names that merely look similar are never written into the notes by default. The terminal,
 report.md and the MCP tools show them as "not confirmed as replacements", and not at all where
@@ -956,8 +959,12 @@ meaning the same as `checks.example_type_checks`).
 - A type checker sees wrong names, wrong parameters and PEP 702 deprecations. It cannot see
   behaviour changes behind an unchanged signature, or deprecations that only warn at run time.
   `scan` also lists deprecations declared with a library's own decorator (name containing
-  "deprecat") and removed names that a module still serves with a warning through
-  `__getattr__`, but `run` does not probe them.
+  "deprecat"), removed names that a module still serves with a warning through
+  `__getattr__`, and deprecations a public function or method announces with `warnings.warn`
+  (a DeprecationWarning, PendingDeprecationWarning or FutureWarning, or a subclass of the
+  package's, read from the source: pandas 2.3.1 -> 3.0.6 went from 0 deprecations to 42), but
+  `run` does not probe them. A warning in compiled code, or one whose category or message is
+  built at run time, is not seen.
 - The diff covers the public API: `_private` names, and test suites, benchmarks and examples
   shipped inside a package, are skipped.
 - "Your code uses" is a static match, file by file: imports (re-exported names included),

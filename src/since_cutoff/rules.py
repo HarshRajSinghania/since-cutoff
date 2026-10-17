@@ -45,18 +45,24 @@ files on the way to the folder it starts in), so neither has a format here.
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from since_cutoff.models import DEFAULT_CUTOFF_MARGIN
 from since_cutoff.notes import (
+    BLOCK_END,
+    BLOCK_START,
+    SCOPE_IMPORTED,
     NotesFileError,
     _hash,
     _read,
     _write,
     has_markers,
+    parse_block,
     with_block,
     without_block,
 )
@@ -194,6 +200,58 @@ def present(root: Path) -> list[RuleFormat]:
     return [f for f in FORMATS.values() if f.files(root)]
 
 
+def skipped(root: Path, only: RuleFormat | None = None) -> list[str]:
+    """What to say of each file in a rules folder (``only``'s, else every format's) that is
+    named for a package and has since-cutoff's markers, but that since-cutoff leaves alone
+    (RuleFormat.files does not list it): it is not UTF-8 text, it is a hard link, or it is
+    reached through a link outside the project. ``status``, ``sync`` and ``unapply`` do not
+    see its notes, and a plain ``sync`` writes AGENTS.md beside it: they say so, one line
+    each."""
+    out: list[str] = []
+    for f in [only] if only is not None else FORMATS.values():
+        folder = root / f.folder
+        try:
+            found = sorted(
+                (p for p in folder.iterdir() if f.package_of(p) is not None and _marked(p)),
+                key=lambda p: p.name,
+            )
+        except OSError:  # no such folder, or it cannot be read
+            continue
+        if not found:
+            continue
+        why = outside(root, folder)
+        if why:
+            names = ", ".join(p.name for p in found)
+            out.append(f"{f.folder} {why}, so since-cutoff leaves {names} in it alone")
+            continue
+        for p in found:
+            why = outside(root, p)
+            if why is None:
+                try:
+                    _read(p)
+                    continue
+                except UnicodeDecodeError:
+                    why = "is not UTF-8 text"
+                except OSError as exc:
+                    why = f"cannot be read ({exc})"
+            out.append(
+                f"{f.folder}/{p.name} {why}, so since-cutoff leaves it alone: status, sync "
+                "and unapply do not see the notes in it"
+            )
+    return out
+
+
+def _marked(path: Path) -> bool:
+    """Whether a file has a since-cutoff marker, read as bytes (so also when it is not UTF-8)."""
+    try:
+        if not path.is_file():
+            return False
+        data = path.read_bytes()
+    except OSError:
+        return False
+    return any(m.encode() in data for m in (BLOCK_START, BLOCK_END))
+
+
 # ------------------------------------------------------------------ the globs
 # A character a glob reads as syntax (or YAML, or a list's comma), or a space: it stands as
 # ``?``, which matches any one character, that one included.
@@ -276,14 +334,16 @@ def front_edited(text: str, meta: dict[str, object]) -> bool:
 def with_rule(text: str | None, front: str, block: str, name: str) -> tuple[str, str]:
     """The text of a rule file with ``front`` as its front matter and ``block`` as its notes
     block, and what that does ("created", "updated"). Text of its own after the block stays,
-    and so does a byte order mark at its start."""
+    and so does a byte order mark at its start; the front matter gets the file's line breaks
+    (``front`` may have either: the one a file has already, read back, has its own)."""
     if text is None:
         return front + block, "created"
     nl = "\r\n" if "\r\n" in text else "\n"
     bom = BOM if text.startswith(BOM) else ""
     _, rest = split_front(text)
     body, action = with_block(rest, block, name)
-    return bom + front.replace("\n", nl) + body, "updated" if action == "updated" else action
+    front = front.replace("\r\n", "\n").replace("\n", nl)
+    return bom + front + body, "updated" if action == "updated" else action
 
 
 def without_rule(text: str, name: str) -> str | None:
@@ -346,6 +406,22 @@ def check_ours(root: Path, path: Path) -> None:
         )
 
 
+def foreign(rule: RuleFormat, path: Path, text: str) -> str | None:
+    """Why since-cutoff leaves alone the rule file ``path`` (with ``text``) whose block is for
+    another package than its name says (copied, or renamed by hand): which file is that
+    package's is not this one's to say. None when the block is its own package's, or when it
+    has none (NotesFileError for markers that cannot be read)."""
+    package = rule.package_of(path)
+    block = parse_block(text, path.name)
+    others = sorted(set(block.packages) - {package}) if block is not None and package else []
+    if not others:
+        return None
+    return (
+        f"{path.name} holds the notes for {', '.join(others)}, not {package}'s, so since-cutoff "
+        "leaves it alone; rename or remove it, then run again"
+    )
+
+
 def remove_rule(path: Path) -> bool:
     """``unapply`` for a rule file: the file goes when it holds nothing but since-cutoff's
     front matter and block, else only the block goes. False when it has no block."""
@@ -378,11 +454,48 @@ def delete(path: Path) -> None:
 
 
 # ------------------------------------------------------------------- git
+def git_command(root: Path) -> str | None:
+    """The git to run, by its full path: the first ``git`` (``git.exe`` on Windows) in a
+    folder of PATH that is absolute and is neither the current folder nor the project's (nor
+    one inside it); None when there is none. Run by its bare name, git is looked for in the
+    current folder first on Windows (unless NoDefaultCurrentDirectoryInExePath is set), so a
+    git.exe committed to a repository would run on a plain ``sync --check`` there."""
+    name = "git.exe" if os.name == "nt" else "git"
+
+    def real(path: Path) -> Path | None:
+        try:
+            return Path(os.path.normcase(path.resolve()))
+        except (OSError, RuntimeError, ValueError):
+            return None
+
+    try:
+        here = real(Path.cwd())
+    except OSError:  # the current folder was removed
+        here = None
+    project = real(root)
+    for entry in os.environ.get("PATH", "").split(os.pathsep):
+        folder = Path(entry.strip().strip('"'))
+        if not entry.strip() or not folder.is_absolute():
+            continue  # "" and "." are the current folder; "bin" is a folder of it
+        found = real(folder)
+        if found is None or found == here:
+            continue
+        if project is not None and (found == project or project in found.parents):
+            continue
+        exe = folder / name
+        if exe.is_file() and os.access(exe, os.X_OK):
+            return str(exe)
+    return None
+
+
 def _git(root: Path, *args: str, stdin: bytes | None = None) -> subprocess.CompletedProcess[bytes]:
-    """``git -C root ...`` (no fsmonitor hook runs); OSError or SubprocessError when git is
-    not there or does not answer."""
+    """``git -C root ...`` (no fsmonitor hook runs), git found by :func:`git_command`; OSError
+    or SubprocessError when there is none or it does not answer."""
+    exe = git_command(root)
+    if exe is None:
+        raise FileNotFoundError("git is not on PATH (outside the project and this folder)")
     return subprocess.run(
-        ["git", "-c", "core.fsmonitor=false", "-C", str(root), *args],
+        [exe, "-c", "core.fsmonitor=false", "-C", str(root), *args],
         input=stdin,
         capture_output=True,
         timeout=60,
@@ -431,6 +544,77 @@ def ignored(root: Path, files: Sequence[str]) -> set[str]:
     if found.returncode not in (0, 1):  # 1: none of them is ignored
         return set()
     return {p for p in found.stdout.decode("utf-8", "surrogateescape").split("\0") if p}
+
+
+def again_command(rule: RuleFormat, meta: dict[str, object]) -> str:
+    """The ``sync`` that writes the notes as ``rule`` again, for the model, cutoff, margin and
+    scope of a block's meta line: ``since-cutoff sync --target claude-rules --model
+    claude-sonnet-4-5 --cutoff 2025-07-31``."""
+    parts = ["since-cutoff sync --target", rule.name]
+    model = meta.get("model")
+    if isinstance(model, str) and model.strip():
+        parts += ["--model", ",".join(m.strip() for m in model.split(",") if m.strip())]
+    cutoff = meta.get("cutoff")
+    if isinstance(cutoff, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", cutoff):
+        parts += ["--cutoff", cutoff]
+    margin = meta.get("margin")
+    if isinstance(margin, int) and margin != DEFAULT_CUTOFF_MARGIN:
+        parts += ["--cutoff-margin", str(margin)]
+    if meta.get("scope") == SCOPE_IMPORTED:
+        parts += ["--scope", SCOPE_IMPORTED]
+    return "`" + " ".join(parts) + "`"
+
+
+def removed_rules(root: Path, into: str = "AGENTS.md") -> list[str]:
+    """What a plain ``sync`` says before it writes a new block ``into`` AGENTS.md or CLAUDE.md in a
+    project whose notes were in rule files, and are no longer (the last one went when its
+    package had no notes left: a plain sync then no longer knows where they went). Git's
+    history says it: the last commit that removed a since-cutoff rule file, and the block it
+    had (its model and cutoff, for the command that writes the notes there again). [] outside
+    a git work tree, without git, or when no such file was ever committed and removed."""
+    if repo_root(root) is None:
+        return []
+    specs = [f":(glob){f.folder}/{PREFIX}*{f.suffix}" for f in FORMATS.values()]
+    try:
+        found = _git(
+            root,
+            "log",
+            "-n",
+            "1",
+            "--diff-filter=D",
+            "--relative",
+            "--name-only",
+            "--no-show-signature",
+            "--no-ext-diff",
+            "--format=%h",
+            "--",
+            *specs,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+    if found.returncode != 0:
+        return []
+    lines = found.stdout.decode("utf-8", "surrogateescape").splitlines()
+    commit, *names = [line.strip() for line in lines if line.strip()] or [""]
+    out: list[str] = []
+    for f in FORMATS.values():
+        files = [n for n in names if format_of(root, root / n) is f]
+        if not commit or not files:
+            continue
+        meta: dict[str, object] = {}
+        try:
+            old = _git(root, "show", "--no-textconv", f"{commit}^:./{files[0]}")
+            block = (
+                parse_block(old.stdout.decode("utf-8"), files[0]) if old.returncode == 0 else None
+            )
+            meta = block.meta if block is not None else {}
+        except (OSError, subprocess.SubprocessError, UnicodeDecodeError, NotesFileError):
+            pass
+        out.append(
+            f"{f.folder} had since-cutoff rule files until commit {commit}, which removed the "
+            f"last of them: {again_command(f, meta)} writes the notes there instead of into {into}"
+        )
+    return out
 
 
 def root_warning(root: Path, rule: RuleFormat) -> str | None:

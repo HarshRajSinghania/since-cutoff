@@ -23,11 +23,19 @@
   package go back there. Only files named `since-cutoff-<package>` with since-cutoff's markers
   and that package's block, inside the project, are written or removed; any other rule file, a
   file of that name without the markers, and a rules folder or file linked in from outside the
-  project (a shared folder) or hard-linked are left alone. AGENTS.md / CLAUDE.md stay the
-  default; once rule files exist, a plain `sync` keeps them in step without writing AGENTS.md,
-  says how to remove a block AGENTS.md or CLAUDE.md still has, and says when the last rule file
-  went. A plain `unapply` now also removes the rule files since-cutoff wrote; `unapply --target
-  cursor-rules` removes one format's, and `unapply --target <rule file>` one file. `sync
+  project (a shared folder) or hard-linked are left alone; one of them that has the markers
+  (not UTF-8, a hard link, reached through a link) gets a line from `status`, `sync` and
+  `unapply` that says why. AGENTS.md / CLAUDE.md stay the default; once rule files exist, a
+  plain `sync` keeps them in step without writing AGENTS.md, and says how to remove a block
+  AGENTS.md or CLAUDE.md still has. When the last rule file goes, `sync` gives the command that
+  writes the notes there again, with their model and cutoff (`since-cutoff sync --target
+  claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31`), and inside a git repository a
+  later plain `sync` that would write a first block into AGENTS.md says so first, from git's
+  history. git (for the files it ignores, and that history) is run by its full path from
+  `PATH`, never from the current folder or the project: Windows runs a `git.exe` in the current
+  folder first. A plain `unapply` now also removes the rule files since-cutoff wrote, and
+  leaves one that holds another package's block; `unapply --target cursor-rules` removes one
+  format's, and `unapply --target <rule file>` one file. `sync
   --target copilot-instructions` warns when the project is a folder of a git repository, whose
   `.github/instructions` GitHub reads at the root only. `run --apply` refuses a rule format, a
   rule file's path, and (with no `--target`) a project whose notes are in rule files, before any
@@ -42,13 +50,14 @@
   file it is in, the replacement and its evidence (a move's kept names, a switched dependency's
   Requires-Dist), the Runtime line, the changelog, every place the code uses it and in which
   form (for a package first released after the cutoff, the files that import it), and what the
-  tag does not check. It says first what changed in the lockfile since the notes were written,
-  and which packages could not be checked. The API can be named as the note names it, with or
-  without backticks and `()`, by the end of the name or as `package.API` (with the PyPI name
-  too); up to 3 matches are explained, after a line that says how the name matched. An unknown
-  name lists the closest ones, a bullet a block still has about it and a package that could
-  not be checked (exit code 1, as for more than 3 matches). `--package P --from A --to B`
-  explains a change between two releases, and `--json` prints the same as JSON, with the keys
+  tag does not check. It says first what changed in the lockfile since the notes were written
+  (once for all the files with the same change), and which packages could not be checked. The
+  API can be named as the note names it, with or without backticks and call syntax, by the end
+  of the name or as `package.API` (with the PyPI name too); up to 3 matches are explained,
+  after a line that says how the name matched. An unknown name lists the closest ones, a bullet
+  a block still has about it and a package that could not be checked (exit code 1, as for more
+  than 3 matches). `--package P --from A --to B` explains a change between two releases, of a
+  package the project does not depend on too, and `--json` prints the same as JSON, with the keys
   results.json uses (docs/how-it-works.md lists them). The MCP server has four tools.
 - Notes from the diff say what to use instead in more cases, and point somewhere useful when they
   cannot (an audit of 36 libraries found 25 of 36 notes ending in "since-cutoff found no

@@ -1270,7 +1270,14 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     from since_cutoff.models import parse_cutoff
     from since_cutoff.notes import IMPORTED_APIS, SCOPE_USED, agents_import_tip
     from since_cutoff.project import load_project
-    from since_cutoff.rules import root_warning, rules_tip
+    from since_cutoff.rules import (
+        again_command,
+        removed_rules,
+        root_warning,
+        rule_format,
+        rules_tip,
+        skipped,
+    )
     from since_cutoff.sync import (
         EXIT_EDITED,
         EXIT_OK,
@@ -1300,6 +1307,12 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     targets = read_targets(project.root, args.target)
     store = DiskCache()
     reporter = RichReporter(out)
+    rule = rule_format(args.target)
+    if rule is not None or not args.target:
+        # Rule files that look like since-cutoff's but that it leaves alone: their notes are
+        # not kept in step, and a plain sync may write AGENTS.md beside them.
+        for line in skipped(project.root, rule):
+            reporter.warn(line)
     plans: list[_Plan] = []
     given: ModelTarget | None = None
     for t in targets:
@@ -1358,6 +1371,13 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
             warning = root_warning(project.root, t.rule)
             if warning:
                 reporter.warn(warning)
+    # A first block for AGENTS.md or CLAUDE.md, in a project whose notes were in rule files
+    # until the last of them went: a plain sync no longer knows, but git's history does.
+    new = [p for p in proposals if p.block and p.target.block is None and p.target.rule is None]
+    if new and not args.target and not any(isinstance(t, RuleTargets) for t in targets):
+        names = " and ".join(p.target.name for p in new)
+        for line in removed_rules(project.root, names):
+            reporter.warn(line)
 
     def finish(code: int) -> int:
         if args.json:
@@ -1409,11 +1429,13 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
         out.print("[dim]Text outside the since-cutoff markers is unchanged.[/dim]")
     for t in targets:
         if isinstance(t, RuleTargets) and t.files and not t.rule.files(project.root):
-            # The last of them went: a plain sync no longer knows the notes went there.
+            # The last of them went: a plain sync no longer knows the notes went there, nor
+            # the model they were for.
+            again = again_command(t.rule, t.meta)
             out.print(
                 f"[dim]No since-cutoff rule files are left in {_escape(t.rule.folder)}: when a "
-                f"package needs notes again, `since-cutoff sync --target {t.rule.name}` writes "
-                "them there (a plain sync writes AGENTS.md).[/dim]"
+                f"package needs notes again, {_escape(again)} writes them there (a plain sync "
+                "writes AGENTS.md instead, for the model your coding agent is set up with).[/dim]"
             )
     return finish(EXIT_OK)
 
@@ -1432,7 +1454,7 @@ def _sync_scans(
     from datetime import date
 
     from since_cutoff.engine import SKIPPED, Settings
-    from since_cutoff.sync import blocked_by, lockfile_changes, target_files, target_status
+    from since_cutoff.sync import blocked_by, lockfile_notices, target_files, target_status
 
     settings = Settings(
         max_download_mb=args.max_download_mb,
@@ -1447,13 +1469,11 @@ def _sync_scans(
         if key in scans:
             continue
         out.print(_model_line(basis))
-        for t, *_ in plans:
-            if t.basis != key:
-                continue
-            for f in target_files(t):
-                moved = lockfile_changes(project, target_status(project, f))
-                if moved:
-                    reporter.info(moved)
+        statuses = [
+            target_status(project, f) for t, *_ in plans if t.basis == key for f in target_files(t)
+        ]
+        for moved in lockfile_notices(project, statuses):
+            reporter.info(moved)
         scans[key] = engine.scan(project, basis)
     reporter.done()
     for scan in scans.values():
@@ -1660,12 +1680,21 @@ def _status(args: argparse.Namespace, out: Console | None) -> int:
         if line:
             STDOUT.write(line + "\n")
         return EXIT_OK
+    from since_cutoff.rules import rule_format, skipped
+
+    # Rule files that look like since-cutoff's but that it leaves alone (not in the targets).
+    rule = rule_format(args.target)
+    left = skipped(project.root, rule) if rule is not None or not args.target else []
     if args.json:
+        for line in left:
+            _console(STDERR).print(f"[yellow]![/yellow] {_escape(line)}")
         STDOUT.write(json.dumps(status_json(project, statuses, detected), indent=2) + "\n")
         return code
     console = out if out is not None else _console(STDOUT)
     for line in status_lines(project, statuses):
         console.print(_escape(line))
+    for line in left:
+        console.print(f"[yellow]![/yellow] {_escape(line)}")
     return code
 
 
@@ -1857,8 +1886,16 @@ def _cmd_mcp(args: argparse.Namespace) -> int:
 def _cmd_unapply(args: argparse.Namespace, out: Console) -> int:
     """Remove the block from AGENTS.md and CLAUDE.md, and the rule files since-cutoff wrote
     (issue #16), or from ``--target`` only: a file, or a rule format (``cursor-rules``)."""
-    from since_cutoff.notes import remove_block
-    from since_cutoff.rules import FORMATS, format_of, outside, remove_rule, rule_format
+    from since_cutoff.notes import NotesFileError, _read, remove_block
+    from since_cutoff.rules import (
+        FORMATS,
+        foreign,
+        format_of,
+        outside,
+        remove_rule,
+        rule_format,
+        skipped,
+    )
 
     root = Path(args.path).resolve()
     if not root.is_dir():
@@ -1885,8 +1922,21 @@ def _cmd_unapply(args: argparse.Namespace, out: Console) -> int:
             done = remove_rule(path)
         if done:
             removed.append(t.name)
+    left: list[str] = []
     for f in formats:
-        removed += [p.relative_to(root).as_posix() for p in f.files(root) if remove_rule(p)]
+        for p in f.files(root):
+            try:
+                why = foreign(f, p, _read(p))
+            except (OSError, UnicodeDecodeError) as exc:
+                raise NotesFileError(f"cannot read {p}: {exc}") from exc
+            if why:  # another package's block: as sync, unapply leaves the file alone
+                left.append(f"{f.folder}/{why}")
+            elif remove_rule(p):
+                removed.append(p.relative_to(root).as_posix())
+    if not args.target or rule is not None:
+        left += skipped(root, rule)
+    for line in left:
+        out.print(f"[yellow]![/yellow] {_escape(line)}")
     if removed:
         out.print("removed the since-cutoff block from " + ", ".join(_escape(n) for n in removed))
     else:

@@ -374,7 +374,10 @@ that import the package; when no file is known, the rule applies everywhere (no 
 `alwaysApply: true`, `applyTo: "**"`). since-cutoff only writes and removes files named
 `since-cutoff-<package>` that have its markers and that package's block, inside the project:
 your own rule files, a file of that name without the markers, and a rules folder linked in from
-outside the project (one shared between projects) are never touched.
+outside the project (one shared between projects) are never touched (`unapply --target <rule
+file>` removes the block from the file you name). A file of that name with the markers that it
+still leaves alone (not UTF-8 text, a hard link, reached through a link, or holding another
+package's block) gets one line from `status`, `sync` and `unapply` that says why.
 
 What the globs do not cover: a file created at the project's root is not named until the next
 `sync`, and a file in another folder that does not use the package yet gets no notes. VS Code
@@ -385,10 +388,31 @@ missing one.
 The rule formats are opt-in, and the default stays AGENTS.md / CLAUDE.md. Once a project has
 rule files, a plain `sync` keeps them in step and writes no AGENTS.md; when AGENTS.md or
 CLAUDE.md still has a block too, `sync` says how to remove it (`since-cutoff unapply --target
-AGENTS.md`), and when the last rule file goes, it says that a later one needs `--target`
-again. `unapply --target cursor-rules` removes one format's files, `unapply --target
-<rule file>` one file, and a plain `unapply` removes the block from AGENTS.md and CLAUDE.md and
-every rule file since-cutoff wrote. The folders are written in the project: GitHub reads
+AGENTS.md`). When the last rule file goes, a plain `sync` no longer knows where the notes went,
+nor for which model: it then writes AGENTS.md, for the model your coding agent is set up with.
+So `sync` says it, with the command that writes them there again:
+
+```text
+No since-cutoff rule files are left in .claude/rules: when a package needs notes again,
+`since-cutoff sync --target claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31` writes
+them there (a plain sync writes AGENTS.md instead, for the model your coding agent is set up
+with).
+```
+
+and inside a git repository, the plain `sync` (or `sync --check`) that would write a first block
+into AGENTS.md says so first, from git's history:
+
+```text
+! .claude/rules had since-cutoff rule files until commit d7f0a25, which removed the last of
+them: `since-cutoff sync --target claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31`
+writes the notes there instead of into AGENTS.md
+```
+
+To keep the format whatever happens, give `--target` where sync runs (the pre-commit hook takes
+`args: [--target, claude-rules]`). `unapply --target cursor-rules` removes one format's files,
+`unapply --target <rule file>` one file, and a plain `unapply` removes the block from AGENTS.md
+and CLAUDE.md and every rule file since-cutoff wrote. The folders are written in the project:
+GitHub reads
 `.github/instructions` at the repository's root only, which `sync --target
 copilot-instructions` says when the project is a folder of a repository. Windsurf (now Devin
 Desktop, `.devin/rules`) documents a rule with one glob and not how to give several, and Codex

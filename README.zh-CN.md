@@ -222,11 +222,28 @@ Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, comparing 
 <!-- since-cutoff:end -->
 ```
 
-`.claude/rules/since-cutoff-huggingface-hub.md` 也是如此。front matter 之后，每个文件包含的是 AGENTS.md 中会有的同一个区块，只针对它自己的包，所以 `sync`、`sync --check`、`status` 和 `unapply` 对它的处理和对 AGENTS.md 一样；它的元数据行还记录了 front matter 的哈希（`front`），因此手动修改其中任何一处都能看出来。一个包在新的目录中被用到时，下一次 `sync` 会把该目录加进去（“now loaded for 3 globs (1 added)”）；git 忽略的文件不会被写入（提交的规则文件不会列出本地的临时文件）；超过 20 个 glob 时，目录改用它所在的顶层目录表示，因此无论多少文件用到这个包，front matter 都保持简短。一个包不再有说明时，它的文件会被删除；如果区块之后有你自己的文本，说明会被移除而标记保留，这样这个包之后的说明会回到同一个文件。使用 `--scope imported` 时，以及对于截止日期之后才首次发布的包，这些文件是导入了这个包的文件；一个文件也不知道时，规则对所有文件生效（没有 `paths`、`alwaysApply: true`、`applyTo: "**"`）。since-cutoff 只写入和删除项目内名为 `since-cutoff-<package>`、带有它的标记并且是该包区块的文件：你自己的规则文件、同名但没有标记的文件，以及从项目外链接进来的规则目录（多个项目共享的目录），永远不会被改动。
+`.claude/rules/since-cutoff-huggingface-hub.md` 也是如此。front matter 之后，每个文件包含的是 AGENTS.md 中会有的同一个区块，只针对它自己的包，所以 `sync`、`sync --check`、`status` 和 `unapply` 对它的处理和对 AGENTS.md 一样；它的元数据行还记录了 front matter 的哈希（`front`），因此手动修改其中任何一处都能看出来。一个包在新的目录中被用到时，下一次 `sync` 会把该目录加进去（“now loaded for 3 globs (1 added)”）；git 忽略的文件不会被写入（提交的规则文件不会列出本地的临时文件）；超过 20 个 glob 时，目录改用它所在的顶层目录表示，因此无论多少文件用到这个包，front matter 都保持简短。一个包不再有说明时，它的文件会被删除；如果区块之后有你自己的文本，说明会被移除而标记保留，这样这个包之后的说明会回到同一个文件。使用 `--scope imported` 时，以及对于截止日期之后才首次发布的包，这些文件是导入了这个包的文件；一个文件也不知道时，规则对所有文件生效（没有 `paths`、`alwaysApply: true`、`applyTo: "**"`）。since-cutoff 只写入和删除项目内名为 `since-cutoff-<package>`、带有它的标记并且是该包区块的文件：你自己的规则文件、同名但没有标记的文件，以及从项目外链接进来的规则目录（多个项目共享的目录），永远不会被改动（`unapply --target <规则文件>` 会从你指定的文件中移除区块）。同名、带有标记、但 since-cutoff 仍然不处理的文件（不是 UTF-8、是硬链接、经由链接才能到达，或者包含另一个包的区块），`status`、`sync` 和 `unapply` 会各用一行说明原因。
 
 glob 覆盖不到的情况：在项目根目录新建的文件要到下一次 `sync` 才会被列出；其他目录中还没有用到这个包的文件不会得到说明。VS Code 会在路径的任何位置匹配不以 `**/` 开头的 glob，所以在 VS Code 中 `app/**/*.py` 也会为 `other/app/x.py` 加载说明，`main.py` 也会为 `other/main.py` 加载：只会多加载，不会漏加载。
 
-规则格式需要显式选择，默认仍然是 AGENTS.md / CLAUDE.md。项目中有了规则文件之后，不带参数的 `sync` 会让它们保持最新，并且不写 AGENTS.md；如果 AGENTS.md 或 CLAUDE.md 中还留有区块，`sync` 会说明如何移除它（`since-cutoff unapply --target AGENTS.md`）；最后一个规则文件被删除时，它会提示之后需要再次使用 `--target`。`unapply --target cursor-rules` 删除一种格式的文件，`unapply --target <规则文件>` 删除其中一个；不带参数的 `unapply` 会移除 AGENTS.md 和 CLAUDE.md 中的区块，以及 since-cutoff 写过的所有规则文件。这些目录写在项目中：GitHub 只在仓库根目录读取 `.github/instructions`，当项目是仓库中的一个子目录时，`sync --target copilot-instructions` 会给出提示。Windsurf（现为 Devin Desktop，`.devin/rules`）的文档只给出单个 glob 的规则，没有说明如何指定多个；Codex 没有按路径生效的规则（它读取从项目根目录到启动目录路径上的 AGENTS.md），所以两者暂时都没有对应的格式。`run --apply` 只把一个区块写进一个文件；规则文件请用 `sync --target`。
+规则格式需要显式选择，默认仍然是 AGENTS.md / CLAUDE.md。项目中有了规则文件之后，不带参数的 `sync` 会让它们保持最新，并且不写 AGENTS.md；如果 AGENTS.md 或 CLAUDE.md 中还留有区块，`sync` 会说明如何移除它（`since-cutoff unapply --target AGENTS.md`）。最后一个规则文件被删除后，不带参数的 `sync` 就不再知道说明写在哪里、是为哪个模型写的：它会改为写入 AGENTS.md，用的是你的编程 Agent 所配置的模型。因此 `sync` 会提示这一点，并给出把说明重新写回那里的命令：
+
+```text
+No since-cutoff rule files are left in .claude/rules: when a package needs notes again,
+`since-cutoff sync --target claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31` writes
+them there (a plain sync writes AGENTS.md instead, for the model your coding agent is set up
+with).
+```
+
+在 git 仓库中，不带参数的 `sync`（或 `sync --check`）准备往 AGENTS.md 写入第一个区块时，也会先根据 git 历史给出提示：
+
+```text
+! .claude/rules had since-cutoff rule files until commit d7f0a25, which removed the last of
+them: `since-cutoff sync --target claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31`
+writes the notes there instead of into AGENTS.md
+```
+
+如果无论如何都要保持这种格式，请在运行 sync 的地方加上 `--target`（pre-commit 钩子可以写 `args: [--target, claude-rules]`）。`unapply --target cursor-rules` 删除一种格式的文件，`unapply --target <规则文件>` 删除其中一个；不带参数的 `unapply` 会移除 AGENTS.md 和 CLAUDE.md 中的区块，以及 since-cutoff 写过的所有规则文件。这些目录写在项目中：GitHub 只在仓库根目录读取 `.github/instructions`，当项目是仓库中的一个子目录时，`sync --target copilot-instructions` 会给出提示。Windsurf（现为 Devin Desktop，`.devin/rules`）的文档只给出单个 glob 的规则，没有说明如何指定多个；Codex 没有按路径生效的规则（它读取从项目根目录到启动目录路径上的 AGENTS.md），所以两者暂时都没有对应的格式。`run --apply` 只把一个区块写进一个文件；规则文件请用 `sync --target`。
 
 ### 解释一条说明
 

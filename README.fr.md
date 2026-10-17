@@ -401,7 +401,10 @@ règle s'applique partout (pas de `paths`, `alwaysApply: true`, `applyTo: "**"`)
 n'écrit et ne supprime que des fichiers nommés `since-cutoff-<package>` qui portent ses
 marqueurs et le bloc de ce paquet, dans le projet : vos propres fichiers de règles, un fichier
 de ce nom sans les marqueurs et un dossier de règles lié depuis l'extérieur du projet (partagé
-entre projets) ne sont jamais modifiés.
+entre projets) ne sont jamais modifiés (`unapply --target <fichier de règles>` retire le bloc du
+fichier que vous nommez). Un fichier de ce nom qui porte les marqueurs mais que since-cutoff
+laisse quand même de côté (pas en UTF-8, lien physique, atteint par un lien, ou qui contient le
+bloc d'un autre paquet) reçoit de `status`, `sync` et `unapply` une ligne qui dit pourquoi.
 
 Ce que les globs ne couvrent pas : un fichier créé à la racine du projet n'est nommé qu'au
 `sync` suivant, et un fichier d'un autre dossier qui n'utilise pas encore le paquet ne reçoit
@@ -412,8 +415,29 @@ là, `app/**/*.py` charge aussi les notes pour `other/app/x.py`, et `main.py` po
 Les formats de règles sont optionnels, et AGENTS.md / CLAUDE.md restent la destination par
 défaut. Dès qu'un projet a des fichiers de règles, un `sync` sans option les tient à jour et
 n'écrit pas AGENTS.md ; si AGENTS.md ou CLAUDE.md contient encore un bloc, `sync` indique
-comment le retirer (`since-cutoff unapply --target AGENTS.md`), et quand le dernier fichier de
-règles part, il prévient que le suivant demande à nouveau `--target`.
+comment le retirer (`since-cutoff unapply --target AGENTS.md`). Quand le dernier fichier de
+règles part, un `sync` sans option ne sait plus où allaient les notes, ni pour quel modèle : il
+écrit alors AGENTS.md, pour le modèle avec lequel votre agent est configuré. `sync` le dit
+donc, avec la commande qui les y écrit de nouveau :
+
+```text
+No since-cutoff rule files are left in .claude/rules: when a package needs notes again,
+`since-cutoff sync --target claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31` writes
+them there (a plain sync writes AGENTS.md instead, for the model your coding agent is set up
+with).
+```
+
+et, dans un dépôt git, le `sync` sans option (ou `sync --check`) qui écrirait un premier bloc
+dans AGENTS.md le signale d'abord, d'après l'historique de git :
+
+```text
+! .claude/rules had since-cutoff rule files until commit d7f0a25, which removed the last of
+them: `since-cutoff sync --target claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31`
+writes the notes there instead of into AGENTS.md
+```
+
+Pour garder le format quoi qu'il arrive, donnez `--target` là où sync s'exécute (le hook
+pre-commit accepte `args: [--target, claude-rules]`).
 `unapply --target cursor-rules` supprime les fichiers d'un format,
 `unapply --target <fichier de règles>` un seul, et un `unapply` sans option retire le bloc
 d'AGENTS.md et de CLAUDE.md et tous les fichiers de règles écrits par since-cutoff. Les dossiers

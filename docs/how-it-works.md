@@ -572,7 +572,11 @@ since-cutoff does not write.
   first released after the cutoff (its `[metadata]` note), the files that import the package.
   A file git ignores (`.gitignore`, `.git/info/exclude`, the global excludes; `git
   check-ignore`, which never counts a tracked file) is left out, so that a committed rule file
-  names no local file and `sync --check` passes on a clean checkout.
+  names no local file and `sync --check` passes on a clean checkout. git is run by its full
+  path: the first `git` (`git.exe` on Windows) in an absolute folder of `PATH` that is neither
+  the current folder nor the project's (nor one inside it), since Windows runs a `git.exe` in
+  the current folder before `PATH`'s, and a repository could commit one. With none found, the
+  files git ignores are not left out.
 - **The globs.** A file at the project's root is named as itself (`main.py`); the others by
   their folder, as the Python files of it and its subfolders (`sub/**/*.py`; a folder inside
   another one named is left out), so that a file added there later, or one that does not use
@@ -595,8 +599,14 @@ since-cutoff does not write.
   order mark an editor puts first does not.
 - **Keeping it in step.** `sync` proposes each file there now for its package, then a new file
   for each package with notes that has none. A file whose package has no notes left is
-  removed, and when it was the last one, `sync` says that a later one needs `--target` again
-  (a plain sync then writes AGENTS.md). With text of your own after the block, the notes go and
+  removed, and when it was the last one, `sync` gives the command that writes the notes there
+  again, with the files' model, cutoff, margin and scope (`since-cutoff sync --target
+  claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31`): a plain sync then writes
+  AGENTS.md, for the model the coding agent is set up with. Inside a git repository, a plain
+  `sync` that would write a first block into AGENTS.md or CLAUDE.md looks in git's history
+  first (`git log --diff-filter=D` for the three formats' `since-cutoff-*` files, then `git
+  show` of the last one removed, for its meta line) and, when the project had rule files, says
+  so with that command. With text of your own after the block, the notes go and
   the markers and meta line stay ("Removed the notes from ...: your own text in it stays"), so
   the file stays since-cutoff's: the next `sync` that has notes for the package writes them
   there again, with the same model. A change in the folders the package is used in rewrites
@@ -607,10 +617,13 @@ since-cutoff does not write.
   since-cutoff's: `since-cutoff-toylib.instructions.md` in `.claude/rules` is no Claude rule.
   Another rule file in the folder is never read or written, and a file of that name without
   the markers, one that is not UTF-8, or one with another package's block stops `sync` with an
-  error before anything is written. A rules folder or file reached through a link to a place
-  outside the project (Claude Code documents a `.claude/rules` shared between projects that
-  way), and a hard link, are left out by `status`, `sync` and `unapply`, and `sync --target`
-  refuses to write there.
+  error before anything is written; `unapply` leaves one with another package's block and says
+  so. A rules folder or file reached through a link to a place outside the project (Claude
+  Code documents a `.claude/rules` shared between projects that way), and a hard link, are
+  left out by `status`, `sync` and `unapply`, and `sync --target` refuses to write there. A
+  file left out that has since-cutoff's markers (not UTF-8, a hard link, reached through a
+  link) gets one line from each of them, which says why: its notes are not kept in step, and a
+  plain `sync` writes AGENTS.md beside it.
 - **Where the agents look.** The folders go in the project. GitHub reads
   `.github/instructions` at the repository's root only: when the project is a folder of a git
   repository, `sync --target copilot-instructions` says so (VS Code reads them when that
@@ -636,16 +649,20 @@ note's (`Client.send`), each public path of each of its changes, re-exports incl
 after the package's names (`toylib.Client.send`), and a module path with the PyPI name for its
 top module (`huggingface-hub.hf_hub_download`); then by the end of a name (`send`), then
 either without regard to case. Backticks and call syntax (`` `Client.send()` ``,
-`send(temperature=...)`) are ignored, so a name can be pasted from a note. `--package` keeps
-one package (one that is not a dependency says so); with `--from` and/or `--to` it diffs that
-package between those releases (by default the one at the comparison day and the pinned one)
-and still reads the code for its uses, and the output says which releases were given. Up to 3
+`send(timeout=Timeout(5))`) are ignored, so a name can be pasted from a note. `--package` keeps
+one package (one that is not a dependency says so, unless `--from` or `--to` diffs it all the
+same); with `--from` and/or `--to` it diffs that package between those releases (by default
+the one at the comparison day and the pinned one) and still reads the code for its uses, the
+output says which releases were given, and a name that matches nothing has "no API named ...
+changed in P between A and B". Up to 3
 matching APIs are explained, after a line that says how the name matched when it is not
 exact; more are listed by name, with exit code 1. A name that matches nothing exits with 1 and
 lists the closest names, any bullet a block still has about it (the notes are then out of
 date: a pin moved back, say), and a package that could not be checked when the name may be
 one of its APIs. Before that, as `sync` says it before its scan, what changed in the lockfile
-since the notes were written, and which packages could not be checked.
+since the notes were written (once for all the files with the same changes, all of a format's
+rule files by their folder; a rule file whose own package kept its version is left out when
+another file says what changed), and which packages could not be checked.
 
 For each API it prints the note as the bullet reads (a block's own `[type-checked]` bullet,
 written by `run --apply` with its example in `.since-cutoff/results.json`, in place of the
@@ -671,7 +688,9 @@ released after the cutoff the files that import it; and what the tag does not ch
 `end_of_name_ignoring_case`, or null), `matches` (every API the name matches: `display`,
 `package`), `truncated` (more than 3: `found` is then empty), `found`, `close_matches`,
 `block_mentions` (a block's bullet about a name that matches nothing: `file`, `package`,
-`version`, `bullet`), `not_checked` (`package`, `reason`), `not_a_dependency` and `exit_code`.
+`version`, `bullet`), `not_checked` (`package`, `reason`), `not_a_dependency` (`--package`
+names a package the project does not depend on and that `--from` or `--to` did not diff) and
+`exit_code`.
 Each of `found` has the keys results.json's `used_apis` uses for the same things (`api`, the
 full path; `display`, the note's name; `package`, `cutoff_version`, `versions_from`), with
 `version`, `from_given` and `to_given`, `status`, `changelog`, `note` (results.json's note,

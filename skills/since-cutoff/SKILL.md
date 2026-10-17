@@ -79,7 +79,9 @@ report what it prints.
    `since-cutoff unapply` removes the block again. When the user wants the notes loaded only
    where each package is used, add `--target claude-rules` (Claude Code; `cursor-rules` for
    Cursor, `copilot-instructions` for GitHub Copilot) to both commands: one rule file per package
-   in that agent's rules folder, which a plain `sync` then keeps in step. `since-cutoff status` says,
+   in that agent's rules folder, which a plain `sync` then keeps in step (once the last of them
+   is gone, a plain `sync` writes AGENTS.md instead and says so, with the `--target` command
+   that writes them there again: run that one). `since-cutoff status` says,
    without the network, whether the notes still match the lockfile; from since-cutoff 0.4.0 the
    Claude Code plugin runs it when a session starts (the first time, uvx downloads since-cutoff).
 

@@ -197,13 +197,29 @@ def candidates(scan: ScanResult, package: str | None = None) -> list[Found]:
 
 def clean_name(query: str) -> str:
     """The name in ``query`` without what surrounds it in a note: backticks and call syntax
-    (```Client.send()```, ``Client.send(temperature=...)``), whichever comes first."""
+    (```Client.send()```, ``Client.send(timeout=Timeout(5))``), whichever comes first."""
     q = query.strip()
     while True:
         before = q
-        q = re.sub(r"\([^()]*\)$", "", q.strip().strip("`").strip()).strip()
+        q = _without_call(q.strip().strip("`").strip()).strip()
         if q == before:
             return q
+
+
+def _without_call(q: str) -> str:
+    """``q`` without the call at its end: ``Client.send(timeout=Timeout(5))`` is
+    ``Client.send``; ``q`` as it is when its brackets do not balance."""
+    if not q.endswith(")"):
+        return q
+    depth = 0
+    for i in range(len(q) - 1, -1, -1):
+        if q[i] == ")":
+            depth += 1
+        elif q[i] == "(":
+            depth -= 1
+            if depth == 0:
+                return q[:i]
+    return q
 
 
 def _tests(q: str) -> tuple[tuple[str, Callable[[str], bool]], ...]:
@@ -456,15 +472,17 @@ def notices(project: Project, scan: ScanResult, files: Iterable[Any]) -> list[st
     """What explain says before the explanation, as ``sync`` says it before its scan: the
     lockfile changes since each block was written (sync.lockfile_changes), and the packages
     that could not be checked. ``files``: the target files (sync.TargetFile)."""
-    from since_cutoff.sync import lockfile_changes, target_status
+    from since_cutoff.sync import lockfile_notices, target_status
 
-    out = []
-    for t in files:
-        if getattr(t, "block", None) is None:
-            continue
-        moved = lockfile_changes(project, target_status(project, t, margin=scan.target.margin))
-        if moved:
-            out.append(f"{moved}: `since-cutoff sync` brings the notes in step.")
+    statuses = [
+        target_status(project, t, margin=scan.target.margin)
+        for t in files
+        if getattr(t, "block", None) is not None
+    ]
+    out = [
+        f"{moved}: `since-cutoff sync` brings the notes in step."
+        for moved in lockfile_notices(project, statuses)
+    ]
     for p in scan.skipped:
         if p.reason and METAPACKAGE not in p.reason:
             out.append(f"{p.name} could not be checked ({p.reason}), so it has no notes here.")
@@ -767,7 +785,7 @@ def lookup_lines(
     :func:`notices` to print first; ``package``: ``--package``."""
     head = [f"# {result.query}", "", _head(scan, given), *said, ""]
     if not result.found:
-        return [*head, *no_match_lines(scan, result, blocks, package)]
+        return [*head, *no_match_lines(scan, result, blocks, package, given)]
     how = MATCH_TEXT[result.match or EXACT]
     names = ", ".join(f"{f.api} ({f.package.name})" for f in result.found)
     if result.too_many:
@@ -793,15 +811,15 @@ def no_match_lines(
     result: Lookup,
     blocks: Mapping[str, ParsedBlock],
     package: str | None = None,
+    given: Given | None = None,
 ) -> list[str]:
     """Why nothing matched, and what is close: also a note a block still has for the name
     (written for another version: the notes are out of date), and a package that could not be
-    checked, which the name may be in."""
-    if package:
-        wanted = canonicalize_name(package)
-        if not any(d.key == wanted for d in scan.project.dependencies):
-            return [f"{package} is not a dependency of this project, so explain has no API of it."]
-    out = [no_match_text(scan, result)]
+    checked, which the name may be in. ``--package`` for a package the project does not
+    depend on says so, unless ``--from`` or ``--to`` scanned it all the same."""
+    if _not_a_dependency(scan, package):
+        return [f"{package} is not a dependency of this project, so explain has no API of it."]
+    out = [no_match_text(scan, result, given)]
     found = mentions(result.query, blocks)
     for m in found:
         out += [
@@ -821,16 +839,34 @@ def no_match_lines(
     return out
 
 
-def no_match_text(scan: ScanResult, result: Lookup) -> str:
-    """Why nothing matched, and what is close."""
+def no_match_text(scan: ScanResult, result: Lookup, given: Given | None = None) -> str:
+    """Why nothing matched, and what is close (between the two releases of ``--from`` and
+    ``--to``, when they are given)."""
+    close = f" Close matches: {', '.join(result.close)}." if result.close else ""
+    if given is not None and given.any and scan.packages:
+        p = scan.packages[0]
+        return (
+            f"No API named '{result.query}' changed in {p.name} between {p.cutoff_version} and "
+            f"{p.locked}.{close}"
+        )
     changed = [p.name for p in scan.packages if p.status in (CHANGED, NEW)]
     if not changed:
         return f"No API named '{result.query}': no dependency changed its API after {_basis(scan)}."
-    close = f" Close matches: {', '.join(result.close)}." if result.close else ""
     return (
         f"No API named '{result.query}' changed in {', '.join(sorted(changed))} after "
         f"{_basis(scan)}.{close}"
     )
+
+
+def _not_a_dependency(scan: ScanResult, package: str | None) -> bool:
+    """``--package`` names a package the project does not depend on, and that the scan did not
+    cover (``--from`` and ``--to`` scan one all the same)."""
+    if not package:
+        return False
+    wanted = canonicalize_name(package)
+    if any(p.name == wanted for p in scan.packages):
+        return False
+    return not any(d.key == wanted for d in scan.project.dependencies)
 
 
 def _basis(scan: ScanResult) -> str:
@@ -876,10 +912,7 @@ def explain_json(
             [m.__dict__ for m in mentions(result.query, blocks)] if not result.found else []
         ),
         "not_checked": [{"package": p.name, "reason": p.reason} for p in scan.skipped],
-        "not_a_dependency": bool(
-            package
-            and not any(d.key == canonicalize_name(package) for d in scan.project.dependencies)
-        ),
+        "not_a_dependency": _not_a_dependency(scan, package),
         "exit_code": exit_code(result),
     }
 

@@ -118,6 +118,41 @@ def test_a_parameter_past_a_cut_signature_says_so(cache, pypi, tmp_path) -> None
     )
 
 
+def test_a_bullet_shared_with_other_apis_and_a_parameter_still_read(
+    cache, pypi, tmp_path, monkeypatch
+) -> None:
+    """A block writes the notes that say the same of several APIs as one bullet (#99):
+    explain shows that bullet beside the API's own note; and the pinned release's code that
+    still reads a removed parameter, in its own words."""
+    from since_cutoff.notes import diff_notes
+
+    scan = scan_app(make_app(tmp_path), cache, pypi, date(2025, 7, 31))
+    [f] = [f for f in candidates(scan) if f.api == "toylib.fetch"]
+    c = f.note.covered[0]
+    twin = replace(c, path="toylib.fetch_all", name="fetch_all", import_paths=None)
+    [merged] = diff_notes([c, twin], merge=True)
+    assert merged.apis == ["toylib.fetch", "toylib.fetch_all"]
+    monkeypatch.setattr(scan, "scope_notes", lambda *args, **kwargs: [merged])
+    lines = explain_module.explain_lines(scan, f, {})
+    i = lines.index("The block writes it in a bullet shared with other APIs:")
+    assert lines[i - 1] == f"- {f.note.line}" and lines[i + 1] == f"- {merged.line}"
+    assert explain_module._found_json(scan, f, {}, None)["block_bullet"] == merged.line
+    [send] = [f for f in candidates(scan) if f.api == "Client.send"]
+    still = replace(send.note.covered[0], still_handled_text="temperature is ignored")
+    assert '  2.0\'s code that still reads it says: "temperature is ignored"' in _change_lines(
+        scan, still, send.package
+    )
+
+
+def test_a_name_in_nested_call_syntax_is_the_name() -> None:
+    """``(``[^()]*``)$`` left a call whose arguments are calls as it was."""
+    clean = explain_module.clean_name
+    assert clean("`Client.send(timeout=Timeout(5))`") == "Client.send"
+    assert clean(" ``fetch()`` ") == "fetch"
+    assert clean("`fetch`()") == "fetch"  # a call after the backticks: twice round
+    assert clean("send())") == "send())"  # brackets that do not balance stay
+
+
 def test_a_library_replacement_with_the_text_and_file_it_rests_on(sc, app) -> None:
     code, out = explain(sc, app, "legacy_fetch")
     assert code == 0, out
@@ -214,6 +249,84 @@ def test_an_unknown_api_lists_close_matches(sc, app) -> None:
     )
     code, out = explain(sc, app, "send", "--package", "notadep")
     assert code == 1 and "notadep is not a dependency of this project" in out
+
+
+def test_two_given_releases_of_a_package_that_is_no_dependency(sc, tmp_path) -> None:
+    """--from and --to scan the package all the same: a name it does not have is no reason to
+    say that it is not a dependency."""
+    root = make_app(tmp_path, ("otherlib==1.0",))
+    versions = ("--package", "toylib", "--from", "1.0", "--to", "2.0", *SONNET)
+    code, out = explain(sc, root, "send", *versions)
+    assert code == 0 and "## Client.send (toylib)" in out, out
+    code, out = explain(sc, root, "nosuch", *versions)
+    assert code == 1 and "not a dependency" not in out
+    assert "No API named 'nosuch' changed in toylib between 1.0 and 2.0." in out
+    code, out = explain(sc, root, "nosuch", *versions, "--json")
+    assert json.loads(out)["not_a_dependency"] is False
+    code, out = explain(sc, root, "nosuch", "--package", "toylib", *SONNET, "--json")
+    assert json.loads(out)["not_a_dependency"] is True
+
+
+def test_a_lockfile_change_is_said_once_for_all_the_rule_files(sc, tmp_path) -> None:
+    """With the rule files of three formats, one pin change made a line for each file."""
+    root = make_app(tmp_path)
+    for target in ("claude-rules", "cursor-rules", "copilot-instructions"):
+        assert sc("sync", root, *SONNET, "--yes", "--target", target)[0] == 0
+    set_pins(root, ("toylib==2.1", "otherlib==1.0"))
+    code, out = explain(sc, root, "Client.send")
+    assert code == 0, out
+    assert flat(out).count("changed since the notes in") == 1
+    assert (
+        "pyproject.toml changed since the notes in .claude/rules/since-cutoff-toylib.md, "
+        ".cursor/rules/since-cutoff-toylib.mdc and "
+        ".github/instructions/since-cutoff-toylib.instructions.md were written: toylib 2.0 -> "
+        "2.1: `since-cutoff sync` brings the notes in step." in flat(out)
+    )
+    code, out = sc("sync", root, "--check")
+    assert flat(out).count("changed since the notes in") == 1, out
+
+
+def test_rule_files_whose_package_kept_its_version_say_nothing_of_the_others(tmp_path) -> None:
+    """Every rule file's deps hash covers every dependency: one bump gave a line "other
+    dependencies" for each of the other packages' files."""
+    from since_cutoff.project import load_project
+    from since_cutoff.rules import FORMATS
+    from since_cutoff.sync import (
+        DEPENDENCIES_CHANGED,
+        OUT_OF_DATE,
+        PackageStatus,
+        TargetFile,
+        TargetStatus,
+        lockfile_notices,
+    )
+
+    root = make_app(tmp_path)
+    project = load_project(root)
+    claude = FORMATS["claude-rules"]
+
+    def status(name: str, bumped: bool) -> TargetStatus:
+        t = TargetFile(
+            claude.path(root, name), f".claude/rules/since-cutoff-{name}.md", "", None, None, claude
+        )
+        s = TargetStatus(t, problems=[(DEPENDENCIES_CHANGED, "other dependencies changed")])
+        if bumped:
+            s.packages = [PackageStatus(name, "1.0", "2.0", "pyproject.toml", OUT_OF_DATE)]
+        return s
+
+    agents_md = TargetFile(root / "AGENTS.md", "AGENTS.md", "", None, None)
+    others = TargetStatus(agents_md, problems=[(DEPENDENCIES_CHANGED, "other dependencies")])
+    said = lockfile_notices(project, [status("a", True), status("b", False), others])
+    assert said == [
+        "pyproject.toml changed since the notes in .claude/rules/since-cutoff-a.md were "
+        "written: a 1.0 -> 2.0",
+        "pyproject.toml changed since the notes in AGENTS.md were written: other dependencies",
+    ]
+    # Only other dependencies changed: one line, a format's files by their folder.
+    said = lockfile_notices(project, [status("a", False), status("b", False)])
+    assert said == [
+        "pyproject.toml changed since the notes in the rule files in .claude/rules were "
+        "written: other dependencies"
+    ]
 
 
 def test_a_name_a_replacement_only_names_is_not_written_in_the_block(sc, tmp_path) -> None:

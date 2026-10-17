@@ -78,6 +78,7 @@ from since_cutoff.rules import (
     RuleFormat,
     check_ours,
     delete,
+    foreign,
     format_of,
     front_edited,
     front_hash,
@@ -205,15 +206,9 @@ def read_target(root: Path, path: Path) -> TargetFile:
     if text is None:
         return TargetFile(path, name, None, None, None, rule)
     block = parse_block(text, path.name)
-    package = rule.package_of(path) if rule is not None else None
-    others = sorted(set(block.packages) - {package}) if block is not None and package else []
-    if others:
-        # A block for another package (copied, or renamed by hand): which file is that
-        # package's is not this one's to say, so nothing of it is written or removed.
-        raise NotesFileError(
-            f"{path.name} holds the notes for {', '.join(others)}, not {package}'s, so "
-            "since-cutoff leaves it alone; rename or remove it, then run again"
-        )
+    why = foreign(rule, path, text) if rule is not None else None
+    if why:  # another package's block: nothing of it is written or removed
+        raise NotesFileError(why)
     return TargetFile(path, name, text, block, block_text(text, path.name), rule)
 
 
@@ -621,6 +616,14 @@ def _changes(scan: ScanResult, target: TargetFile, p: Proposal, *, same: bool) -
     if old is None:
         return out
     if new is None and not old.packages:  # a rule file's block with no notes, kept for its text
+        if p.new_text is None:  # which is gone now: so is the file
+            return [
+                Change(
+                    None,
+                    "no notes and no text of your own left",
+                    "it has no notes and no text of your own left, so the file would go",
+                )
+            ]
         return [Change(None, "its metadata written again", "its metadata would change")]
     if target.edited:
         out.append(Change(None, "replaced the text edited by hand", "the block was edited by hand"))
@@ -1240,9 +1243,57 @@ def status_json(
     }
 
 
+OTHER_DEPENDENCIES = "other dependencies"
+
+
 def lockfile_changes(project: Project, status: TargetStatus) -> str | None:
     """``uv.lock changed since the notes in AGENTS.md were written: anthropic 1.8.0 -> 1.9.2,
     huggingface-hub removed`` (sync says it before it scans), or None."""
+    items = _lockfile_items(status)
+    return _lockfile_text(project, [status.target.name], items) if items else None
+
+
+def lockfile_notices(project: Project, statuses: Sequence[TargetStatus]) -> list[str]:
+    """:func:`lockfile_changes` for several files, each change said once: the files with the
+    same changes in one line, and all of a format's rule files by their folder. A rule file
+    whose only change is in other dependencies (its package kept its version) is left out
+    when another file says what changed: every rule file's deps hash covers every
+    dependency, so one bump made a line for each of them."""
+    found = [(s, _lockfile_items(s)) for s in statuses]
+    found = [(s, items) for s, items in found if items]
+    if any(items != [OTHER_DEPENDENCIES] for _, items in found):
+        found = [
+            (s, items)
+            for s, items in found
+            if not (s.target.rule is not None and items == [OTHER_DEPENDENCIES])
+        ]
+    groups: dict[tuple[str, ...], list[TargetFile]] = {}
+    for s, items in found:
+        groups.setdefault(tuple(items), []).append(s.target)
+    every: dict[str, list[TargetFile]] = {}
+    for s in statuses:
+        if s.target.rule is not None:
+            every.setdefault(s.target.rule.name, []).append(s.target)
+    out = []
+    for said, targets in groups.items():
+        names: list[str] = []
+        for t in targets:
+            rule = t.rule
+            if (
+                rule is not None
+                and len(every[rule.name]) > 1
+                and every[rule.name] == [u for u in targets if u.rule is rule]
+            ):
+                name = f"the rule files in {rule.folder}"
+            else:
+                name = t.name
+            if name not in names:
+                names.append(name)
+        out.append(_lockfile_text(project, names, list(said)))
+    return out
+
+
+def _lockfile_items(status: TargetStatus) -> list[str]:
     items = [
         f"{p.package} {p.notes_for} -> {p.locked}"
         if p.state == OUT_OF_DATE
@@ -1251,14 +1302,14 @@ def lockfile_changes(project: Project, status: TargetStatus) -> str | None:
         if p.state in (OUT_OF_DATE, ORPHAN)
     ]
     if not items and any(kind == DEPENDENCIES_CHANGED for kind, _ in status.problems):
-        items.append("other dependencies")
-    if not items:
-        return None
+        items.append(OTHER_DEPENDENCIES)
+    return items
+
+
+def _lockfile_text(project: Project, names: Sequence[str], items: Sequence[str]) -> str:
     word = project.versions_word
     word = "Your" + word[4:] if word.startswith("your") else word
-    return (
-        f"{word} changed since the notes in {status.target.name} were written: {', '.join(items)}"
-    )
+    return f"{word} changed since the notes in {_joined(names)} were written: {', '.join(items)}"
 
 
 # ---------------------------------------------------------------- helpers

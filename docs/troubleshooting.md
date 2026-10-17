@@ -135,7 +135,8 @@ be read (often PyPI unreachable), so explain cannot say whether the name changed
 APIs match '...' by the end of the name: ... Give one of them (exit code 1)` means more than 3
 APIs end with that name: give a longer one, or `--package`.
 `<name> is not a dependency of this project` means `--package` names a package the project
-does not depend on. The texts are
+does not depend on; give `--from` and `--to` to diff it all the same (a name it does not have
+then says `No API named '...' changed in <package> between <from> and <to>`). The texts are
 in [`explain.py`](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/explain.py).
 
 ## explain --from and --to need --package
@@ -158,9 +159,26 @@ another's block (copied or renamed by hand). `.claude/rules is a link to <path>,
 project` means the folder (or the file) is a link into a folder shared between projects;
 since-cutoff writes rule files only inside the project, so make the folder a real one there, or
 keep the notes in AGENTS.md. `is a hard link` is the same for a file. All of them stop `sync`
-before anything is written; the checks are in
+before anything is written. The same reasons, ending `so since-cutoff leaves it alone:
+status, sync and unapply do not see the notes in it`, are a warning of `status`, `sync` and
+`unapply` for such a file that has since-cutoff's markers: its notes are not kept in step,
+and a plain `sync` writes AGENTS.md beside it, so two copies may load. Convert it to UTF-8, or
+replace the link with a file of its own, then run sync again. The checks are in
 [`rules.py`](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/rules.py)
 and [`sync.py`](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/sync.py).
+
+## had since-cutoff rule files until commit
+
+`.claude/rules had since-cutoff rule files until commit d7f0a25, which removed the last of
+them: ... writes the notes there instead of into AGENTS.md` is a warning of a plain `sync` (or
+`sync --check`) about to write a first notes block into AGENTS.md or CLAUDE.md: git's history
+shows that the project's notes were in rule files until the last of them went, when its
+package had no notes left, and a plain sync no longer knows that. Run the command it gives,
+which has the files' model and cutoff, to write the notes as rule files again, or go on to keep
+them in AGENTS.md. The sync that removed the last file said the same:
+`No since-cutoff rule files are left in .claude/rules`. To keep the format whatever happens,
+give `--target` where sync runs. The text is in
+[`rules.py`](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/rules.py).
 
 ## GitHub reads .github/instructions at the repository's root only
 

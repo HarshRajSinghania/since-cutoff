@@ -294,6 +294,9 @@ def test_every_readme_says_how_to_install_run_and_what_the_cache_commands_are(na
         "is a hard link",
         "at the repository's root (",
         "the notes are in rule files (",
+        "had since-cutoff rule files until commit",
+        "do not see the notes in it",
+        "No since-cutoff rule files are left in",
     ),
 )
 def test_troubleshooting_quotes_current_source_text(fragment: str) -> None:

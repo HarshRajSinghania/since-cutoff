@@ -13,7 +13,11 @@ account, no server of its own and no telemetry, and it collects no personal data
   `.github/instructions/since-cutoff-*.instructions.md`), for `sync`, `status`, `explain` and
   `unapply`.
 - Inside a git repository, for `sync` with rule files: which of the project's Python files git
-  ignores (`git check-ignore`, run locally), so that a rule file names none of them.
+  ignores (`git check-ignore`, run locally), so that a rule file names none of them; and when a
+  plain `sync` would write a first notes block into AGENTS.md or CLAUDE.md, whether git's
+  history has a since-cutoff rule file that a commit removed, and that file's meta line (`git
+  log`, `git show`, run locally), to say where the notes were. git is the one on `PATH`, never
+  one in the current folder or the project.
 - Without `--model`, the model fields of your coding agent's settings (Claude Code, Codex,
   Gemini CLI, OpenCode, Aider) and the `SINCE_CUTOFF_MODEL`, `ANTHROPIC_MODEL`, `GEMINI_MODEL`
   and `AIDER_MODEL` variables,

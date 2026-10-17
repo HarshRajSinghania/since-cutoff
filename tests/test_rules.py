@@ -9,17 +9,20 @@ The toy project and the fake PyPI are test_sync.py's: toylib 2.0 changed after t
 
 from __future__ import annotations
 
+import io
 import json
 import os
 import shutil
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from since_cutoff import cli
+from since_cutoff import rules as rules_module
 from since_cutoff.notes import BLOCK_END, BLOCK_START, NotesFileError, _write, parse_block
 from since_cutoff.rules import (
     FORMATS,
@@ -324,14 +327,62 @@ def test_a_package_with_no_notes_left_loses_its_file(sc, tmp_path) -> None:
     )
     assert not (root / CLAUDE).exists()
     assert "Text outside the since-cutoff markers is unchanged" not in out  # the file went
-    # The last one went: a plain sync no longer knows where the notes went, so sync says so.
+    # The last one went: a plain sync no longer knows where the notes went, nor for which
+    # model, so sync says so, with the command that writes them there again.
+    again = "since-cutoff sync --target claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31"
     assert (
         "No since-cutoff rule files are left in .claude/rules: when a package needs notes "
-        "again, `since-cutoff sync --target claude-rules` writes them there" in flat(out)
+        f"again, `{again}` writes them there (a plain sync writes AGENTS.md instead, for the "
+        "model your coding agent is set up with)." in flat(out)
     )
-    code, out = sc("sync", root, "--target", "claude-rules")
+    code, out = sc("sync", root, *again.split()[2:])
     assert code == EXIT_OK
     assert ".claude/rules: no notes to write; your code uses none of the APIs" in out
+    set_pins(root, ("toylib==2.0", "otherlib==1.0"))
+    code, out = sc("sync", root, *again.split()[2:], "--yes")
+    assert code == EXIT_OK and f"✓ Created {CLAUDE} with 2 notes." in out, out
+
+
+def commit_all(root: Path, message: str) -> str:
+    """Commit everything in ``root`` (no signing, whoever the user is); the short hash."""
+    flags = ["-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false"]
+    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    subprocess.run(["git", *flags, "-C", str(root), "commit", "-q", "-m", message], check=True)
+    head = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--short", "HEAD"], capture_output=True, check=True
+    )
+    return head.stdout.decode().strip()
+
+
+@git
+def test_a_plain_sync_says_when_the_notes_were_in_rule_files_until_the_last_went(
+    sc, tmp_path
+) -> None:
+    """The last rule file went with its package's notes; a later plain sync (CI, a teammate)
+    created AGENTS.md and said nothing of the rule files the project had."""
+    root = make_app(tmp_path)
+    git_init(root)
+    rules(sc, root)
+    commit_all(root, "notes")
+    set_pins(root, ("toylib==1.0", "otherlib==1.0"))
+    assert sc("sync", root, "--yes")[0] == EXIT_OK and not (root / CLAUDE).exists()
+    removed = commit_all(root, "toylib 1.0")
+    set_pins(root, ("toylib==2.0", "otherlib==1.0"))
+    code, out = sc("sync", root, *SONNET, "--check")
+    assert code == EXIT_OUT_OF_DATE
+    assert (
+        f"! .claude/rules had since-cutoff rule files until commit {removed}, which removed the "
+        "last of them: `since-cutoff sync --target claude-rules --model claude-sonnet-4-5 "
+        "--cutoff 2025-07-31` writes the notes there instead of into AGENTS.md" in flat(out)
+    )
+    # Once AGENTS.md has its block, nothing more is said; nor where no rule file ever went.
+    code, out = sc("sync", root, *SONNET, "--yes")
+    assert code == EXIT_OK and "had since-cutoff rule files" in out
+    assert "had since-cutoff rule files" not in sc("sync", root, "--check")[1]
+    other = make_app(tmp_path / "other")
+    git_init(other)
+    commit_all(other, "app")
+    assert "had since-cutoff rule files" not in sc("sync", other, *SONNET, "--check")[1]
 
 
 def test_text_of_ones_own_keeps_the_file_since_cutoffs_when_its_notes_go(sc, tmp_path) -> None:
@@ -367,6 +418,71 @@ def test_text_of_ones_own_keeps_the_file_since_cutoffs_when_its_notes_go(sc, tmp
     assert read(root, CLAUDE) == CLAUDE_FRONT + "Also: prefer fetch.\n"
 
 
+def test_an_emptied_file_another_since_cutoff_wrote_is_left_as_it_is(sc, tmp_path) -> None:
+    """As a block with notes: the same (no) notes, as that version of since-cutoff wrote them,
+    are not written again for this one's version alone."""
+    root = make_app(tmp_path)
+    write(root / CLAUDE, rules(sc, root) + "\nMine.\n")
+    set_pins(root, ("toylib==1.0", "otherlib==1.0"))
+    assert sc("sync", root, "--yes")[0] == EXIT_OK
+    text = read(root, CLAUDE)
+    tool = parse_block(text).meta["tool"]  # type: ignore[union-attr]
+    older = text.replace(f'"tool":"{tool}"', '"tool":"0.6.0"')
+    assert older != text
+    write(root / CLAUDE, older)
+    code, out = sc("sync", root, "--yes")
+    assert code == EXIT_OK and "Nothing written" in out, out
+    assert read(root, CLAUDE) == older
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+
+
+def test_an_emptied_file_whose_own_text_goes_is_said_to_go(sc, tmp_path) -> None:
+    """It was "its metadata written again", for a file sync removed."""
+    root = make_app(tmp_path)
+    text = rules(sc, root)
+    write(root / CLAUDE, text + "\nMine.\n")
+    set_pins(root, ("toylib==1.0", "otherlib==1.0"))
+    assert sc("sync", root, "--yes")[0] == EXIT_OK
+    write(root / CLAUDE, read(root, CLAUDE).replace("\nMine.\n", ""))
+    code, out = sc("sync", root, "--check")
+    assert code == EXIT_OUT_OF_DATE
+    assert (
+        f"{CLAUDE} is out of date: it has no notes and no text of your own left, so the file "
+        "would go." in out
+    )
+    code, out = sc("sync", root, "--yes", "--json")
+    assert code == EXIT_OK and not (root / CLAUDE).exists()
+    [change] = json.loads(out)["targets"][0]["changes"]
+    assert change["done"] == "no notes and no text of your own left"
+
+
+@pytest.mark.parametrize("bom", ["", "﻿"])
+def test_a_crlf_file_whose_notes_go_keeps_its_front_matter_as_it_was(sc, tmp_path, bom) -> None:
+    """The front matter read back from a CRLF file (Git for Windows checks files out so) was
+    given CRLF line breaks a second time (``\\r\\r\\n``): the file then counted as edited by hand
+    for good, and `--force` wrote a second front matter ahead of it."""
+    root = make_app(tmp_path)
+    text = bom + (rules(sc, root) + "\nMine.\n").replace("\n", "\r\n")
+    write(root / CLAUDE, text)
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+    set_pins(root, ("toylib==1.0", "otherlib==1.0"))
+    code, out = sc("sync", root, "--yes")
+    assert code == EXIT_OK and f"✓ Removed the notes from {CLAUDE}" in out, out
+    after = read(root, CLAUDE)
+    assert "\r\r" not in after and after.count("\r\n") == after.count("\n")
+    assert after.startswith(bom + CLAUDE_FRONT.replace("\n", "\r\n") + BLOCK_START + "\r\n")
+    code, out = sc("status", root)
+    assert code == EXIT_OK and "edited by hand" not in out, out
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+    # And back: the notes come into the same file, as it was.
+    set_pins(root, ("toylib==2.0", "otherlib==1.0"))
+    code, out = sc("sync", root, "--yes")
+    assert code == EXIT_OK and f"✓ Updated {CLAUDE}" in out, out
+    assert read(root, CLAUDE) == text
+    assert sc("unapply", root)[0] == EXIT_OK
+    assert read(root, CLAUDE) == bom + (CLAUDE_FRONT + "Mine.\n").replace("\n", "\r\n")
+
+
 def test_a_byte_order_mark_is_no_hand_edit_and_stays_first(sc, tmp_path) -> None:
     root = make_app(tmp_path)
     text = rules(sc, root)
@@ -400,6 +516,64 @@ def test_files_git_ignores_are_not_named(sc, tmp_path) -> None:
     (root / "scratch.py").unlink()
     shutil.rmtree(root / "local")
     assert sc("sync", root, "--check")[0] == EXIT_OK
+
+
+def test_git_is_run_by_its_full_path_and_never_from_the_current_folder(
+    tmp_path, monkeypatch
+) -> None:
+    """Run as ``git``, Windows looks for git.exe in the current folder before PATH: a git.exe
+    committed to a repository ran on a plain `sync --check` there."""
+    name = "git.exe" if os.name == "nt" else "git"
+    here, root, real = tmp_path / "here", tmp_path / "project", tmp_path / "real"
+    for folder in (here, root, root / "tools", real, here / "rel"):
+        put(folder / name, "#!/bin/sh\nexit 1\n")
+        (folder / name).chmod(0o755)
+    (root / ".git").mkdir()
+    entries = ["", ".", "rel", str(here), str(root), str(root / "tools"), str(real)]
+    monkeypatch.setenv("PATH", os.pathsep.join(entries))
+    monkeypatch.chdir(here)
+    assert rules_module.git_command(root) == str(real / name)
+    ran: list[list[str]] = []
+
+    def run(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[bytes]:
+        ran.append(argv)
+        return subprocess.CompletedProcess(argv, 128, b"", b"")
+
+    monkeypatch.setattr(rules_module.subprocess, "run", run)
+    assert rules_module.repo_root(root) is None
+    assert [argv[0] for argv in ran] == [str(real / name)]
+    # No git outside those folders: the checks that need it are skipped.
+    monkeypatch.setenv("PATH", os.pathsep.join(entries[:-1]))
+    ran.clear()
+    assert rules_module.git_command(root) is None
+    assert rules_module.ignored(root, ["main.py"]) == set() and ran == []
+
+
+@git
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows runs a git.exe in the current folder")
+def test_a_git_exe_in_the_project_does_not_run(sc, tmp_path, monkeypatch) -> None:
+    """A probe git.exe (a script launcher, as pip makes them) that leaves a mark if it runs."""
+    distlib = pytest.importorskip("pip._vendor.distlib")
+    root = make_app(tmp_path)
+    git_init(root)
+    rules(sc, root)
+    marker = tmp_path / "ran.txt"
+    script = io.BytesIO()
+    with zipfile.ZipFile(script, "w") as z:
+        z.writestr("__main__.py", f"open({str(marker)!r}, 'a').write('ran')\nraise SystemExit(1)\n")
+    launcher = (Path(distlib.__file__).parent / "t64.exe").read_bytes()
+    shebang = f'#!"{sys.executable}"\r\n'.encode()
+    (root / "git.exe").write_bytes(launcher + shebang + script.getvalue())
+    monkeypatch.delenv("NoDefaultCurrentDirectoryInExePath", raising=False)
+    monkeypatch.chdir(root)
+    subprocess.run(["git", "--version"], capture_output=True, check=False)
+    if not marker.exists():
+        pytest.skip("this Windows does not look in the current folder first")
+    marker.unlink()
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+    assert sc("sync", root, "--yes")[0] == EXIT_OK
+    assert sc("sync", root, *SONNET, "--yes", "--target", "copilot-instructions")[0] == EXIT_OK
+    assert not marker.exists()
 
 
 @git
@@ -438,6 +612,40 @@ def test_a_rule_file_since_cutoff_did_not_write_is_never_touched(sc, tmp_path, c
     assert code == 1 and "since-cutoff-toylib.md is not UTF-8 text" in err
 
 
+def test_a_rule_file_since_cutoff_leaves_alone_is_said_by_every_command(sc, tmp_path) -> None:
+    """A rule file with the markers that is not UTF-8, or is a hard link: status said "no
+    since-cutoff notes", unapply "no since-cutoff block found", and a plain sync created
+    AGENTS.md beside it, all without a word of it."""
+    root = make_app(tmp_path)
+    latin = rules(sc, root).replace("do not pass it.", "ne le passez pas, café.")
+    (root / CLAUDE).write_bytes(latin.encode("latin-1"))
+    said = f"{CLAUDE} is not UTF-8 text, so since-cutoff leaves it alone"
+    code, out = sc("status", root)
+    assert code == EXIT_OK and f"! {said}" in flat(out)
+    code, out = sc("sync", root, *SONNET, "--yes")
+    assert code == EXIT_OK and f"! {said}" in flat(out)
+    assert "Created AGENTS.md" in out  # as before, but not without a word
+    code, out = sc("unapply", root, "--target", "claude-rules")
+    assert code == EXIT_OK and f"! {said}" in flat(out)
+    assert (root / CLAUDE).read_bytes() == latin.encode("latin-1")
+    # status --json: on stderr, so that stdout stays JSON.
+    _, out = sc("status", root, "--json")
+    assert json.loads(out)["targets"][0]["file"] == "AGENTS.md"
+    (root / CLAUDE).unlink()
+    elsewhere = tmp_path / "elsewhere.md"
+    write(elsewhere, latin.replace("café", "cafe"))
+    try:
+        os.link(elsewhere, root / CLAUDE)
+    except OSError as exc:
+        pytest.skip(f"no hard links here: {exc}")
+    code, out = sc("status", root)
+    assert f"! {CLAUDE} is a hard link, which may be a file of another project" in flat(out)
+    # A file of the user's (no markers) is theirs: nothing to say, whatever it is.
+    (root / CLAUDE).unlink()
+    (root / CLAUDE).write_bytes("# My notes on toylib, café\n".encode("latin-1"))
+    assert "leaves it alone" not in sc("status", root)[1]
+
+
 def test_only_a_formats_own_names_and_its_packages_block_are_its(sc, tmp_path, capsys) -> None:
     """``package_of`` read ``since-cutoff-toylib.instructions.md`` in .claude/rules as the
     claude rule of a package ``toylib.instructions``, and a plain sync removed it."""
@@ -456,6 +664,15 @@ def test_only_a_formats_own_names_and_its_packages_block_are_its(sc, tmp_path, c
     code, err = errors(capsys, "sync", root, "--yes")
     assert code == 1
     assert "since-cutoff-otherlib.instructions.md holds the notes for toylib, not otherlib's" in err
+    assert read(root, other) == copilot + "\nMy otherlib notes: pin it.\n"
+    # unapply leaves it alone too (it removed the block, and left toylib's front matter over
+    # the user's text), and says so.
+    code, out = sc("unapply", root)
+    assert code == EXIT_OK and f"removed the since-cutoff block from {COPILOT}" in out
+    assert (
+        f"! {other} holds the notes for toylib, not otherlib's, so since-cutoff leaves it alone"
+        in flat(out)
+    )
     assert read(root, other) == copilot + "\nMy otherlib notes: pin it.\n"
 
 
@@ -484,7 +701,14 @@ def test_a_rules_folder_linked_outside_the_project_is_left_alone(sc, tmp_path, c
     assert status_files(sc, b) == [] and sc("status", b)[0] == EXIT_OK
     assert sc("sync", b, "--check")[0] == EXIT_OK
     assert sc("sync", b, "--yes")[0] == EXIT_OK
-    assert sc("unapply", b)[1].strip() == "no since-cutoff block found"
+    # Each says that it leaves the file there alone.
+    code, out = sc("unapply", b)
+    assert code == EXIT_OK and flat(out).endswith("no since-cutoff block found")
+    assert (
+        f"! .claude/rules is a link to {shared.resolve()}, outside the project, so since-cutoff "
+        "leaves since-cutoff-toylib.md in it alone" in flat(out)
+    )
+    assert "leaves since-cutoff-toylib.md in it alone" in flat(sc("status", b)[1])
     assert sorted(p.name for p in shared.iterdir()) == ["security.md", "since-cutoff-toylib.md"]
     # Writing there is refused, before anything is written.
     set_pins(b, ("toylib==2.0", "otherlib==1.0"))
@@ -508,6 +732,25 @@ def test_a_hard_linked_rule_file_is_left_alone(sc, tmp_path, capsys) -> None:
     code, err = errors(capsys, "sync", root, *SONNET, "--yes", "--target", "claude-rules")
     assert code == 1 and "is a hard link" in err
     assert elsewhere.read_bytes().decode("utf-8") == text
+    # Named on its own, unapply leaves it alone too.
+    code, err = errors(capsys, "unapply", root, "--target", CLAUDE)
+    assert code == 1
+    assert (
+        f"{CLAUDE} is a hard link, which may be a file of another project: since-cutoff removes "
+        "rule files only inside the project, so it leaves it alone" in err
+    )
+    assert (root / CLAUDE).exists() and elsewhere.read_bytes().decode("utf-8") == text
+
+
+def test_unapply_of_a_rule_file_through_a_linked_folder_leaves_it(sc, tmp_path, capsys) -> None:
+    shared = tmp_path / "shared"
+    text = rules(sc, make_app(tmp_path / "a"))
+    put(shared / "since-cutoff-toylib.md", text)
+    b = make_app(tmp_path / "b")
+    link_folder(b / ".claude" / "rules", shared)
+    code, err = errors(capsys, "unapply", b, "--target", CLAUDE)
+    assert code == 1 and f"{CLAUDE} is a link to" in err and "outside the project" in err
+    assert read(shared, "since-cutoff-toylib.md") == text
 
 
 def test_a_file_name_that_is_not_utf8_is_matched_and_nothing_is_emptied(sc, tmp_path) -> None:

@@ -20,9 +20,26 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
 1. **Dependencies and exact versions** come from the first source found: `uv.lock`,
    `poetry.lock`, `pdm.lock`, `pylock.toml`, `Pipfile.lock`; then the project's `.venv`
    (read from `*.dist-info/METADATA`, nothing is executed); then pins in `pyproject.toml`,
-   `requirements*.txt` and `Pipfile`. `setup.py` and `setup.cfg` are not read (that would mean
-   running the project's code); a project with nothing else gets an error that says so.
+   `requirements*.txt`, `Pipfile` and the `pip:` block of a conda `environment.yml` (or
+   `environment.yaml`). `setup.py` and `setup.cfg` are not read (that would mean running the
+   project's code); a project with nothing else gets an error that says so.
    The version source in the reports names every place the versions come from.
+   - A conda environment file's `pip:` block is read as a requirements file: pins, ranges,
+     extras and direct references (`pkg @ git+https://...`, not looked up on PyPI), and the
+     files it includes (`-r requirements-x.txt`, relative to the environment file, as conda
+     has pip read it), with a warning for one that does not exist. An include is followed with
+     or without a space after `-r` and with a space or `=` after `--requirement`, its name
+     being the first word after the option (`-r base.txt --pre` includes base.txt), here and
+     in any requirements file. A block that YAML aliases repeat is read once, and no more than
+     its first 10,000 lines are read, with a warning. Its conda packages (`python=3.12`,
+     `numpy=1.26`) are not read, as they do not come from PyPI, and neither are other options
+     (`-e .`) or local paths. A version pinned there or in a file it includes is labelled
+     `environment.yml` (the pins of a file that `requirements.txt` includes are labelled
+     `requirements.txt`), also when a `.venv` provides the others; a `requirements*.txt` that
+     the block includes and that is also read on its own keeps its own label. An environment
+     file that is not YAML stops the scan with an error (`could not parse environment.yml:
+     ...`), also when a lockfile provides the versions, as a `pyproject.toml` that is not TOML
+     does.
    - A lockfile the project is not set up for (a `poetry.lock` or `pdm.lock` next to a
      `pyproject.toml` without that tool's table or build backend, a `Pipfile.lock` without a
      `Pipfile`) is ignored, with a warning, when its versions disagree with the pinned

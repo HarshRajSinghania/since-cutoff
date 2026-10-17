@@ -47,10 +47,11 @@ installs it, and `uvx --with basedpyright since-cutoff run` adds it to a run wit
 without it, `run` stops at once and says so.
 
 Run it from your project root. It reads `uv.lock`, `poetry.lock`, `pdm.lock`, `pylock.toml`,
-`Pipfile.lock`, `requirements*.txt`, `pyproject.toml`, `Pipfile` or a `.venv` (not `setup.py` or
-`setup.cfg`). Without `--model` it uses the model your coding agent is set up with, from the
-Claude Code, Codex, Gemini CLI, OpenCode or Aider settings; for any other model, pass `--model`
-(see [Choosing the model](https://github.com/MohammadHijjawi97/since-cutoff#choosing-the-model)).
+`Pipfile.lock`, `requirements*.txt`, `pyproject.toml`, `Pipfile`, the `pip:` block of a conda
+`environment.yml` or a `.venv` (not `setup.py` or `setup.cfg`). Without `--model` it uses the
+model your coding agent is set up with, from the Claude Code, Codex, Gemini CLI, OpenCode or
+Aider settings; for any other model, pass `--model` (see
+[Choosing the model](https://github.com/MohammadHijjawi97/since-cutoff#choosing-the-model)).
 `scan`, `sync` and `status` call no model and need no API key; `run` sends prompts to the model
 provider and uses your API credits or Claude Code usage.
 
@@ -734,7 +735,7 @@ and models.dev: no model calls, no API key.
 name: since-cutoff
 on:
   pull_request:
-    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
+    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/environment.y*ml", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -784,14 +785,15 @@ repos:
       - id: since-cutoff-sync  # keeps the notes in AGENTS.md current; args: [--check] only checks
 ```
 
-`since-cutoff-scan` runs when a lockfile, a requirements file or `pyproject.toml` changes, and
-prints the scan; give it `--model` in `args`. `since-cutoff-sync` runs when one of those files,
-AGENTS.md or CLAUDE.md changes, and updates the notes; when it changes the file, the hook fails,
-as pre-commit hooks that change files do: add the file and commit again. With `args: [--check]`
-it changes nothing and fails while the notes are out of date. It keeps the model the notes were
-written for; for a first block, give it one: `args: [--model=anthropic:claude-sonnet-4-5]`. Both
-need PyPI, so skip them on pre-commit.ci (`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`).
-`since-cutoff-status` needs no network: it fails when the notes do not match the lockfile.
+`since-cutoff-scan` runs when a lockfile, a requirements file, a conda `environment.yml` or
+`pyproject.toml` changes, and prints the scan; give it `--model` in `args`. `since-cutoff-sync`
+runs when one of those files, AGENTS.md or CLAUDE.md changes, and updates the notes; when it
+changes the file, the hook fails, as pre-commit hooks that change files do: add the file and
+commit again. With `args: [--check]` it changes nothing and fails while the notes are out of
+date. It keeps the model the notes were written for; for a first block, give it one:
+`args: [--model=anthropic:claude-sonnet-4-5]`. Both need PyPI, so skip them on pre-commit.ci
+(`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`). `since-cutoff-status` needs no network:
+it fails when the notes do not match the lockfile.
 
 ### Other CI
 

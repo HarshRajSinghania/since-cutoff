@@ -102,15 +102,20 @@ key in the same way; see
 Never put the key in a bug report or diagnostic log. `scan`, `sync`, `status` and the MCP
 inspection tools do not call a model and need no model-provider key.
 
-## basedpyright is not installed (pip install basedpyright)
+## run checks the model's answers with the basedpyright type checker, which is not installed
 
-`basedpyright is not installed (pip install basedpyright)` means the installation is incomplete:
-basedpyright is a required dependency in
+`run checks the model's answers with the basedpyright type checker, which is not installed: pip install "since-cutoff[run]", or uvx --with basedpyright since-cutoff run`
+means the Python environment that runs since-cutoff has no basedpyright. Only `run` type-checks
+anything, so basedpyright (with the Node.js it brings, about 180 MB) is the `run` extra in
 [`pyproject.toml`](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/pyproject.toml),
-not an optional checker. Repair the installation in the same Python environment that runs
-since-cutoff, for example with `python -m pip install basedpyright`.
+not a required dependency: `scan`, `sync`, `status` and the MCP server never use it. Install the
+extra in that same environment with `pip install "since-cutoff[run]"` (or
+`pipx install "since-cutoff[run]"`), or add it to one run without installing anything with
+`uvx --with basedpyright since-cutoff run`. `run` stops with this message before the scan and
+before any model call, so nothing was spent.
 [`checker.py`](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/checker.py)
-imports it there and invokes it with that environment's Python executable.
+uses a `basedpyright` executable on `PATH`, else the installed module with that environment's
+Python executable.
 
 When reporting a bug, include the command, `since-cutoff --version`, OS/Python versions and the
 sanitized diagnostic. Leave out API keys, private package-index URLs and customer source code.

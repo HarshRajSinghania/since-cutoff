@@ -240,6 +240,29 @@ def test_the_slug_is_githubs() -> None:
     )
 
 
+_UNQUOTED_EXTRA = re.compile(r'(?<!")since-cutoff\[run\]|since-cutoff\[run\](?!")')
+
+
+@pytest.mark.parametrize("name", [*PAGES, "CHANGELOG.md"])
+def test_the_run_extra_is_always_quoted(name: str) -> None:
+    """Unquoted, zsh takes ``since-cutoff[run]`` for a glob and the install fails."""
+    lines = [line for line in _text(name).splitlines() if _UNQUOTED_EXTRA.search(line)]
+    assert lines == []
+
+
+@pytest.mark.parametrize("name", READMES)
+def test_every_readme_says_how_to_install_run_and_what_the_cache_commands_are(name: str) -> None:
+    text = _text(name)
+    for needed in (
+        'pip install "since-cutoff[run]"',
+        "uvx --with basedpyright since-cutoff run",
+        "since-cutoff cache info",
+        "`--sources`",
+        "SINCE_CUTOFF_CACHE_MAX_MB",
+    ):
+        assert needed in text, needed
+
+
 @pytest.mark.parametrize(
     "fragment",
     (
@@ -254,7 +277,8 @@ def test_the_slug_is_githubs() -> None:
         "models.dev has no knowledge cutoff for '",
         "the `claude` CLI was not found on PATH",
         "ANTHROPIC_API_KEY is not set",
-        "basedpyright is not installed (pip install basedpyright)",
+        "run checks the model's answers with the basedpyright type checker, which is not",
+        'installed: pip install "since-cutoff[run]", or uvx --with basedpyright since-cutoff run',
         "CLAUDE.md does not import AGENTS.md, so Claude Code does not read the notes in AGENTS.md",
     ),
 )

@@ -44,6 +44,12 @@ Ou lancez-le sans l'installer : `uvx since-cutoff scan` télécharge la version
 l'exécute (`uvx since-cutoff@latest scan` prend les nouvelles versions au lieu de réutiliser la
 première que uv a mise en cache).
 
+`run` vérifie les types des réponses du modèle avec
+[basedpyright](https://github.com/DetachHead/basedpyright), un extra de 180 Mo dont les autres
+commandes ne se servent jamais : `pip install "since-cutoff[run]"` (ou
+`pipx install "since-cutoff[run]"`) l'installe, et `uvx --with basedpyright since-cutoff run`
+l'ajoute à une exécution sans rien installer ; sans lui, `run` s'arrête aussitôt et le dit.
+
 Lancez-le depuis la racine de votre projet. Il lit `uv.lock`, `poetry.lock`, `pdm.lock`,
 `pylock.toml`, `Pipfile.lock`, `requirements*.txt`, `pyproject.toml`, `Pipfile` ou un `.venv`
 (pas `setup.py` ni `setup.cfg`). Sans `--model`, il utilise le modèle configuré pour votre agent
@@ -240,8 +246,9 @@ uvx since-cutoff scan
 # écrire ces notes dans AGENTS.md (montre le diff et demande d'abord) ; à relancer après une mise à jour
 uvx since-cutoff sync
 
-# facultatif : mesurer sur quels changements votre modèle se trompe, et tester les notes (appelle le modèle)
-uvx since-cutoff run
+# facultatif : mesurer sur quels changements votre modèle se trompe, et tester les notes (appelle le modèle ;
+# --with ajoute le vérificateur de types basedpyright, dont seul run a besoin)
+uvx --with basedpyright since-cutoff run
 ```
 
 Ce qu'affiche `scan` pour le projet d'exemple, en entier :
@@ -981,8 +988,13 @@ mesuré le test sur les tâches réservées ; `verified` est conservé et signi
   annotations d'un job de CI, et l'outil MCP `project_changes` le renvoie à l'agent qui l'a
   appelé, lequel transmet les résultats de ses outils à son modèle.
 - **Stocke** les résultats dans `.since-cutoff/` au sein de votre projet (le dossier s'exclut
-  lui-même de git) et dans un cache local (`since-cutoff cache path` indique son emplacement,
-  `since-cutoff cache clear` le supprime). `sync` (quand vous acceptez, ou avec `--yes`) et
+  lui-même de git) et dans un cache local : `since-cutoff cache info` indique son emplacement et
+  sa taille par type, `since-cutoff cache clear` le supprime, ou avec `--sources`, `--diffs` ou
+  `--pypi` ce seul type (les réponses du modèle à `run`, qui coûtent de l'argent, sont
+  conservées). Les sources extraites des paquets, l'essentiel du cache, sont plafonnées à 2 Go
+  (`SINCE_CUTOFF_CACHE_MAX_MB` ; 0 pour aucun plafond) : après l'extraction d'une nouvelle
+  version, les moins récemment utilisées partent, jamais une qu'une analyse en cours utilise, et
+  la première suppression d'une exécution l'annonce en une ligne. `sync` (quand vous acceptez, ou avec `--yes`) et
   `run --apply` écrivent un seul bloc balisé dans AGENTS.md ou CLAUDE.md et laissent le reste du
   fichier intact, octet pour octet ; `since-cutoff unapply` retire le bloc.
 - **Aucune télémétrie**, aucun compte, aucune donnée personnelle. Les exécutions suivantes sont

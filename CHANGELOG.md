@@ -28,27 +28,33 @@
   `unapply` that says why. AGENTS.md / CLAUDE.md stay the default; once rule files exist, a
   plain `sync` keeps them in step without writing AGENTS.md, and says how to remove a block
   AGENTS.md or CLAUDE.md still has. When the last rule file goes, `sync` gives the command that
-  writes the notes there again, with their model and cutoff (`since-cutoff sync --target
+  writes the notes there again, for the model and cutoff it ran for (`since-cutoff sync --target
   claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31`), and inside a git repository a
   later plain `sync` that would write a first block into AGENTS.md says so first, from git's
-  history. git (for the files it ignores, and that history) is run by its full path from
-  `PATH`, never from the current folder or the project: Windows runs a `git.exe` in the current
-  folder first. A plain `unapply` now also removes the rule files since-cutoff wrote, and
+  history, with the `--model` and `--cutoff` it was given, else the removed files' own. git (for
+  the files it ignores, and that history) is run by its full path from `PATH`, never from the
+  current folder or the project: Windows runs a `git.exe` in the current folder first. A plain
+  `unapply` now also removes the rule files since-cutoff wrote, and
   leaves one that holds another package's block; `unapply --target cursor-rules` removes one
   format's, and `unapply --target <rule file>` one file. `sync
   --target copilot-instructions` warns when the project is a folder of a git repository, whose
   `.github/instructions` GitHub reads at the root only. `run --apply` refuses a rule format, a
   rule file's path, and (with no `--target`) a project whose notes are in rule files, before any
   model call. Windsurf / Devin Desktop (a rule with one glob documented, several not) and Codex
-  (no path scoping) have no format.
+  (no path scoping) have no format. The GitHub Action's `check-notes` sees the rule files (a
+  block in one keeps its model and cutoff, as in AGENTS.md, so the `cutoff` input is only for a
+  first block), and its new `notes-target` input is the `--target` of `sync --check`; the
+  `since-cutoff-sync` and `since-cutoff-status` pre-commit hooks also run when a rule file
+  since-cutoff wrote changes.
 - `since-cutoff explain <API>` and the MCP tool `explain_api` say everything since-cutoff knows
   about one API, from the scan `sync` runs and with no model call (#28): the note as the block
   writes it (its own `[type-checked]` bullet when it has one) and which files' blocks have it,
   or have another note for it (written for another version: the block is out of date), the
   pinned release and the one compared from and where each comes from, each change with both
-  signatures and the changed parameter in each, the library's own deprecation text and the
-  file it is in, the replacement and its evidence (a move's kept names, a switched dependency's
-  Requires-Dist), the Runtime line, the changelog, every place the code uses it and in which
+  signatures and the changed parameter in each (saying so when a signature, cut at 400
+  characters, ends inside it), the library's own deprecation text and the file it is in, the
+  replacement and its evidence (a move's kept names, a switched dependency's Requires-Dist), the
+  Runtime line, the changelog, every place the code uses it and in which
   form (for a package first released after the cutoff, the files that import it), and what the
   tag does not check. It says first what changed in the lockfile since the notes were written
   (once for all the files with the same change), and which packages could not be checked. The

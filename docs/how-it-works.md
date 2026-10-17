@@ -617,18 +617,19 @@ since-cutoff does not write.
 - **Keeping it in step.** `sync` proposes each file there now for its package, then a new file
   for each package with notes that has none. A file whose package has no notes left is
   removed, and when it was the last one, `sync` gives the command that writes the notes there
-  again, with the files' model, cutoff, margin and scope (`since-cutoff sync --target
-  claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31`): a plain sync then writes
-  AGENTS.md, for the model the coding agent is set up with. Inside a git repository, a plain
-  `sync` that would write a first block into AGENTS.md or CLAUDE.md looks in git's history
-  first (`git log --diff-filter=D` for the three formats' `since-cutoff-*` files, then `git
-  show` of the last one removed, for its meta line) and, when the project had rule files, says
-  so with that command. With text of your own after the block, the notes go and
-  the markers and meta line stay ("Removed the notes from ...: your own text in it stays"), so
-  the file stays since-cutoff's: the next `sync` that has notes for the package writes them
-  there again, with the same model. A change in the folders the package is used in rewrites
-  the front matter ("now loaded for 3 globs (1 added)"). The model, cutoff and scope are the
-  files' own, as for a block.
+  again, with the model, cutoff, margin and scope that sync ran for (`since-cutoff sync --target
+  claude-rules --model claude-sonnet-4-5 --cutoff 2025-07-31`; after `sync --model` that model,
+  not the removed files'): a plain sync then writes AGENTS.md, for the model the coding agent is
+  set up with. Inside a git repository, a plain `sync` that would write a first block into
+  AGENTS.md or CLAUDE.md looks in git's history first (`git log --diff-filter=D` for the three
+  formats' `since-cutoff-*` files, then `git show` of the last one removed, for its meta line)
+  and, when the project had rule files, says so with that command: with the `--model` and
+  `--cutoff` (`--cutoff-margin`, `--scope`) that sync was given, else the removed file's own.
+  With text of your own after the block, the notes go and the markers and meta line stay
+  ("Removed the notes from ...: your own text in it stays"), so the file stays since-cutoff's:
+  the next `sync` that has notes for the package writes them there again, with the same model. A
+  change in the folders the package is used in rewrites the front matter ("now loaded for 3
+  globs (1 added)"). The model, cutoff and scope are the files' own, as for a block.
 - **What is never touched.** Only files named `since-cutoff-<package>` (a package's
   normalised name, in any case) with since-cutoff's markers and that package's block are
   since-cutoff's: `since-cutoff-toylib.instructions.md` in `.claude/rules` is no Claude rule.
@@ -690,14 +691,14 @@ when the block was written for other releases), or another note about it (one wh
 span names it, not one that names it as a replacement), shown as the block has it; the pinned
 release, the release compared from and where each comes from; each change by kind, with both
 signatures, the changed parameter's declaration in each (a signature is cut at 400
-characters, which it says when the parameter is past the cut), and the library's own
-deprecation text, from the old version (`hint`, with its file and where it was read: a
-decorator, a docstring line, a parameter's docstring entry, a `warnings.warn`) and the pinned
-one (`deprecation`); the tag's legend and `checks.change`; each replacement with its evidence
-and source; what a move kept; a switched dependency's Requires-Dist and places; the Runtime
-line; the changelog; every place the code uses it with the form ("old form" or "uses this
-API") and what it does there (`file:line` once the scan records lines,
-[#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), or for a package first
+characters, which it says when the parameter is past the cut, and when the cut ends inside the
+declaration shown), and the library's own deprecation text, from the old version (`hint`, with
+its file and where it was read: a decorator, a docstring line, a parameter's docstring entry, a
+`warnings.warn`) and the pinned one (`deprecation`); the tag's legend and `checks.change`; each
+replacement with its evidence and source; what a move kept; a switched dependency's
+Requires-Dist and places; the Runtime line; the changelog; every place the code uses it with the
+form ("old form" or "uses this API") and what it does there (`file:line` once the scan records
+lines, [#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), or for a package first
 released after the cutoff the files that import it; and what the tag does not check.
 
 `--json` prints an object with `query`, `model`, `cutoff`, `cutoff_margin`, `versions_from`,

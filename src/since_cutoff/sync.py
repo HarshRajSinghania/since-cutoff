@@ -356,6 +356,17 @@ class Proposal:
     def edited(self) -> bool:
         return self.target.edited
 
+    @property
+    def basis_meta(self) -> dict[str, Any]:
+        """The model, cutoff, margin and scope the proposal is for, as a meta line names them
+        (for rules.again_command)."""
+        return {
+            "model": self.model,
+            "cutoff": self.cutoff.isoformat(),
+            "margin": self.margin,
+            "scope": self.scope,
+        }
+
 
 def propose(
     scan: ScanResult,

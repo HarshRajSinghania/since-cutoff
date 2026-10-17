@@ -343,6 +343,38 @@ def test_a_package_with_no_notes_left_loses_its_file(sc, tmp_path) -> None:
     assert code == EXIT_OK and f"✓ Created {CLAUDE} with 2 notes." in out, out
 
 
+@pytest.mark.parametrize(
+    ("given", "again"),
+    [
+        (
+            ["--model", "anthropic:claude-haiku-4-5", "--cutoff", "2025-12-31"],
+            "--model claude-haiku-4-5 --cutoff 2025-12-31",
+        ),
+        (["--cutoff", "2025-12-31"], "--cutoff 2025-12-31"),
+        (
+            ["--cutoff", "2025-12-31", "--cutoff-margin", "0"],
+            "--cutoff 2025-12-31 --cutoff-margin 0",
+        ),
+    ],
+)
+def test_the_command_after_the_last_file_went_is_for_the_model_sync_ran_for(
+    sc, tmp_path, given, again
+) -> None:
+    """A sync for another model or cutoff removed the last rule file: the command that writes
+    the notes there again is for what that sync ran for, not for what the files were for."""
+    root = make_app(tmp_path)
+    rules(sc, root)  # claude-sonnet-4-5, cutoff 2025-07-31
+    # By then toylib 2.1 is out: 2.0 is no newer, and its notes and file go.
+    code, out = sc("sync", root, *given, "--yes")
+    assert code == EXIT_OK, out
+    assert not (root / CLAUDE).exists()
+    assert (
+        "No since-cutoff rule files are left in .claude/rules: when a package needs notes "
+        f"again, `since-cutoff sync --target claude-rules {again}` writes them there" in flat(out)
+    )
+    assert "claude-sonnet-4-5 --cutoff 2025-07-31" not in flat(out)
+
+
 def commit_all(root: Path, message: str) -> str:
     """Commit everything in ``root`` (no signing, whoever the user is); the short hash."""
     flags = ["-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false"]
@@ -383,6 +415,48 @@ def test_a_plain_sync_says_when_the_notes_were_in_rule_files_until_the_last_went
     git_init(other)
     commit_all(other, "app")
     assert "had since-cutoff rule files" not in sc("sync", other, *SONNET, "--check")[1]
+
+
+@git
+def test_the_command_for_rule_files_a_commit_removed_is_for_the_model_sync_was_given(
+    sc, tmp_path, monkeypatch
+) -> None:
+    """The removed files were for claude-sonnet-4-5; a plain sync given another model names
+    that one (the notes it is about to write are for it), and the removed files' model only
+    when it was given none."""
+    root = make_app(tmp_path)
+    git_init(root)
+    rules(sc, root)
+    commit_all(root, "notes")
+    set_pins(root, ("toylib==1.0", "otherlib==1.0"))
+    assert sc("sync", root, "--yes")[0] == EXIT_OK and not (root / CLAUDE).exists()
+    removed = commit_all(root, "toylib 1.0")
+    set_pins(root, ("toylib==2.0", "otherlib==1.0"))
+    head = f"! .claude/rules had since-cutoff rule files until commit {removed}, which removed "
+    code, out = sc(
+        "sync", root, "--model", "anthropic:claude-haiku-4-5", "--cutoff", "2024-12-31", "--check"
+    )
+    assert code == EXIT_OUT_OF_DATE, out
+    assert (
+        f"{head}the last of them: `since-cutoff sync --target claude-rules --model "
+        "claude-haiku-4-5 --cutoff 2024-12-31` writes the notes there instead of into AGENTS.md"
+        in flat(out)
+    )
+    code, out = sc("sync", root, "--cutoff", "2024-12-31", "--scope", "imported", "--check")
+    assert code == EXIT_OUT_OF_DATE, out
+    assert (
+        f"{head}the last of them: `since-cutoff sync --target claude-rules --cutoff 2024-12-31 "
+        "--scope imported` writes the notes there" in flat(out)
+    )
+    # Given no model, the plain sync uses the coding agent's; the command, the removed files'.
+    monkeypatch.setenv("SINCE_CUTOFF_MODEL", "anthropic:claude-haiku-4-5")
+    code, out = sc("sync", root, "--check")
+    assert code == EXIT_OUT_OF_DATE, out
+    assert "claude-haiku-4-5" in out
+    assert (
+        f"{head}the last of them: `since-cutoff sync --target claude-rules --model "
+        "claude-sonnet-4-5 --cutoff 2025-07-31` writes the notes there" in flat(out)
+    )
 
 
 def test_text_of_ones_own_keeps_the_file_since_cutoffs_when_its_notes_go(sc, tmp_path) -> None:

@@ -48,7 +48,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -565,13 +565,18 @@ def again_command(rule: RuleFormat, meta: dict[str, object]) -> str:
     return "`" + " ".join(parts) + "`"
 
 
-def removed_rules(root: Path, into: str = "AGENTS.md") -> list[str]:
+def removed_rules(
+    root: Path, into: str = "AGENTS.md", given: Mapping[str, object] | None = None
+) -> list[str]:
     """What a plain ``sync`` says before it writes a new block ``into`` AGENTS.md or CLAUDE.md in a
     project whose notes were in rule files, and are no longer (the last one went when its
     package had no notes left: a plain sync then no longer knows where they went). Git's
     history says it: the last commit that removed a since-cutoff rule file, and the block it
-    had (its model and cutoff, for the command that writes the notes there again). [] outside
-    a git work tree, without git, or when no such file was ever committed and removed."""
+    had (its model and cutoff, for the command that writes the notes there again). ``given``:
+    what this sync was given (``--model`` or ``--cutoff``, ``--cutoff-margin``, ``--scope``), as a
+    meta line names it; the command names that rather than the removed file's (which may be
+    another model's). [] outside a git work tree, without git, or when no such file was ever
+    committed and removed."""
     if repo_root(root) is None:
         return []
     specs = [f":(glob){f.folder}/{PREFIX}*{f.suffix}" for f in FORMATS.values()]
@@ -610,6 +615,7 @@ def removed_rules(root: Path, into: str = "AGENTS.md") -> list[str]:
             meta = block.meta if block is not None else {}
         except (OSError, subprocess.SubprocessError, UnicodeDecodeError, NotesFileError):
             pass
+        meta = {**meta, **(given or {})}
         out.append(
             f"{f.folder} had since-cutoff rule files until commit {commit}, which removed the "
             f"last of them: {again_command(f, meta)} writes the notes there instead of into {into}"

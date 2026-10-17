@@ -562,13 +562,14 @@ def _change_lines(scan: ScanResult, c: APIChange, p: PackageScan) -> list[str]:
     return out
 
 
-def _parameters(signature: str) -> list[str]:
+def _parameters(signature: str) -> tuple[list[str], bool]:
     """The parameters of a signature as written (``temperature: float = 1.0``), split at the
-    commas outside brackets and quotes."""
+    commas outside brackets and quotes, and whether the list ends (its ``)``): a signature cut
+    at 400 characters may stop inside it."""
     start = signature.find("(")
     if start < 0:
-        return []
-    out, depth, quote, part = [], 0, "", ""
+        return [], True
+    out, depth, quote, part, closed = [], 0, "", "", False
     for ch in signature[start + 1 :]:
         if quote:
             quote = "" if ch == quote else quote
@@ -578,6 +579,7 @@ def _parameters(signature: str) -> list[str]:
             depth += 1
         elif ch in ")]}":
             if depth == 0:
+                closed = True
                 break
             depth -= 1
         elif ch == "," and depth == 0:
@@ -587,16 +589,21 @@ def _parameters(signature: str) -> list[str]:
         part += ch
     if part.strip():
         out.append(part.strip())
-    return out
+    return out, closed
 
 
 def _declared(signature: str | None, name: str) -> str:
     """How ``signature`` declares the parameter ``name``: ```temperature: float = 1.0```, or
-    why it does not show it (the signature is cut at 400 characters before it)."""
+    why it does not show it (the signature is cut at 400 characters before it). A declaration
+    the cut ends inside says so."""
     if not signature:
         return "no signature"
-    for part in _parameters(signature):
+    parts, closed = _parameters(signature)
+    cut = signature.endswith("...") and not closed
+    for i, part in enumerate(parts):
         if re.match(rf"\*{{0,2}}{re.escape(name)}\b", part):
+            if cut and i == len(parts) - 1:
+                return f"`{part}` (the signature above is cut at 400 characters)"
             return f"`{part}`"
     if signature.endswith("..."):
         return "past the end of the signature above (cut at 400 characters)"

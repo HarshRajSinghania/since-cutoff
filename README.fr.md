@@ -418,7 +418,7 @@ n'écrit pas AGENTS.md ; si AGENTS.md ou CLAUDE.md contient encore un bloc, `sy
 comment le retirer (`since-cutoff unapply --target AGENTS.md`). Quand le dernier fichier de
 règles part, un `sync` sans option ne sait plus où allaient les notes, ni pour quel modèle : il
 écrit alors AGENTS.md, pour le modèle avec lequel votre agent est configuré. `sync` le dit
-donc, avec la commande qui les y écrit de nouveau :
+donc, avec la commande qui les y écrit de nouveau, pour le modèle et la date limite de ce sync :
 
 ```text
 No since-cutoff rule files are left in .claude/rules: when a package needs notes again,
@@ -428,7 +428,8 @@ with).
 ```
 
 et, dans un dépôt git, le `sync` sans option (ou `sync --check`) qui écrirait un premier bloc
-dans AGENTS.md le signale d'abord, d'après l'historique de git :
+dans AGENTS.md le signale d'abord, d'après l'historique de git, avec les `--model` et `--cutoff`
+qu'on lui a donnés, sinon ceux des fichiers supprimés :
 
 ```text
 ! .claude/rules had since-cutoff rule files until commit d7f0a25, which removed the last of
@@ -437,15 +438,15 @@ writes the notes there instead of into AGENTS.md
 ```
 
 Pour garder le format quoi qu'il arrive, donnez `--target` là où sync s'exécute (le hook
-pre-commit accepte `args: [--target, claude-rules]`).
-`unapply --target cursor-rules` supprime les fichiers d'un format,
-`unapply --target <fichier de règles>` un seul, et un `unapply` sans option retire le bloc
-d'AGENTS.md et de CLAUDE.md et tous les fichiers de règles écrits par since-cutoff. Les dossiers
-sont écrits dans le projet : GitHub ne lit `.github/instructions` qu'à la racine du dépôt, ce
-que `sync --target copilot-instructions` signale quand le projet est un dossier d'un dépôt.
-Windsurf (désormais Devin Desktop, `.devin/rules`) documente une règle avec un glob, mais pas
-comment en donner plusieurs, et Codex n'a pas de règles par chemin (il lit les AGENTS.md sur le
-chemin jusqu'au dossier où il démarre) : aucun des deux n'a donc encore de format.
+pre-commit accepte `args: [--target, claude-rules]`, et l'action GitHub
+`notes-target: claude-rules`). `unapply --target cursor-rules` supprime les fichiers d'un
+format, `unapply --target <fichier de règles>` un seul, et un `unapply` sans option retire le
+bloc d'AGENTS.md et de CLAUDE.md et tous les fichiers de règles écrits par since-cutoff. Les
+dossiers sont écrits dans le projet : GitHub ne lit `.github/instructions` qu'à la racine du
+dépôt, ce que `sync --target copilot-instructions` signale quand le projet est un dossier d'un
+dépôt. Windsurf (désormais Devin Desktop, `.devin/rules`) documente une règle avec un glob, mais
+pas comment en donner plusieurs, et Codex n'a pas de règles par chemin (il lit les AGENTS.md sur
+le chemin jusqu'au dossier où il démarre) : aucun des deux n'a donc encore de format.
 `run --apply` écrit un seul bloc dans un fichier ; pour les fichiers de règles, utilisez
 `sync --target`.
 
@@ -939,16 +940,16 @@ avertissement.
 L'action analyse le projet à chaque pull request et ajoute un résumé à la page du job : les API
 modifiées qu'utilise votre code, avec les fichiers qui les utilisent, le changement, l'usage ou
 non de l'ancienne forme et le remplaçant ; puis, repliés, les notes et les changements de chaque
-dépendance. Avec `check-notes: true`, elle fait aussi échouer le job quand les notes d'AGENTS.md
-ne sont plus à jour. Comme `scan`, elle ne lit que PyPI et models.dev : aucun appel au modèle,
-aucune clé d'API.
+dépendance. Avec `check-notes: true`, elle fait aussi échouer le job quand les notes
+d'AGENTS.md, ou celles des fichiers de règles écrits par sync, ne sont plus à jour. Comme
+`scan`, elle ne lit que PyPI et models.dev : aucun appel au modèle, aucune clé d'API.
 
 ```yaml
 # .github/workflows/since-cutoff.yml
 name: since-cutoff
 on:
   pull_request:
-    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/environment.y*ml", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
+    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/environment.y*ml", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md", "**/.claude/rules/since-cutoff-*.md", "**/.cursor/rules/since-cutoff-*.mdc", "**/.github/instructions/since-cutoff-*.instructions.md"]
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -971,7 +972,8 @@ modifiée.
 | `cutoff` | | remplace la date limite d'entraînement (`YYYY-MM` ou `YYYY-MM-DD`) |
 | `cutoff-margin` | | compare depuis la dernière version publiée ce nombre de jours avant la date limite (la valeur par défaut de since-cutoff est 30 ; `0` compare depuis la date limite elle-même) |
 | `fail-on-changes` | `false` | fait échouer l'étape quand une dépendance a modifié son API après la date limite |
-| `check-notes` | `false` | lance aussi `since-cutoff sync --check`, qui n'écrit rien, et fait échouer le job quand les notes d'AGENTS.md / CLAUDE.md ne sont plus à jour ou que le bloc a été modifié à la main ; les notes gardent le modèle pour lequel elles ont été écrites, et `model` (et `cutoff`) servent pour un projet qui n'a pas encore de bloc |
+| `check-notes` | `false` | lance aussi `since-cutoff sync --check`, qui n'écrit rien, et fait échouer le job quand les notes d'AGENTS.md / CLAUDE.md ou des fichiers de règles écrits par sync ne sont plus à jour ou qu'un bloc a été modifié à la main ; les notes gardent le modèle pour lequel elles ont été écrites, et `model` (et `cutoff`) servent pour un projet qui n'a pas encore de bloc |
+| `notes-target` | | (depuis 0.7.0) avec `check-notes`, le `--target` de `sync --check` : `claude-rules`, `cursor-rules`, `copilot-instructions` ou un fichier ; par défaut, les notes sont vérifiées là où elles sont |
 | `step-summary` | `true` | ajoute le résumé Markdown au résumé du job |
 | `cache` | `true` | conserve entre les exécutions les métadonnées PyPI, les sources des paquets et les diffs d'API (y compris quand `fail-on-changes` fait échouer le job) |
 | `args` | | arguments supplémentaires pour `since-cutoff scan`, par exemple `--all-deps --limit 20` |
@@ -1003,12 +1005,13 @@ repos:
 `since-cutoff-scan` s'exécute quand un fichier de verrouillage, un fichier `requirements*.txt`,
 un `environment.yml` conda ou `pyproject.toml` change, et affiche le résultat du scan ;
 passez-lui `--model` dans `args`. `since-cutoff-sync` s'exécute quand l'un de ces fichiers,
-AGENTS.md ou CLAUDE.md change, et met les notes à jour ; s'il modifie le fichier, le hook
-échoue, comme tout hook pre-commit qui modifie des fichiers : ajoutez le fichier et refaites
-le commit. Avec `args: [--check]`, il ne modifie rien et échoue tant que les notes ne sont pas à
-jour. Il conserve le modèle pour lequel les notes ont été écrites ; pour un premier bloc,
-indiquez-lui en un :
-`args: [--model=anthropic:claude-sonnet-4-5]`. Les deux ont besoin d'accéder à PyPI :
+AGENTS.md, CLAUDE.md ou un fichier de règles écrit par sync (`.claude/rules/since-cutoff-*.md`,
+`.cursor/rules/since-cutoff-*.mdc`, `.github/instructions/since-cutoff-*.instructions.md` ;
+depuis 0.7.0) change, et met les notes à jour ; s'il modifie le fichier, le hook échoue, comme
+tout hook pre-commit qui modifie des fichiers : ajoutez le fichier et refaites le commit. Avec
+`args: [--check]`, il ne modifie rien et échoue tant que les notes ne sont pas à jour. Il
+conserve le modèle pour lequel les notes ont été écrites ; pour un premier bloc, indiquez-lui en
+un : `args: [--model=anthropic:claude-sonnet-4-5]`. Les deux ont besoin d'accéder à PyPI :
 désactivez-les donc sur pre-commit.ci (`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`).
 `since-cutoff-status` n'a pas besoin du réseau : il échoue quand les notes ne correspondent pas
 au fichier de verrouillage.

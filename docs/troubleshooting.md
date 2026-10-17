@@ -174,9 +174,10 @@ them: ... writes the notes there instead of into AGENTS.md` is a warning of a pl
 `sync --check`) about to write a first notes block into AGENTS.md or CLAUDE.md: git's history
 shows that the project's notes were in rule files until the last of them went, when its
 package had no notes left, and a plain sync no longer knows that. Run the command it gives,
-which has the files' model and cutoff, to write the notes as rule files again, or go on to keep
-them in AGENTS.md. The sync that removed the last file said the same:
-`No since-cutoff rule files are left in .claude/rules`. To keep the format whatever happens,
+which has the `--model` and `--cutoff` the sync was given, else the removed files' model and
+cutoff, to write the notes as rule files again, or go on to keep them in AGENTS.md. The sync
+that removed the last file said the same: `No since-cutoff rule files are left in
+.claude/rules`, with the model and cutoff it ran for. To keep the format whatever happens,
 give `--target` where sync runs. The text is in
 [`rules.py`](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/rules.py).
 

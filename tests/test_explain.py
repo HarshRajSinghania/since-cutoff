@@ -116,6 +116,17 @@ def test_a_parameter_past_a_cut_signature_says_so(cache, pypi, tmp_path) -> None
         "  parameter `temperature`: in 1.0, past the end of the signature above (cut at 400 "
         "characters); in 2.0, removed" in _change_lines(scan, removed, f.package)
     )
+    # The cut ends inside the declaration: it is not shown as if it were all of it.
+    assert _declared("create(self, *, model: str, max_tokens: int = 1...", "max_tokens") == (
+        "`max_tokens: int = 1...` (the signature above is cut at 400 characters)"
+    )
+    # A cut in the return annotation leaves the parameters whole.
+    assert _declared("f(a, b: int) -> dict[str, Lon...", "b") == "`b: int`"
+    inside = replace(f.note.covered[0], old_signature="send(self, message: str, temperature: fl...")
+    assert (
+        "  parameter `temperature`: in 1.0, `temperature: fl...` (the signature above is cut at "
+        "400 characters); in 2.0, removed" in _change_lines(scan, inside, f.package)
+    )
 
 
 def test_a_bullet_shared_with_other_apis_and_a_parameter_still_read(

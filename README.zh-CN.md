@@ -226,7 +226,7 @@ Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, comparing 
 
 glob 覆盖不到的情况：在项目根目录新建的文件要到下一次 `sync` 才会被列出；其他目录中还没有用到这个包的文件不会得到说明。VS Code 会在路径的任何位置匹配不以 `**/` 开头的 glob，所以在 VS Code 中 `app/**/*.py` 也会为 `other/app/x.py` 加载说明，`main.py` 也会为 `other/main.py` 加载：只会多加载，不会漏加载。
 
-规则格式需要显式选择，默认仍然是 AGENTS.md / CLAUDE.md。项目中有了规则文件之后，不带参数的 `sync` 会让它们保持最新，并且不写 AGENTS.md；如果 AGENTS.md 或 CLAUDE.md 中还留有区块，`sync` 会说明如何移除它（`since-cutoff unapply --target AGENTS.md`）。最后一个规则文件被删除后，不带参数的 `sync` 就不再知道说明写在哪里、是为哪个模型写的：它会改为写入 AGENTS.md，用的是你的编程 Agent 所配置的模型。因此 `sync` 会提示这一点，并给出把说明重新写回那里的命令：
+规则格式需要显式选择，默认仍然是 AGENTS.md / CLAUDE.md。项目中有了规则文件之后，不带参数的 `sync` 会让它们保持最新，并且不写 AGENTS.md；如果 AGENTS.md 或 CLAUDE.md 中还留有区块，`sync` 会说明如何移除它（`since-cutoff unapply --target AGENTS.md`）。最后一个规则文件被删除后，不带参数的 `sync` 就不再知道说明写在哪里、是为哪个模型写的：它会改为写入 AGENTS.md，用的是你的编程 Agent 所配置的模型。因此 `sync` 会提示这一点，并给出把说明重新写回那里的命令（用的是这次 sync 所针对的模型和截止日期）：
 
 ```text
 No since-cutoff rule files are left in .claude/rules: when a package needs notes again,
@@ -235,7 +235,7 @@ them there (a plain sync writes AGENTS.md instead, for the model your coding age
 with).
 ```
 
-在 git 仓库中，不带参数的 `sync`（或 `sync --check`）准备往 AGENTS.md 写入第一个区块时，也会先根据 git 历史给出提示：
+在 git 仓库中，不带参数的 `sync`（或 `sync --check`）准备往 AGENTS.md 写入第一个区块时，也会先根据 git 历史给出提示；命令中用的是这次 sync 收到的 `--model` 和 `--cutoff`，没有给出时才用被删除文件中的：
 
 ```text
 ! .claude/rules had since-cutoff rule files until commit d7f0a25, which removed the last of
@@ -243,7 +243,7 @@ them: `since-cutoff sync --target claude-rules --model claude-sonnet-4-5 --cutof
 writes the notes there instead of into AGENTS.md
 ```
 
-如果无论如何都要保持这种格式，请在运行 sync 的地方加上 `--target`（pre-commit 钩子可以写 `args: [--target, claude-rules]`）。`unapply --target cursor-rules` 删除一种格式的文件，`unapply --target <规则文件>` 删除其中一个；不带参数的 `unapply` 会移除 AGENTS.md 和 CLAUDE.md 中的区块，以及 since-cutoff 写过的所有规则文件。这些目录写在项目中：GitHub 只在仓库根目录读取 `.github/instructions`，当项目是仓库中的一个子目录时，`sync --target copilot-instructions` 会给出提示。Windsurf（现为 Devin Desktop，`.devin/rules`）的文档只给出单个 glob 的规则，没有说明如何指定多个；Codex 没有按路径生效的规则（它读取从项目根目录到启动目录路径上的 AGENTS.md），所以两者暂时都没有对应的格式。`run --apply` 只把一个区块写进一个文件；规则文件请用 `sync --target`。
+如果无论如何都要保持这种格式，请在运行 sync 的地方加上 `--target`（pre-commit 钩子可以写 `args: [--target, claude-rules]`，GitHub Action 可以写 `notes-target: claude-rules`）。`unapply --target cursor-rules` 删除一种格式的文件，`unapply --target <规则文件>` 删除其中一个；不带参数的 `unapply` 会移除 AGENTS.md 和 CLAUDE.md 中的区块，以及 since-cutoff 写过的所有规则文件。这些目录写在项目中：GitHub 只在仓库根目录读取 `.github/instructions`，当项目是仓库中的一个子目录时，`sync --target copilot-instructions` 会给出提示。Windsurf（现为 Devin Desktop，`.devin/rules`）的文档只给出单个 glob 的规则，没有说明如何指定多个；Codex 没有按路径生效的规则（它读取从项目根目录到启动目录路径上的 AGENTS.md），所以两者暂时都没有对应的格式。`run --apply` 只把一个区块写进一个文件；规则文件请用 `sync --target`。
 
 ### 解释一条说明
 
@@ -524,14 +524,14 @@ Not listed: 58 breaking changes, 0 new deprecations (removed or moved 30, parame
 
 ### GitHub Action
 
-在每个 pull request 上扫描项目，并在任务页面添加一份摘要：你的代码用到的有变更 API，包括用到它们的文件、变更内容、是否是旧写法和替代项；然后是折叠起来的说明和每个依赖的变更。设置 `check-notes: true` 时，如果 AGENTS.md 中的说明已过时，它还会让任务失败。和 `scan` 一样，它只读取 PyPI 和 models.dev：不调用模型，不需要 API key。
+在每个 pull request 上扫描项目，并在任务页面添加一份摘要：你的代码用到的有变更 API，包括用到它们的文件、变更内容、是否是旧写法和替代项；然后是折叠起来的说明和每个依赖的变更。设置 `check-notes: true` 时，如果 AGENTS.md 或 sync 写入的规则文件中的说明已过时，它还会让任务失败。和 `scan` 一样，它只读取 PyPI 和 models.dev：不调用模型，不需要 API key。
 
 ```yaml
 # .github/workflows/since-cutoff.yml
 name: since-cutoff
 on:
   pull_request:
-    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/environment.y*ml", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
+    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/environment.y*ml", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md", "**/.claude/rules/since-cutoff-*.md", "**/.cursor/rules/since-cutoff-*.mdc", "**/.github/instructions/since-cutoff-*.instructions.md"]
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -553,7 +553,8 @@ jobs:
 | `cutoff` | | 覆盖训练截止日期（`YYYY-MM` 或 `YYYY-MM-DD`） |
 | `cutoff-margin` | | 从截止日期前这么多天发布的最新版本开始对比（since-cutoff 的默认值是 30；`0` 表示从截止日期当天算起） |
 | `fail-on-changes` | `false` | 有依赖在截止日期之后改了 API 时，让这一步失败 |
-| `check-notes` | `false` | 同时运行 `since-cutoff sync --check`（不写入任何内容），当 AGENTS.md / CLAUDE.md 中的说明已过时或区块被手动修改过时，让任务失败；说明沿用写入时的模型，`model`（和 `cutoff`）用于还没有区块的项目 |
+| `check-notes` | `false` | 同时运行 `since-cutoff sync --check`（不写入任何内容），当 AGENTS.md / CLAUDE.md 或 sync 写入的规则文件中的说明已过时或区块被手动修改过时，让任务失败；说明沿用写入时的模型，`model`（和 `cutoff`）用于还没有区块的项目 |
+| `notes-target` | | （0.7.0 起）配合 `check-notes`，作为 `sync --check` 的 `--target`：`claude-rules`、`cursor-rules`、`copilot-instructions` 或一个文件；默认在说明所在的位置检查 |
 | `step-summary` | `true` | 把 Markdown 摘要加到任务摘要（job summary）中 |
 | `cache` | `true` | 在多次运行之间保留 PyPI 元数据、包源码和 API 对比结果（`fail-on-changes` 让任务失败时也会保留） |
 | `args` | | 额外的 `since-cutoff scan` 参数，例如 `--all-deps --limit 20` |
@@ -576,7 +577,7 @@ repos:
       - id: since-cutoff-sync  # 让 AGENTS.md 中的说明保持最新；args: [--check] 只检查
 ```
 
-`since-cutoff-scan` 在 lockfile、requirements 文件、conda `environment.yml` 或 `pyproject.toml` 变更时运行，并打印扫描结果；需要在 `args` 里给出 `--model`。`since-cutoff-sync` 在这些文件或 AGENTS.md、CLAUDE.md 变更时运行，并更新说明；如果它修改了文件，这个钩子就会失败，和其他会修改文件的 pre-commit 钩子一样：把文件加入暂存区后重新提交即可。使用 `args: [--check]` 时，它不修改任何内容，只要说明已过时就失败。它沿用说明写入时的模型；写第一个区块时，请给它指定一个：`args: [--model=anthropic:claude-sonnet-4-5]`。这两个钩子都要访问 PyPI，所以在 pre-commit.ci 上请跳过它们（`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`）。`since-cutoff-status` 不需要联网：说明与 lockfile 不一致时它会失败。
+`since-cutoff-scan` 在 lockfile、requirements 文件、conda `environment.yml` 或 `pyproject.toml` 变更时运行，并打印扫描结果；需要在 `args` 里给出 `--model`。`since-cutoff-sync` 在这些文件、AGENTS.md、CLAUDE.md 或 sync 写入的规则文件（`.claude/rules/since-cutoff-*.md`、`.cursor/rules/since-cutoff-*.mdc`、`.github/instructions/since-cutoff-*.instructions.md`；0.7.0 起）变更时运行，并更新说明；如果它修改了文件，这个钩子就会失败，和其他会修改文件的 pre-commit 钩子一样：把文件加入暂存区后重新提交即可。使用 `args: [--check]` 时，它不修改任何内容，只要说明已过时就失败。它沿用说明写入时的模型；写第一个区块时，请给它指定一个：`args: [--model=anthropic:claude-sonnet-4-5]`。这两个钩子都要访问 PyPI，所以在 pre-commit.ci 上请跳过它们（`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`）。`since-cutoff-status` 不需要联网：说明与 lockfile 不一致时它会失败。
 
 ### 其他 CI
 

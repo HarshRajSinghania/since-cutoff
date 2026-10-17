@@ -1376,7 +1376,12 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     new = [p for p in proposals if p.block and p.target.block is None and p.target.rule is None]
     if new and not args.target and not any(isinstance(t, RuleTargets) for t in targets):
         names = " and ".join(p.target.name for p in new)
-        for line in removed_rules(project.root, names):
+        # The command names what this sync was given; the rest as the removed file had it.
+        ran_for = new[0].basis_meta
+        keys = ["model", "cutoff"] if args.model or cutoff else []
+        keys += ["margin"] if getattr(args, "cutoff_margin", None) is not None else []
+        keys += ["scope"] if args.scope else []
+        for line in removed_rules(project.root, names, {k: ran_for[k] for k in keys}):
             reporter.warn(line)
 
     def finish(code: int) -> int:
@@ -1430,8 +1435,10 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     for t in targets:
         if isinstance(t, RuleTargets) and t.files and not t.rule.files(project.root):
             # The last of them went: a plain sync no longer knows the notes went there, nor
-            # the model they were for.
-            again = again_command(t.rule, t.meta)
+            # the model they were for. The command is for the model this sync ran for, which
+            # is not the removed files' own after `--model`.
+            mine = next(p for p in proposals if p.target.rule is t.rule)
+            again = again_command(t.rule, mine.basis_meta)
             out.print(
                 f"[dim]No since-cutoff rule files are left in {_escape(t.rule.folder)}: when a "
                 f"package needs notes again, {_escape(again)} writes them there (a plain sync "

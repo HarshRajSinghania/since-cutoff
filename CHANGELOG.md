@@ -59,6 +59,10 @@
   than 3 matches). `--package P --from A --to B` explains a change between two releases, of a
   package the project does not depend on too, and `--json` prints the same as JSON, with the keys
   results.json uses (docs/how-it-works.md lists them). The MCP server has four tools.
+- Add a reference for environment variables, files and exit codes, with a docs drift check
+  (docs/reference.md, #69). The check fails when the code reads a variable the page has no row
+  for (`os.getenv` and a constant for the name included), or the page has a row for one the code
+  no longer reads.
 - Notes from the diff say what to use instead in more cases, and point somewhere useful when they
   cannot (an audit of 36 libraries found 25 of 36 notes ending in "since-cutoff found no
   replacement in X's deprecation text", several although the text named one; #14). A replacement

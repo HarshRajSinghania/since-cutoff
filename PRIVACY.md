@@ -5,9 +5,9 @@ account, no server of its own and no telemetry, and it collects no personal data
 
 ## What it reads on your machine
 
-- Your project's dependency files (lockfiles, `requirements*.txt`, `pyproject.toml`, `.venv`
-  metadata) and its Python files, to see which dependencies you pin and which of their names
-  your code uses. This stays on your machine.
+- Your project's dependency files (lockfiles, `requirements*.txt`, `pyproject.toml`, a conda
+  `environment.yml`, `.venv` metadata) and its Python files, to see which dependencies you pin
+  and which of their names your code uses. This stays on your machine.
 - The notes block in `AGENTS.md` or `CLAUDE.md`, and the rule files since-cutoff wrote
   (`.claude/rules/since-cutoff-*.md`, `.cursor/rules/since-cutoff-*.mdc`,
   `.github/instructions/since-cutoff-*.instructions.md`), for `sync`, `status`, `explain` and

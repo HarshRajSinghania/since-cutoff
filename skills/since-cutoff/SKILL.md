@@ -76,9 +76,12 @@ report what it prints.
    none of the changed APIs yet), add it to both commands. After `run`, `--apply` writes that
    run's notes in place of the whole block; `since-cutoff sync` then adds the notes from the
    diff for the other changed APIs the code uses, keeping the run's `[type-checked]` ones.
-   `since-cutoff unapply` removes the block again. `since-cutoff status` says, without the
-   network, whether the notes still match the lockfile; from since-cutoff 0.4.0 the Claude Code
-   plugin runs it when a session starts (the first time, uvx downloads since-cutoff).
+   `since-cutoff unapply` removes the block again. When the user wants the notes loaded only
+   where each package is used, add `--target claude-rules` (Claude Code; `cursor-rules` for
+   Cursor, `copilot-instructions` for GitHub Copilot) to both commands: one rule file per package
+   in that agent's rules folder, which a plain `sync` then keeps in step. `since-cutoff status` says,
+   without the network, whether the notes still match the lockfile; from since-cutoff 0.4.0 the
+   Claude Code plugin runs it when a session starts (the first time, uvx downloads since-cutoff).
 
 ## Output
 
@@ -86,7 +89,8 @@ report what it prints.
   dependencies that changed after the cutoff, and the changed APIs the code uses, each with its
   note. `run` adds the result card of step 6.
 - `.since-cutoff/report.md`: the full report. Read it when the user wants details.
-- The notes block in AGENTS.md or CLAUDE.md, written only by `sync --yes` or `run --apply`. The
+- The notes block in AGENTS.md or CLAUDE.md (or, with `sync --target claude-rules`, one rule
+  file per package), written only by `sync --yes` or `run --apply`. The
   notes in it are API reference facts about the versions the project pins: what was removed,
   renamed or deprecated after the release at your training cutoff, each tagged with what was
   checked, for example `[diff]` (a static comparison of the two releases' public APIs),

@@ -288,8 +288,8 @@ y su fecha de modificación.
 | `since-cutoff sync --json --check` | imprime en JSON las propuestas; no escribe nada | 0 al día; 3 desactualizado |
 | `since-cutoff sync --json --dry-run` | imprime en JSON las propuestas; no escribe nada | 0 |
 | `since-cutoff status` | compara el bloque con el lockfile, sin conexión | 0 al día, o sin bloque; 3 desactualizado; 1 marcadores rotos |
-| `since-cutoff sync --target claude-rules` | un archivo de reglas por paquete, que el agente carga solo para los archivos que lo usan ([archivos de reglas](#notas-solo-donde-aplican-archivos-de-reglas)) | como `sync` |
-| `since-cutoff explain Messages.create` | todo lo que se sabe de la nota de una API ([explain](#explicar-una-nota)) | 0 encontrada; 1 no existe esa API |
+| `since-cutoff sync --target claude-rules` | un archivo de reglas por paquete, que el agente carga solo donde se usa el paquete ([archivos de reglas](#notas-solo-donde-aplican-archivos-de-reglas)) | como `sync` |
+| `since-cutoff explain Messages.create` | todo lo que se sabe de la nota de una API ([explain](#explicar-una-nota)) | 0 encontrada; 1 no existe esa API, o coinciden más de 3 |
 
 Si el bloque se editó a mano, `sync` y `sync --check` muestran el diff, no escriben nada y salen
 con el código 4; `sync --force` lo sustituye. Si no se puede comprobar un paquete del que tratan
@@ -345,28 +345,31 @@ de un bloque de código no es una importación.
 AGENTS.md y CLAUDE.md se cargan en cada petición, sea cual sea el archivo en el que trabaja el
 agente. `sync --target` con un formato de reglas (desde la 0.7.0) escribe las notas en un archivo
 por paquete modificado, en la carpeta donde ese agente lee las reglas por ruta, y su front
-matter nombra los archivos que usan las API modificadas del paquete: el agente carga las notas
-solo mientras lee o edita uno de esos archivos.
+matter nombra dónde se usan las API modificadas del paquete: un archivo en la raíz del proyecto
+por su nombre, y los demás por su carpeta (`app/**/*.py`, los archivos Python de `app` y sus
+subcarpetas). El agente carga las notas mientras lee o edita un archivo de ahí, también uno
+nuevo, y no mientras trabaja en el resto del proyecto.
 
 | `--target` | archivo por paquete | front matter | lo lee |
 |---|---|---|---|
-| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:`, una lista de globs | Claude Code ([documentación](https://code.claude.com/docs/en/memory#path-specific-rules), en inglés) |
-| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:` (separados por comas) y `alwaysApply: false` | Cursor ([documentación](https://cursor.com/docs/context/rules), en inglés) |
-| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `applyTo:` (globs separados por comas) | Copilot cloud agent y code review de GitHub Copilot ([documentación](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions), en inglés) |
+| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:`, una lista de globs | Claude Code ([documentación](https://code.claude.com/docs/en/memory#path-specific-rules), en inglés); también Copilot Chat de VS Code |
+| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:` (separados por comas) y `alwaysApply: false` | Cursor ([documentación](https://cursor.com/docs/rules), en inglés) |
+| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `description:` y `applyTo:` (globs separados por comas) | GitHub Copilot: Chat en VS Code, Visual Studio, JetBrains, Eclipse y Xcode, Copilot CLI, cloud agent y code review ([documentación](https://docs.github.com/en/copilot/reference/custom-instructions-support), en inglés) |
 
 Para el proyecto de ejemplo, `since-cutoff sync --target claude-rules` escribe
-`.claude/rules/since-cutoff-anthropic.md` (aquí con la cabecera recortada):
+`.claude/rules/since-cutoff-anthropic.md` (aquí la línea de metadatos y la cabecera se cortan
+en `...`):
 
 ```markdown
 ---
 paths:
-  - "app/main.py"
+  - "app/**/*.py"
 ---
 <!-- since-cutoff:start -->
-<!-- since-cutoff:meta {"v":2,...,"scope":"used","paths":["app/main.py"],"front":"sha256:..."} -->
+<!-- since-cutoff:meta {"v":2,"tool":"0.5.0",...,"scope":"used","front":"sha256:d14e0427f29e"} -->
 ## Library changes after the model's training cutoff
 
-Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, ...) ...
+Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, comparing from releases up to 2025-07-01) and used by this project at ...
 
 **anthropic 1.8.0** (compared from 0.56.0)
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
@@ -376,59 +379,101 @@ Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, ...) ...
 y `.claude/rules/since-cutoff-huggingface-hub.md` del mismo modo. Tras el front matter, cada
 archivo tiene el mismo bloque que tendría AGENTS.md, solo para su paquete, así que `sync`,
 `sync --check`, `status` y `unapply` lo tratan como tratan AGENTS.md; su línea de metadatos
-registra además los archivos (`paths`) y un hash del front matter, de modo que se nota una
-edición a mano de cualquiera de los dos. Un archivo que empieza a usar las API modificadas de un
-paquete se añade en el siguiente `sync` («now loaded for 3 files (1 added)»), y un paquete que se
-queda sin notas pierde su archivo. Con `--scope imported`, y para un paquete publicado por
-primera vez después de la fecha de corte, los archivos son los que importan el paquete; si no se
-conoce ninguno, la regla se aplica a todo (sin `paths`, `alwaysApply: true`, `applyTo: "**"`).
-since-cutoff solo escribe y elimina archivos llamados `since-cutoff-<package>` que tengan sus
-marcadores: tus propios archivos de reglas, y un archivo con ese nombre sin los marcadores, no se
-tocan nunca.
+registra además un hash del front matter (`front`), de modo que se nota una edición a mano de
+cualquiera de los dos. Un paquete que se usa en una carpeta nueva la recibe en el siguiente
+`sync` («now loaded for 3 globs (1 added)»), los archivos que git ignora se dejan fuera (un
+archivo de reglas versionado no nombra ningún archivo local de pruebas) y, a partir de 20 globs,
+las carpetas se nombran por su carpeta de primer nivel, así que el front matter sigue siendo
+corto por muchos archivos que usen el paquete. Un paquete que se queda sin notas pierde su
+archivo; si tiene texto tuyo después del bloque, las notas se van y los marcadores se quedan, de
+modo que las siguientes notas de ese paquete vuelven al mismo archivo. Con `--scope imported`, y
+para un paquete publicado por primera vez después de la fecha de corte, los archivos son los que
+importan el paquete; si no se conoce ninguno, la regla se aplica a todo (sin `paths`,
+`alwaysApply: true`, `applyTo: "**"`). since-cutoff solo escribe y elimina archivos llamados
+`since-cutoff-<package>` que tengan sus marcadores y el bloque de ese paquete, dentro del
+proyecto: tus propios archivos de reglas, un archivo con ese nombre sin los marcadores y una
+carpeta de reglas enlazada desde fuera del proyecto (compartida entre proyectos) no se tocan
+nunca.
+
+Lo que los globs no cubren: un archivo creado en la raíz del proyecto no se nombra hasta el
+siguiente `sync`, y un archivo de otra carpeta que todavía no usa el paquete no recibe notas.
+VS Code compara un glob que no empieza por `**/` en cualquier parte de la ruta, así que allí
+`app/**/*.py` también carga las notas para `other/app/x.py`, y `main.py` para `other/main.py`:
+una carga de más, nunca una de menos.
 
 Los formatos de reglas son opcionales, y AGENTS.md / CLAUDE.md siguen siendo el destino por
 defecto. Cuando un proyecto ya tiene archivos de reglas, un `sync` sin opciones los mantiene al
 día y no escribe AGENTS.md; si AGENTS.md o CLAUDE.md conservan además un bloque, `sync` dice cómo
-quitarlo (`since-cutoff unapply --target AGENTS.md`). `unapply --target cursor-rules` elimina los
-archivos de un formato, y un `unapply` sin opciones quita el bloque de AGENTS.md y CLAUDE.md y
-todos los archivos de reglas que escribió since-cutoff. Los globs son relativos al proyecto, que
-es donde los agentes buscan estas carpetas cuando el proyecto es la raíz del repositorio.
-Windsurf documenta un solo glob por archivo de reglas, y Codex ninguna regla por ruta (lee los
-AGENTS.md del camino hasta la carpeta en la que arranca), así que ninguno tiene formato todavía.
-`run --apply` escribe un único bloque en un archivo; para archivos de reglas, usa
-`sync --target`.
+quitarlo (`since-cutoff unapply --target AGENTS.md`), y cuando se va el último archivo de
+reglas, avisa de que el siguiente necesita `--target` otra vez. `unapply --target cursor-rules`
+elimina los archivos de un formato, `unapply --target <archivo de reglas>` uno solo, y un
+`unapply` sin opciones quita el bloque de AGENTS.md y CLAUDE.md y todos los archivos de reglas
+que escribió since-cutoff. Las carpetas se escriben en el proyecto: GitHub lee
+`.github/instructions` solo en la raíz del repositorio, cosa que `sync --target
+copilot-instructions` avisa cuando el proyecto es una carpeta de un repositorio. Windsurf (ahora
+Devin Desktop, `.devin/rules`) documenta una regla con un glob, pero no cómo dar varios, y Codex
+no tiene reglas por ruta (lee los AGENTS.md del camino hasta la carpeta en la que arranca), así
+que ninguno tiene formato todavía. `run --apply` escribe un único bloque en un archivo; para
+archivos de reglas, usa `sync --target`.
 
 ### Explicar una nota
 
 `since-cutoff explain <API>` (desde la 0.7.0) dice todo lo que since-cutoff sabe de una API, a
 partir del mismo escaneo que hace `sync` (con el modelo y la fecha de corte del bloque, salvo que
 pases `--model` o `--cutoff`), sin llamar a ningún modelo y sin escribir nada: la nota tal como
-la escribe el bloque y qué archivos la tienen, la versión fijada y la versión de comparación,
-cada cambio con las dos firmas, el texto de obsolescencia de la propia biblioteca con el archivo
-donde está, el sustituto y dónde se nombra (o lo que conservó un traslado, o el Requires-Dist de
-una dependencia sustituida), la línea Runtime, el changelog, cada lugar donde tu código la usa
+la escribe el bloque (su propia viñeta `[type-checked]` si la tiene) y qué archivos la tienen, o
+tienen otra nota para ella (escrita para otra versión: el bloque está desactualizado), la versión
+fijada y la versión de comparación, cada cambio con las dos firmas y el parámetro modificado en
+cada una, el texto de obsolescencia de la propia biblioteca con el archivo donde está, el
+sustituto y dónde se nombra (o lo que conservó un traslado, o el Requires-Dist de una
+dependencia sustituida), la línea Runtime, el changelog, cada lugar donde tu código la usa
 («old form» o «uses this API») y lo que la etiqueta no comprueba. La API se nombra como la
-nombra la nota (`Messages.create`, `huggingface_hub.hf_hub_download`), por el final de ese
-nombre (`create`) o como `package.API`; un nombre que no coincide con nada lista los más
-cercanos (código de salida 1).
+nombra la nota (`Messages.create`, `huggingface_hub.hf_hub_download`), con o sin las comillas
+invertidas y los `()` de la nota, por el final de ese nombre (`create`) o como `package.API`; se
+explican hasta 3 coincidencias. Un nombre que no coincide con nada lista los más cercanos, la
+nota que un bloque aún tiene para él y los paquetes que no se pudieron comprobar (código de
+salida 1, igual que con más de 3 coincidencias, cuyos nombres se listan).
 
 ```console
 $ uvx since-cutoff explain Messages.create
+• Model claude-sonnet-4-5, training cutoff 2025-07-31, comparing from releases up to 2025-07-01 (from the notes in AGENTS.md; --model to change)
+• Checking 9 dependencies on PyPI
+• Diffing the API of 8 packages released after their cutoff version
+...
+
+# Messages.create
+
+For claude-sonnet-4-5's training cutoff (2025-07-31); versions from pyproject.toml, latest on PyPI for 3 unpinned.
+
 ## Messages.create (anthropic)
 
 Note:
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 Written in: AGENTS.md (from the diff).
 
-Package: anthropic 1.8.0 (...), from pyproject.toml; compared from 0.56.0 (...), the latest release 30 days before the cutoff.
+Package: anthropic 1.8.0 (2026-09-22), from pyproject.toml; compared from 0.56.0 (2025-07-01), the latest release 30 days before the cutoff.
+Changelog: https://github.com/anthropics/anthropic-sdk-python/releases
+
+Changes:
+- param_removed: `anthropic.resources.messages.messages.Messages.create(temperature=...)`: parameter `temperature` was removed
+  0.56.0: create(self, *, max_tokens: int, messages: Iterable[MessageParam], model: ModelParam, ...
+  1.8.0: create(self, *, max_tokens: int, messages: Iterable[MessageParam], model: ModelParam, ...
+  parameter `temperature`: in 0.56.0, past the end of the signature above (cut at 400 characters); in 1.8.0, removed
 ...
+
 Where your code uses it:
 - app/main.py: uses this API, calls create
+
+Not checked:
+- no example was type-checked against the pinned version (`since-cutoff run` does that, with a model)
+- nothing of the library was run: its behaviour behind an unchanged signature
+- whether a model gets this API wrong was not measured (`since-cutoff run`)
 ```
 
-`--package anthropic --from 0.60.0 --to 1.8.0` explica el cambio entre dos versiones dadas, y
-`--json` imprime lo mismo en JSON. El servidor MCP ofrece lo mismo con la herramienta
-`explain_api`.
+`--package anthropic --from 0.60.0 --to 1.8.0` explica el cambio entre dos versiones dadas (la
+salida dice cuáles se dieron), y `--json` imprime lo mismo en JSON, con las claves que usa
+results.json ([cómo funciona](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/how-it-works.md#explain)
+las enumera, en inglés). El servidor MCP ofrece lo mismo con la herramienta `explain_api`.
 
 ### Medir tu modelo
 

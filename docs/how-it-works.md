@@ -437,7 +437,7 @@ comes a meta line, an HTML comment holding JSON:
 | `body` | a hash of the block's text after the meta line, with line breaks normalised, so a hand edit shows |
 | `scope` | `used` (the changed APIs the code uses), `imported` (`sync --scope imported`) or `failures` (a `run --apply` block) |
 | `suggestions`, `checked`, `added_eol` | only when needed: `sync --suggestions` was used; the API each `[type-checked]` bullet is about; the line break since-cutoff added to a file that did not end with one, which `unapply` takes away again |
-| `paths`, `front` | in a [rule file](#rule-files) only: the files its front matter names, and a hash of the front matter, so a hand edit of it shows |
+| `front` | in a [rule file](#rule-files) only: a hash of its front matter, so a hand edit of it shows (the globs themselves are in the front matter alone, not repeated in this comment, which Cursor and Copilot load with the notes) |
 
 Then the title "## Library changes after the model's training cutoff", a header that names the
 model, the cutoff and the day the comparison releases were published by ("the training cutoff
@@ -555,40 +555,74 @@ rules, as each agent documents them (checked 2026-10):
 
 | `--target` | file | front matter | loaded |
 |---|---|---|---|
-| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:` with a YAML list of quoted globs | when Claude Code reads or edits a matching file ([docs](https://code.claude.com/docs/en/memory#path-specific-rules)) |
-| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `description:`, `globs:` (comma-separated), `alwaysApply: false` | "Apply to Specific Files" ([docs](https://cursor.com/docs/context/rules)) |
-| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `applyTo:` (comma-separated globs) | by Copilot cloud agent and code review for matching files ([docs](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions)) |
+| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:` with a YAML list of quoted globs | when Claude Code reads or edits a matching file ([docs](https://code.claude.com/docs/en/memory#path-specific-rules)); VS Code's Copilot Chat reads these files too |
+| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:` (comma-separated) and `alwaysApply: false` | "Auto-attached when a matching file is in context" ([docs](https://cursor.com/docs/rules)) |
+| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `description:` and `applyTo:` (comma-separated globs) | for matching files by Copilot Chat in VS Code, Visual Studio, JetBrains, Eclipse and Xcode, Copilot CLI, cloud agent and code review, from the repository's root ([docs](https://docs.github.com/en/copilot/reference/custom-instructions-support)); VS Code reads the description to load the file on demand |
 
-Windsurf documents one glob per rule file (`trigger: glob`), and Codex reads the AGENTS.md
-files on the way from the project root to the folder it starts in, once per run, with no path
-scoping; neither has a format. Claude Code also loads a subdirectory's CLAUDE.md when it works
-in that directory, but those are the user's own files, which since-cutoff does not write.
+Windsurf, now Devin Desktop (`.devin/rules`, `.windsurf/rules`), documents a rule with one glob
+(`trigger: glob`) and not how to give several, and Codex reads the AGENTS.md files on the way
+from the project root to the folder it starts in, once per run, with no path scoping (its
+"rules" are a command policy); neither has a format. Claude Code also loads a subdirectory's
+CLAUDE.md when it works in that directory, but those are the user's own files, which
+since-cutoff does not write.
 
 - **Which files the rule names.** The files that use the package's changed APIs: the files of
-  the scan's locations (`used_apis[].locations`), sorted, relative to the project with `/`. For
+  the scan's locations (`used_apis[].locations`), relative to the project with `/`. For
   `--scope imported`, whose notes are also about APIs the code does not use, and for a package
   first released after the cutoff (its `[metadata]` note), the files that import the package.
-  A character a glob, YAML or a comma-separated list would read as syntax (and a space) stands
-  as `?`, which matches any one character, that one included: `a [draft].py` is `a??draft?.py`.
-  When no file is known, the rule applies everywhere: no `paths` (Claude Code then loads it in
-  every session), `alwaysApply: true`, `applyTo: "**"`.
+  A file git ignores (`.gitignore`, `.git/info/exclude`, the global excludes; `git
+  check-ignore`, which never counts a tracked file) is left out, so that a committed rule file
+  names no local file and `sync --check` passes on a clean checkout.
+- **The globs.** A file at the project's root is named as itself (`main.py`); the others by
+  their folder, as the Python files of it and its subfolders (`sub/**/*.py`; a folder inside
+  another one named is left out), so that a file added there later, or one that does not use
+  the API yet, loads the notes too, and the list stays short however many files use the
+  package (VS Code puts every instruction file's `applyTo` in every request). More than 20
+  globs: each folder by its top-level folder (`pkg/**/*.py`);
+  still more, the rule applies everywhere. A character a glob, YAML or a comma-separated list
+  would read as syntax (and a space) stands as `?`, which matches any one character, that one
+  included: `a [draft]` is `a??draft?`; an emoji or another character beyond the Basic
+  Multilingual Plane that is not a letter stands as `*`, as the JavaScript glob engines' `?`
+  matches half of one. When no file is known, the rule applies everywhere: no `paths` (Claude
+  Code then loads it in every session), `alwaysApply: true`, `applyTo: "**"`. A file at the
+  root that is created later is not named until the next `sync`. VS Code matches a glob that
+  does not start with `**/` as `**/<glob>` against the whole path, so there `main.py` also
+  loads the rule for `other/main.py`.
 - **What the file holds.** The front matter, then the block as AGENTS.md would have it, with
-  that package's notes alone: the same markers, header, meta line and `body` hash, plus `paths`
-  and `front` (a hash of the front matter). `status`, `sync --check` and the hand-edit check
-  read it as they read AGENTS.md; an edit of the front matter counts as a hand edit too.
+  that package's notes alone: the same markers, header, meta line and `body` hash, plus
+  `front` (a hash of the front matter). `status`, `sync --check` and the hand-edit check read
+  it as they read AGENTS.md; an edit of the front matter counts as a hand edit too, and a byte
+  order mark an editor puts first does not.
 - **Keeping it in step.** `sync` proposes each file there now for its package, then a new file
   for each package with notes that has none. A file whose package has no notes left is
-  removed (with text of your own after the block, only the block goes, as from AGENTS.md); a
-  change in the files that use the package rewrites the front matter ("now loaded for 3 files
-  (1 added)"). The model, cutoff and scope are the files' own, as for a block.
-- **What is never touched.** Only files named `since-cutoff-<package>` with since-cutoff's
-  markers are since-cutoff's. Another rule file in the folder is never read or written, and a
-  file of that name without the markers stops `sync` with an error before anything is written.
-- **Removing them.** `unapply --target <format>` removes that format's files; `unapply` with no
-  `--target` removes the block from AGENTS.md and CLAUDE.md and every rule file since-cutoff
-  wrote. When rule files are written and AGENTS.md or CLAUDE.md still has a block, `sync` says
-  so, with the `unapply` command. `run --apply` writes one block into a file and refuses a rule
-  format.
+  removed, and when it was the last one, `sync` says that a later one needs `--target` again
+  (a plain sync then writes AGENTS.md). With text of your own after the block, the notes go and
+  the markers and meta line stay ("Removed the notes from ...: your own text in it stays"), so
+  the file stays since-cutoff's: the next `sync` that has notes for the package writes them
+  there again, with the same model. A change in the folders the package is used in rewrites
+  the front matter ("now loaded for 3 globs (1 added)"). The model, cutoff and scope are the
+  files' own, as for a block.
+- **What is never touched.** Only files named `since-cutoff-<package>` (a package's
+  normalised name, in any case) with since-cutoff's markers and that package's block are
+  since-cutoff's: `since-cutoff-toylib.instructions.md` in `.claude/rules` is no Claude rule.
+  Another rule file in the folder is never read or written, and a file of that name without
+  the markers, one that is not UTF-8, or one with another package's block stops `sync` with an
+  error before anything is written. A rules folder or file reached through a link to a place
+  outside the project (Claude Code documents a `.claude/rules` shared between projects that
+  way), and a hard link, are left out by `status`, `sync` and `unapply`, and `sync --target`
+  refuses to write there.
+- **Where the agents look.** The folders go in the project. GitHub reads
+  `.github/instructions` at the repository's root only: when the project is a folder of a git
+  repository, `sync --target copilot-instructions` says so (VS Code reads them when that
+  folder is the workspace). Claude Code loads a nested `.claude/rules` folder when it works in
+  that folder.
+- **Removing them.** `unapply --target <format>` removes that format's files, and `unapply
+  --target <rule file>` one of them the same way; `unapply` with no `--target` removes the
+  block from AGENTS.md and CLAUDE.md and every rule file since-cutoff wrote. When rule files
+  are written and AGENTS.md or CLAUDE.md still has a block, `sync` says so, with the `unapply`
+  command. `run --apply` writes one block into a file: it refuses a rule format, a rule file's
+  path, and, with no `--target`, a project whose notes are in rule files (it would write
+  AGENTS.md beside them), before any model call.
 
 ### `explain`
 
@@ -598,27 +632,56 @@ runs the scan `sync` runs, with the model and cutoff of the project's notes unle
 written. The API is found among every changed API of the changed packages (those the code uses
 first, with their places; the others from the diff alone, as `scan --all` lists them) and the
 packages first released after the cutoff that the code imports, by any of its names: the
-note's (`Client.send`), each public path of each of its changes, re-exports included, and
-each after the package's import names (`toylib.Client.send`); then by the end of a name
-(`send`), then either without regard to case. Call syntax (`send()`) is ignored. `--package`
-keeps one package; with `--from` and/or `--to` it diffs that package between those releases
-(by default the one at the comparison day and the pinned one) and still reads the code for its
-uses. A name that matches nothing exits with 1 and lists the closest names; more than 3
-matches are listed by name.
+note's (`Client.send`), each public path of each of its changes, re-exports included, each
+after the package's names (`toylib.Client.send`), and a module path with the PyPI name for its
+top module (`huggingface-hub.hf_hub_download`); then by the end of a name (`send`), then
+either without regard to case. Backticks and call syntax (`` `Client.send()` ``,
+`send(temperature=...)`) are ignored, so a name can be pasted from a note. `--package` keeps
+one package (one that is not a dependency says so); with `--from` and/or `--to` it diffs that
+package between those releases (by default the one at the comparison day and the pinned one)
+and still reads the code for its uses, and the output says which releases were given. Up to 3
+matching APIs are explained, after a line that says how the name matched when it is not
+exact; more are listed by name, with exit code 1. A name that matches nothing exits with 1 and
+lists the closest names, any bullet a block still has about it (the notes are then out of
+date: a pin moved back, say), and a package that could not be checked when the name may be
+one of its APIs. Before that, as `sync` says it before its scan, what changed in the lockfile
+since the notes were written, and which packages could not be checked.
 
-For each API it prints the note as the bullet reads (and the bullet it shares with other APIs
-in the block, when it does) and which files' blocks have it (`[type-checked]` when `run
---apply` wrote one, whose example is in `.since-cutoff/results.json`); the pinned release, the
-release compared from and where the version comes from; each change by kind, with both
-signatures and the library's own deprecation text, from the old version (`hint`, with its file
-and where it was read: a decorator, a docstring line, a parameter's docstring entry, a
-`warnings.warn`) and the pinned one (`deprecation`); the tag's legend and `checks.change`;
-each replacement with its evidence and source; what a move kept; a switched dependency's
-Requires-Dist and places; the Runtime line; the changelog; every place the code uses it with
-the form ("old form" or "uses this API") and what it does there (`file:line` once the scan
-records lines, [#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)); and what the
-tag does not check. `--json` has the same, with each change's fields as results.json writes
-them. The MCP tool `explain_api` takes the same arguments and returns the text.
+For each API it prints the note as the bullet reads (a block's own `[type-checked]` bullet,
+written by `run --apply` with its example in `.since-cutoff/results.json`, in place of the
+note from the diff it stands in for; and the bullet it shares with other APIs in the block,
+when it does) and which files' blocks have it: the note the scan gives for that block's scope
+and options ("from the diff"; "the same note, in its section for toylib 2.0 compared from 1.0"
+when the block was written for other releases), or another note about it (one whose first code
+span names it, not one that names it as a replacement), shown as the block has it; the pinned
+release, the release compared from and where each comes from; each change by kind, with both
+signatures, the changed parameter's declaration in each (a signature is cut at 400
+characters, which it says when the parameter is past the cut), and the library's own
+deprecation text, from the old version (`hint`, with its file and where it was read: a
+decorator, a docstring line, a parameter's docstring entry, a `warnings.warn`) and the pinned
+one (`deprecation`); the tag's legend and `checks.change`; each replacement with its evidence
+and source; what a move kept; a switched dependency's Requires-Dist and places; the Runtime
+line; the changelog; every place the code uses it with the form ("old form" or "uses this
+API") and what it does there (`file:line` once the scan records lines,
+[#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), or for a package first
+released after the cutoff the files that import it; and what the tag does not check.
+
+`--json` prints an object with `query`, `model`, `cutoff`, `cutoff_margin`, `versions_from`,
+`notices` (the lines said first), `match` (`exact`, `end_of_name`, `exact_ignoring_case`,
+`end_of_name_ignoring_case`, or null), `matches` (every API the name matches: `display`,
+`package`), `truncated` (more than 3: `found` is then empty), `found`, `close_matches`,
+`block_mentions` (a block's bullet about a name that matches nothing: `file`, `package`,
+`version`, `bullet`), `not_checked` (`package`, `reason`), `not_a_dependency` and `exit_code`.
+Each of `found` has the keys results.json's `used_apis` uses for the same things (`api`, the
+full path; `display`, the note's name; `package`, `cutoff_version`, `versions_from`), with
+`version`, `from_given` and `to_given`, `status`, `changelog`, `note` (results.json's note,
+with `line` and `tag_legend`), `block_bullet` (the block's own bullet when it is not the note:
+`[type-checked]`, or the one shared with other APIs), `in_blocks` (`file`, `how`: `diff`,
+`type_checked` or `other`, `bullet`, `version`, `compared_from`), `changes` (each as
+results.json's `diff` writes it, with `change_id` as `used_apis` names it, `description` and,
+for a switched dependency, `dependency_detail`), `runtime`, `uses` (`file`, `line`, `column`,
+`form`, `what`, `match`) and `not_checked`. The MCP tool `explain_api` takes the same
+arguments (`from_version` and `to_version` for `--from` and `--to`) and returns the text.
 
 ## 2. Probe
 

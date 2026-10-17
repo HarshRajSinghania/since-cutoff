@@ -275,8 +275,8 @@ nothing, and the file keeps its bytes and modification time.
 | `since-cutoff sync --json --check` | prints JSON proposals; writes nothing | 0 up to date; 3 out of date |
 | `since-cutoff sync --json --dry-run` | prints JSON proposals; writes nothing | 0 |
 | `since-cutoff status` | compares the block with the lockfile, offline | 0 current, or no block; 3 out of date; 1 broken markers |
-| `since-cutoff sync --target claude-rules` | one rule file per package, loaded only for the files that use it ([rule files](#notes-only-where-they-apply-rule-files)) | as `sync` |
-| `since-cutoff explain Messages.create` | everything known about one API's note ([explain](#explain-one-note)) | 0 found; 1 no such API |
+| `since-cutoff sync --target claude-rules` | one rule file per package, loaded only where the package is used ([rule files](#notes-only-where-they-apply-rule-files)) | as `sync` |
+| `since-cutoff explain Messages.create` | everything known about one API's note ([explain](#explain-one-note)) | 0 found; 1 no such API, or more than 3 match |
 
 When the block was edited by hand, `sync` and `sync --check` show the diff, write nothing and
 exit with code 4; `sync --force` replaces it. When a package the notes are about cannot be
@@ -330,28 +330,30 @@ command. An `@AGENTS.md` in a code span or a fenced block is not an import.
 AGENTS.md and CLAUDE.md are loaded on every request, whichever file the agent is working on.
 `sync --target` with a rule format (0.7.0 and later) writes the notes as one file per changed
 package instead, in the folder where that agent reads path-scoped rules, and names in its front
-matter the files that use the package's changed APIs: the agent loads the notes only while it
-reads or edits one of those files.
+matter where the package's changed APIs are used: a file at the project's root as itself, and
+the others by their folder (`app/**/*.py`, the Python files of `app` and its subfolders). The
+agent loads the notes while it reads or edits a file there, a new one included, and not while
+it works on the rest of the project.
 
 | `--target` | file per package | front matter | read by |
 |---|---|---|---|
-| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:`, a list of globs | Claude Code ([docs](https://code.claude.com/docs/en/memory#path-specific-rules)) |
-| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:` (comma-separated) and `alwaysApply: false` | Cursor ([docs](https://cursor.com/docs/context/rules)) |
-| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `applyTo:` (comma-separated globs) | GitHub Copilot cloud agent and code review ([docs](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions)) |
+| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:`, a list of globs | Claude Code ([docs](https://code.claude.com/docs/en/memory#path-specific-rules)); VS Code's Copilot Chat too |
+| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:` (comma-separated) and `alwaysApply: false` | Cursor ([docs](https://cursor.com/docs/rules)) |
+| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `description:` and `applyTo:` (comma-separated globs) | GitHub Copilot: Chat in VS Code, Visual Studio, JetBrains, Eclipse and Xcode, Copilot CLI, cloud agent and code review ([docs](https://docs.github.com/en/copilot/reference/custom-instructions-support)) |
 
 For the sample project, `since-cutoff sync --target claude-rules` writes
-`.claude/rules/since-cutoff-anthropic.md` (the header is trimmed here):
+`.claude/rules/since-cutoff-anthropic.md` (the meta line and the header are cut at `...` here):
 
 ```markdown
 ---
 paths:
-  - "app/main.py"
+  - "app/**/*.py"
 ---
 <!-- since-cutoff:start -->
-<!-- since-cutoff:meta {"v":2,...,"scope":"used","paths":["app/main.py"],"front":"sha256:..."} -->
+<!-- since-cutoff:meta {"v":2,"tool":"0.5.0",...,"scope":"used","front":"sha256:d14e0427f29e"} -->
 ## Library changes after the model's training cutoff
 
-Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, ...) ...
+Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, comparing from releases up to 2025-07-01) and used by this project at ...
 
 **anthropic 1.8.0** (compared from 0.56.0)
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
@@ -360,54 +362,97 @@ Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, ...) ...
 
 and `.claude/rules/since-cutoff-huggingface-hub.md` the same way. After the front matter each
 file holds the same block as AGENTS.md would, for its package alone, so `sync`, `sync --check`,
-`status` and `unapply` handle it as they handle AGENTS.md; its meta line also records the files
-(`paths`) and a hash of the front matter, so a hand edit of either shows. A file that starts
-using a package's changed APIs is added on the next `sync` ("now loaded for 3 files (1
-added)"), and a package with no notes left loses its file. With `--scope imported`, and for a
-package first released after the cutoff, the files are those that import the package; when no
-file is known, the rule applies everywhere (no `paths`, `alwaysApply: true`, `applyTo: "**"`).
-since-cutoff only writes and removes files named `since-cutoff-<package>` that have its markers:
-your own rule files, and a file of that name without the markers, are never touched.
+`status` and `unapply` handle it as they handle AGENTS.md; its meta line also records a hash of
+the front matter (`front`), so a hand edit of either shows. A package used in a new folder gets
+it on the next `sync` ("now loaded for 3 globs (1 added)"), files git ignores are left out (a
+committed rule file names no local scratch file), and past 20 globs the folders are named by
+their top-level folder, so the front matter stays short however many files use the package. A
+package with no notes left loses its file; with text of your own after the block, the notes go
+and the markers stay, so the next notes for that package go back into the same file. With
+`--scope imported`, and for a package first released after the cutoff, the files are those
+that import the package; when no file is known, the rule applies everywhere (no `paths`,
+`alwaysApply: true`, `applyTo: "**"`). since-cutoff only writes and removes files named
+`since-cutoff-<package>` that have its markers and that package's block, inside the project:
+your own rule files, a file of that name without the markers, and a rules folder linked in from
+outside the project (one shared between projects) are never touched.
+
+What the globs do not cover: a file created at the project's root is not named until the next
+`sync`, and a file in another folder that does not use the package yet gets no notes. VS Code
+matches a glob that does not start with `**/` anywhere in the path, so there `app/**/*.py` also
+loads the notes for `other/app/x.py`, and `main.py` for `other/main.py`: an extra load, never a
+missing one.
 
 The rule formats are opt-in, and the default stays AGENTS.md / CLAUDE.md. Once a project has
 rule files, a plain `sync` keeps them in step and writes no AGENTS.md; when AGENTS.md or
 CLAUDE.md still has a block too, `sync` says how to remove it (`since-cutoff unapply --target
-AGENTS.md`). `unapply --target cursor-rules` removes one format's files, and a plain `unapply`
-removes the block from AGENTS.md and CLAUDE.md and every rule file since-cutoff wrote. The
-globs are relative to the project, which is where the agents look for these folders when the
-project is the repository root. Windsurf documents one glob per rule file, and Codex no path
-scoping (it reads the AGENTS.md files on the way to the folder it starts in), so neither has a
-format yet. `run --apply` writes one block into a file; use `sync --target` for rule files.
+AGENTS.md`), and when the last rule file goes, it says that a later one needs `--target`
+again. `unapply --target cursor-rules` removes one format's files, `unapply --target
+<rule file>` one file, and a plain `unapply` removes the block from AGENTS.md and CLAUDE.md and
+every rule file since-cutoff wrote. The folders are written in the project: GitHub reads
+`.github/instructions` at the repository's root only, which `sync --target
+copilot-instructions` says when the project is a folder of a repository. Windsurf (now Devin
+Desktop, `.devin/rules`) documents a rule with one glob and not how to give several, and Codex
+has no path scoping (it reads the AGENTS.md files on the way to the folder it starts in), so
+neither has a format yet. `run --apply` writes one block into a file; use `sync --target` for
+rule files.
 
 ### Explain one note
 
 `since-cutoff explain <API>` (0.7.0 and later) says everything since-cutoff knows about one API,
 from the scan `sync` runs (the block's model and cutoff unless `--model` or `--cutoff` is
-given), with no model call and nothing written: the note as the block writes it and which
-files have it, the pinned release and the one compared from, each change with both signatures,
-the library's own deprecation text with the file it is in, the replacement and where it is
-named (or what a move kept, or a switched dependency's Requires-Dist), the Runtime line, the
+given), with no model call and nothing written: the note as the block writes it (its own
+`[type-checked]` bullet when it has one) and which files have it, or have another note for it
+(written for another version: the block is out of date), the pinned release and the one
+compared from, each change with both signatures and the changed parameter in each, the
+library's own deprecation text with the file it is in, the replacement and where it is named
+(or what a move kept, or a switched dependency's Requires-Dist), the Runtime line, the
 changelog, every place your code uses it ("old form" or "uses this API"), and what the tag does
 not check. The API is named as the note names it (`Messages.create`,
-`huggingface_hub.hf_hub_download`), by the end of that name (`create`), or as
-`package.API`; a name that matches nothing lists the closest ones (exit code 1).
+`huggingface_hub.hf_hub_download`), with or without the backticks and `()` of the note, by the
+end of that name (`create`), or as `package.API`; up to 3 matches are explained. A name that
+matches nothing lists the closest ones, a note a block still has for it and the packages that
+could not be checked (exit code 1, as for more than 3 matches, whose names are listed).
 
 ```console
 $ uvx since-cutoff explain Messages.create
+• Model claude-sonnet-4-5, training cutoff 2025-07-31, comparing from releases up to 2025-07-01 (from the notes in AGENTS.md; --model to change)
+• Checking 9 dependencies on PyPI
+• Diffing the API of 8 packages released after their cutoff version
+...
+
+# Messages.create
+
+For claude-sonnet-4-5's training cutoff (2025-07-31); versions from pyproject.toml, latest on PyPI for 3 unpinned.
+
 ## Messages.create (anthropic)
 
 Note:
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 Written in: AGENTS.md (from the diff).
 
-Package: anthropic 1.8.0 (...), from pyproject.toml; compared from 0.56.0 (...), the latest release 30 days before the cutoff.
+Package: anthropic 1.8.0 (2026-09-22), from pyproject.toml; compared from 0.56.0 (2025-07-01), the latest release 30 days before the cutoff.
+Changelog: https://github.com/anthropics/anthropic-sdk-python/releases
+
+Changes:
+- param_removed: `anthropic.resources.messages.messages.Messages.create(temperature=...)`: parameter `temperature` was removed
+  0.56.0: create(self, *, max_tokens: int, messages: Iterable[MessageParam], model: ModelParam, ...
+  1.8.0: create(self, *, max_tokens: int, messages: Iterable[MessageParam], model: ModelParam, ...
+  parameter `temperature`: in 0.56.0, past the end of the signature above (cut at 400 characters); in 1.8.0, removed
 ...
+
 Where your code uses it:
 - app/main.py: uses this API, calls create
+
+Not checked:
+- no example was type-checked against the pinned version (`since-cutoff run` does that, with a model)
+- nothing of the library was run: its behaviour behind an unchanged signature
+- whether a model gets this API wrong was not measured (`since-cutoff run`)
 ```
 
-`--package anthropic --from 0.60.0 --to 1.8.0` explains the change between two given releases,
-and `--json` prints the same as JSON. The MCP server has the same as the tool `explain_api`.
+`--package anthropic --from 0.60.0 --to 1.8.0` explains the change between two given releases
+(the output says which were given), and `--json` prints the same as JSON, with the keys
+results.json uses ([how it works](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/how-it-works.md#explain) lists them). The MCP server has
+the same as the tool `explain_api`.
 
 ### Measure your model
 

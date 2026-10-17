@@ -3,34 +3,53 @@
 ## Unreleased
 
 - `sync --target claude-rules`, `cursor-rules` or `copilot-instructions` writes the notes as
-  path-scoped rule files, one per changed package, that the agent loads only while it works on
-  the files that use that package's changed APIs, instead of one block in AGENTS.md that every
-  request pays for (#16): `.claude/rules/since-cutoff-<package>.md` with `paths:` (Claude Code),
-  `.cursor/rules/since-cutoff-<package>.mdc` with `globs:` and `alwaysApply: false` (Cursor),
-  `.github/instructions/since-cutoff-<package>.instructions.md` with `applyTo:` (Copilot cloud
-  agent and code review), as each agent documents them. The globs are the files of the scan's
-  locations (with `--scope imported`, and for a package first released after the cutoff, the
-  files that import it), and the file holds the same block as AGENTS.md would, for its package,
-  with the files and a hash of the front matter in its meta line: `sync`, `sync --check`,
-  `status` and `unapply` handle it, a hand edit of the notes or of the front matter shows, a
-  file that starts using the package is added on the next sync ("now loaded for 3 files (1
-  added)"), and a package with no notes left loses its file. Only files named
-  `since-cutoff-<package>` with since-cutoff's markers are written or removed; any other rule
-  file, and a file of that name without the markers, is left alone. AGENTS.md / CLAUDE.md stay
-  the default; once rule files exist, a plain `sync` keeps them in step without writing
-  AGENTS.md, and says how to remove a block AGENTS.md or CLAUDE.md still has. A plain `unapply`
-  now also removes the rule files since-cutoff wrote; `unapply --target cursor-rules` removes
-  one format's. Windsurf (one glob per rule) and Codex (no path scoping) have no format.
+  path-scoped rule files, one per changed package, that the agent loads only while it works
+  where that package's changed APIs are used, instead of one block in AGENTS.md that every
+  request pays for (#16): `.claude/rules/since-cutoff-<package>.md` with `paths:` (Claude Code,
+  and VS Code's Copilot Chat), `.cursor/rules/since-cutoff-<package>.mdc` with `globs:` and
+  `alwaysApply: false` (Cursor), `.github/instructions/since-cutoff-<package>.instructions.md`
+  with `description:` and `applyTo:` (Copilot Chat in VS Code, Visual Studio, JetBrains, Eclipse
+  and Xcode, Copilot CLI, cloud agent and code review), as each agent documents them. The globs
+  come from the scan's locations (with `--scope imported`, and for a package first released
+  after the cutoff, the files that import it), leaving out the files git ignores: a file at the
+  project's root as itself, and the others by their folder (`app/**/*.py`), so that a new file
+  there loads the notes too and the list stays short however many files use the package (by
+  their top-level folder past 20 globs). The file holds the same block as AGENTS.md would, for
+  its package, with a hash of the front matter in its meta line: `sync`, `sync --check`,
+  `status` and `unapply` handle it, a hand edit of the notes or of the front matter shows (a
+  byte order mark does not), a new folder using the package is added on the next sync ("now
+  loaded for 3 globs (1 added)"), and a package with no notes left loses its file; with text of
+  your own after the block, the notes go and the markers stay, so the next notes for the
+  package go back there. Only files named `since-cutoff-<package>` with since-cutoff's markers
+  and that package's block, inside the project, are written or removed; any other rule file, a
+  file of that name without the markers, and a rules folder or file linked in from outside the
+  project (a shared folder) or hard-linked are left alone. AGENTS.md / CLAUDE.md stay the
+  default; once rule files exist, a plain `sync` keeps them in step without writing AGENTS.md,
+  says how to remove a block AGENTS.md or CLAUDE.md still has, and says when the last rule file
+  went. A plain `unapply` now also removes the rule files since-cutoff wrote; `unapply --target
+  cursor-rules` removes one format's, and `unapply --target <rule file>` one file. `sync
+  --target copilot-instructions` warns when the project is a folder of a git repository, whose
+  `.github/instructions` GitHub reads at the root only. `run --apply` refuses a rule format, a
+  rule file's path, and (with no `--target`) a project whose notes are in rule files, before any
+  model call. Windsurf / Devin Desktop (a rule with one glob documented, several not) and Codex
+  (no path scoping) have no format.
 - `since-cutoff explain <API>` and the MCP tool `explain_api` say everything since-cutoff knows
   about one API, from the scan `sync` runs and with no model call (#28): the note as the block
-  writes it and which files' blocks have it, the pinned release and the one compared from, each
-  change with both signatures, the library's own deprecation text and the file it is in, the
-  replacement and its evidence (a move's kept names, a switched dependency's Requires-Dist), the
-  Runtime line, the changelog, every place the code uses it and in which form, and what the tag
-  does not check; a `[type-checked]` bullet points to results.json. The API can be named as the
-  note names it, by the end of the name or as `package.API`; an unknown name lists the closest
-  ones (exit code 1). `--package P --from A --to B` explains a change between two releases, and
-  `--json` prints the same as JSON. The MCP server has four tools.
+  writes it (its own `[type-checked]` bullet when it has one) and which files' blocks have it,
+  or have another note for it (written for another version: the block is out of date), the
+  pinned release and the one compared from and where each comes from, each change with both
+  signatures and the changed parameter in each, the library's own deprecation text and the
+  file it is in, the replacement and its evidence (a move's kept names, a switched dependency's
+  Requires-Dist), the Runtime line, the changelog, every place the code uses it and in which
+  form (for a package first released after the cutoff, the files that import it), and what the
+  tag does not check. It says first what changed in the lockfile since the notes were written,
+  and which packages could not be checked. The API can be named as the note names it, with or
+  without backticks and `()`, by the end of the name or as `package.API` (with the PyPI name
+  too); up to 3 matches are explained, after a line that says how the name matched. An unknown
+  name lists the closest ones, a bullet a block still has about it and a package that could
+  not be checked (exit code 1, as for more than 3 matches). `--package P --from A --to B`
+  explains a change between two releases, and `--json` prints the same as JSON, with the keys
+  results.json uses (docs/how-it-works.md lists them). The MCP server has four tools.
 - Notes from the diff say what to use instead in more cases, and point somewhere useful when they
   cannot (an audit of 36 libraries found 25 of 36 notes ending in "since-cutoff found no
   replacement in X's deprecation text", several although the text named one; #14). A replacement

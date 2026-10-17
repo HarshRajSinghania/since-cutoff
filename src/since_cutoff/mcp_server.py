@@ -59,7 +59,7 @@ from since_cutoff.engine import (
     unread_warning,
 )
 from since_cutoff.errors import ModelLookupError, PackageIndexError, SinceCutoffError
-from since_cutoff.explain import blocks_of, lookup, lookup_lines, version_scan
+from since_cutoff.explain import Given, blocks_of, lookup, lookup_lines, notices, version_scan
 from since_cutoff.models import (
     CUTOFF_MARGIN_VAR,
     DEFAULT_CUTOFF_MARGIN,
@@ -576,13 +576,17 @@ class Tools:
             include_name_matches: also count uses matched by a method's name alone.
 
         Returns Markdown: for each API the name finds (at most 3; more are listed by name to
-        pick from), the note with its tag and the files whose notes block has it, the pinned
-        release and the one compared from, each change with both signatures and the
-        library's own deprecation text (with its file), the evidence behind the tag (the
-        replacement and where it is named, what a move kept, a switched dependency's
-        Requires-Dist), the runtime caveat, the changelog link, each file of the project's
-        code that uses it ("old form" or "uses this API") and what the tag does not check.
-        When nothing matches, the closest names.
+        pick from), the note with its tag (a notes block's own [type-checked] bullet when it
+        has one) and the files whose notes block has it, or has another note for it (written
+        for another version), the pinned release and the one compared from, each change with
+        both signatures, the changed parameter in each and the library's own deprecation text
+        (with its file), the evidence behind the tag (the replacement and where it is named,
+        what a move kept, a switched dependency's Requires-Dist), the runtime caveat, the
+        changelog link, each file of the project's code that uses it ("old form" or "uses
+        this API") and what the tag does not check. First, what changed in the lockfile since
+        the notes were written and the packages that could not be checked. When nothing
+        matches, the closest names, a note a block still has for the name (the notes are then
+        out of date) and whether its package could not be checked.
         """
         root = _project_root(project_dir)
         project = load_project(root)
@@ -621,7 +625,21 @@ class Tools:
         else:
             scan = engine.scan(project, basis)
         result = lookup(scan, api, package)
-        return "\n".join(lookup_lines(scan, result, blocks_of(files))) + "\n"
+        given = Given(
+            bool((from_version or "").strip()),
+            bool((to_version or "").strip()),
+            "from_version",
+            "to_version",
+        )
+        lines = lookup_lines(
+            scan,
+            result,
+            blocks_of(files),
+            given=given,
+            package=package,
+            said=notices(project, scan, files),
+        )
+        return "\n".join(lines) + "\n"
 
     # --------------------------------------------------------------- helpers
     def _now(self) -> date:

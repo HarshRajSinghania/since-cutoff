@@ -4,25 +4,38 @@ written.
 
 The toy project and the fake PyPI are test_sync.py's: toylib 1.0 is the release at the cutoff
 2025-07-31 and the project pins 2.0, in which `Client.send` lost `temperature` ([diff]),
-`legacy_fetch` was removed with "Use fetch instead." in its docstring ([diff + library]) and
+`legacy_fetch` was removed with "Use fetch instead." in its docstring ([diff + library]),
+`Client.close` is deprecated with "Use Client.shutdown() instead." and
 `toylib.helpers.Session` moved to `toylib.Session` ([diff + move checked])."""
 
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+import since_cutoff.explain as explain_module
 from since_cutoff import cli
 from since_cutoff.cache import DiskCache
-from since_cutoff.mcp_server import Tools
+from since_cutoff.errors import PackageIndexError
+from since_cutoff.explain import (
+    SUFFIX,
+    Found,
+    Lookup,
+    _change_lines,
+    _declared,
+    candidates,
+    lookup_lines,
+)
+from since_cutoff.mcp_server import Tools, build_server
 from since_cutoff.models import ModelRegistry
 from tests import test_sync
 from tests.test_ci import scan_app
-from tests.test_sync import SONNET, make_app, run_block
+from tests.test_sync import SONNET, agents, make_app, run_block, set_pins, write
 
 # The fixtures of test_sync.py: the fake PyPI, and the CLI without network (``sc``).
 pypi = test_sync.pypi
@@ -38,12 +51,16 @@ def snapshot(root: Path) -> dict[str, bytes]:
 
 
 def explain(sc: Any, root: Path, api: str, *flags: str) -> tuple[int, str]:
-    """``explain API PATH FLAGS`` in a project, which it leaves as it was (the flags after the
-    path: Python 3.10's argparse takes no option between two positionals)."""
+    """``explain API FLAGS PATH`` in a project, which it leaves as it was (an option between
+    the API and the path, which Python 3.10's argparse did not take)."""
     before = snapshot(root)
-    code, out = sc("explain", api, root, *flags)
+    code, out = sc("explain", api, *flags, root)
     assert snapshot(root) == before  # nothing written
     return code, out
+
+
+def flat(text: str) -> str:
+    return " ".join(text.split())
 
 
 @pytest.fixture
@@ -73,12 +90,32 @@ def test_a_diff_note_with_both_signatures_and_where_the_code_uses_it(sc, app) ->
     assert "  1.0: send(self, message: str, temperature: float = 1.0, stream: bool = False)" in out
     assert "  2.0: send(self, message: str, *, stream: bool = False) -> str" in out
     assert out.count("  2.0: send(self") == 1  # both changes of one API: said once
+    # The changed parameter in each release, which a long signature may cut off.
+    assert "  parameter `temperature`: in 1.0, `temperature: float = 1.0`; in 2.0, removed" in out
+    assert "parameter `stream`" not in out  # it reads the same: keyword-only says it
     assert "- [diff] a static comparison of the two releases' public APIs" in out
     assert "- checked: static API diff (griffe), 1.0 vs 2.0, diff schema" in out
     assert "- runtime: not checked" in out
     assert "- main.py: old form, passes temperature to send" in out
     assert "- sub/other.py: uses this API, calls send" in out
     assert "- no example was type-checked against the pinned version" in out
+
+
+def test_a_parameter_past_a_cut_signature_says_so(cache, pypi, tmp_path) -> None:
+    """anthropic's Messages.create: the 400 characters of its signature end before the
+    `temperature` the note is about."""
+    cut = "create(self, *, model: str, max_tokens: int, system: str | None = None, temperat..."
+    assert _declared(cut, "model") == "`model: str`"
+    assert _declared(cut, "top_k") == "past the end of the signature above (cut at 400 characters)"
+    assert _declared("f(a, b)", "c") == "not a parameter"
+    assert _declared("f(x: dict[str, int] = {'a': 1}, *, c=2)", "c") == "`c=2`"
+    scan = scan_app(make_app(tmp_path), cache, pypi, date(2025, 7, 31))
+    [f] = [f for f in candidates(scan) if f.api == "Client.send"]
+    removed = replace(f.note.covered[0], old_signature="send(self, message: str, s...")
+    assert (
+        "  parameter `temperature`: in 1.0, past the end of the signature above (cut at 400 "
+        "characters); in 2.0, removed" in _change_lines(scan, removed, f.package)
+    )
 
 
 def test_a_library_replacement_with_the_text_and_file_it_rests_on(sc, app) -> None:
@@ -97,6 +134,19 @@ def test_a_library_replacement_with_the_text_and_file_it_rests_on(sc, app) -> No
     assert "Not in a notes block yet" in out
 
 
+def test_a_deprecation_with_the_librarys_text_and_its_file(sc, app) -> None:
+    code, out = explain(sc, app, "Client.close")
+    assert code == 0, out
+    assert (
+        "- deprecated: `toylib.Client.close` is deprecated: Use Client.shutdown() instead." in out
+    )
+    assert '  toylib 2.0 says (toylib/_client.py): "Use Client.shutdown() instead."' in out
+    assert (
+        "- replacement `toylib.Client.shutdown` for `Client.close` (library_text): toylib 2.0 "
+        "toylib/_client.py" in out
+    )
+
+
 def test_a_moved_api_with_what_the_move_kept(sc, app) -> None:
     code, out = explain(sc, app, "Session")
     assert code == 0, out
@@ -112,13 +162,47 @@ def test_a_moved_api_with_what_the_move_kept(sc, app) -> None:
 
 
 @pytest.mark.parametrize(
-    "name", ["toylib.fetch", "fetch", "toylib.helpers.fetch", "fetch()", "TOYLIB.FETCH"]
+    "name",
+    [
+        "toylib.fetch",
+        "fetch",
+        "toylib.helpers.fetch",
+        "fetch()",
+        "TOYLIB.FETCH",
+        "`toylib.fetch()`",  # as a note prints it
+        "`toylib.helpers.fetch(timeout=...)`",
+    ],
 )
 def test_an_api_by_any_of_its_names(sc, app, name) -> None:
     code, out = explain(sc, app, name)
     assert code == 0 and "## toylib.fetch (toylib)" in out, out
     assert "- `toylib.fetch()` now requires `timeout`. [diff]" in out
     assert "- main.py: uses this API, calls fetch" in out
+
+
+def test_a_module_path_goes_by_the_pypi_name_too(cache, pypi, tmp_path) -> None:
+    root = make_app(tmp_path)
+    scan = scan_app(root, cache, pypi, date(2025, 7, 31))
+    [f] = [f for f in candidates(scan) if f.api == "toylib.fetch"]
+    # As huggingface-hub's huggingface_hub.hf_hub_download.
+    changes = [replace(c, package="toy-lib") for c in f.note.covered]
+    note = replace(f.note, change=changes[0], changes=changes)
+    names = Found(note, replace(f.package, name="toy-lib"), f.used).names()
+    assert "toylib.fetch" in names and "toy-lib.fetch" in names
+
+
+def test_a_switched_dependency_by_either_name_with_its_requires_dist(cache, pypi, tmp_path) -> None:
+    from since_cutoff.engine import CHANGED, PackageScan
+    from since_cutoff.notes import dependency_detail, diff_notes
+    from tests.test_dependency_switch import _switch
+
+    switch = _switch(tmp_path / "switch")
+    [note] = diff_notes([switch])
+    p = PackageScan(switch.package, switch.to_version, "pyproject.toml", True, status=CHANGED)
+    names = Found(note, p, None).names()
+    assert {switch.name, switch.switched_to} <= names
+    scan = scan_app(make_app(tmp_path), cache, pypi, date(2025, 7, 31))
+    assert f"  {dependency_detail(switch)}" in _change_lines(scan, switch, p)
 
 
 def test_an_unknown_api_lists_close_matches(sc, app) -> None:
@@ -128,6 +212,79 @@ def test_an_unknown_api_lists_close_matches(sc, app) -> None:
         "No API named 'fetchh' changed in toylib after claude-sonnet-4-5's training cutoff "
         "(2025-07-31). Close matches: toylib.fetch" in out
     )
+    code, out = explain(sc, app, "send", "--package", "notadep")
+    assert code == 1 and "notadep is not a dependency of this project" in out
+
+
+def test_a_name_a_replacement_only_names_is_not_written_in_the_block(sc, tmp_path) -> None:
+    """The block's bullet for `legacy_fetch` names `toylib.fetch` as its replacement: that is
+    no note for `fetch`, which changed too."""
+    root = make_app(tmp_path)
+    write(root / "main.py", "from toylib import legacy_fetch\nlegacy_fetch('u')\n")
+    write(root / "sub" / "other.py", "import json\n")
+    assert sc("sync", root, *SONNET, "--yes")[0] == 0
+    assert "Use `toylib.fetch` instead." in agents(root)
+    code, out = explain(sc, root, "toylib.fetch")
+    assert code == 0, out
+    assert "Written in" not in out and "Not in a notes block yet" in out
+
+
+def test_another_note_for_the_api_in_a_block_is_shown_not_claimed(sc, app) -> None:
+    write(app / "AGENTS.md", agents(app).replace("do not pass it.", "do not pass it, ever."))
+    code, out = explain(sc, app, "Client.send")
+    assert code == 0, out
+    assert "Written in" not in out
+    assert (
+        "AGENTS.md has another note for it, for toylib 2.0 (`since-cutoff sync` writes the note "
+        "above in its place):" in out
+    )
+    assert "- `Client.send()` no longer accepts `temperature`; do not pass it, ever." in out
+    # For another cutoff than the block's, sync would not write the note above there.
+    code, out = explain(sc, app, "Client.send", "--cutoff", "2024-09")
+    assert "written for another model, cutoff or --cutoff-margin than this explanation" in out
+
+
+def test_the_same_note_for_other_releases_says_them(sc, app) -> None:
+    code, out = explain(sc, app, "fetch", "--package", "toylib", "--from", "1.1", "--to", "2.1")
+    assert code == 0, out
+    assert (
+        "Written in: AGENTS.md (the same note, in its section for toylib 2.0 compared from 1.0)."
+        in out
+    )
+
+
+def test_a_stale_block_and_a_package_that_could_not_be_checked_are_said(
+    sc, app, pypi, monkeypatch
+) -> None:
+    """With the pin moved back to a release before the change, explain said only that no API
+    of that name changed; with PyPI unreachable for the package, the same."""
+    set_pins(app, ("toylib==1.0", "otherlib==1.0"))
+    code, out = explain(sc, app, "Client.send")
+    assert code == 1
+    assert (
+        "pyproject.toml changed since the notes in AGENTS.md were written: toylib 2.0 -> 1.0: "
+        "`since-cutoff sync` brings the notes in step." in flat(out)
+    )
+    assert (
+        "AGENTS.md has a note for it, for toylib 2.0, which this scan does not find: the notes "
+        "may be out of date (`since-cutoff status`, `since-cutoff sync`)." in flat(out)
+    )
+    assert "- `Client.send()` no longer accepts `temperature`" in out
+    set_pins(app, ("toylib==2.0", "otherlib==1.0"))
+    releases = pypi.releases
+
+    def unreachable(name: str) -> Any:
+        if name == "toylib":
+            raise PackageIndexError("PyPI could not be reached")
+        return releases(name)
+
+    monkeypatch.setattr(pypi, "releases", unreachable)
+    code, out = explain(sc, app, "toylib.Client.send")
+    assert code == 1
+    text = flat(out)
+    assert "toylib could not be checked (" in text and "so it has no notes here." in text
+    assert "explain cannot say whether 'toylib.Client.send' changed in it." in text
+    assert "AGENTS.md has a note for it, for toylib 2.0" in text
 
 
 def test_json_has_the_same_and_more(sc, app) -> None:
@@ -139,19 +296,35 @@ def test_json_has_the_same_and_more(sc, app) -> None:
         "claude-sonnet-4-5",
         "2025-07-31",
     )
+    assert result["match"] == "end_of_name" and result["truncated"] is False
+    assert result["matches"] == [{"display": "Client.send", "package": "toylib"}]
     [found] = result["found"]
-    assert found["api"] == "Client.send" and found["in_blocks"] == {"AGENTS.md": "from the diff"}
+    # As results.json's used_apis names them: the full path, and the note's name.
+    assert found["api"] == "toylib.Client.send" and found["display"] == "Client.send"
+    assert found["in_blocks"] == [
+        {
+            "file": "AGENTS.md",
+            "how": "diff",
+            "bullet": found["note"]["line"],
+            "version": "2.0",
+            "compared_from": "1.0",
+        }
+    ]
     assert found["note"]["tags"] == ["diff"] and found["note"]["line"].endswith("[diff]")
     assert [c["kind"] for c in found["changes"]] == ["param_removed", "param_keyword_only"]
+    assert found["changes"][0]["change_id"] == found["note"]["change_ids"][0]
     assert (
         found["changes"][0]["new_signature"]
         == "send(self, message: str, *, stream: bool = False) -> str"
     )
+    assert found["block_bullet"] is None
     forms = {(u["file"], u["form"]) for u in found["uses"]}
     assert {("main.py", "old_form"), ("sub/other.py", "uses_api")} <= forms
     assert all(u["line"] is None for u in found["uses"])  # file-level until issue #8
-    code, out = explain(sc, app, "nothing.like.it", "--json")
-    assert code == 1 and json.loads(out)["found"] == []
+    code, out = explain(sc, app, "fetchh", "--json")
+    nothing = json.loads(out)
+    assert code == 1 and nothing["found"] == [] and nothing["close_matches"] == ["toylib.fetch"]
+    assert nothing["exit_code"] == 1
 
 
 def test_another_cutoff_and_two_given_releases(sc, app) -> None:
@@ -160,18 +333,90 @@ def test_another_cutoff_and_two_given_releases(sc, app) -> None:
     assert code == 0 and "compared from 0.9 (2024-06-01)" in out
     code, out = explain(sc, app, "fetch", "--package", "toylib", "--from", "1.1", "--to", "2.1")
     assert code == 0, out
-    assert "Package: toylib 2.1 (2025-11-01), from as given (--to); compared from 1.1" in out
+    assert (
+        "For claude-sonnet-4-5's training cutoff (2025-07-31); toylib from 1.1 (--from) to 2.1 "
+        "(--to)." in out
+    )
+    assert (
+        "Package: toylib 2.1 (2025-11-01), given with --to; compared from 1.1 (2025-09-01), "
+        "given with --from." in out
+    )
     assert "- main.py: uses this API, calls fetch" in out
+    code, out = explain(sc, app, "fetch", "--package", "toylib", "--from", "1.1", "--json")
+    [found] = json.loads(out)["found"]
+    assert (found["versions_from"], found["from_given"], found["to_given"]) == (
+        "pyproject.toml",
+        True,
+        False,
+    )
+    code, out = explain(sc, app, "fetch", "--package", "toylib", "--to", "2.1", "--json")
+    [found] = json.loads(out)["found"]
+    assert (found["versions_from"], found["to_given"]) == ("given with --to", True)
+    code, out = explain(sc, app, "fetch", "--package", "toylib", "--from", "1.1")
+    assert (
+        "Package: toylib 2.0 (2025-10-01), from pyproject.toml; compared from 1.1 (2025-09-01), "
+        "given with --from." in out
+    )
 
 
-def test_a_type_checked_bullet_points_to_results_json(sc, tmp_path, cache, pypi) -> None:
+def test_a_package_first_released_after_the_cutoff(sc, app) -> None:
+    code, out = explain(sc, app, "toylib", "--cutoff", "2024-01-01")
+    assert code == 0, out
+    assert "- toylib first appeared on PyPI on 2024-06-01, after the cutoff" in out
+    assert "- new package: first released 2024-06-01, after the cutoff; no release by" in out
+    assert "new_package: `toylib` changed" not in out
+    # Its note is for the files that import it.
+    assert "- main.py: imports it\n- sub/other.py: imports it" in out
+    assert "behind an unchanged signature" not in out
+    assert "nothing of the library was run, nor its API read: there is no diff" in out
+    code, out = explain(sc, app, "toylib", "--cutoff", "2024-01-01", "--json")
+    [found] = json.loads(out)["found"]
+    assert [u["file"] for u in found["uses"]] == ["main.py", "sub/other.py"]
+
+
+def test_a_type_checked_bullet_is_the_note_shown(sc, tmp_path, cache, pypi) -> None:
     root = make_app(tmp_path)
     run_block(root, scan_app(root, cache, pypi, date(2025, 7, 31)))
     assert sc("sync", root, "--yes")[0] == 0  # keeps the [type-checked] note of Client.send
     code, out = explain(sc, root, "Client.send")
     assert code == 0, out
+    assert "Note:\n- Call `Client().send(q)`. [type-checked]\n" in out
     assert "Written in: AGENTS.md ([type-checked])." in out
     assert "its example and the type checker's verdict are in .since-cutoff/results.json" in out
+    assert "It stands in for the note from the diff:\n- `Client.send()` no longer accepts" in out
+    assert "Evidence [type-checked], and [diff] for the note from the diff:" in out
+    assert "- [type-checked] an example that basedpyright accepts for the pinned version" in out
+    assert "- example: type-checked against toylib 2.0 by `since-cutoff run`" in out
+    assert "no example was type-checked" not in out
+    code, out = explain(sc, root, "Client.send", "--json")
+    [found] = json.loads(out)["found"]
+    assert found["block_bullet"] == "Call `Client().send(q)`. [type-checked]"
+    assert found["in_blocks"][0]["how"] == "type_checked"
+
+
+def test_several_matches_say_so_and_too_many_list_their_names(
+    sc, app, cache, pypi, monkeypatch
+) -> None:
+    scan = scan_app(app, cache, pypi, date(2025, 7, 31))
+    found = candidates(scan)
+    two = [f for f in found if f.api in ("Client.send", "Client.close")]
+    out = lookup_lines(scan, Lookup("x", two, match=SUFFIX), {})
+    assert (
+        "2 APIs match 'x' by the end of the name: Client.send (toylib), Client.close"
+        in "\n".join(out)
+    )
+    assert sum(line.startswith("## ") for line in out) == 2
+    monkeypatch.setattr(explain_module, "MATCHES_SHOWN", 0)
+    code, out = explain(sc, app, "send")
+    assert code == 1
+    assert (
+        "1 APIs match 'send' by the end of the name: Client.send (toylib). Give one of them "
+        "(exit code 1)." in out
+    )
+    code, out = explain(sc, app, "send", "--json")
+    result = json.loads(out)
+    assert code == 1 and result["truncated"] is True and result["found"] == []
+    assert result["matches"] == [{"display": "Client.send", "package": "toylib"}]
 
 
 def test_from_and_to_need_a_package(sc, app, capsys) -> None:
@@ -182,6 +427,19 @@ def test_from_and_to_need_a_package(sc, app, capsys) -> None:
     assert "toylib 1.1 is not newer than 2.0: there is no change to explain" in " ".join(
         capsys.readouterr().err.split()
     )
+
+
+def test_options_go_before_or_after_the_path(sc, app, capsys) -> None:
+    """Python 3.10's argparse took no option between the API and the path."""
+    for argv in (
+        ["explain", "Client.send", "--json", str(app)],
+        ["explain", "Client.send", str(app), "--json"],
+    ):
+        assert cli.main(argv) == 0
+        assert json.loads(capsys.readouterr().out)["found"]
+    with pytest.raises(SystemExit):
+        cli.main(["explain", "Client.send", str(app), "extra"])
+    assert "unrecognized arguments: extra" in capsys.readouterr().err
 
 
 def test_explain_without_notes_uses_the_model_given(sc, tmp_path) -> None:
@@ -200,5 +458,37 @@ def test_the_mcp_tool_explains_too(app, cache: DiskCache, pypi) -> None:
     assert "[diff + library]" in out and "toylib 1.0 toylib/helpers.py" in out
     out = tools.explain_api("send", str(app), cutoff="2025-07")
     assert "## Client.send (toylib)" in out and "- main.py: old form" in out
+    out = tools.explain_api(
+        "fetch", str(app), package="toylib", from_version="1.1", to_version="2.1"
+    )
+    assert "given with to_version; compared from 1.1 (2025-09-01), given with from_version" in out
     with pytest.raises(Exception, match="pass `package`"):
         tools.explain_api("send", str(app), from_version="1.0")
+
+
+def test_the_mcp_tool_over_the_protocol_reads_the_blocks_and_writes_nothing(
+    app, cache: DiskCache, pypi
+) -> None:
+    import anyio
+    from mcp import Client
+
+    registry = ModelRegistry(cache, offline=True)
+    server = build_server(Tools(cache, registry=registry, pypi=pypi, today=date(2026, 9, 1)))
+    before = snapshot(app)
+
+    async def main() -> None:
+        async with Client(server, mode="legacy") as client:
+            result = await client.call_tool(
+                "explain_api", {"api": "Client.send", "project_dir": str(app)}
+            )
+            assert not result.is_error
+            text = result.content[0].text  # type: ignore[union-attr]
+            assert "Written in: AGENTS.md (from the diff)." in text
+            assert "(from the notes in AGENTS.md" not in text  # no progress lines in the text
+            missing = await client.call_tool(
+                "explain_api", {"api": "nothing.like.it", "project_dir": str(app)}
+            )
+            assert "No API named 'nothing.like.it'" in missing.content[0].text  # type: ignore[union-attr]
+
+    anyio.run(main)
+    assert snapshot(app) == before

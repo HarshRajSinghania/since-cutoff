@@ -173,8 +173,8 @@ uvx --with basedpyright since-cutoff run
 | `since-cutoff sync --json --check` | 以 JSON 输出提议；不写入任何内容 | 0 已是最新；3 已过时 |
 | `since-cutoff sync --json --dry-run` | 以 JSON 输出提议；不写入任何内容 | 0 |
 | `since-cutoff status` | 离线比较区块与 lockfile | 0 已是最新，或没有区块；3 已过时；1 标记损坏 |
-| `since-cutoff sync --target claude-rules` | 每个包一个规则文件，Agent 只在处理用到它的文件时才加载（[规则文件](#用规则文件按路径加载说明)） | 与 `sync` 相同 |
-| `since-cutoff explain Messages.create` | 关于一个 API 的说明的全部信息（[explain](#解释一条说明)） | 0 找到；1 没有这个 API |
+| `since-cutoff sync --target claude-rules` | 每个包一个规则文件，Agent 只在用到该包的位置才加载（[规则文件](#用规则文件按路径加载说明)） | 与 `sync` 相同 |
+| `since-cutoff explain Messages.create` | 关于一个 API 的说明的全部信息（[explain](#解释一条说明)） | 0 找到；1 没有这个 API，或匹配超过 3 个 |
 
 区块被手动修改过时，`sync` 和 `sync --check` 会显示 diff，不写入任何内容，并以退出码 4 结束；`sync --force` 会替换它。说明所涉及的某个包无法检查时（例如 PyPI 无法访问），`sync` 不写入任何内容，并以退出码 1 结束。
 
@@ -196,55 +196,79 @@ Claude Code 会读取 CLAUDE.md；只有在没有 CLAUDE.md，或者 CLAUDE.md �
 
 ### 用规则文件按路径加载说明
 
-无论 Agent 在处理哪个文件，AGENTS.md 和 CLAUDE.md 在每次请求时都会被加载。`sync --target` 加上一种规则格式（0.7.0 及以后）时，会为每个有变更的包写一个文件，放在该 Agent 读取按路径生效的规则的目录中，并在 front matter 中列出用到这个包有变更 API 的文件：只有当 Agent 读取或编辑其中某个文件时，才会加载这些说明。
+无论 Agent 在处理哪个文件，AGENTS.md 和 CLAUDE.md 在每次请求时都会被加载。`sync --target` 加上一种规则格式（0.7.0 及以后）时，会为每个有变更的包写一个文件，放在该 Agent 读取按路径生效的规则的目录中，并在 front matter 中写明这个包有变更的 API 在哪里被用到：项目根目录下的文件写它本身，其他文件写它所在的目录（`app/**/*.py`，即 `app` 及其子目录中的 Python 文件）。Agent 读取或编辑这些位置的文件时（包括新建的文件）才会加载这些说明，处理项目其余部分时不会加载。
 
 | `--target` | 每个包的文件 | front matter | 读取者 |
 |---|---|---|---|
-| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:`，glob 列表 | Claude Code（[文档](https://code.claude.com/docs/en/memory#path-specific-rules)，英文） |
-| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:`（逗号分隔）和 `alwaysApply: false` | Cursor（[文档](https://cursor.com/docs/context/rules)，英文） |
-| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `applyTo:`（逗号分隔的 glob） | GitHub Copilot 的 cloud agent 和 code review（[文档](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions)，英文） |
+| `claude-rules` | `.claude/rules/since-cutoff-<package>.md` | `paths:`，glob 列表 | Claude Code（[文档](https://code.claude.com/docs/en/memory#path-specific-rules)，英文）；VS Code 的 Copilot Chat 也会读取 |
+| `cursor-rules` | `.cursor/rules/since-cutoff-<package>.mdc` | `globs:`（逗号分隔）和 `alwaysApply: false` | Cursor（[文档](https://cursor.com/docs/rules)，英文） |
+| `copilot-instructions` | `.github/instructions/since-cutoff-<package>.instructions.md` | `description:` 和 `applyTo:`（逗号分隔的 glob） | GitHub Copilot：VS Code、Visual Studio、JetBrains、Eclipse 和 Xcode 中的 Chat，Copilot CLI，cloud agent 和 code review（[文档](https://docs.github.com/en/copilot/reference/custom-instructions-support)，英文） |
 
-对示例项目，`since-cutoff sync --target claude-rules` 会写出 `.claude/rules/since-cutoff-anthropic.md`（这里省略了头部）：
+对示例项目，`since-cutoff sync --target claude-rules` 会写出 `.claude/rules/since-cutoff-anthropic.md`（这里元数据行和头部在 `...` 处截断）：
 
 ```markdown
 ---
 paths:
-  - "app/main.py"
+  - "app/**/*.py"
 ---
 <!-- since-cutoff:start -->
-<!-- since-cutoff:meta {"v":2,...,"scope":"used","paths":["app/main.py"],"front":"sha256:..."} -->
+<!-- since-cutoff:meta {"v":2,"tool":"0.5.0",...,"scope":"used","front":"sha256:d14e0427f29e"} -->
 ## Library changes after the model's training cutoff
 
-Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, ...) ...
+Changed after the training cutoff of `claude-sonnet-4-5` (2025-07-31, comparing from releases up to 2025-07-01) and used by this project at ...
 
 **anthropic 1.8.0** (compared from 0.56.0)
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 <!-- since-cutoff:end -->
 ```
 
-`.claude/rules/since-cutoff-huggingface-hub.md` 也是如此。front matter 之后，每个文件包含的是 AGENTS.md 中会有的同一个区块，只针对它自己的包，所以 `sync`、`sync --check`、`status` 和 `unapply` 对它的处理和对 AGENTS.md 一样；它的元数据行还记录了这些文件（`paths`）和 front matter 的哈希，因此手动修改其中任何一处都能看出来。某个文件开始用到一个包有变更的 API 时，下一次 `sync` 会把它加进去（“now loaded for 3 files (1 added)”）；一个包不再有说明时，它的文件会被删除。使用 `--scope imported` 时，以及对于截止日期之后才首次发布的包，这些文件是导入了这个包的文件；一个文件也不知道时，规则对所有文件生效（没有 `paths`、`alwaysApply: true`、`applyTo: "**"`）。since-cutoff 只写入和删除名为 `since-cutoff-<package>` 且带有它的标记的文件：你自己的规则文件，以及同名但没有标记的文件，永远不会被改动。
+`.claude/rules/since-cutoff-huggingface-hub.md` 也是如此。front matter 之后，每个文件包含的是 AGENTS.md 中会有的同一个区块，只针对它自己的包，所以 `sync`、`sync --check`、`status` 和 `unapply` 对它的处理和对 AGENTS.md 一样；它的元数据行还记录了 front matter 的哈希（`front`），因此手动修改其中任何一处都能看出来。一个包在新的目录中被用到时，下一次 `sync` 会把该目录加进去（“now loaded for 3 globs (1 added)”）；git 忽略的文件不会被写入（提交的规则文件不会列出本地的临时文件）；超过 20 个 glob 时，目录改用它所在的顶层目录表示，因此无论多少文件用到这个包，front matter 都保持简短。一个包不再有说明时，它的文件会被删除；如果区块之后有你自己的文本，说明会被移除而标记保留，这样这个包之后的说明会回到同一个文件。使用 `--scope imported` 时，以及对于截止日期之后才首次发布的包，这些文件是导入了这个包的文件；一个文件也不知道时，规则对所有文件生效（没有 `paths`、`alwaysApply: true`、`applyTo: "**"`）。since-cutoff 只写入和删除项目内名为 `since-cutoff-<package>`、带有它的标记并且是该包区块的文件：你自己的规则文件、同名但没有标记的文件，以及从项目外链接进来的规则目录（多个项目共享的目录），永远不会被改动。
 
-规则格式需要显式选择，默认仍然是 AGENTS.md / CLAUDE.md。项目中有了规则文件之后，不带参数的 `sync` 会让它们保持最新，并且不写 AGENTS.md；如果 AGENTS.md 或 CLAUDE.md 中还留有区块，`sync` 会说明如何移除它（`since-cutoff unapply --target AGENTS.md`）。`unapply --target cursor-rules` 删除一种格式的文件；不带参数的 `unapply` 会移除 AGENTS.md 和 CLAUDE.md 中的区块，以及 since-cutoff 写过的所有规则文件。glob 相对于项目目录；当项目就是仓库根目录时，Agent 正是在那里查找这些目录。Windsurf 的文档中每个规则文件只有一个 glob，Codex 没有按路径生效的规则（它读取从项目根目录到启动目录路径上的 AGENTS.md），所以两者暂时都没有对应的格式。`run --apply` 只把一个区块写进一个文件；规则文件请用 `sync --target`。
+glob 覆盖不到的情况：在项目根目录新建的文件要到下一次 `sync` 才会被列出；其他目录中还没有用到这个包的文件不会得到说明。VS Code 会在路径的任何位置匹配不以 `**/` 开头的 glob，所以在 VS Code 中 `app/**/*.py` 也会为 `other/app/x.py` 加载说明，`main.py` 也会为 `other/main.py` 加载：只会多加载，不会漏加载。
+
+规则格式需要显式选择，默认仍然是 AGENTS.md / CLAUDE.md。项目中有了规则文件之后，不带参数的 `sync` 会让它们保持最新，并且不写 AGENTS.md；如果 AGENTS.md 或 CLAUDE.md 中还留有区块，`sync` 会说明如何移除它（`since-cutoff unapply --target AGENTS.md`）；最后一个规则文件被删除时，它会提示之后需要再次使用 `--target`。`unapply --target cursor-rules` 删除一种格式的文件，`unapply --target <规则文件>` 删除其中一个；不带参数的 `unapply` 会移除 AGENTS.md 和 CLAUDE.md 中的区块，以及 since-cutoff 写过的所有规则文件。这些目录写在项目中：GitHub 只在仓库根目录读取 `.github/instructions`，当项目是仓库中的一个子目录时，`sync --target copilot-instructions` 会给出提示。Windsurf（现为 Devin Desktop，`.devin/rules`）的文档只给出单个 glob 的规则，没有说明如何指定多个；Codex 没有按路径生效的规则（它读取从项目根目录到启动目录路径上的 AGENTS.md），所以两者暂时都没有对应的格式。`run --apply` 只把一个区块写进一个文件；规则文件请用 `sync --target`。
 
 ### 解释一条说明
 
-`since-cutoff explain <API>`（0.7.0 及以后）给出 since-cutoff 关于一个 API 所知道的全部信息。它运行与 `sync` 相同的扫描（使用区块的模型和截止日期，除非传入 `--model` 或 `--cutoff`），不调用模型，也不写入任何内容：区块中写出的说明以及哪些文件有它、锁定版本和对照版本、每项变更及其新旧签名、库自己的弃用文本及其所在文件、替代项及其出处（或者移动保留了什么，或者被替换的依赖的 Requires-Dist）、Runtime 一行、changelog、你的代码中用到它的每个位置（“old form” 或 “uses this API”），以及这个标签没有检查什么。API 的写法与说明中的名称相同（`Messages.create`、`huggingface_hub.hf_hub_download`），也可以只写名称的末尾（`create`）或写成 `package.API`；什么都匹配不到的名称会列出最接近的名称（退出码 1）。
+`since-cutoff explain <API>`（0.7.0 及以后）给出 since-cutoff 关于一个 API 所知道的全部信息。它运行与 `sync` 相同的扫描（使用区块的模型和截止日期，除非传入 `--model` 或 `--cutoff`），不调用模型，也不写入任何内容：区块中写出的说明（如果区块有自己的 `[type-checked]` 条目，则是该条目）以及哪些文件有它，或者有它的另一条说明（为其他版本写的：区块已过期）、锁定版本和对照版本、每项变更及其新旧签名和每个签名中变更的参数、库自己的弃用文本及其所在文件、替代项及其出处（或者移动保留了什么，或者被替换的依赖的 Requires-Dist）、Runtime 一行、changelog、你的代码中用到它的每个位置（“old form” 或 “uses this API”），以及这个标签没有检查什么。API 的写法与说明中的名称相同（`Messages.create`、`huggingface_hub.hf_hub_download`），可以带或不带说明中的反引号和 `()`，也可以只写名称的末尾（`create`）或写成 `package.API`；最多解释 3 个匹配项。什么都匹配不到的名称会列出最接近的名称、区块中仍然为它保留的说明，以及无法检查的包（退出码 1；匹配超过 3 个时同样如此，并列出它们的名称）。
 
 ```console
 $ uvx since-cutoff explain Messages.create
+• Model claude-sonnet-4-5, training cutoff 2025-07-31, comparing from releases up to 2025-07-01 (from the notes in AGENTS.md; --model to change)
+• Checking 9 dependencies on PyPI
+• Diffing the API of 8 packages released after their cutoff version
+...
+
+# Messages.create
+
+For claude-sonnet-4-5's training cutoff (2025-07-31); versions from pyproject.toml, latest on PyPI for 3 unpinned.
+
 ## Messages.create (anthropic)
 
 Note:
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 Written in: AGENTS.md (from the diff).
 
-Package: anthropic 1.8.0 (...), from pyproject.toml; compared from 0.56.0 (...), the latest release 30 days before the cutoff.
+Package: anthropic 1.8.0 (2026-09-22), from pyproject.toml; compared from 0.56.0 (2025-07-01), the latest release 30 days before the cutoff.
+Changelog: https://github.com/anthropics/anthropic-sdk-python/releases
+
+Changes:
+- param_removed: `anthropic.resources.messages.messages.Messages.create(temperature=...)`: parameter `temperature` was removed
+  0.56.0: create(self, *, max_tokens: int, messages: Iterable[MessageParam], model: ModelParam, ...
+  1.8.0: create(self, *, max_tokens: int, messages: Iterable[MessageParam], model: ModelParam, ...
+  parameter `temperature`: in 0.56.0, past the end of the signature above (cut at 400 characters); in 1.8.0, removed
 ...
+
 Where your code uses it:
 - app/main.py: uses this API, calls create
+
+Not checked:
+- no example was type-checked against the pinned version (`since-cutoff run` does that, with a model)
+- nothing of the library was run: its behaviour behind an unchanged signature
+- whether a model gets this API wrong was not measured (`since-cutoff run`)
 ```
 
-`--package anthropic --from 0.60.0 --to 1.8.0` 解释两个指定版本之间的变更，`--json` 以 JSON 输出同样的内容。MCP 服务器通过工具 `explain_api` 提供同样的信息。
+`--package anthropic --from 0.60.0 --to 1.8.0` 解释两个指定版本之间的变更（输出会说明哪些版本是指定的），`--json` 以 JSON 输出同样的内容，使用与 results.json 相同的键（[工作原理](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/how-it-works.md#explain)中列出了它们，英文）。MCP 服务器通过工具 `explain_api` 提供同样的信息。
 
 ### 测量你的模型
 

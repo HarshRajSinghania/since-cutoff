@@ -1,7 +1,8 @@
 """Path-scoped rule files (issue #16): ``sync --target claude-rules`` (``cursor-rules``,
 ``copilot-instructions``) writes one file per changed package, whose front matter names the
-files that use it, with the same block, markers and hash as AGENTS.md's; ``status``, ``sync
---check`` and ``unapply`` handle them, and a file since-cutoff did not write is left alone.
+files that use it (a file at the root as itself, the others by their folder), with the same
+block, markers and hash as AGENTS.md's; ``status``, ``sync --check`` and ``unapply`` handle
+them, and a file since-cutoff did not write, or one outside the project, is left alone.
 
 The toy project and the fake PyPI are test_sync.py's: toylib 2.0 changed after the cutoff
 2025-07-31, and main.py and sub/other.py use it. No network, and no model is called."""
@@ -9,17 +10,24 @@ The toy project and the fake PyPI are test_sync.py's: toylib 2.0 changed after t
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from since_cutoff import cli
-from since_cutoff.notes import BLOCK_START, parse_block
+from since_cutoff.notes import BLOCK_END, BLOCK_START, NotesFileError, _write, parse_block
 from since_cutoff.rules import (
     FORMATS,
+    MAX_GLOBS,
+    front_edited,
     front_hash,
     glob_of,
+    globs_for,
     split_front,
     with_rule,
     without_rule,
@@ -36,6 +44,9 @@ CLAUDE = ".claude/rules/since-cutoff-toylib.md"
 CURSOR = ".cursor/rules/since-cutoff-toylib.mdc"
 COPILOT = ".github/instructions/since-cutoff-toylib.instructions.md"
 FILES = {"claude-rules": CLAUDE, "cursor-rules": CURSOR, "copilot-instructions": COPILOT}
+USES = "from toylib import fetch\nfetch('u')\n"
+CLAUDE_FRONT = '---\npaths:\n  - "main.py"\n  - "sub/**/*.py"\n---\n'
+git = pytest.mark.skipif(shutil.which("git") is None, reason="needs git")
 
 
 def read(root: Path, name: str) -> str:
@@ -47,16 +58,44 @@ def put(path: Path, text: str) -> None:
     write(path, text)
 
 
+def flat(text: str) -> str:
+    return " ".join(text.split())
+
+
 def errors(capsys: pytest.CaptureFixture[str], *argv: object) -> tuple[int, str]:
     """The CLI's exit code and what it printed to stderr, in one line (with ``sc``'s fakes)."""
     code = cli.main([str(a) for a in argv])
-    return code, " ".join(capsys.readouterr().err.split())
+    return code, flat(capsys.readouterr().err)
 
 
 def rules(sc: Any, root: Path, target: str = "claude-rules", *flags: str) -> str:
     code, out = sc("sync", root, *SONNET, "--yes", "--target", target, *flags)
     assert code == EXIT_OK, out
     return read(root, FILES[target])
+
+
+def status_files(sc: Any, root: Path) -> list[str]:
+    _, out = sc("status", root, "--json")
+    return [t["file"] for t in json.loads(out)["targets"] if t["state"] != "never_run"]
+
+
+def link_folder(link: Path, target: Path) -> None:
+    """``link`` as a link to the folder ``target`` (a junction on Windows: no admin needed)."""
+    link.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if sys.platform == "win32":
+            import _winapi
+
+            _winapi.CreateJunction(str(target), str(link))
+        else:
+            link.symlink_to(target, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"cannot link a folder here: {exc}")
+
+
+def git_init(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
 
 
 # ------------------------------------------------------------------ writing
@@ -68,13 +107,16 @@ def test_claude_rules_name_the_files_that_use_the_package(sc, tmp_path) -> None:
     assert f"✓ Created {CLAUDE} with 2 notes." in out
     text = read(root, CLAUDE)
     front, rest = split_front(text)
-    assert front == '---\npaths:\n  - "main.py"\n  - "sub/other.py"\n---\n'
+    # main.py at the root as itself; sub/other.py by its folder, so that a file added there
+    # later loads the notes too.
+    assert front == CLAUDE_FRONT
     assert rest.startswith(BLOCK_START + "\n")
     block = parse_block(text)
     assert block is not None and block.edited is False
     assert set(block.packages) == {"toylib"} and block.packages["toylib"].version == "2.0"
-    assert block.meta["paths"] == ["main.py", "sub/other.py"]
-    assert block.meta["front"] == front_hash(front)
+    # The meta line has the front matter's hash, not the files again (an HTML comment the
+    # agents may load with the notes).
+    assert "paths" not in block.meta and block.meta["front"] == front_hash(front)
     # The notes are where the agent loads them only for those files: AGENTS.md is not written.
     assert not (root / "AGENTS.md").exists() and not (root / "CLAUDE.md").exists()
 
@@ -82,16 +124,15 @@ def test_claude_rules_name_the_files_that_use_the_package(sc, tmp_path) -> None:
 def test_cursor_and_copilot_front_matter_as_their_docs_give_it(sc, tmp_path) -> None:
     root = make_app(tmp_path)
     cursor = rules(sc, root, "cursor-rules")
-    assert split_front(cursor)[0] == (
+    # Cursor's auto-attached rule: globs and alwaysApply: false, no description.
+    assert split_front(cursor)[0] == ("---\nglobs: main.py, sub/**/*.py\nalwaysApply: false\n---\n")
+    copilot = rules(sc, root, "copilot-instructions")
+    assert split_front(copilot)[0] == (
         "---\n"
-        "description: \"toylib 2.0: library changes after the model's training cutoff "
-        '(since-cutoff)"\n'
-        "globs: main.py, sub/other.py\n"
-        "alwaysApply: false\n"
+        'description: "toylib 2.0: API changes after the model\'s training cutoff"\n'
+        'applyTo: "main.py,sub/**/*.py"\n'
         "---\n"
     )
-    copilot = rules(sc, root, "copilot-instructions")
-    assert split_front(copilot)[0] == '---\napplyTo: "main.py,sub/other.py"\n---\n'
     # The same notes in each: the block after the front matter differs only in its meta line.
     for text in (cursor, copilot):
         block = parse_block(text)
@@ -109,12 +150,14 @@ def test_imported_scope_rules_apply_to_every_file_that_imports_the_package(sc, t
     text = rules(sc, root, "claude-rules", "--scope", "imported")
     block = parse_block(text)
     assert block is not None and block.meta["scope"] == "imported"
-    assert block.meta["paths"] == ["main.py", "plain.py", "sub/other.py"]
-    # Used scope: only the files that use a changed API.
-    assert parse_block(rules(sc, root, "cursor-rules")).meta["paths"] == [  # type: ignore[union-attr]
+    assert FORMATS["claude-rules"].globs_in(split_front(text)[0]) == [
         "main.py",
-        "sub/other.py",
+        "plain.py",
+        "sub/**/*.py",
     ]
+    # Used scope: only the files that use a changed API.
+    cursor = rules(sc, root, "cursor-rules")
+    assert "globs: main.py, sub/**/*.py\n" in cursor
 
 
 def test_globs_match_each_file_and_nothing_breaks_the_front_matter() -> None:
@@ -123,19 +166,58 @@ def test_globs_match_each_file_and_nothing_breaks_the_front_matter() -> None:
     assert glob_of('we"ird#{x}*.py') == "we?ird??x??.py"
     assert glob_of("@scope/x.py") == "?scope/x.py"
     assert glob_of("café/ü.py") == "café/ü.py"
+    assert glob_of("a-->b/x.py") == "a--?b/x.py"  # nothing in it can end an HTML comment
+    # An emoji: the JavaScript engines' ``?`` matches half of one, so ``*`` (not first).
+    assert glob_of("emoji/\U0001f600.py") == "emoji/*.py"
+    assert glob_of("\U0001f600/x.py") == "?/x.py"
     claude = FORMATS["claude-rules"].front_matter(['x "y".py'], "toylib", "2.0")
     assert claude == '---\npaths:\n  - "x??y?.py"\n---\n'
     # No file known: a rule that applies everywhere.
     assert FORMATS["claude-rules"].front_matter([], "toylib", "2.0") == ""
-    assert "alwaysApply: true" in FORMATS["cursor-rules"].front_matter([], "toylib", "2.0")
-    assert FORMATS["copilot-instructions"].front_matter([], "toylib", "2.0") == (
-        '---\napplyTo: "**"\n---\n'
+    assert FORMATS["cursor-rules"].front_matter([], "toylib", "2.0") == (
+        "---\nalwaysApply: true\n---\n"
     )
+    assert (
+        FORMATS["copilot-instructions"]
+        .front_matter([], "toylib", "2.0")
+        .endswith('applyTo: "**"\n---\n')
+    )
+    for f in FORMATS.values():
+        assert f.globs_in(f.front_matter(["a.py", "b/c.py"], "toylib", "2.0")) == [
+            "a.py",
+            "b/**/*.py",
+        ]
+        assert f.globs_in(f.front_matter([], "toylib", "2.0")) == []
+
+
+def test_globs_name_folders_and_stay_few() -> None:
+    assert globs_for(["main.py", "app/a.py", "app/api/b.py", "lib/x/y.py"]) == [
+        "app/**/*.py",
+        "lib/x/**/*.py",
+        "main.py",
+    ]
+    # More folders than MAX_GLOBS: by their top-level folder.
+    many = [f"pkg/m{i:02}/f.py" for i in range(MAX_GLOBS + 5)]
+    assert globs_for([*many, "main.py"]) == ["main.py", "pkg/**/*.py"]
+    # Still more: the rule applies always.
+    assert globs_for([f"top{i:02}/f.py" for i in range(MAX_GLOBS + 5)]) == []
+
+
+def test_a_package_used_in_many_files_gets_a_short_front_matter(sc, tmp_path) -> None:
+    """602 using files made a Copilot applyTo of 13,840 characters, which VS Code puts in
+    every request: the folders collapse instead."""
+    root = make_app(tmp_path)
+    for i in range(MAX_GLOBS + 5):
+        for j in range(2):
+            put(root / "pkg" / f"mod{i:02}" / f"f{j}.py", USES)
+    copilot = rules(sc, root, "copilot-instructions")
+    assert 'applyTo: "main.py,pkg/**/*.py,sub/**/*.py"\n' in copilot
+    assert len(split_front(copilot)[0]) < 200
 
 
 def test_with_and_without_rule_keep_text_of_ones_own() -> None:
     front = '---\napplyTo: "a.py"\n---\n'
-    block = f"{BLOCK_START}\nnotes\n<!-- since-cutoff:end -->\n"
+    block = f"{BLOCK_START}\nnotes\n{BLOCK_END}\n"
     text, action = with_rule(None, front, block, "x.md")
     assert (text, action) == (front + block, "created")
     assert without_rule(text, "x.md") is None  # nothing of the user's: the file goes
@@ -145,6 +227,13 @@ def test_with_and_without_rule_keep_text_of_ones_own() -> None:
     assert without_rule(mine, "x.md") == front + "My own line.\n"
     crlf = text.replace("\n", "\r\n")
     assert with_rule(crlf, front, block, "x.md")[0] == crlf
+    # A byte order mark stays first, and is not part of the front matter.
+    bom = "﻿" + mine
+    assert split_front(bom) == (front, block + "\nMy own line.\n")
+    assert with_rule(bom, front, block, "x.md")[0] == bom
+    assert without_rule(bom, "x.md") == "﻿" + front + "My own line.\n"
+    # A block without a front hash was not written for a rule file: no edit to tell.
+    assert front_edited('---\napplyTo: "c.py"\n---\n', {}) is False
 
 
 # ---------------------------------------------------------- keeping in step
@@ -162,16 +251,20 @@ def test_a_second_sync_leaves_the_rule_files_alone_and_writes_no_agents_md(sc, t
     assert sc("status", root)[0] == EXIT_OK
 
 
-def test_a_file_that_starts_using_the_package_is_added_to_the_globs(sc, tmp_path) -> None:
+def test_a_file_in_a_new_folder_adds_a_glob_and_one_next_to_the_others_needs_none(
+    sc, tmp_path
+) -> None:
     root = make_app(tmp_path)
     rules(sc, root, "cursor-rules")
-    (root / "sub" / "more.py").write_text("from toylib import fetch\nfetch('u')\n", "utf-8")
+    write(root / "sub" / "more.py", USES)  # sub/**/*.py has it already
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+    put(root / "lib" / "more.py", USES)
     code, out = sc("sync", root, "--check")
     assert code == EXIT_OUT_OF_DATE, out
     assert f"{CURSOR} is out of date: the files it is loaded for would change (1 added)." in out
     code, out = sc("sync", root, "--yes")
-    assert code == EXIT_OK and f"✓ Updated {CURSOR}: now loaded for 3 files (1 added)." in out
-    assert "globs: main.py, sub/more.py, sub/other.py\n" in read(root, CURSOR)
+    assert code == EXIT_OK and f"✓ Updated {CURSOR}: now loaded for 3 globs (1 added)." in out
+    assert "globs: lib/**/*.py, main.py, sub/**/*.py\n" in read(root, CURSOR)
     assert sc("sync", root, "--check")[0] == EXIT_OK
 
 
@@ -188,7 +281,7 @@ def test_status_and_check_see_a_bumped_package_in_a_rule_file(sc, tmp_path) -> N
     assert sc("sync", root, "--check")[0] == EXIT_OUT_OF_DATE
     code, out = sc("sync", root, "--yes")
     assert code == EXIT_OK and f"✓ Updated {COPILOT}: toylib checked again for 2.1" in out
-    assert "toylib 2.1: library" not in read(root, COPILOT)  # Copilot's has no description
+    assert 'description: "toylib 2.1: API changes' in read(root, COPILOT)
     assert parse_block(read(root, COPILOT)).packages["toylib"].version == "2.1"  # type: ignore[union-attr]
 
 
@@ -207,6 +300,9 @@ def test_a_hand_edit_of_the_front_matter_or_the_notes_shows(sc, tmp_path, target
         assert f"The since-cutoff block in {name} was edited by hand" in out
         code, out = sc("status", root)
         assert "edited by hand since since-cutoff wrote it" in out
+        # status --json says it too, for the front matter as for the notes.
+        code, out = sc("status", root, "--json")
+        assert json.loads(out)["targets"][0]["edited"] is True
         assert read(root, name) == edited
     code, out = sc("sync", root, "--yes", "--force")
     assert code == EXIT_OK and "replaced the text edited by hand" in out
@@ -227,20 +323,98 @@ def test_a_package_with_no_notes_left_loses_its_file(sc, tmp_path) -> None:
         "cutoff)." in out
     )
     assert not (root / CLAUDE).exists()
+    assert "Text outside the since-cutoff markers is unchanged" not in out  # the file went
+    # The last one went: a plain sync no longer knows where the notes went, so sync says so.
+    assert (
+        "No since-cutoff rule files are left in .claude/rules: when a package needs notes "
+        "again, `since-cutoff sync --target claude-rules` writes them there" in flat(out)
+    )
     code, out = sc("sync", root, "--target", "claude-rules")
     assert code == EXIT_OK
     assert ".claude/rules: no notes to write; your code uses none of the APIs" in out
 
 
-def test_text_of_ones_own_in_a_rule_file_stays_when_its_notes_go(sc, tmp_path) -> None:
+def test_text_of_ones_own_keeps_the_file_since_cutoffs_when_its_notes_go(sc, tmp_path) -> None:
+    """The user's text after the block (where the hand-edit message says to move it) stays
+    with an empty block, so that the notes come back into the same file, under the same model,
+    and not into a new AGENTS.md."""
     root = make_app(tmp_path)
     text = rules(sc, root) + "\nAlso: prefer fetch.\n"
     write(root / CLAUDE, text)
-    set_pins(root, ("otherlib==1.0",))
+    set_pins(root, ("toylib==1.0", "otherlib==1.0"))
     code, out = sc("sync", root, "--yes")
     assert code == EXIT_OK, out
-    assert f"✓ Removed the notes block from {CLAUDE}: toylib dropped" in out
-    assert read(root, CLAUDE) == split_front(text)[0] + "Also: prefer fetch.\n"
+    assert f"✓ Removed the notes from {CLAUDE}: toylib dropped" in out
+    assert "Your own text in it stays" in flat(out)
+    after = read(root, CLAUDE)
+    front, rest = split_front(after)
+    assert front == CLAUDE_FRONT
+    assert rest.startswith(f"{BLOCK_START}\n<!-- since-cutoff:meta ")
+    assert rest.endswith(f" -->\n{BLOCK_END}\n\nAlso: prefer fetch.\n")
+    block = parse_block(after)
+    assert block is not None and block.packages == {} and block.edited is False
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+    assert sc("status", root)[0] == EXIT_OK
+    assert sc("sync", root, "--yes")[1].count("Nothing written") == 1  # nothing to change
+    set_pins(root, ("toylib==2.0", "otherlib==1.0"))
+    code, out = sc("sync", root, "--yes")
+    assert code == EXIT_OK and f"✓ Updated {CLAUDE}" in out, out
+    assert "(from the notes in .claude/rules" in out  # the model the notes were written for
+    assert read(root, CLAUDE) == text
+    assert not (root / "AGENTS.md").exists()
+    # unapply leaves the user's text, under its front matter.
+    assert sc("unapply", root)[0] == EXIT_OK
+    assert read(root, CLAUDE) == CLAUDE_FRONT + "Also: prefer fetch.\n"
+
+
+def test_a_byte_order_mark_is_no_hand_edit_and_stays_first(sc, tmp_path) -> None:
+    root = make_app(tmp_path)
+    text = rules(sc, root)
+    write(root / CLAUDE, "﻿" + text)
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+    code, out = sc("status", root, "--json")
+    [target] = json.loads(out)["targets"]
+    assert target["edited"] is False and target["notes"] == []
+    put(root / "lib" / "more.py", USES)
+    code, out = sc("sync", root, "--yes")
+    assert code == EXIT_OK, out
+    after = read(root, CLAUDE)
+    assert after.startswith("﻿---\npaths:\n") and after.count("paths:") == 1
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+    write(root / CLAUDE, after + "\nMine.\n")
+    assert sc("unapply", root)[0] == EXIT_OK
+    assert read(root, CLAUDE).startswith("﻿---\npaths:\n")
+    assert read(root, CLAUDE).endswith("---\nMine.\n")
+
+
+@git
+def test_files_git_ignores_are_not_named(sc, tmp_path) -> None:
+    """A local scratch file named in a committed rule file made `sync --check` fail on a
+    clean checkout, which does not have it."""
+    root = make_app(tmp_path)
+    git_init(root)
+    write(root / ".gitignore", "scratch.py\nlocal/\n")
+    write(root / "scratch.py", USES)
+    put(root / "local" / "try.py", USES)
+    assert split_front(rules(sc, root))[0] == CLAUDE_FRONT
+    (root / "scratch.py").unlink()
+    shutil.rmtree(root / "local")
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+
+
+@git
+def test_copilot_instructions_below_the_repository_root_get_a_warning(sc, tmp_path) -> None:
+    git_init(tmp_path / "repo")
+    root = make_app(tmp_path / "repo" / "services")
+    code, out = sc("sync", root, *SONNET, "--yes", "--target", "copilot-instructions")
+    assert code == EXIT_OK, out
+    assert (
+        "GitHub reads .github/instructions at the repository's root "
+        f"({(tmp_path / 'repo').resolve().as_posix()}) only" in flat(out)
+    )
+    # Claude Code reads nested .claude/rules folders: no warning there.
+    code, out = sc("sync", root, *SONNET, "--yes", "--target", "claude-rules")
+    assert "repository's root" not in out
 
 
 # ------------------------------------------------------------ the user's own
@@ -258,6 +432,98 @@ def test_a_rule_file_since_cutoff_did_not_write_is_never_touched(sc, tmp_path, c
     assert sc("unapply", root)[0] == EXIT_OK
     assert read(root, CLAUDE) == "# My notes on toylib\n"
     assert read(root, ".claude/rules/style.md") == "Use tabs.\n"
+    # A file that is not UTF-8 says so, rather than that it has no block.
+    (root / CLAUDE).write_bytes(f"{BLOCK_START}\ncaf\xe9\n{BLOCK_END}\n".encode("latin-1"))
+    code, err = errors(capsys, "sync", root, *SONNET, "--yes", "--target", "claude-rules")
+    assert code == 1 and "since-cutoff-toylib.md is not UTF-8 text" in err
+
+
+def test_only_a_formats_own_names_and_its_packages_block_are_its(sc, tmp_path, capsys) -> None:
+    """``package_of`` read ``since-cutoff-toylib.instructions.md`` in .claude/rules as the
+    claude rule of a package ``toylib.instructions``, and a plain sync removed it."""
+    root = make_app(tmp_path)
+    copilot = rules(sc, root, "copilot-instructions")
+    copy = ".claude/rules/since-cutoff-toylib.instructions.md"
+    put(root / copy, copilot)
+    assert FORMATS["claude-rules"].package_of(root / copy) is None
+    code, out = sc("sync", root, "--yes")
+    assert code == EXIT_OK, out
+    assert read(root, copy) == copilot and not (root / CLAUDE).exists()
+    assert status_files(sc, root) == [COPILOT]
+    # A file named for one package that holds another's block is refused, not emptied.
+    other = ".github/instructions/since-cutoff-otherlib.instructions.md"
+    put(root / other, copilot + "\nMy otherlib notes: pin it.\n")
+    code, err = errors(capsys, "sync", root, "--yes")
+    assert code == 1
+    assert "since-cutoff-otherlib.instructions.md holds the notes for toylib, not otherlib's" in err
+    assert read(root, other) == copilot + "\nMy otherlib notes: pin it.\n"
+
+
+def test_a_rule_file_whose_name_differs_in_case_is_its_packages(sc, tmp_path) -> None:
+    root = make_app(tmp_path)
+    rules(sc, root)
+    renamed = ".claude/rules/since-cutoff-Toylib.md"
+    (root / CLAUDE).rename(root / renamed)
+    assert status_files(sc, root) == [renamed]
+    assert sc("sync", root, "--check")[0] == EXIT_OK
+    code, out = sc("unapply", root)
+    assert code == EXIT_OK and renamed in out
+    assert not (root / ".claude" / "rules" / "since-cutoff-Toylib.md").exists()
+
+
+def test_a_rules_folder_linked_outside_the_project_is_left_alone(sc, tmp_path, capsys) -> None:
+    """Claude Code documents a .claude/rules folder linked into several projects: one
+    project's sync wrote its file into the shared folder, and another's status, sync and
+    unapply took that file for its own (and removed it)."""
+    shared = tmp_path / "shared"
+    put(shared / "security.md", "Check inputs.\n")
+    a = make_app(tmp_path / "a")
+    put(shared / "since-cutoff-toylib.md", rules(sc, a))  # a file another project wrote
+    b = make_app(tmp_path / "b", ("toylib==1.0", "otherlib==1.0"))
+    link_folder(b / ".claude" / "rules", shared)
+    assert status_files(sc, b) == [] and sc("status", b)[0] == EXIT_OK
+    assert sc("sync", b, "--check")[0] == EXIT_OK
+    assert sc("sync", b, "--yes")[0] == EXIT_OK
+    assert sc("unapply", b)[1].strip() == "no since-cutoff block found"
+    assert sorted(p.name for p in shared.iterdir()) == ["security.md", "since-cutoff-toylib.md"]
+    # Writing there is refused, before anything is written.
+    set_pins(b, ("toylib==2.0", "otherlib==1.0"))
+    (shared / "since-cutoff-toylib.md").unlink()
+    code, err = errors(capsys, "sync", b, *SONNET, "--yes", "--target", "claude-rules")
+    assert code == 1 and ".claude/rules is a link to" in err and "outside the project" in err
+    assert sorted(p.name for p in shared.iterdir()) == ["security.md"]
+
+
+def test_a_hard_linked_rule_file_is_left_alone(sc, tmp_path, capsys) -> None:
+    root = make_app(tmp_path)
+    text = rules(sc, root)
+    elsewhere = tmp_path / "elsewhere.md"
+    write(elsewhere, text)
+    (root / CLAUDE).unlink()
+    try:
+        os.link(elsewhere, root / CLAUDE)
+    except OSError as exc:
+        pytest.skip(f"no hard links here: {exc}")
+    put(root / "lib" / "more.py", USES)
+    code, err = errors(capsys, "sync", root, *SONNET, "--yes", "--target", "claude-rules")
+    assert code == 1 and "is a hard link" in err
+    assert elsewhere.read_bytes().decode("utf-8") == text
+
+
+def test_a_file_name_that_is_not_utf8_is_matched_and_nothing_is_emptied(sc, tmp_path) -> None:
+    """A name with a lone surrogate (NTFS allows one; Linux gives one for bytes that are not
+    UTF-8) reached the meta line, the write failed, and the rule file was left empty."""
+    root = make_app(tmp_path)
+    try:
+        (root / "a\udc80b.py").write_text(USES, encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        pytest.skip(f"no such file name here: {exc}")
+    text = rules(sc, root)
+    assert '  - "a?b.py"\n' in split_front(text)[0]
+    # A write that cannot be encoded leaves the file as it was.
+    with pytest.raises(NotesFileError, match="not UTF-8"):
+        _write(root / CLAUDE, text + "\udc80")
+    assert read(root, CLAUDE) == text
 
 
 def test_unapply_removes_the_rule_files_and_nothing_else(sc, tmp_path) -> None:
@@ -279,6 +545,17 @@ def test_unapply_removes_the_rule_files_and_nothing_else(sc, tmp_path) -> None:
     assert sc("unapply", root)[1].strip() == "no since-cutoff block found"
 
 
+def test_unapply_of_one_rule_file_removes_it_as_a_formats_unapply_does(sc, tmp_path) -> None:
+    """``unapply --target <rule file>`` removed the block only, and left a front matter
+    without markers that the next sync refused."""
+    root = make_app(tmp_path)
+    rules(sc, root)
+    code, out = sc("unapply", root, "--target", CLAUDE)
+    assert code == EXIT_OK and "removed the since-cutoff block from since-cutoff-toylib.md" in out
+    assert not (root / CLAUDE).exists()
+    rules(sc, root)  # and sync writes it again
+
+
 def test_sync_says_when_agents_md_keeps_a_second_copy(sc, tmp_path) -> None:
     root = make_app(tmp_path)
     code, _ = sc("sync", root, *SONNET, "--yes")
@@ -287,7 +564,7 @@ def test_sync_says_when_agents_md_keeps_a_second_copy(sc, tmp_path) -> None:
     assert code == EXIT_OK
     assert (
         "AGENTS.md still has a notes block, which agents load on every request: `since-cutoff "
-        "unapply --target AGENTS.md` removes it." in " ".join(out.split())
+        "unapply --target AGENTS.md` removes it." in flat(out)
     )
     # Both are kept in step from then on.
     assert sc("sync", root, "--check")[0] == EXIT_OK
@@ -299,3 +576,12 @@ def test_run_leaves_the_rule_files_to_sync(sc, tmp_path, capsys) -> None:
     assert code == 2
     assert "run `since-cutoff sync --target cursor-rules`" in err
     assert not (root / ".cursor").exists()
+    rules(sc, root)
+    # Without --target, run --apply would write AGENTS.md beside the rule files; into a rule
+    # file's path, a block that sync would then take for a hand edit. Both stop before any
+    # model call.
+    code, err = errors(capsys, "run", root, "--apply")
+    assert code == 2 and "the notes are in rule files (.claude/rules)" in err
+    code, err = errors(capsys, "run", root, "--apply", "--target", CLAUDE)
+    assert code == 2 and f"{CLAUDE} is a rule file" in err
+    assert not (root / "AGENTS.md").exists()

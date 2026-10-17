@@ -282,6 +282,18 @@ def test_every_readme_says_how_to_install_run_and_what_the_cache_commands_are(na
         "CLAUDE.md does not import AGENTS.md, so Claude Code does not read the notes in AGENTS.md",
         "CLAUDE.md does not import AGENTS.md, so the notes go to both files",
         "CLAUDE.md imports AGENTS.md, so its since-cutoff block is a second copy of the notes",
+        "No API named '",
+        "the notes may be out of date",
+        "is not a dependency of this project",
+        "Give one of",
+        "explain --from and --to need --package",
+        "there is no change to explain",
+        "exists and has no since-cutoff block, so since-cutoff leaves it",
+        "holds the notes for",
+        "since-cutoff writes rule files only inside the project",
+        "is a hard link",
+        "at the repository's root (",
+        "the notes are in rule files (",
     ),
 )
 def test_troubleshooting_quotes_current_source_text(fragment: str) -> None:

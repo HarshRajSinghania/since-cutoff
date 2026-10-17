@@ -75,7 +75,7 @@ IMPORTED_APIS = 5
 DEFAULT_CUTOFF_MARGIN = 30
 CUTOFF_MARGIN_VAR = "SINCE_CUTOFF_CUTOFF_MARGIN"
 # The rule formats ``--target`` takes besides a file: since_cutoff.rules.FORMATS' names, copied
-# so that building the parser does not import notes; test_startup.py keeps them equal.
+# so that building the parser does not import notes; test_rules.py keeps them equal.
 RULE_TARGETS = ("claude-rules", "cursor-rules", "copilot-instructions")
 _RULES_HELP = (
     f"; or {', '.join(RULE_TARGETS[:-1])} or {RULE_TARGETS[-1]}: one path-scoped rule file "
@@ -625,14 +625,17 @@ def build_parser() -> argparse.ArgumentParser:
         "both signatures and where your code uses it (no model calls)",
         description="Explain one note: run the scan sync runs (with the model and cutoff the "
         "notes block was written for, unless --model or --cutoff is given) and print, for the "
-        "API, the note as the block writes it and which files' blocks have it, the package's "
-        "pinned release, the release it is compared from and where the version comes from, "
-        "each change with both signatures, the evidence behind the tag (the library's own "
+        "API, the note as the block writes it and which files' blocks have it (or have another "
+        "note for it, written for another version), the package's pinned release, the release "
+        "it is compared from and where each comes from, each change with both signatures and "
+        "the changed parameter in each, the evidence behind the tag (the library's own "
         "deprecation text and the file it is in, a replacement and where it is named, what a "
         "move kept, a switched dependency's Requires-Dist), the Runtime line, the changelog, "
         "every place your code uses it and in which form, and what the tag does not check. "
-        "No model is called and nothing is written. Exit code 1 when no changed API has that "
-        "name (the closest are listed).",
+        "No model is called and nothing is written. Up to 3 APIs that match are explained; "
+        "exit code 1 when no changed API has that name (the closest are listed, with a note a "
+        "block still has for it and the packages that could not be checked) or more than 3 "
+        "do (their names are listed).",
     )
     explain.add_argument(
         "api",
@@ -670,7 +673,12 @@ def build_parser() -> argparse.ArgumentParser:
     explain.add_argument("--cutoff", help="the training cutoff instead (YYYY-MM or YYYY-MM-DD)")
     _margin_flag(explain)
     explain.add_argument("--json", action="store_true", help="print the explanation as JSON")
-    explain.add_argument("--include-name-matches", action="store_true", help=_NAME_MATCHES_HELP)
+    explain.add_argument(
+        "--include-name-matches",
+        action="store_true",
+        help="also count the uses matched by a method's name alone, on a value whose class the "
+        "code does not show (tagged [name match]), as sync and scan do with this flag",
+    )
     explain.add_argument(
         "--max-download-mb",
         type=float,
@@ -799,7 +807,15 @@ def _main(argv: list[str] | None) -> int:
         argv_ = _argv_with_default(list(sys.argv[1:] if argv is None else argv))
     except SinceCutoffError as exc:
         return _usage_error(str(exc))
-    args = build_parser().parse_args(argv_)
+    parser = build_parser()
+    args, extra = parser.parse_known_args(argv_)
+    lone = len(extra) == 1 and not extra[0].startswith("-")
+    if lone and args.command == "explain" and args.path == ".":
+        # ``explain API --json PATH``: Python 3.10's argparse takes no option between two
+        # positionals, and leaves the path over (3.12 reads it as the path).
+        args.path, extra = extra[0], []
+    if extra:
+        parser.error(f"unrecognized arguments: {' '.join(extra)}")
     if getattr(args, "debug", False):
         import logging
 
@@ -871,13 +887,40 @@ def _cache_problem(args: argparse.Namespace) -> str | None:
 
 
 def _rules_problem(args: argparse.Namespace) -> str | None:
-    """``run --target cursor-rules``: the rule files are sync's; run writes one block."""
-    target = (getattr(args, "target", None) or "").strip().lower()
-    if args.command != "run" or target not in RULE_TARGETS:
+    """``run --target cursor-rules``: the rule files are sync's; run writes one block. Also
+    ``run --apply`` into a rule file's path, or with no ``--target`` in a project whose notes
+    are in rule files (it would write AGENTS.md beside them): before any model call."""
+    if args.command != "run":
         return None
+    given = (getattr(args, "target", None) or "").strip()
+    target = given.lower()
+    if target in RULE_TARGETS:
+        return (
+            f"run --apply writes one notes block, into a file; to write the notes as {target}, "
+            f"run `since-cutoff sync --target {target}`"
+        )
+    root = Path(args.path).resolve()
+    if not getattr(args, "apply", False) or not root.is_dir():
+        return None
+    from since_cutoff.notes import INSTRUCTION_FILES, has_markers
+    from since_cutoff.rules import format_of, present
+
+    if given:
+        path = Path(given) if Path(given).is_absolute() else root / given
+        rule = format_of(root, path)
+        if rule is None:
+            return None
+        return (
+            f"{given} is a rule file, which `since-cutoff sync --target {rule.name}` writes; "
+            "run --apply writes its block into AGENTS.md or another file of your choice"
+        )
+    formats = present(root)
+    if not formats or any(has_markers(root / n) for n in INSTRUCTION_FILES):
+        return None
+    names = ", ".join(f.folder for f in formats)
     return (
-        f"run --apply writes one notes block, into a file; to write the notes as {target}, "
-        f"run `since-cutoff sync --target {target}`"
+        f"the notes are in rule files ({names}), which `since-cutoff sync` keeps in step; run "
+        "--apply writes one block into a file: give --target AGENTS.md to write it there too"
     )
 
 
@@ -1227,7 +1270,7 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     from since_cutoff.models import parse_cutoff
     from since_cutoff.notes import IMPORTED_APIS, SCOPE_USED, agents_import_tip
     from since_cutoff.project import load_project
-    from since_cutoff.rules import rules_tip
+    from since_cutoff.rules import root_warning, rules_tip
     from since_cutoff.sync import (
         EXIT_EDITED,
         EXIT_OK,
@@ -1309,6 +1352,12 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     # loaded on every request.
     if not tip and any(p.block and p.target.rule for p in proposals):
         tip = rules_tip(project.root, [t.rule for t in targets if isinstance(t, RuleTargets)])
+    # A project in a folder of a repository: GitHub reads .github/instructions at its root only.
+    for t in targets:
+        if isinstance(t, RuleTargets) and any(p.block and p.target.rule for p in proposals):
+            warning = root_warning(project.root, t.rule)
+            if warning:
+                reporter.warn(warning)
 
     def finish(code: int) -> int:
         if args.json:
@@ -1356,8 +1405,16 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
         write_proposal(p)
         written.add(p.target.name)
         out.print(f"[green]✓[/green] {_escape(written_text(p))}")
-    if any(p.target.text for p in changed):
+    if any(p.target.text and p.action != "deleted" for p in changed):
         out.print("[dim]Text outside the since-cutoff markers is unchanged.[/dim]")
+    for t in targets:
+        if isinstance(t, RuleTargets) and t.files and not t.rule.files(project.root):
+            # The last of them went: a plain sync no longer knows the notes went there.
+            out.print(
+                f"[dim]No since-cutoff rule files are left in {_escape(t.rule.folder)}: when a "
+                f"package needs notes again, `since-cutoff sync --target {t.rule.name}` writes "
+                "them there (a plain sync writes AGENTS.md).[/dim]"
+            )
     return finish(EXIT_OK)
 
 
@@ -1465,7 +1522,16 @@ def _cmd_explain(args: argparse.Namespace, ui: Console) -> int:
 
     from since_cutoff.cache import DiskCache
     from since_cutoff.engine import Settings
-    from since_cutoff.explain import blocks_of, explain_json, lookup, lookup_lines, version_scan
+    from since_cutoff.explain import (
+        Given,
+        blocks_of,
+        exit_code,
+        explain_json,
+        lookup,
+        lookup_lines,
+        notices,
+        version_scan,
+    )
     from since_cutoff.models import parse_cutoff
     from since_cutoff.project import load_project
     from since_cutoff.sync import read_targets, sticky_target, target_files
@@ -1508,14 +1574,17 @@ def _cmd_explain(args: argparse.Namespace, ui: Console) -> int:
     reporter.done()
     result = lookup(scan, args.api, args.package)
     blocks = blocks_of(files)
-    code = 0 if result.found else 1
+    given = Given(bool(args.from_version), bool(args.to_version))
+    options: dict[str, Any] = {"given": given, "package": args.package}
+    options["said"] = notices(project, scan, files)
     if args.json:
-        STDOUT.write(json.dumps(explain_json(scan, result, blocks), indent=2, default=str) + "\n")
-        return code
+        listed = explain_json(scan, result, blocks, **options)
+        STDOUT.write(json.dumps(listed, indent=2, default=str) + "\n")
+        return exit_code(result)
     ui.print()
-    for line in lookup_lines(scan, result, blocks):
+    for line in lookup_lines(scan, result, blocks, **options):
         ui.print(line, markup=False, highlight=False)
-    return code
+    return exit_code(result)
 
 
 def _confirm(question: str, out: Console) -> bool | None:
@@ -1789,7 +1858,7 @@ def _cmd_unapply(args: argparse.Namespace, out: Console) -> int:
     """Remove the block from AGENTS.md and CLAUDE.md, and the rule files since-cutoff wrote
     (issue #16), or from ``--target`` only: a file, or a rule format (``cursor-rules``)."""
     from since_cutoff.notes import remove_block
-    from since_cutoff.rules import FORMATS, remove_rule, rule_format
+    from since_cutoff.rules import FORMATS, format_of, outside, remove_rule, rule_format
 
     root = Path(args.path).resolve()
     if not root.is_dir():
@@ -1801,7 +1870,21 @@ def _cmd_unapply(args: argparse.Namespace, out: Console) -> int:
         files, formats = [Path(args.target)], []
     else:
         files, formats = [root / "AGENTS.md", root / "CLAUDE.md"], list(FORMATS.values())
-    removed = [t.name for t in files if remove_block(t if t.is_absolute() else root / t)]
+    removed = []
+    for t in files:
+        path = t if t.is_absolute() else root / t
+        if format_of(root, path) is None:
+            done = remove_block(path)
+        else:  # a rule file: as a format's (the file goes when nothing of the user's is left)
+            why = outside(root, path.parent) or outside(root, path)
+            if why:
+                raise SinceCutoffError(
+                    f"{t.as_posix()} {why}: since-cutoff removes rule files only inside the "
+                    "project, so it leaves it alone"
+                )
+            done = remove_rule(path)
+        if done:
+            removed.append(t.name)
     for f in formats:
         removed += [p.relative_to(root).as_posix() for p in f.files(root) if remove_rule(p)]
     if removed:

@@ -253,6 +253,24 @@ def cache(tmp_path: Path) -> DiskCache:
     return DiskCache(tmp_path / "cache")
 
 
+@pytest.fixture
+def older_python(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Parse sources as Python 3.10 does a line of newer syntax, whatever Python runs the test:
+    a SyntaxError for a line that starts with a PEP 695 ``type`` statement or ``def g[``
+    (numpy 2.5's ``__init__.pyi`` has the first)."""
+    import griffe
+
+    visit = griffe.GriffeLoader._visit_module
+
+    def as_310(self: Any, module_name: str, module_path: Path, parent: Any = None) -> Any:
+        for n, line in enumerate(Path(module_path).read_text().splitlines(), 1):
+            if line.startswith(("type ", "def g[")):
+                raise SyntaxError("invalid syntax", (str(module_path), n, 6, line + "\n"))
+        return visit(self, module_name, module_path, parent)
+
+    monkeypatch.setattr(griffe.GriffeLoader, "_visit_module", as_310)
+
+
 # ------------------------------------------------------------------ fake PyPI
 def _dt(s: str) -> datetime:
     return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)

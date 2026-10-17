@@ -2,6 +2,41 @@
 
 ## Unreleased
 
+- A package whose sources the running Python cannot parse could not be checked, and the scan
+  says so, instead of reporting no changes: on Python 3.10, numpy 2.5.4's `__init__.pyi` (PEP
+  695 `type` statements) and 2.3.1's (a PEP 646 `*tuple[...]` in a subscript) failed to load
+  with a debug log only, and the scan said numpy had no breaking changes. It now warns "numpy
+  2.3.1's and 2.5.4's sources use syntax that Python 3.10 cannot parse; run since-cutoff with
+  Python 3.12 or later to check it", and lists numpy among the dependencies that could not be
+  checked. This holds for a release's top-level module or stub, and for a public module in the
+  syntax of a newer Python (PEP 758's `except A, B:` back to PEP 646, from the line that fails);
+  private modules in newer syntax are left out and counted in one warning per package. Nothing
+  is cached for them, so a run on a newer Python compares them, and a diff a newer Python cached
+  is served as before. A module no Python parses (Python 2 code, a template) is left out, as
+  before.
+- Quotes in the notes keep the library's code whole: pandas' `read_csv` note read `pandas 2.3.0
+  said: "Use '`sep=`\s+''' instead" For ...`, from ``` Use ``sep='\\s+'`` instead ```. A
+  reStructuredText literal is one code span with its backslashes unescaped (`` `sep="\s+"` ``),
+  code that names something the pinned version has stays code, other code is in quotes, and a
+  quoted sentence ends with a period; a quote that cannot be made clean (a backtick no span
+  closes) is left out, and is no evidence for `[diff + library]`. A replacement stated directly
+  is quoted with the rest of its sentence when that says how, up to 200 characters (polars'
+  "use `DataFrame.unpivot` instead, with 'index' instead of 'id_vars' and 'on' instead of
+  'value_vars'", which the note cut to "Use `DataFrame.unpivot` instead."), and a deprecation
+  message that says more than "deprecated" is quoted (fastapi's `ORJSONResponse`: "FastAPI now
+  serializes data directly to JSON bytes via Pydantic ...", which `--all` printed and the note
+  left out).
+- More notes name the replacement the library's own text gives (diff schema 21 still: 0.6.0 is
+  not released). The body of a `.. deprecated::` directive is read after a blank line too
+  (pandas' `DataFrame.applymap`: "Use `DataFrame.map` instead."), and the docstring an
+  `@Appender` template gives a function (`read_csv(date_parser=)`: "Use `date_format` instead,
+  or read in as 'object' and then apply `pandas.to_datetime` as-needed."); a name the member's
+  class no longer has is found on its public subclasses (`NDFrame.swapaxes`: "Use
+  `DataFrame.transpose` instead."); a removed member with no text of its own takes its class's
+  (llama-index-core's `ReActAgent.from_tools`: "Use `llama_index.core.agent.workflow.ReActAgent`
+  instead."), and a removed class its first method's that names something (huggingface-hub's
+  `HfFolder`, from `get_token`'s "deprecated in favor of [`huggingface_hub.get_token`]"). Their
+  notes pointed at the releases page before.
 - Notes from the diff say what to use instead in more cases, and point somewhere useful when they
   cannot (an audit of 36 libraries found 25 of 36 notes ending in "since-cutoff found no
   replacement in X's deprecation text", several although the text named one; #14). A replacement
@@ -16,14 +51,18 @@
   text ("see `Helper` for the background. Use `new_func` instead." names `new_func`). "see X" and
   advice ("Use `strict=False` to keep the previous lenient parsing") are quoted under `[diff]`,
   not taken as replacements.
-  Where the text names nothing, the note points at the package's changelog with the pinned
-  version ("See https://github.com/encode/httpx/blob/master/CHANGELOG.md (0.28.1).": the
-  Changelog URL in its PyPI metadata, else the releases page of the GitHub repository its Source,
-  Repository or Homepage URL names; never a sponsors or organisation page, pydantic-core's first
-  URL being `github.com/sponsors/samuelcolvin`), and says "found no replacement" only when PyPI
-  lists neither. The cached PyPI metadata now keeps a package's project URLs, summary and home
-  page (`PyPI.project_urls`, `PyPI.summary`); a copy cached before is fetched again once, and
-  read as it is when PyPI cannot be reached, without asking PyPI again for the rest of the scan.
+  Where the text names nothing, the note points at the package's migration guide or changelog
+  for the changes since the release compared from ("See
+  https://github.com/encode/httpx/blob/master/CHANGELOG.md for the changes since 0.27.2.": a
+  project URL labelled as a migration or upgrade guide in its PyPI metadata, else the Changelog
+  URL, else the releases page of the GitHub repository its Source, Repository or Homepage URL
+  names; never a sponsors or organisation page, pydantic-core's first URL being
+  `github.com/sponsors/samuelcolvin`), and says "found no replacement" only when PyPI lists none
+  of them. The pointer named the pinned version at first, which misled: anthropic 1.13.0's notes
+  cited 1.13.0 for what 1.0.0 removed, and the diff does not say which release made a change.
+  The cached PyPI metadata now keeps a package's project URLs, summary and home page
+  (`PyPI.project_urls`, `PyPI.summary`); a copy cached before is fetched again once, and read as
+  it is when PyPI cannot be reached, without asking PyPI again for the rest of the scan.
 - A function deprecated in one call form only (a PEP 702 `@deprecated` on one `@overload`) is
   named by the parameters that form alone takes (diff schema 21, `call_form_only`): mcp 2.2's
   note read "`Server` called as `__init__(self, name: str, *, version: str = ..., ...)` is

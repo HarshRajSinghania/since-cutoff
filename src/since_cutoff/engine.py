@@ -51,7 +51,9 @@ from since_cutoff.apidiff import (
     PARAM_REMOVED,
     PARAM_REQUIRED,
     TIER_INTERNAL,
+    UNREAD_SYNTAX,
     APIChange,
+    UnparsedSources,
     dependency_module,
     diff_sources_with_unread,
     griffe_version,
@@ -93,6 +95,7 @@ from since_cutoff.notes import (
     deps_hash,
     diff_note,
     diff_notes,
+    migration_url,
     new_package_note,
     render_block,
     render_legacy_block,
@@ -355,7 +358,8 @@ class PackageScan:
     first_released: str | None = None
     # From the package's PyPI metadata, read with its release list: its one-line summary (NEW
     # only), and where it documents its releases (pypi.changelog_url: a Changelog URL, else the
-    # GitHub releases page), for the notes. None when PyPI lists neither.
+    # GitHub releases page; for a package compared with an older release, a migration guide
+    # first, notes.migration_url), for the notes. None when PyPI lists none.
     summary: str | None = None
     changelog: str | None = None
     # CHANGED: modules the pinned release ships compiled, without a source or a stub, that hid
@@ -1385,8 +1389,13 @@ class Engine:
             what = f"{len(to_diff)} package{'' if one else 's'} released after {'its' if one else 'their'}"
             self.reporter.stage(f"Diffing the API of {what} cutoff version", len(to_diff))
             locked = {d.key: d.version for d in project.dependencies if d.version}
-            self._diff_all(to_diff, locked=locked, when=target.compare_date)
+            unparsed = self._diff_all(to_diff, locked=locked, when=target.compare_date)
+        else:
+            unparsed = []
         self.reporter.done()
+        for text in unparsed:
+            warnings.append(text)
+            self.reporter.warn(text)
         for s in to_diff:
             if s.unread:
                 warnings.append(unread_warning(s))
@@ -1429,8 +1438,12 @@ class Engine:
             locked = self.pypi.release(dep.key, scan.locked)
             scan.locked_date = locked.uploaded.date().isoformat()
             # From the metadata the release list came with (cached): no request of its own.
-            scan.changelog = changelog_url(self.pypi.project_urls(dep.key))
+            urls = self.pypi.project_urls(dep.key)
             at_cutoff = self.pypi.version_at(dep.key, target.compare_date)
+            # Compared with an older release, a note that names no replacement points at the
+            # migration guide first; a new package's note names its changelog.
+            guide = migration_url(urls) if at_cutoff is not None else None
+            scan.changelog = guide or changelog_url(urls)
             if at_cutoff is None:
                 scan.status, scan.reason = NEW, "first released after the cutoff"
                 first = min((r.uploaded for r in self.pypi.releases(dep.key)), default=None)
@@ -1487,7 +1500,7 @@ class Engine:
         *,
         locked: Mapping[str, str] | None = None,
         when: date | None = None,
-    ) -> None:
+    ) -> list[str]:
         """Diff each scan's two releases. ``locked`` (the project's dependencies by canonical
         name) and ``when`` (the comparison date) pick the versions of the distributions each
         side takes names from (:meth:`_siblings`): the locked one for the pinned release, the
@@ -1497,8 +1510,19 @@ class Engine:
         release at the cutoff is read when the diff is not cached, and once to learn which
         distributions it takes names from (the diff's key names them: :meth:`_diff_key`), which
         the store then keeps (:meth:`_wanted_siblings`), so that a later scan serves the cached
-        diff from the pinned release alone, with nothing else to download."""
+        diff from the pinned release alone, with nothing else to download.
+
+        Returns the scan's warnings for the packages whose sources the running Python cannot
+        parse (apidiff.UnparsedSources): each is SKIPPED, with the warning as its reason, and
+        nothing is cached for it, so that a run on a newer Python diffs it."""
         locked = locked or {}
+        unparsed: list[str] = []
+
+        def unchecked(s: PackageScan, exc: UnparsedSources) -> None:
+            s.status, s.reason = SKIPPED, str(exc)
+            unparsed.append(str(exc))
+            self.reporter.advance(label=s.name)
+
         wanted: list[tuple[str, str]] = []
         for s in scans:
             assert s.cutoff_version and s.locked
@@ -1608,21 +1632,25 @@ class Engine:
 
         if len(pending) <= 1 or not self.processes or os.environ.get("SINCE_CUTOFF_NO_PROCESSES"):
             for s, old, new, names, old_roots, new_roots, key in pending:
-                result = diff_sources_with_unread(
-                    s.name,
-                    old.version,
-                    old.root,
-                    new.version,
-                    new.root,
-                    names,
-                    old_requires=old.requires,
-                    new_requires=new.requires,
-                    new_compiled=list(new.compiled),
-                    old_roots=old_roots,
-                    new_roots=new_roots,
-                )
+                try:
+                    result = diff_sources_with_unread(
+                        s.name,
+                        old.version,
+                        old.root,
+                        new.version,
+                        new.root,
+                        names,
+                        old_requires=old.requires,
+                        new_requires=new.requires,
+                        new_compiled=list(new.compiled),
+                        old_roots=old_roots,
+                        new_roots=new_roots,
+                    )
+                except UnparsedSources as exc:
+                    unchecked(s, exc)
+                    continue
                 self._finish(s, result, key)
-            return
+            return unparsed
         workers = max(1, min(len(pending), (os.cpu_count() or 2) - 1, 6))
         pool = ProcessPoolExecutor(max_workers=workers)
         try:
@@ -1647,6 +1675,8 @@ class Engine:
                 s, key = futs[fut]
                 try:
                     self._finish(s, fut.result(), key)
+                except UnparsedSources as exc:
+                    unchecked(s, exc)
                 except Exception as exc:  # a crash in one package must not sink the run
                     s.status, s.reason = SKIPPED, f"API diff failed: {exc}"
                     self.reporter.advance(label=s.name)
@@ -1654,6 +1684,7 @@ class Engine:
             pool.shutdown(wait=False, cancel_futures=True)
             raise
         pool.shutdown()
+        return unparsed
 
     def _wanted_siblings(
         self, name: str, version: str, tree: SourceTree | None = None
@@ -1785,9 +1816,10 @@ class Engine:
     ) -> None:
         """Take a diff (its changes, and the compiled modules that hid something), computed or
         from the cache; only a finished diff sets :attr:`PackageScan.unread`, so a failed one
-        warns of nothing."""
+        warns of nothing. A diff that left out private modules the running Python cannot parse
+        (apidiff.UNREAD_SYNTAX) is not stored: a newer Python reads them."""
         changes, unread = result
-        if store:
+        if store and not any(UNREAD_SYNTAX in entry for entry in unread):
             self.store.set("diffs", key, changes)
             if unread:
                 self.store.set("diffs", self._unread_key(s), unread)

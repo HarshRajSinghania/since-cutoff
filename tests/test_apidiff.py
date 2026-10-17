@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import textwrap
 from datetime import date
 from pathlib import Path
@@ -21,8 +22,13 @@ from since_cutoff.apidiff import (
     REMOVED,
     TIER_INTERNAL,
     TIER_PUBLIC,
+    UNREAD_SYNTAX,
     APIChange,
+    UnparsedSources,
+    _needs_python,
     diff_sources,
+    diff_sources_with_unread,
+    unread_text,
 )
 from since_cutoff.cache import DiskCache, stable_hash
 from since_cutoff.engine import Engine, ModelTarget, PackageScan, ScanResult, Settings
@@ -824,3 +830,131 @@ def test_a_re_export_of_another_kind_is_a_kind_change(tmp_path: Path):
     assert [(c.kind, c.path, c.old_kind, c.new_kind) for c in changes] == [
         (KIND_CHANGED, "pkg.api.Tool", "class", "function")
     ]
+
+
+# ------------------------------------------- sources the running Python cannot parse
+# numpy 2.5.4's ``__init__.pyi:737`` (PEP 695) and numpy 2.3.1's ``__init__.pyi:801`` (PEP 646):
+# Python 3.10 cannot parse either, and the scan said "no breaking changes" of numpy.
+NUMPY_TYPE_LINE = "type _Falsy = L[False, 0] | bool_[L[False]]"
+NUMPY_STAR_LINE = '_1NShapeT = TypeVar("_1NShapeT", bound=tuple[L[1], *tuple[L[1], ...]])'
+NEWER = sys.version_info >= (3, 12)  # parses ``type X = int`` itself
+
+
+def _next_python(version: tuple[int, int]) -> str:
+    """What since-cutoff names as the Python that can: the syntax's, at least the next one."""
+    best = max(version, (sys.version_info[0], sys.version_info[1] + 1))
+    return f"{best[0]}.{best[1]}"
+
+
+def _typed_stub(tmp_path: Path) -> tuple[Path, Path]:
+    old = write_tree(tmp_path / "old", {"tp/__init__.py": "def f(a, b): ...\n"})
+    new = write_tree(
+        tmp_path / "new",
+        {
+            "tp/__init__.py": "def f(a): ...\n",
+            "tp/__init__.pyi": "type X = int\n\ndef f(a) -> X: ...\n",
+        },
+    )
+    return old, new
+
+
+def test_a_stub_the_running_python_cannot_parse_is_not_checked(tmp_path, older_python) -> None:
+    """The top-level stub is where griffe gives up on the whole package: the diff raises,
+    naming the release and the Python that can parse it, instead of finding no changes."""
+    old, new = _typed_stub(tmp_path)
+    with pytest.raises(UnparsedSources) as raised:
+        diff_sources_with_unread("tp", "1.0", old, "2.5.4", new, ["tp"])
+    running = f"{sys.version_info[0]}.{sys.version_info[1]}"
+    assert str(raised.value) == (
+        f"tp 2.5.4's sources use syntax that Python {running} cannot parse; run since-cutoff "
+        f"with Python {_next_python((3, 12))} or later to check it"
+    )
+
+
+@pytest.mark.skipif(NEWER, reason="this Python parses PEP 695 type statements")
+def test_a_pep_695_stub_on_an_older_python_is_not_checked(tmp_path) -> None:
+    old, new = _typed_stub(tmp_path)
+    with pytest.raises(UnparsedSources, match=r"run since-cutoff with Python 3\.12 or later"):
+        diff_sources_with_unread("tp", "1.0", old, "2.5.4", new, ["tp"])
+
+
+def test_both_releases_unparsable_are_named_once(tmp_path, older_python) -> None:
+    """numpy 2.3.1 and 2.5.4 on Python 3.10: the release compared from fails first, and the
+    pinned one is read all the same, so that the Python named parses both."""
+    _, new = _typed_stub(tmp_path)
+    old = write_tree(tmp_path / "older", {"tp/__init__.py": "type X = int\n"})
+    with pytest.raises(UnparsedSources, match=r"^tp 2\.3\.1's and 2\.5\.4's sources use syntax"):
+        diff_sources_with_unread("tp", "2.3.1", old, "2.5.4", new, ["tp"])
+
+
+def test_a_private_module_in_newer_syntax_is_counted_and_said_once(tmp_path, older_python):
+    """A private module griffe drops with a debug log: the rest is compared, and the unread
+    entries say which modules were left out and which Python reads them."""
+    old = write_tree(tmp_path / "old", {"tp/__init__.py": "def f(a, b): ...\n"})
+    new = write_tree(
+        tmp_path / "new",
+        {
+            "tp/__init__.py": "def f(a): ...\n",
+            "tp/_core/__init__.py": "",
+            "tp/_core/gen.py": "def g[T](x: T) -> T: ...\n",
+            "tp/_core/more.py": "type Y = str\n",
+        },
+    )
+    changes, unread = diff_sources_with_unread("tp", "1.0", old, "2.0", new, ["tp"])
+    assert [(c["kind"], c["path"], c["parameter"]) for c in changes] == [
+        (PARAM_REMOVED, "tp.f", "b")
+    ]
+    needed = _next_python((3, 12))
+    assert unread == [
+        f"tp._core.gen{UNREAD_SYNTAX}{needed}",
+        f"tp._core.more{UNREAD_SYNTAX}{needed}",
+    ]
+    running = f"{sys.version_info[0]}.{sys.version_info[1]}"
+    assert unread_text("tp", "2.0", "1.0", unread) == (
+        f"tp 2.0: 2 private modules (tp._core.gen and tp._core.more) use syntax that Python "
+        f"{running} cannot parse, so changes in them are not reported; run since-cutoff with "
+        f"Python {needed} or later to check them"
+    )
+
+
+def test_a_public_module_in_newer_syntax_is_not_checked(tmp_path, older_python) -> None:
+    old = write_tree(tmp_path / "old", {"tp/__init__.py": "", "tp/gen.py": "def g(x): ...\n"})
+    new = write_tree(tmp_path / "new", {"tp/__init__.py": "", "tp/gen.py": "def g[T](x: T): ...\n"})
+    with pytest.raises(UnparsedSources, match=r"^tp 2\.0's sources use syntax"):
+        diff_sources_with_unread("tp", "1.0", old, "2.0", new, ["tp"])
+
+
+def test_a_module_no_python_parses_stays_a_debug_log(tmp_path) -> None:
+    """Python 2 code shipped in a package (or a template) is no newer syntax: as before, the
+    rest is compared and nothing is said of it."""
+    old = write_tree(tmp_path / "old", {"tp/__init__.py": "def f(a, b): ...\n"})
+    new = write_tree(
+        tmp_path / "new", {"tp/__init__.py": "def f(a): ...\n", "tp/legacy.py": 'print "hi"\n'}
+    )
+    changes, unread = diff_sources_with_unread("tp", "1.0", old, "2.0", new, ["tp"])
+    assert [c["parameter"] for c in changes] == ["b"] and unread == []
+
+
+@pytest.mark.parametrize(
+    ("line", "version"),
+    [
+        (NUMPY_TYPE_LINE, (3, 12)),
+        (NUMPY_STAR_LINE, (3, 11)),
+        ("class Array(Generic[*Shape]): ...", (3, 11)),
+        ("def call(*args: *Ts) -> None: ...", (3, 11)),
+        ('print "row", rows[i * n]', None),
+        ("def first[T](xs: list[T]) -> T: ...", (3, 12)),
+        ("class Box[T = int]: ...", (3, 13)),
+        ("except* ValueError:", (3, 11)),
+        ("except ValueError, TypeError:", (3, 14)),
+        ('print "hi"', None),
+        ("{{ cookiecutter.name }} = 1", None),
+    ],
+)
+def test_which_python_parses_a_line(line: str, version: tuple[int, int] | None) -> None:
+    found = _needs_python(SyntaxError("invalid syntax", ("x.pyi", 1, 1, line)))
+    if version is None:
+        assert found is None
+    else:
+        expected = max(version, (sys.version_info[0], sys.version_info[1] + 1))
+        assert found == expected

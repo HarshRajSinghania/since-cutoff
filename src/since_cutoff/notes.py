@@ -8,7 +8,8 @@ not know, each tagged with what was checked, and nothing else claimed.
   ``[diff]``                    the change is in the static comparison of the two releases'
                                 public APIs; no replacement is named ("do not pass it"), and
                                 where the library's text names none, the note points at the
-                                package's changelog (from its PyPI metadata) instead
+                                package's migration guide or changelog (from its PyPI
+                                metadata) instead
   ``[diff + library]``          the replacement is named in the library's own deprecation
                                 text and exists in the pinned version (``use `stop```)
   ``[diff + move checked]``     the object at the new path keeps the old one's public names
@@ -476,8 +477,10 @@ def diff_note(
     to force a new download, use `force_download=True`") is quoted, and is not a replacement.
     What has none is said right after what it is about: "huggingface-hub's deprecation text
     says there is no replacement for `x`" where the library says so; else a pointer to where
-    the package documents its releases, "See <changelog> (2.0.0).", when ``changelog`` is
-    known (:func:`pypi.changelog_url`), else "since-cutoff found no replacement in its
+    the package documents its releases, "See <changelog> for the changes since 0.34.3." (the
+    release compared from: the diff does not say which later release made the change), when
+    ``changelog`` is known (:func:`migration_url`, else :func:`pypi.changelog_url`), else
+    "since-cutoff found no replacement in its
     deprecation text" (what was read: docstrings, deprecation decorators, warnings). A removed
     parameter of an SDK method that still takes ``extra_body`` points there instead, and says
     nothing more. Names that merely look similar go in ``not_confirmed``, never in the bullet,
@@ -744,14 +747,29 @@ def _replacement_sentences(
         some = _unique(unnamed) != _unique(items)
         listed = _listed(_unique(unnamed), "or")
         if changelog:
+            # Since the release compared from: the change may be in any release after it, and
+            # the pinned version (anthropic 1.13.0, for what 1.0.0 removed) would mislead.
             see = f"For {listed}, see" if some else "See"
-            sentences.append(f"{see} {_url(changelog)} ({group[0].to_version}).")
+            sentences.append(
+                f"{see} {_url(changelog)} for the changes since {group[0].from_version}."
+            )
         else:
             rest = f" for {listed}" if some else ""
             sentences.append(
                 f"since-cutoff found no replacement{rest} in {package}'s deprecation text."
             )
     return sentences
+
+
+def migration_url(urls: dict[str, str]) -> str | None:
+    """The project URL (:meth:`pypi.PyPI.project_urls`) labelled as a migration or upgrade guide
+    ("Migration guide", "Upgrading", "Migrate"), for a note that names no replacement to point
+    at before the changelog; None when there is none."""
+    for label, url in urls.items():
+        key = re.sub(r"[\s_'-]", "", label.lower())
+        if key.startswith(("migrat", "upgrad")) and url.strip().startswith(("https://", "http://")):
+            return url.strip()
+    return None
 
 
 def _url(url: str) -> str:
@@ -886,7 +904,11 @@ def _library_evidence(
         replacement = Replacement(found[0], EVIDENCE_LIBRARY, source, what)
         shown = _listed([_shown_name(n) for n in found], "or")
         use = f"Use {shown} instead of `{what}`." if change.parameter else f"Use {shown} instead."
-        quote = "" if stated.direct else _quote(text, found[0])
+        # Stated directly, the short form says it all, unless the sentence goes on to say how
+        # (polars' "use `DataFrame.unpivot` instead, with `index` instead of `id_vars` ...").
+        quote = "" if stated.direct and not stated.more else _quote(text, found[0], keep=names)
+        if quote is None:
+            continue  # it cannot be quoted cleanly: the text is not shown, nor taken as evidence
         if quote:
             return f'{on}{change.package} {version} {said}: "{quote}"', replacement
         return use, replacement
@@ -896,7 +918,7 @@ def _library_evidence(
     text, version, _where, said = next(
         (t for t in texts if _mentions(_plain(t[0]), last)), texts[-1]
     )
-    quote = _quote(text, best)
+    quote = _quote(text, best, keep=names)
     if not quote:
         return None
     return f'{on}{change.package} {version} {said}: "{quote}"', None
@@ -977,6 +999,10 @@ class _Stated:
     # The cue states them as the replacement. False for "see `X`", and for a sentence-initial
     # "Use `X` to ..." that says more than the names: advice, quoted and not a replacement.
     replacement: bool
+    # The sentence goes on after the cue with a clause of its own: polars' "use
+    # `DataFrame.unpivot` instead, with `index` instead of `id_vars` and ...". The note then
+    # quotes it, short as the direct form would be.
+    more: bool = False
 
 
 def _stated_replacement(text: str, names: list[str], subject: str = "") -> _Stated | None:
@@ -1012,19 +1038,25 @@ def _stated_by(cue: re.Pattern[str], sentences: list[str], names: list[str]) -> 
         ((i, m) for i, sentence in enumerate(sentences) for m in cue.finditer(sentence)),
         key=lambda im: (im[0], im[1].start("rest")),
     )
-    for _, m in matches:
+    for i, m in matches:
         tokens = [t.strip(".") for t in _TOKEN.findall(m.group("rest"))]
         said = [(t, _named_as(t, names)) for t in tokens if t]
         found = _unique(n for _, n in said if n is not None)
         if not found:
             continue
         direct = all(n is not None or t.lower() in ("or", "and") for t, n in said)
+        more = _GOES_ON.match(sentences[i][m.end() :]) is not None
         weak = m.groupdict().get("weak")
         if weak is None:
-            return _Stated(found, direct, True)
+            return _Stated(found, direct, True, more)
         # A sentence-initial "Use" that names nothing else states it; "see" never does.
-        return _Stated(found, direct, direct and weak.lower() != "see")
+        return _Stated(found, direct, direct and weak.lower() != "see", more)
     return None
+
+
+# A clause after the cue that says more than "instead": ", with `index` instead of ...", ",
+# or read in as ``object`` and then ..." (not " of this.").
+_GOES_ON = re.compile(r"\s*[,;:]\s*\w|\s+(?:with|and|or|but|which|passing|using|setting)\s", re.I)
 
 
 def _named_as(said: str, names: list[str]) -> str | None:
@@ -1043,63 +1075,131 @@ _NOISE = re.compile(
 )
 
 
-# Markup a docstring puts around a name: Sphinx roles (:func:`x`, :py:meth:`~pkg.x`) and
-# MkDocs' cross-references ([`HfApi`], ['Repository']).
+# Markup a docstring puts around a name: Sphinx roles (:func:`x`, :py:meth:`~pkg.x`), MkDocs'
+# cross-references ([`HfApi`], ['Repository']), reStructuredText's ``literals`` and its
+# ``.. deprecated:: 2.1.0`` directive (the bullet says "deprecated" already).
 _ROLE = re.compile(r":(?:\w+:)+(?=`)")
 _BRACKETED = re.compile(r"\[([`'\"][^\[\]]*?[`'\"])\]")
+_RST_LITERAL = re.compile(r"``(?!`)(.+?)``")
+_DIRECTIVE = re.compile(r"\.\.\s+deprecated::(?:\s+v?\d[\w.]*\w)?\s*", re.IGNORECASE)
+_SPAN = re.compile(r"`([^`]+)`")
 
 
 def _plain(text: str) -> str:
-    """``text`` without the markup around names: ``[`HfApi`]`` reads ```HfApi```."""
-    return _BRACKETED.sub(r"\1", _ROLE.sub("", text).replace("`~", "`"))
+    """``text`` without the markup around names: ``[`HfApi`]`` reads ```HfApi```, and
+    ```sep='\\\\s+'``` (reStructuredText, which escapes the backslash) reads ```sep='\\s+'```."""
+    text = _RST_LITERAL.sub(r"`\1`", _DIRECTIVE.sub("", text))
+    text = _BRACKETED.sub(r"\1", _ROLE.sub("", text).replace("`~", "`"))
+    return _SPAN.sub(lambda m: "`" + m.group(1).replace("\\\\", "\\") + "`", text)
+
+
+# A code span a quote keeps as one (the name of what exists in the pinned version, called or
+# with a value: ``DataFrame.unpivot``, ``sep='\s+'``, ``force_download=True``).
+_KEPT_CODE = re.compile(r"\.?(?P<name>[A-Za-z_][\w.]*?)(?:\(\))?(?:=\S+)?")
+
+
+def _render(text: str, keep: Sequence[str] = ()) -> str | None:
+    """``text`` (:func:`_plain`) as a note quotes it, on one line, unable to end the block
+    (:func:`safe_text`): a code span that names one of ``keep`` (names that exist in the pinned
+    version) stays one, whole (```sep='\\s+'```); any other reads 'quoted'. None when it cannot
+    be made clean, rather than garbled: a backtick left outside a span, or a span to quote that
+    holds a quote itself."""
+    text = " ".join(text.split())
+    while "<!--" in text or "-->" in text:  # "<!<!----" is "<!--" once the inner one goes
+        text = text.replace("<!--", "").replace("-->", "")
+    out: list[str] = []
+    end = 0
+    for m in _SPAN.finditer(text):
+        out.append(text[end : m.start()])
+        end = m.end()
+        code = m.group(1).strip()
+        named = _KEPT_CODE.fullmatch(code)
+        # By its whole name or its last parts: ``DataFrame.unpivot`` is
+        # ``polars.dataframe.frame.DataFrame.unpivot``; ``HfFolder.get_token`` is not
+        # ``huggingface_hub.get_token``.
+        name = named.group("name") if named else ""
+        if name and any(k == name or k.endswith("." + name) for k in keep):
+            out.append(f"`{code}`")
+        elif "'" in code:
+            return None
+        else:
+            out.append(f"'{code}'")
+    out.append(text[end:])
+    if any("`" in part for part in out[::2]):
+        return None  # a backtick no span closes
+    return "".join(out)
 
 
 def _sentences(text: str) -> list[str]:
-    return [s for s in re.split(r"(?<=[.!?])\s+", " ".join(_plain(text).split())) if s]
+    """The sentences of ``text`` (:func:`_plain`); a "; " before a capital letter ends one too,
+    where apidiff joined two texts (polars 1.31's decorator message and its docstring's "Use
+    the :meth:`.unpivot` method instead.")."""
+    plain = " ".join(_plain(text).split())
+    return [s for s in re.split(r"(?<=[.!?])\s+|;\s+(?=[A-Z])", plain) if s]
 
 
 def _worth_quoting(sentence: str) -> bool:
-    """Not boilerplate the bullet says already, and not a request to open an issue."""
+    """Not boilerplate the bullet says already, and not a request to open an issue. A sentence
+    that says "deprecated" is boilerplate unless it gives advice, or a clause of it says
+    something else at some length: fastapi 0.143's "ORJSONResponse is deprecated, FastAPI now
+    serializes data directly to JSON bytes via Pydantic when a return type or response model is
+    set, ..." is worth quoting; "X is deprecated, and will be removed in 3.0." is not."""
     if _NOISE.search(sentence):
         return False
-    return not (_BOILERPLATE.search(sentence) and not _ADVICE.search(sentence))
+    if not _BOILERPLATE.search(sentence) or _ADVICE.search(sentence):
+        return True
+    clauses = re.split(r"[,;:]\s+|\s+-+\s+", sentence)
+    return any(not _BOILERPLATE.search(c) and len(c.split()) >= 5 for c in clauses)
 
 
-def _whole_sentences(sentences: list[str], limit: int) -> str:
-    """As many of ``sentences`` as fit in ``limit`` characters, each whole (:func:`safe_text`
-    made): "" when not even the first one fits. A quote never stops mid-sentence."""
+# How long a quote may be: a sentence that states the replacement whole, as polars 1.31's
+# "`DataFrame.melt` is deprecated; use `DataFrame.unpivot` instead, with `index` instead of
+# `id_vars` and `on` instead of `value_vars`" (127 characters), or fastapi's deprecation (196).
+QUOTE_LIMIT = 200
+
+
+def _whole_sentences(sentences: list[str], limit: int, keep: Sequence[str] = ()) -> str:
+    """As many of ``sentences`` as fit in ``limit`` characters, each whole and each ending as
+    a sentence does (:func:`_render` made: one that cannot be is left out): "" when not even
+    the first one fits. A quote never stops mid-sentence."""
     out: list[str] = []
     for s in sentences:
-        text = safe_text(" ".join([*out, s]), 10**6)
-        if len(text) > limit:
+        shown = _render(s, keep)
+        if shown is None:
+            continue
+        if shown[-1:].isalnum() or shown[-1:] in "`'\")":
+            shown += "."  # pandas 2.3's "Use ``sep='\\s+'`` instead" has no period
+        if len(" ".join([*out, shown])) > limit:
             break
-        out.append(s)
-    return safe_text(" ".join(out), 10**6) if out else ""
+        out.append(shown)
+    return " ".join(out)
 
 
-def _quote(text: str, name: str, limit: int = 160) -> str:
+def _quote(text: str, name: str, limit: int = QUOTE_LIMIT, keep: Sequence[str] = ()) -> str | None:
     """What ``text`` says up to the sentence that names ``name``, safe to quote
-    (:func:`safe_text`), with ``name`` (and ``name=value``) in a code span again: it exists in
-    the pinned version.
+    (:func:`_render`), with ``name`` (and ``name=value``) and the names of ``keep`` in code
+    spans: they exist in the pinned version.
 
     Sentences that only say "deprecated" (the bullet says as much) or ask to open an issue are
     left out, and so is anything before the naming sentence when the quote would be longer
-    than ``limit``. Only whole sentences are quoted: "" when the naming one alone is longer.
+    than ``limit``. Only whole sentences are quoted: "" when the naming one alone is longer;
+    None when it cannot be quoted cleanly (:func:`_render`), so that a note drops it.
     """
     last = name.rsplit(".", 1)[-1]
+    keep = [name, *keep]
     sentences = _sentences(text)
     at = next((i for i, s in enumerate(sentences) if _mentions(s, last)), None)
     if at is None:
-        chosen = [s for s in sentences if _worth_quoting(s)]
-    else:
-        chosen = [s for s in sentences[:at] if _worth_quoting(s)] + [sentences[at]]
-        while len(chosen) > 1 and len(safe_text(" ".join(chosen), 10**6)) > limit:
-            chosen.pop(0)
-    quote = _whole_sentences(chosen, limit)
-    return re.sub(rf"'((?:[\w.]*\.)?{re.escape(last)}(?:=[^'\s]*)?)'", r"`\1`", quote)
+        return _whole_sentences([s for s in sentences if _worth_quoting(s)], limit, keep)
+    if _render(sentences[at], keep) is None:
+        return None
+    chosen = [s for s in sentences[:at] if _worth_quoting(s)] + [sentences[at]]
+    while len(chosen) > 1 and len(_whole_sentences(chosen, 10**6, keep)) > limit:
+        chosen.pop(0)
+    return _whole_sentences(chosen, limit, keep)
 
 
-def _quote_text(text: str, limit: int = 160) -> str:
+def _quote_text(text: str, limit: int = QUOTE_LIMIT) -> str:
     """A deprecation message worth quoting in a note: its sentences that say more than
     "deprecated", each whole, within ``limit`` characters; "" when none does."""
     return _whole_sentences([s for s in _sentences(text) if _worth_quoting(s)], limit)

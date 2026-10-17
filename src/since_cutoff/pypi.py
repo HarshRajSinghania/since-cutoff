@@ -404,6 +404,13 @@ class PyPI:
             self._trim_sources()
         return tree
 
+    def is_cached(self, name: str, version: str) -> bool:
+        """Whether :meth:`source` has these sources already, so needs no download."""
+        return (
+            _read_marker(self.cache.root / "sources" / f"{canonicalize_name(name)}-{version}")
+            is not None
+        )
+
     def _trim_sources(self) -> None:
         """Evict the least recently used trees while the sources are over the cap. The first
         trim of this process that evicts any prints one line (a warning): the first one after an

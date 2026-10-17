@@ -442,6 +442,7 @@ class Tools:
         limit_per_package: int = 10,
         include_internal: bool = False,
         cutoff_margin: int | None = None,
+        include_name_matches: bool = False,
         *,
         progress: ProgressFn | None = None,
     ) -> str:
@@ -482,6 +483,9 @@ class Tools:
             cutoff_margin: compare from the newest release published this many days before
                 the cutoff (default 30, or SINCE_CUTOFF_CUTOFF_MARGIN); 0 compares from the
                 newest release at the cutoff itself.
+            include_name_matches: also list the methods matched by their name alone, on a
+                value whose class the code does not show (tagged "[name match]"); left out by
+                default, as most are another library's method of the same name.
 
         One of `model` or `cutoff` is required.
 
@@ -511,6 +515,7 @@ class Tools:
             include=[s for s in (only or []) if s.strip()],
             python_version=project.python_version,
             today=self._now(),
+            include_name_matches=include_name_matches,
         )
         model_target = ModelTarget(
             settings.model, target.model or "", target.cutoff, target.label, margin=target.margin

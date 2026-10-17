@@ -6,6 +6,7 @@ import json
 import re
 import textwrap
 from collections.abc import Callable, Collection, Mapping, Sequence
+from dataclasses import replace
 from datetime import datetime, timezone
 from fractions import Fraction
 from pathlib import Path
@@ -88,6 +89,8 @@ from since_cutoff.selection import (
     CATCHES,
     FORM_LABELS,
     NAME_MATCH,
+    NAME_MATCH_TAG,
+    NAME_ONLY,
     OLD_FORM,
     USE_CALL,
     USE_DEPENDENCY,
@@ -1119,6 +1122,8 @@ def use_text(uses: Sequence[Use], *, code: bool = False) -> str:
         text = f"reads {q(first.names[0])}"
     else:
         text = f"uses {q(first.names[0])}"
+    if first.how == NAME_ONLY:
+        return f"{text} {NAME_MATCH_TAG}"
     return text + (" (matched by name)" if first.how == NAME_MATCH else "")
 
 
@@ -1203,6 +1208,8 @@ def _api_lines(scan: ScanResult, u: UsedAPI, width: int, verbose: bool) -> list[
     """One used API in the scan's first section: what changed and the label, where, the note,
     the runtime caveat and the names that merely look similar."""
     label = FORM_LABELS[u.form]
+    if u.match == NAME_ONLY:
+        label += f" {NAME_MATCH_TAG}"
     style = "bold red" if u.form == OLD_FORM else "yellow"
     head = _wrap(api_head(u), max(20, width - len(label) - 4), "  ", "  ")
     out = [Text(line) for line in head[:-1]]
@@ -1287,6 +1294,12 @@ def _form_legend(used: Sequence[UsedAPI]) -> list[str]:
             "uses this API: not in the old form, but an assistant editing this code may write "
             "the old form"
         )
+    if any(u.match == NAME_ONLY for u in used):
+        out.append(
+            f"{NAME_MATCH_TAG}: matched by the method's name alone, on a value whose class the "
+            "code does not show; shown, written to the notes and counted by --fail-on and "
+            "--annotate only because --include-name-matches was given"
+        )
     return out
 
 
@@ -1337,11 +1350,25 @@ def place_form(uses: Sequence[Use]) -> str:
     return OLD_FORM if any(u.form == OLD_FORM for u in uses) else USES_API
 
 
+def counted(scan: ScanResult) -> list[UsedAPI]:
+    """The used APIs that ``--fail-on`` and ``--annotate`` count, each with the uses they
+    count: not a use matched by a member's name alone (selection.NAME_ONLY; the reports tag
+    it), unless ``--include-name-matches`` asked for them, as for the notes. Per use: an API
+    with one path match does not bring its name-only places along."""
+    out: list[UsedAPI] = []
+    for u in scan.used_apis():
+        kept = [x for x in u.uses if x.how != NAME_ONLY or scan.name_matches]
+        if kept:
+            out.append(u if len(kept) == len(u.uses) else replace(u, uses=kept))
+    return out
+
+
 def fail_reason(scan: ScanResult, conditions: set[str]) -> str | None:
     """Why ``scan --fail-on`` exits with code 3, or None: ``old-form`` when the code uses a
     changed API in the old form, ``used`` when it uses one at all, ``changes`` when any
-    dependency changed its API after the cutoff (``--fail-on-changes``)."""
-    used = scan.used_apis() if conditions & {"used", "old-form"} else []
+    dependency changed its API after the cutoff (``--fail-on-changes``). A name match counts
+    only with ``--include-name-matches`` (:func:`counted`)."""
+    used = counted(scan) if conditions & {"used", "old-form"} else []
     old = [u for u in used if u.form == OLD_FORM]
     if "old-form" in conditions and old:
         return (
@@ -1364,10 +1391,11 @@ def github_annotations(scan: ScanResult, env: Mapping[str, str] | None = None) -
     project's code uses a changed API: ``::warning`` where it is the old form, ``::notice``
     elsewhere. File-level for now (``file=`` only); once the scan records lines (issue #8),
     ``line=`` and ``col=`` too. Paths are relative to ``GITHUB_WORKSPACE`` when the project is
-    inside it. Property values and the message are escaped as the Actions toolkit does."""
+    inside it. Property values and the message are escaped as the Actions toolkit does. A name
+    match is annotated only with ``--include-name-matches`` (:func:`counted`)."""
     prefix = _workspace_prefix(scan.project.root, env)
     out = []
-    for u in scan.used_apis():
+    for u in counted(scan):
         p = u.package
         title = f"since-cutoff: {p.name} {p.locked}"
         message = (
@@ -1975,7 +2003,7 @@ def _used_markdown(scan: ScanResult, env: Mapping[str, str] | None) -> list[str]
                 "<br>".join(wheres),
                 api,
                 change,
-                FORM_LABELS[u.form],
+                FORM_LABELS[u.form] + (f" {NAME_MATCH_TAG}" if u.match == NAME_ONLY else ""),
                 replacement or "none named",
             ]
             out.append("| " + " | ".join(_cell(c) for c in cells) + " |")

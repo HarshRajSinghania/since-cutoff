@@ -206,9 +206,22 @@ the files that import the package, and statically (nothing is run):
   when the module lists the name in `__all__`);
 - a method or attribute where the file reads it on the class, or on what the file shows is an
   instance of the class (`client = anthropic.Anthropic(); client.messages.create(...)`), or on
-  `self` or `super()` in a subclass of it; a method counts under every public class that
-  inherits it without overriding it (`df.fillna(method="ffill")` on a `DataFrame` for the
-  change to `NDFrame.fillna`);
+  `self` or `super()` in a subclass of it; or on what the pinned releases' own annotations show
+  is an instance: a name assigned from a call of a package function or class (`df =
+  pd.read_csv(...)`: `read_csv` returns a `DataFrame`; `llm = ChatOpenAI(...)`), each step of a
+  chain (`df.groupby(...).count()` is `DataFrameGroupBy.count`), a parameter or variable annotated
+  with a package class (a string annotation too), and the returns of the file's own functions. A
+  class counts with its base classes, across the project's packages whose sources the scan read:
+  `ChatOpenAI` from langchain-openai is a langchain-core `BaseChatModel`, so `llm.predict(q)` is
+  `BaseChatModel.predict` although the file never imports langchain-core. A member is read up to
+  the nearest class that defines it in the pinned release, or that the diff says changed it:
+  `df.sum()` on a `DataFrame` is `DataFrame.sum`, which pandas 3 still defines, not the
+  `NDFrame.sum` whose parameters became keyword-only, and `llm.predict` is not also its base's
+  `BaseLanguageModel.predict`. The return annotations, bases, members and re-exports come from
+  the pinned release's sources (griffe; nothing is run) and are cached per release: the first
+  scan of a release reads its sources once more for them, a few seconds for pandas. A method
+  counts under every public class that inherits it without overriding it
+  (`df.fillna(method="ffill")` on a `DataFrame` for the change to `NDFrame.fillna`);
 - a constructor where the class is called, under any name of the class;
 - a parameter only where it is passed by keyword to that very callable: `temperature=` passed to
   another library's `create` in the same file does not count. An SDK's beta mirror
@@ -217,11 +230,34 @@ the files that import the package, and statically (nothing is run):
 A change from a diff that recorded no import paths (an older cache, or a change made by hand
 through the Python API) is matched by package and name, and the report says "matched by name".
 
+Last, a method or attribute read on a bare name the file shows nothing of (a parameter without
+an annotation, a loop variable; not a literal, nor a value of the file's own classes and
+functions, of a relative import, of a builtin or of a package the scan did not read) counts by
+its name alone, when that name belongs to exactly one changed API across the changed packages
+the code imports or reaches, is not a common Python name (`get`, `set`, `run`, `create`,
+`close`, `update`, `count`, `sum`, `shape`, `view`, `to_dict`, ...) and is no member of a
+built-in or standard-library type (`union` of a set, `fromisoformat` of a datetime, `is_integer`
+of a float: every name `dir()` gives for dict, list, str, set, bytes, the numbers, tuple, the
+`datetime` types, `pathlib.Path`, `re` patterns and matches, `logging.Logger`, text files and
+`argparse`). A name the file assigns from a value of its own or of a builtin is not unknown
+either: an alias (`alias = loc`), `store = self.store` after `self.store = Store()`, tuple
+unpacking, `:=` and `except ... as err`.
+
+Such a name match is hidden by default: no report (the terminal, report.md, the JSON lists, the
+MCP answers), no note and no count of `--fail-on` or `--annotate github` has it, as on ordinary
+code most of them are another library's method of the same name. `--include-name-matches` (on
+`scan` and `sync`; `include_name_matches` for the MCP `project_changes`) shows them: the
+reports tag each such use `[name match]` (the terminal next to its label and its place, the
+Markdown summary in the form column, the JSON as `"match": "name_only"`), its note is written,
+and CI counts it. CI counts per use: an API matched through a path in one file does not bring
+its name-only places in other files along. The block does not keep the choice, so give the flag
+on every sync.
+
 Each use is one of two **forms**:
 
 | form | meaning |
 |---|---|
-| **old form** | the code uses the API as the comparison release allowed and the pinned release no longer does: it reads or imports what was removed, moved (its old path) or changed kind, uses what is deprecated, or passes a removed or deprecated parameter by keyword |
+| **old form** | the code uses the API as the comparison release allowed and the pinned release no longer does: it reads or imports what was removed, moved (its old path) or changed kind, uses what is deprecated, or passes a removed or deprecated parameter by keyword. A class that became a function, or the reverse (pandas 3's `option_context`), is called the same way, so a call of it is "uses this API" unless it passes a keyword the new signature does not take (a subclass or an `isinstance()` of it stays the old form); the note still says to check its signature |
 | **uses this API** | the code is fine today, but an assistant editing it may write the old form; a parameter that is now required, keyword-only or positional-only is always this, since a name match cannot tell whether a call passes it the new way |
 
 The terminal and the MCP tool `project_changes` show at most 3 files per API (`scan -v` shows

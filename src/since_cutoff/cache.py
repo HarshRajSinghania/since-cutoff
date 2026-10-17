@@ -35,6 +35,7 @@ NAMESPACES = (
     "sources",
     "sources-meta",
     "diffs",
+    "receivers",
     "tasks",
     "answers",
     "notes",

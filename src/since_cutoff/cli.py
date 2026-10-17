@@ -270,6 +270,15 @@ def _at_least_one(value: str) -> int:
     return n
 
 
+# ``scan`` and ``sync`` --include-name-matches (selection.NAME_ONLY).
+_NAME_MATCHES_HELP = (
+    "also show the uses matched by a method's name alone, on a value whose class the code "
+    "does not show (tagged [name match]): the reports list them, their notes are written, and "
+    "scan's --fail-on and --annotate see them. Off by default (no report has them), and not "
+    "kept by the block: give it on every sync"
+)
+
+
 def _margin_flag(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--cutoff-margin",
@@ -478,6 +487,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="also print GitHub Actions annotations to stdout: a warning on each file that uses "
         "a changed API in the old form, a notice on each file that uses one otherwise",
     )
+    scan.add_argument("--include-name-matches", action="store_true", help=_NAME_MATCHES_HELP)
 
     sync = sub.add_parser(
         "sync",
@@ -562,6 +572,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=80.0,
         help="skip packages whose wheel is larger (default: 80)",
     )
+    sync.add_argument("--include-name-matches", action="store_true", help=_NAME_MATCHES_HELP)
     sync.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
 
     status = sub.add_parser(
@@ -813,6 +824,7 @@ def _settings(args: argparse.Namespace) -> Settings:
         python_version=args.python_version,
         base_url=args.base_url,
         today=date.today(),
+        include_name_matches=getattr(args, "include_name_matches", False),
     )
     if args.command == "run":
         s.task_model = args.task_model
@@ -1270,6 +1282,7 @@ def _sync_scans(
         max_download_mb=args.max_download_mb,
         python_version=project.python_version,
         today=date.today(),
+        include_name_matches=args.include_name_matches,
     )
     engine = Engine(settings, store=store, llm_cache=store, reporter=reporter)
     scans: dict[tuple[str, date], ScanResult] = {}

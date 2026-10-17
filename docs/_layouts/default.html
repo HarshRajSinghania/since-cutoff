@@ -3,7 +3,8 @@
   The Cayman theme's layout (pages-themes/cayman, _layouts/default.html) with three changes:
   <html lang> comes from the page's own `lang` (es/index.md and fr/index.md set it), the theme's
   few fixed strings (skip link, GitHub button, footer) follow that language, and a nav bar at the
-  top of the content links the site's pages and the docs on GitHub (#67).
+  top of the content links the site's pages (the troubleshooting guide among them) and the docs
+  on GitHub (#67).
 {% endcomment %}
 {%- assign lang = page.lang | default: site.lang | default: "en-US" -%}
 {%- assign code = lang | slice: 0, 2 -%}
@@ -20,6 +21,7 @@
     {%- assign t_stack = "El stack de IA por modelo (en inglés)" -%}
     {%- assign t_bench = "Benchmark con un agente (en inglés)" -%}
     {%- assign t_how = "Cómo funciona (en inglés)" -%}
+    {%- assign t_trouble = "Solución de problemas (en inglés)" -%}
     {%- assign t_readme_label = "README en español" -%}
   {%- when "fr" -%}
     {%- assign t_skip = "Aller au contenu." -%}
@@ -33,6 +35,7 @@
     {%- assign t_stack = "Le stack IA par modèle (en anglais)" -%}
     {%- assign t_bench = "Benchmark avec un agent (en anglais)" -%}
     {%- assign t_how = "Fonctionnement (en anglais)" -%}
+    {%- assign t_trouble = "Dépannage (en anglais)" -%}
     {%- assign t_readme_label = "README en français" -%}
   {%- else -%}
     {%- assign t_skip = "Skip to the content." -%}
@@ -46,6 +49,7 @@
     {%- assign t_stack = "The AI stack by model" -%}
     {%- assign t_bench = "Agent benchmark" -%}
     {%- assign t_how = "How it works" -%}
+    {%- assign t_trouble = "Troubleshooting" -%}
     {%- assign t_readme_label = "README" -%}
 {%- endcase %}
 <html lang="{{ lang }}">
@@ -84,6 +88,7 @@
         <a href="{{ '/ai-stack.html' | relative_url }}">{{ t_stack }}</a> ·
         <a href="{{ '/benchmark.html' | relative_url }}">{{ t_bench }}</a> ·
         <a href="https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/how-it-works.md">{{ t_how }}</a> ·
+        <a href="{{ '/troubleshooting.html' | relative_url }}">{{ t_trouble }}</a> ·
         <a href="https://github.com/MohammadHijjawi97/since-cutoff{{ t_readme }}">{{ t_readme_label }}</a>
       </nav>
 

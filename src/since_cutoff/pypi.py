@@ -343,6 +343,17 @@ class PyPI:
             )
         raise PackageIndexError(f"{name}=={version} is not on PyPI")
 
+    def requires_python(self, name: str, version: str) -> str | None:
+        """The Requires-Python of the file of a release that :meth:`source` extracts, as PyPI
+        lists it (from the cached metadata): what the diff reads to tell syntax of a newer
+        Python (apidiff._needs_python). None when PyPI lists none or the release is unknown."""
+        try:
+            artifact = _pick_artifact(self.release(name, version).files, allow_yanked=True)
+        except PackageIndexError:
+            return None
+        value = (artifact or {}).get("requires_python")
+        return str(value).strip() or None if value else None
+
     def latest(self, name: str) -> Release:
         """The newest final, non-yanked release; for a package with only pre-releases, the
         newest of those, which is what pip and uv install then."""

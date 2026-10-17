@@ -17,6 +17,7 @@ import anyio
 import pytest
 
 from since_cutoff import __version__, cli, net
+from since_cutoff.apidiff import UnparsedSources
 from since_cutoff.cache import DiskCache
 from since_cutoff.engine import Engine, ModelTarget, Settings
 from since_cutoff.errors import PackageIndexError, ProjectError, SinceCutoffError
@@ -325,6 +326,19 @@ def test_api_changes_errors_are_clear(tools: Tools) -> None:
         tools.api_changes("no-such-package", cutoff="2025-07")
     with pytest.raises(SinceCutoffError, match="not a PyPI package name"):
         tools.api_changes("not a name!", cutoff="2025-07")
+
+
+def test_api_changes_this_python_cannot_parse_is_no_pypi_error(tools: Tools, monkeypatch) -> None:
+    """A package whose sources the running Python cannot parse raised PackageIndexError,
+    documented as "PyPI could not be reached"."""
+
+    def unparsed(**kwargs: Any) -> Any:
+        raise UnparsedSources("Python 3.10 cannot parse toylib 2.0's sources; run since-cutoff")
+
+    monkeypatch.setattr("since_cutoff.engine.diff_sources_with_unread", unparsed)
+    with pytest.raises(SinceCutoffError, match=r"cannot parse toylib 2\.0's sources") as raised:
+        tools.api_changes("toylib", cutoff="2025-07")
+    assert not isinstance(raised.value, PackageIndexError)
 
 
 # ------------------------------------------------------------- project_changes

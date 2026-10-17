@@ -31,9 +31,18 @@ from typing import Any
 import pytest
 
 from since_cutoff import net, prompts
-from since_cutoff.apidiff import DEPRECATED, PARAM_REMOVED, REMOVED, APIChange, diff_sources
+from since_cutoff.apidiff import (
+    DEPRECATED,
+    HINT_BORROWED,
+    HINT_LIMIT,
+    PARAM_REMOVED,
+    REMOVED,
+    APIChange,
+    diff_sources,
+)
 from since_cutoff.cache import DiskCache
 from since_cutoff.engine import NEW, Engine, ModelTarget, ScanResult, Settings
+from since_cutoff.mcp_server import change_line
 from since_cutoff.notes import (
     EVIDENCE_LIBRARY,
     NEW_PACKAGE,
@@ -46,12 +55,13 @@ from since_cutoff.notes import (
     Note,
     diff_note,
     diff_notes,
-    migration_url,
+    library_replacement,
     new_package_note,
     parse_block,
     render_block,
     render_legacy_block,
     tag_legend,
+    template_bullet,
 )
 from since_cutoff.project import load_project, scan_file
 from since_cutoff.pypi import PyPI, SourceTree, changelog_url
@@ -304,10 +314,10 @@ def test_a_long_sentence_that_leads_up_to_the_name_falls_back_to_use_instead() -
 
 
 # ------------------------------------------------- G: no name: point at the changelog
-def test_no_name_points_at_the_changelog_since_the_release_compared_from() -> None:
+def test_no_name_points_at_the_changelog_since_the_comparison_release() -> None:
     """The pointer named the pinned version ("(2.0.0)"): anthropic 1.13.0's notes cited
     1.13.0 for what 1.0.0 had removed. The diff does not say which release made a change, only
-    that it came after the release compared from, so the note says that."""
+    that it came after the comparison release, so the note says that."""
     gone = change(
         PARAM_REMOVED,
         "huggingface_hub.hf_hub_download",
@@ -351,21 +361,6 @@ def test_no_name_points_at_the_changelog_since_the_release_compared_from() -> No
         "for the changes since 0.60.0. [diff]"
     )
     assert "1.13.0" not in line
-
-
-@pytest.mark.parametrize(
-    ("urls", "expected"),
-    [
-        ({"Migration Guide": "https://x.example/migrate"}, "https://x.example/migrate"),
-        ({"Upgrading": " https://x.example/up "}, "https://x.example/up"),
-        ({"upgrade-guide": "https://x.example/up"}, "https://x.example/up"),
-        ({"Migration": "ftp://x.example/m"}, None),
-        ({"Changelog": "https://x.example/c", "Source": "https://github.com/a/b"}, None),
-        ({}, None),
-    ],
-)
-def test_a_migration_guide_from_the_project_urls(urls: dict[str, str], expected: str) -> None:
-    assert migration_url(urls) == expected
 
 
 def test_the_url_cannot_end_the_block_or_open_a_code_span() -> None:
@@ -553,15 +548,6 @@ def test_the_scan_passes_the_changelog_to_the_notes(tmp_path, cache) -> None:
         "[diff]"
     )
     assert [u.note.line for u in scan.used_apis()] == [note.line]
-    # A migration guide among the project URLs comes first.
-    guide = {**urls, "Migration guide": "https://x.example/migrating"}
-    pypi = _pypi(cache, tmp_path, {"summary": "Hub client", "project_urls": guide})
-    engine = Engine(Settings(), store=cache, llm_cache=cache, pypi=pypi)
-    scan = engine.scan(load_project(root), ModelTarget.cutoff_only(CUTOFF))
-    assert scan.packages[0].changelog == "https://x.example/migrating"
-    assert scan.scope_notes()[0].line.endswith(
-        "See https://x.example/migrating for the changes since 1.0. [diff]"
-    )
     # Without project URLs on PyPI, the note says what it read, as before.
     scan = Engine(Settings(), store=cache, llm_cache=cache, pypi=_pypi(cache, tmp_path)).scan(
         load_project(root), ModelTarget.cutoff_only(CUTOFF)
@@ -1348,10 +1334,11 @@ def test_pandas_replacements_from_its_docstrings(tmp_path) -> None:
         "[diff + library]"
     )
     swapaxes = found[("pandas.core.generic.NDFrame.swapaxes", None)]
-    assert swapaxes.library_names == ["pandas.DataFrame.transpose"]
+    # The note is the base class's, which a Series reaches too: each subclass's is named.
+    assert swapaxes.library_names == ["pandas.DataFrame.transpose", "pandas.Series.transpose"]
     assert diff_note([swapaxes]).line == (
-        "`NDFrame.swapaxes` was removed; do not use it. Use `DataFrame.transpose` instead. "
-        "[diff + library]"
+        "`NDFrame.swapaxes` was removed; do not use it. Use `DataFrame.transpose` or "
+        "`Series.transpose` instead. [diff + library]"
     )
     date_parser = found[("pandas.io.parsers.readers.read_csv", "date_parser")]
     assert date_parser.hint_file == "pandas/io/parsers/readers.py"
@@ -1363,10 +1350,10 @@ def test_pandas_replacements_from_its_docstrings(tmp_path) -> None:
     )
 
 
-def test_a_removed_member_takes_its_classs_deprecation_text(tmp_path) -> None:
-    """llama-index-core 0.12.45's ``ReActAgent.from_tools`` says nothing of its own; its class
-    is ``@deprecated.deprecated(reason="ReActAgent has been rewritten and replaced by
-    llama_index.core.agent.workflow.ReActAgent. ...")``."""
+def _react_agent(tmp_path: Path) -> dict[tuple[str, str | None], APIChange]:
+    """llama-index-core 0.12.45 -> 0.14.25, as far as ``ReActAgent`` goes: the class is
+    deprecated (its decorator's reason), and inherits ``chat`` from ``AgentRunner``, which says
+    it is deprecated too; in 0.14 ``ReActAgent`` is a new class without either."""
     reason = (
         '"ReActAgent has been rewritten and replaced by '
         'llama_index.core.agent.workflow.ReActAgent.\\n\\n"\n'
@@ -1377,33 +1364,95 @@ def test_a_removed_member_takes_its_classs_deprecation_text(tmp_path) -> None:
     old = {
         "llama_index/__init__.py": "",
         "llama_index/core/__init__.py": "",
-        "llama_index/core/agent/__init__.py": "from llama_index.core.agent.react import ReActAgent\n",
-        "llama_index/core/agent/react.py": (
-            "import deprecated\n\n\n@deprecated.deprecated(\n    reason=(\n        "
-            + reason
-            + "    ),\n    action='once',\n)\nclass ReActAgent:\n"
-            "    @classmethod\n    def from_tools(cls, tools=None, llm=None):\n        pass\n\n"
+        "llama_index/core/agent/__init__.py": (
+            "from llama_index.core.agent.react import ReActAgent\n"
+            "from llama_index.core.agent.runner import AgentRunner\n"
+        ),
+        "llama_index/core/agent/runner.py": (
+            'class AgentRunner:\n    """AgentRunner has been deprecated and is not maintained."""\n\n'
             "    def chat(self, message):\n        pass\n"
+        ),
+        "llama_index/core/agent/react.py": (
+            "import deprecated\n\nfrom llama_index.core.agent.runner import AgentRunner\n\n\n"
+            "@deprecated.deprecated(\n    reason=(\n        "
+            + reason
+            + "    ),\n    action='once',\n)\nclass ReActAgent(AgentRunner):\n"
+            "    @classmethod\n    def from_tools(cls, tools=None, llm=None):\n        pass\n"
         ),
         "llama_index/core/agent/workflow.py": "class ReActAgent:\n    def run(self, msg):\n        pass\n",
     }
     new = {
         **old,
-        "llama_index/core/agent/react.py": "class ReActAgent:\n    def chat(self, message):\n        pass\n",
+        "llama_index/core/agent/react.py": "class ReActAgent:\n    def run(self, msg):\n        pass\n",
     }
-    found = _diffed(tmp_path, "llama-index-core", old, new, ("0.12.45", "0.14.25"))
-    from_tools = next(c for (path, _), c in found.items() if path.endswith(".from_tools"))
-    assert from_tools.library_names == ["llama_index.core.agent.workflow.ReActAgent"]
-    assert from_tools.hint_file == "llama_index/core/agent/react.py"
-    assert diff_note([from_tools]).line == (
-        "`ReActAgent.from_tools` was removed; do not use it. Use "
-        "`llama_index.core.agent.workflow.ReActAgent` instead. [diff + library]"
+    return _diffed(tmp_path, "llama-index-core", old, new, ("0.12.45", "0.14.25"))
+
+
+def test_a_removed_member_quotes_its_deprecated_classs_text_and_names_no_replacement(tmp_path):
+    """llama-index-core 0.12.45's ``ReActAgent.from_tools`` says nothing of its own, and its
+    class "has been rewritten and replaced by llama_index.core.agent.workflow.ReActAgent". The
+    note said "Use `llama_index.core.agent.workflow.ReActAgent` instead. [diff + library]": the
+    class ``from llama_index.core.agent import ReActAgent`` is in 0.14, which has no
+    ``from_tools``. The class's text is quoted as the class's, under [diff]; the inherited
+    ``chat`` takes it from ``ReActAgent``, which it is reported under, not ``AgentRunner``."""
+    found = _react_agent(tmp_path)
+    by_name = {
+        path.rsplit(".", 1)[-1]: c for (path, _), c in found.items() if "ReActAgent." in path
+    }
+    quote = (
+        'On `ReActAgent`, llama-index-core 0.12.45 said: "ReActAgent has been rewritten and '
+        'replaced by llama_index.core.agent.workflow.ReActAgent." [diff]'
+    )
+    for name in ("from_tools", "chat"):
+        c = by_name[name]
+        assert (c.hint_source, c.hint_from, c.hint_file) == (
+            HINT_BORROWED,
+            "ReActAgent",
+            "llama_index/core/agent/react.py",
+        )
+        note = diff_note([c])
+        assert note.line == f"`ReActAgent.{name}` was removed; do not use it. {quote}"
+        assert note.replacements == [] and library_replacement(c) is None
+        # 0.3 read no text for it: the template baseline says nothing more than it did.
+        assert template_bullet(c) == (
+            f"`ReActAgent.{name}` no longer exists in llama-index-core 0.14.25. Do not use it."
+        )
+    url = "https://github.com/run-llama/llama_index/releases"
+    assert diff_note([by_name["from_tools"]], changelog=url).line.endswith(
+        f'workflow.ReActAgent." See {url} for the changes since 0.12.45. [diff]'
     )
 
 
-def test_a_removed_class_takes_its_methods_deprecation_text(tmp_path) -> None:
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "The ``fetch_all`` method is deprecated; use ``iter_all`` instead.",
+        "``Client.fetch_all`` is deprecated; use ``Client.iter_all`` instead.",
+    ],
+)
+def test_a_class_text_about_another_member_is_not_borrowed(tmp_path, sentence: str) -> None:
+    """A class whose docstring says one of its methods is deprecated is not a deprecated class:
+    ``Client.ping`` was told "Use `Client.iter_all` instead. [diff + library]" from "The
+    ``fetch_all`` method is deprecated; use ``iter_all`` instead."."""
+    client = (
+        f'class Client:\n    """A client for the toy service.\n\n    {sentence}\n    """\n\n'
+        "    def fetch_all(self): ...\n\n    def iter_all(self): ...\n\n    def ping(self): ...\n"
+    )
+    old = {"toy/__init__.py": client}
+    new = {"toy/__init__.py": client.replace("    def ping(self): ...\n", "")}
+    ping = _diffed(tmp_path, "toy", old, new, ("1.0", "2.0"))[("toy.Client.ping", None)]
+    assert (ping.hint, ping.hint_source, ping.library_names) == (None, None, [])
+    assert diff_note([ping]).line == (
+        "`Client.ping` was removed; do not use it. since-cutoff found no replacement in toy's "
+        "deprecation text. [diff]"
+    )
+
+
+def test_a_removed_class_quotes_its_methods_text_as_the_methods(tmp_path) -> None:
     """huggingface-hub 0.33.1's ``HfFolder`` says nothing; its ``get_token`` "is deprecated in
-    favor of [`huggingface_hub.get_token`]" (MkDocs' link markup), and 2.x has that function."""
+    favor of [`huggingface_hub.get_token`]" (MkDocs' link markup). The quote began with
+    "'HfFolder.get_token':", which since-cutoff wrote, and the note named ``get_token`` as the
+    replacement of the whole class, ``save_token`` included."""
     folder = '''
         class HfFolder:
             @classmethod
@@ -1432,8 +1481,278 @@ def test_a_removed_class_takes_its_methods_deprecation_text(tmp_path) -> None:
     found = _diffed(tmp_path, "huggingface-hub", old, new, ("0.33.1", "2.2.0"))
     gone = found[("huggingface_hub.HfFolder", None)]
     assert gone.library_names == ["huggingface_hub.get_token"]
-    assert diff_note([gone]).line == (
-        "`huggingface_hub.HfFolder` was removed; do not use it. huggingface-hub 0.33.1 said: "
-        "\"'HfFolder.get_token': This method is deprecated in favor of "
-        '`huggingface_hub.get_token` but is kept for backward compatibility." [diff + library]'
+    assert (gone.hint_source, gone.hint_from) == (HINT_BORROWED, "HfFolder.get_token")
+    assert gone.hint is not None and gone.hint.startswith("This method is deprecated")
+    note = diff_note([gone])
+    assert note.line == (
+        "`huggingface_hub.HfFolder` was removed; do not use it. On `HfFolder.get_token`, "
+        'huggingface-hub 0.33.1 said: "This method is deprecated in favor of '
+        "`huggingface_hub.get_token` but is kept for backward compatibility. Its behavior is "
+        'the same as `huggingface_hub.get_token`." [diff]'
     )
+    assert note.replacements == []
+    assert "the old docs of `HfFolder.get_token` said: This method" in change_line(gone)
+
+
+def test_a_method_text_that_names_nothing_is_not_borrowed(tmp_path) -> None:
+    folder = (
+        "class Folder:\n    def get(self):\n"
+        '        """This method is deprecated and will be removed."""\n'
+    )
+    found = _diffed(
+        tmp_path, "pkg", {"pkg/__init__.py": folder}, {"pkg/__init__.py": ""}, ("1.0", "2.0")
+    )
+    assert found[("pkg.Folder", None)].hint is None
+
+
+# ------------------------------------------------- L: the template baseline as 0.3 had it
+TEMPLATE_OLD = {
+    **PANDAS_OLD,
+    "pandas/util/_decorators.py": (
+        "def Appender(addendum):\n    return lambda f: f\n\n\n"
+        "def doc(*args, **kwargs):\n    return lambda f: f\n"
+    ),
+    "pandas/core/generic.py": '''
+        from pandas.util._decorators import doc
+
+
+        class NDFrame:
+            def swapaxes(self, axis1, axis2, copy=None):
+                """
+                Interchange axes and swap values axes appropriately.
+
+                .. deprecated:: 2.1.0
+                    ``swapaxes`` is deprecated and will be removed.
+                    Please use ``transpose`` instead.
+                """
+
+            @doc(klass="NDFrame")
+            def backfill(self, *, axis=None, inplace=False):
+                """
+                Fill NA/NaN values by using the next valid observation to fill the gap.
+
+                .. deprecated:: 2.0
+
+                    {klass}.backfill is deprecated. Use {klass}.bfill instead.
+                """
+
+            def fillna(self, value=None, *, downcast=None):
+                """
+                Fill NA/NaN values.
+
+                Parameters
+                ----------
+                downcast : dict, default is None
+                    A dict of item->dtype of what to downcast if possible.
+
+                    .. deprecated:: 2.2.0
+                """
+        ''',
+}
+TEMPLATE_NEW = {
+    **PANDAS_NEW,
+    "pandas/core/generic.py": "class NDFrame:\n    def fillna(self, value=None):\n        pass\n",
+}
+# What since-cutoff 0.6's main (879eb40) wrote for these changes, the text 0.3 wrote: the
+# ``--compare template`` baseline must not change, or the numbers measured against it move.
+TEMPLATE_03 = {
+    "pandas.core.frame.DataFrame.applymap": (
+        "`DataFrame.applymap` no longer exists in pandas 3.0.6 (.. deprecated:: 2.1.0). Do not "
+        "use it."
+    ),
+    "pandas.core.generic.NDFrame.backfill": (
+        "`NDFrame.backfill` no longer exists in pandas 3.0.6 (.. deprecated:: 2.0). Do not use it."
+    ),
+    "pandas.core.generic.NDFrame.fillna": (
+        "`NDFrame.fillna(downcast=...)`: `downcast` was removed in pandas 3.0.6. Do not pass it."
+    ),
+    "pandas.core.generic.NDFrame.swapaxes": (
+        "`NDFrame.swapaxes` no longer exists in pandas 3.0.6 (.. deprecated:: 2.1.0 ''swapaxes'' "
+        "is deprecated and will be removed. Please use ''transpose'' instead). Do not use it."
+    ),
+    "pandas.io.parsers.readers.read_csv": (
+        "`pandas.io.parsers.readers.read_csv(date_parser=...)`: `date_parser` was removed in "
+        "pandas 3.0.6. Do not pass it."
+    ),
+}
+
+
+def test_the_template_baseline_reads_the_old_text_as_0_3_did(tmp_path) -> None:
+    """The new hint texts (a directive's body after a blank line, an @Appender template, a
+    ``{klass}`` sentence left out) were printed by ``--compare template``, whose text is to stay
+    as 0.3 wrote it: pandas' ``applymap`` gained "(.. deprecated:: 2.1.0 DataFrame.applymap has
+    been deprecated. ...)" and ``backfill`` an unfilled "{klass}.backfill is deprecated."."""
+    found = _diffed(tmp_path, "pandas", TEMPLATE_OLD, TEMPLATE_NEW, ("2.3.0", "3.0.6"))
+    bullets = {path: template_bullet(c) for (path, _), c in found.items() if path in TEMPLATE_03}
+    assert bullets == TEMPLATE_03
+    applymap = found[("pandas.core.frame.DataFrame.applymap", None)]
+    assert applymap.template_hint == ".. deprecated:: 2.1.0"
+    assert found[("pandas.core.generic.NDFrame.swapaxes", None)].template_hint is None  # same
+    # The notes read more: the directive's body, and no unfilled placeholder.
+    backfill = found[("pandas.core.generic.NDFrame.backfill", None)]
+    assert backfill.hint is None and backfill.template_hint == ".. deprecated:: 2.0"
+    assert "Use `DataFrame.map` instead." in diff_note([applymap]).line
+
+
+# ------------------------------------------------- M: what a quote keeps of the library's text
+def test_a_stated_replacement_is_kept_when_its_sentence_cannot_be_quoted() -> None:
+    """polars 1.31's ``LazyFrame.with_context``: the sentence that states ``polars.concat``
+    says more, and could not be quoted cleanly, so the note dropped the replacement it had
+    named before for the changelog pointer."""
+    c = change(
+        REMOVED,
+        "pkg.old",
+        hint="Use ``pkg.new`` instead, with `mode for reading.",
+        library_names=["pkg.new"],
+    )
+    note = diff_note([c], changelog="https://x.example/releases")
+    assert (
+        note.line == "`pkg.old` was removed; do not use it. Use `pkg.new` instead. [diff + library]"
+    )
+    assert [r.text for r in note.replacements] == ["pkg.new"]
+    # Quotable, it is quoted, with what it says of the call.
+    c.hint = "Use ``pkg.new`` instead, with ``mode='r'`` for reading."
+    assert diff_note([c]).line == (
+        '`pkg.old` was removed; do not use it. pkg 1.0 said: "Use `pkg.new` instead, with '
+        "mode='r' for reading.\" [diff + library]"
+    )
+
+
+def test_advice_is_quoted_before_a_deprecated_sentence_that_says_more() -> None:
+    """sqlalchemy 2.1.5's ``ARRAY.Comparator.any``: the quote kept "... are deprecated for
+    removal, along with the PG-specific ... functions." and dropped "See ... for modern use."."""
+    text = (
+        "The :meth:`_types.ARRAY.Comparator.any` and :meth:`_types.ARRAY.Comparator.all` methods "
+        "for arrays are deprecated for removal, along with the PG-specific :func:`_postgresql.Any` "
+        "and :func:`_postgresql.All` functions. See :func:`_sql.any_` and :func:`_sql.all_` "
+        "functions for modern use."
+    )
+    c = change(
+        DEPRECATED,
+        "sqlalchemy.types.ARRAY.Comparator.any",
+        owner="Comparator",
+        pkg="sqlalchemy",
+        old="2.0.41",
+        new="2.1.5",
+        deprecation=text,
+        library_names=[],
+    )
+    assert diff_note([c]).line.endswith(
+        "sqlalchemy 2.1.5 says: \"See '_sql.any_' and '_sql.all_' functions for modern use.\" "
+        "[diff]"
+    )
+    c.deprecation = (
+        "old is deprecated and will be removed in 3.0, together with its helper functions. "
+        "Call `pkg.new` for new code."
+    )
+    assert diff_note([c]).line.endswith("says: \"Call 'pkg.new' for new code.\" [diff]")
+
+
+@pytest.mark.parametrize(
+    ("hint", "quoted"),
+    [
+        # huggingface-hub 0.33's get_token_permission: a span that is a quoted literal.
+        (
+            "If you need to know the permissions associated with a token, please use `whoami` "
+            "and check the `'auth'` key.",
+            "If you need to know the permissions associated with a token, please use 'whoami' "
+            "and check the 'auth' key.",
+        ),
+        # scipy 1.16's sqrtm(disp=): code with quotes inside reads as code.
+        (
+            "The error can be computed as ``norm(X @ X - A, 'fro')**2 / norm(A, 'fro')``.",
+            "The error can be computed as norm(X @ X - A, 'fro')**2 / norm(A, 'fro').",
+        ),
+        # The first, actionable sentence was dropped and the second quoted alone.
+        (
+            "Pass `encoding='utf-8'` explicitly. The default will change.",
+            "Pass encoding='utf-8' explicitly. The default will change.",
+        ),
+        # A span left open stops the quote there: no sentence after it is taken out of order.
+        ("Use the old way. Pass `x to it. Then call `go`.", "Use the old way."),
+        # A one-character version, and Sphinx's leading "." of a relative name.
+        (
+            ".. deprecated:: 2 Use :meth:`.Frame.fill` instead of it.",
+            "Use 'Frame.fill' instead of it.",
+        ),
+    ],
+)
+def test_a_quote_keeps_what_the_library_wrote(hint: str, quoted: str) -> None:
+    """A code span holding a quote made the whole quote go (or a sentence of it, silently)."""
+    c = change(DEPRECATED, "pkg.old", deprecation=hint)
+    assert diff_note([c]).line == (
+        f'`pkg.old` is deprecated; avoid it in new code. pkg 2.0 says: "{quoted}" [diff]'
+    )
+
+
+def test_a_text_apidiff_cut_gets_no_period_it_did_not_have() -> None:
+    """apidiff keeps HINT_LIMIT characters of a text: the quote ended "...for you when." as if
+    the library had written that sentence."""
+    head = "pkg.old is deprecated and will be removed in a future version"
+    tail = " It retries for you when"
+    text = head + " soon" * ((HINT_LIMIT - len(head) - len(tail) - 1) // 5) + "."
+    text = (text + tail).rjust(HINT_LIMIT)
+    assert len(text) == HINT_LIMIT
+    c = change(DEPRECATED, "pkg.old", deprecation=text)
+    assert diff_note([c]).line.endswith('pkg 2.0 says: "It retries for you when" [diff]')
+    c.deprecation = text.strip() + " a call fails."  # whole: the period it has
+    assert diff_note([c]).line.endswith('says: "It retries for you when a call fails." [diff]')
+
+
+def test_a_quote_cannot_end_the_block_by_nesting_a_comment_marker() -> None:
+    c = change(DEPRECATED, "pkg.old", deprecation="Use the new client <!<!---- now.")
+    line = diff_note([c]).line
+    assert "<!--" not in line and "-->" not in line and "Use the new client" in line
+
+
+def test_the_docstring_an_appender_template_gives_with_percent_is_read(tmp_path) -> None:
+    """``@Appender(_doc % {...})``, as pandas also writes it."""
+    readers = '''
+        from pkg.decorators import Appender
+
+        _doc = """
+        Read a file.
+
+        Parameters
+        ----------
+        old_arg : str
+            .. deprecated:: 2.0.0
+               Use ``new_arg`` instead.
+        new_arg : str
+            The new one.
+        """
+
+
+        @Appender(_doc % {"summary": "Read a file."})
+        def read(path, *, old_arg=None, new_arg=None):
+            pass
+        '''
+    old = {
+        "pkg/__init__.py": "from pkg.readers import read\n",
+        "pkg/decorators.py": "def Appender(text):\n    return lambda f: f\n",
+        "pkg/readers.py": readers,
+    }
+    new = {
+        **old,
+        "pkg/readers.py": "def read(path, *, new_arg=None):\n    pass\n",
+    }
+    gone = _diffed(tmp_path, "pkg", old, new, ("1.0", "2.0"))[("pkg.readers.read", "old_arg")]
+    assert gone.library_names == ["new_arg"]
+    assert "Use `new_arg` instead of `old_arg`." in diff_note([gone]).line
+
+
+def test_a_moved_class_takes_no_text_of_its_methods(tmp_path) -> None:
+    """A move names where the object is now; a method's deprecation text says nothing of the
+    class."""
+    folder = (
+        "class Folder:\n    def get(self):\n"
+        '        """This method is deprecated in favor of `pkg.get_token`."""\n'
+    )
+    keep = "def other(): ...\n"
+    auth = "def get_token(): ...\n"
+    old = {"pkg/__init__.py": "", "pkg/a.py": keep + folder, "pkg/auth.py": auth}
+    new = {"pkg/__init__.py": "", "pkg/a.py": keep, "pkg/b.py": folder, "pkg/auth.py": auth}
+    found = _diffed(tmp_path, "pkg", old, new, ("1.0", "2.0"))
+    moved = found[("pkg.a.Folder", None)]
+    assert (moved.kind, moved.moved_to) == ("moved", "pkg.b.Folder")
+    assert moved.hint is None and moved.hint_from is None

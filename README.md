@@ -106,7 +106,7 @@ diff). For the sample project, the block ends with:
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 
 **huggingface-hub 2.0.0** (compared from 0.33.1)
-- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases (2.0.0). [diff]
+- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases for the changes since 0.33.1. [diff]
 <!-- since-cutoff:end -->
 ```
 
@@ -278,7 +278,8 @@ nothing, and the file keeps its bytes and modification time.
 
 When the block was edited by hand, `sync` and `sync --check` show the diff, write nothing and
 exit with code 4; `sync --force` replaces it. When a package the notes are about cannot be
-checked (PyPI unreachable), `sync` writes nothing and exits with code 1.
+checked (PyPI unreachable, or sources the running Python cannot parse), `sync` writes nothing
+and exits with code 1.
 
 `sync --json` requires `--yes`, `--check` or `--dry-run`; without one it exits with code 2
 without prompting. Stdout contains only JSON, and stays empty when sync fails (a usage error,
@@ -464,8 +465,8 @@ and [PRIVACY.md](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/PRI
 **Why do some notes say "since-cutoff found no replacement"?** A note names a replacement only
 when the library's own deprecation text states one and that name exists in your pinned version
 (tag `[diff + library]`). Otherwise the note states the change and points at the package's
-changelog with the pinned version (the Changelog URL in its PyPI metadata, else its GitHub
-releases page), or, when PyPI lists neither, says that no replacement was found: a guessed
+changelog for the changes since the comparison release (the Changelog URL in its PyPI
+metadata, else its GitHub releases page), or, when PyPI lists neither, says that no replacement was found: a guessed
 replacement that an agent then follows is worse than none. Names in the pinned
 version that merely look similar are shown in the terminal as "not confirmed as replacements";
 `sync --suggestions` writes them into the notes, tagged `[not confirmed]`. Where the pinned method
@@ -816,7 +817,8 @@ output is laid out 160 columns wide (`COLUMNS` sets another width). Exit codes:
 - `2` usage error;
 - `3` a check failed: `scan --fail-on changes`, `used` or `old-form` (a dependency changed its
   API after the cutoff, your code uses a changed API, or uses one in the old form;
-  `--fail-on-changes` is `--fail-on changes`), `run --fail-on-stale` (stale API use found), or
+  `--fail-on-changes` is `--fail-on changes`; with any of them, also a dependency the running
+  Python cannot parse the sources of), `run --fail-on-stale` (stale API use found), or
   notes out of date with `sync --check` or `status` (and `sync`, when it did not write them);
 - `4` `sync`: the block was edited by hand, and nothing was written without `--force`;
 - `141` the output was closed early (piped into `head`, for example).
@@ -867,7 +869,7 @@ was checked, and nothing else is claimed:
 
 | tag | what was checked | what was not |
 |---|---|---|
-| `[diff]` | The change is in a static comparison (griffe) of the public APIs of two releases: the latest release published at least 30 days before the model's training cutoff (by default), and the version your project pins. The sources are read, not imported. With `[diff]` alone, no replacement is named: the note says what the library's own deprecation text says ("there is no replacement for `resume_download`"), or points at the package's changelog (the Changelog URL in its PyPI metadata, else its GitHub releases page) with the pinned version, or, when PyPI lists neither, that since-cutoff found no replacement in that text. | Behaviour, and whether a call still runs: the pinned release may still accept a removed parameter with a warning, as huggingface-hub 2.0.0 does for `resume_download`. The terminal, report.md, the MCP tools and the JSON add a "Runtime:" line when the pinned source still handles one; the block does not, since the advice is the same. Whether your model gets it wrong. |
+| `[diff]` | The change is in a static comparison (griffe) of the public APIs of two releases: the latest release published at least 30 days before the model's training cutoff (by default), and the version your project pins. The sources are read, not imported. With `[diff]` alone, no replacement is named: the note says what the library's own deprecation text says ("there is no replacement for `resume_download`"), or points at the package's changelog (the Changelog URL in its PyPI metadata, else its GitHub releases page) for the changes since the comparison release, or, when PyPI lists neither, that since-cutoff found no replacement in that text. | Behaviour, and whether a call still runs: the pinned release may still accept a removed parameter with a warning, as huggingface-hub 2.0.0 does for `resume_download`. The terminal, report.md, the MCP tools and the JSON add a "Runtime:" line when the pinned source still handles one; the block does not, since the advice is the same. Whether your model gets it wrong. |
 | `[diff + library]` | As `[diff]`, and the library's own deprecation text (a docstring, a parameter's docstring entry, an `@deprecated` message or a `warnings.warn` text, in the older release or, for a deprecation, in the pinned one) states the replacement ("Use `stop` instead"), and that name exists in your pinned version. Text that only mentions a name as advice is quoted under `[diff]`, not taken as a replacement. | That the replacement behaves the same. |
 | `[diff + move checked]` | As `[diff]`, and the object at the new path is the same object as far as can be counted: a class or module keeps at least half of the old one's public names, a function keeps its parameters, a value is the same. | Behaviour. |
 | `[diff + metadata]` | The older release's Requires-Dist (its wheel's METADATA) lists a library the pinned one does not, and places in the public API that named that library's types (parameters, return types, attributes, base classes, re-exports) name the types of another library the pinned release requires, or of a copy of the old one it ships, with none of the old library left: openai 3.x, anthropic 1.8, huggingface-hub 2.0 and mcp 2.2 take `httpx2` objects where they took `httpx` ones. `[metadata]` alone marks the one bullet for a package first released after the cutoff (or within the margin before it) that your code imports: there is no release to compare from, so the note gives the date of its first release, its PyPI summary and its changelog URL. | Behaviour: whether the pinned release still accepts the old library's objects (openai 3 converts some, anthropic 1.8 raises `TypeError`, according to their sources). The terminal, report.md, the MCP tools and the JSON add an "Installed:" line (whether your project, its virtual environment included, still has the old library) and a "Runtime:" line that points to where the pinned source still names it. |
@@ -960,6 +962,11 @@ meaning the same as `checks.example_type_checks`).
   `__getattr__`, but `run` does not probe them.
 - The diff covers the public API: `_private` names, and test suites, benchmarks and examples
   shipped inside a package, are skipped.
+- The sources are parsed by the Python that runs since-cutoff, which cannot read syntax of a
+  newer one: on Python 3.10, numpy 2.5 (PEP 695 `type` statements in its stub) cannot be
+  checked. The scan says so and which Python can ("run since-cutoff with Python 3.12 or later
+  to check it"), and `--fail-on` fails on it. Run since-cutoff with the Python your project
+  uses, or a newer one.
 - "Your code uses" is a static match, file by file: imports (re-exported names included),
   calls, attribute reads and keyword arguments, with the receiver of a method call typed from
   the package's own annotations (`df = pd.read_csv(...)` is a `DataFrame`; a class counts with

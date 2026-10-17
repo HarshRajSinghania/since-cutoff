@@ -98,8 +98,9 @@ EXAMPLES = """examples:
 exit codes: 0 ok, 1 error (including: no model answer could be scored), 2 usage error,
             3 stale API use found with --fail-on-stale, or with scan --fail-on: API changes
             (changes, also --fail-on-changes), changed APIs your code uses (used), or uses of
-            them in the old form (old-form); sync --check and status: the notes are out of
-            date (sync: out of date and not written),
+            them in the old form (old-form), and with any of them a dependency this Python
+            cannot parse the sources of (a newer one checks it); sync --check and status: the
+            notes are out of date (sync: out of date and not written),
             4 sync: the notes block was edited by hand; nothing written without --force,
             141 the output was closed early (e.g. piped into head)
 """
@@ -966,9 +967,9 @@ def _cmd_run(args: argparse.Namespace, ui: Console, json_mode: bool) -> int:
 
     checked = [p for p in scan.packages if p.status != "skipped"]
     if not checked and scan.packages:
-        ui.print(
-            "[red]No dependency could be checked[/red] (see the reasons above; is PyPI reachable?)."
-        )
+        # PyPI was reached when every package was skipped for its syntax (this Python).
+        pypi = "" if all(p.unparsed for p in scan.packages) else "; is PyPI reachable?"
+        ui.print(f"[red]No dependency could be checked[/red] (see the reasons above{pypi}).")
         return 1
     if args.command == "run" and not scan.changed:
         ui.print(
@@ -1301,7 +1302,8 @@ def _sync_scans(
     for scan in scans.values():
         if scan.packages and all(p.status == SKIPPED for p in scan.packages):
             first = next((p.reason for p in scan.skipped if p.reason), "")
-            raise SinceCutoffError(f"no dependency could be checked: {first} (is PyPI reachable?)")
+            pypi = "" if all(p.unparsed for p in scan.packages) else " (is PyPI reachable?)"
+            raise SinceCutoffError(f"no dependency could be checked: {first}{pypi}")
     for t, basis, *_ in plans:
         for p in blocked_by(scans[(basis.model_id, basis.cutoff)], [t]):
             raise SinceCutoffError(

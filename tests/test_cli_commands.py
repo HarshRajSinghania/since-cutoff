@@ -22,6 +22,7 @@ from rich.console import Console
 
 from since_cutoff import __version__, cli
 from since_cutoff import pypi as pypi_module
+from since_cutoff.apidiff import UnparsedSources
 from since_cutoff.cache import DiskCache
 from since_cutoff.engine import Engine
 from since_cutoff.errors import ProviderError
@@ -94,6 +95,25 @@ def test_a_scan_that_can_check_nothing_fails_and_says_why(local_index, tmp_path,
     assert "above the 0.0001 MB download limit" in out
     assert "No dependency could be checked" in out
     assert local_index.downloads == []
+
+
+def test_a_scan_this_python_cannot_parse_does_not_blame_pypi(
+    local_index, tmp_path, capsys, monkeypatch
+) -> None:
+    """Every dependency skipped for its syntax: "is PyPI reachable?" pointed the wrong way."""
+
+    def unparsed(**kwargs: Any) -> Any:
+        raise UnparsedSources(
+            "Python 3.10 cannot parse toylib 2.0's sources; run since-cutoff with Python 3.12 "
+            "or later to check it"
+        )
+
+    monkeypatch.setattr("since_cutoff.engine.diff_sources_with_unread", unparsed)
+    assert cli.main(["scan", str(make_project(tmp_path)), *CUTOFF]) == 1
+    out = " ".join(capsys.readouterr().out.split())
+    assert "1 of 1 dependency could not be checked: Python 3.10 cannot parse toylib" in out
+    assert "No dependency could be checked (see the reasons above)." in out
+    assert "reachable" not in out
 
 
 # ------------------------------------------------------------------ cache

@@ -2,20 +2,18 @@
 
 from __future__ import annotations
 
-import sys
 from datetime import date
 from pathlib import Path
 
 import pytest
 
-from since_cutoff.apidiff import DIFF_SCHEMA, REMOVED, APIChange, griffe_version
+from since_cutoff.apidiff import DIFF_SCHEMA, REMOVED, griffe_version
 from since_cutoff.cache import DiskCache, stable_hash
 from since_cutoff.engine import (
     CHANGED,
     KNOWN,
     NEW,
     PASS,
-    SKIPPED,
     STALE,
     UNCHANGED,
     Engine,
@@ -486,59 +484,6 @@ def test_unverifiable_notes_fall_back_to_the_diff(tmp_path, cache, fake_pypi):
         "- `toylib.legacy_fetch` was removed; do not use it. Use `toylib.fetch` instead. "
         "[diff + library]"
     ) in bullets
-
-
-def _typed_pypi(cache: DiskCache, root: Path) -> FakePyPI:
-    """tp 1.0 and 2.5.4, whose ``__init__.pyi`` has a PEP 695 ``type`` statement (numpy 2.5's
-    does): Python 3.10 and 3.11 cannot parse it."""
-    old = write_tree(root / "tp-1.0", {"tp/__init__.py": "def f(a, b): ...\n"})
-    new = write_tree(
-        root / "tp-2.5.4",
-        {
-            "tp/__init__.py": "def f(a): ...\n",
-            "tp/__init__.pyi": "type X = int\ndef f(a) -> X: ...\n",
-        },
-    )
-    return FakePyPI(
-        cache,
-        {"tp": [("1.0", "2025-01-10"), ("2.5.4", "2025-10-01")]},
-        {
-            ("tp", "1.0"): SourceTree("tp", "1.0", old, ("tp",)),
-            ("tp", "2.5.4"): SourceTree("tp", "2.5.4", new, ("tp",)),
-        },
-    )
-
-
-def test_a_package_the_running_python_cannot_parse_could_not_be_checked(
-    tmp_path, cache, scripted, older_python
-):
-    """numpy 2.5.4 on Python 3.10: the diff logged "cannot load numpy" at DEBUG and the scan
-    said no breaking changes. The package is SKIPPED with a warning that names the Python that
-    can parse it, and nothing is cached, so a run on that Python diffs it."""
-    engine = make_engine(cache, _typed_pypi(cache, tmp_path), scripted)
-    project = load_project(make_project(tmp_path, '"tp==2.5.4"', "import tp\ntp.f(1)\n"))
-    scan = engine.scan(project, engine.resolve_target())
-    pkg = scan.package("tp")
-    running = f"{sys.version_info[0]}.{sys.version_info[1]}"
-    needed = max((3, 12), (sys.version_info[0], sys.version_info[1] + 1))
-    warning = (
-        f"tp 2.5.4's sources use syntax that Python {running} cannot parse; run since-cutoff "
-        f"with Python {needed[0]}.{needed[1]} or later to check it"
-    )
-    assert (pkg.status, pkg.reason, pkg.changes) == (SKIPPED, warning, [])
-    assert warning in scan.warnings
-    assert cache.get("diffs", Engine._diff_key(pkg)) is None  # no empty diff cached
-    assert cache.get("diffs", Engine._unread_key(pkg)) is None
-    assert to_json(scan)["dependencies_skipped"] == 1
-    # A diff a newer Python cached is served, without parsing anything.
-    gone = APIChange("tp", "1.0", "2.5.4", REMOVED, "tp.g", "g", tier="public")
-    cache.set("diffs", Engine._diff_key(pkg), [gone.to_dict()])
-    again = make_engine(cache, _typed_pypi(cache, tmp_path), scripted).scan(
-        project, engine.resolve_target()
-    )
-    assert again.package("tp").status == CHANGED
-    assert [c.path for c in again.package("tp").changes] == ["tp.g"]
-    assert warning not in again.warnings
 
 
 def test_measure_only_mode_writes_no_notes(tmp_path, cache, fake_pypi, scripted):

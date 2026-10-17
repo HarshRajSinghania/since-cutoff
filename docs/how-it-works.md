@@ -244,7 +244,8 @@ either: an alias (`alias = loc`), `store = self.store` after `self.store = Store
 unpacking, `:=` and `except ... as err`.
 
 Such a name match is hidden by default: no report (the terminal, report.md, the JSON lists, the
-MCP answers), no note and no count of `--fail-on` or `--annotate github` has it, as on ordinary
+MCP answers), no note and no count of `--fail-on`, `--annotate github`, `--sarif` or
+`--gitlab-codequality` has it, as on ordinary
 code most of them are another library's method of the same name. `--include-name-matches` (on
 `scan` and `sync`; `include_name_matches` for the MCP `project_changes`) shows them: the
 reports tag each such use `[name match]` (the terminal next to its label and its place, the
@@ -264,6 +265,32 @@ The terminal and the MCP tool `project_changes` show at most 3 files per API (`s
 every one). Locations are files for now (`app/main.py`); line numbers are
 [#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8), and the JSON already has
 `line`, `column` and `code` (null until then) in `used_apis[].locations`.
+
+### In CI: annotations, SARIF and Code Quality
+
+`--annotate github`, `--sarif` and `--gitlab-codequality` report the same findings: one per
+file and changed API the code uses there (a place, once lines are known), counted as
+`--fail-on` counts them (a name match only with `--include-name-matches`). The old form is a
+GitHub `warning`, a SARIF `warning` and a Code Quality `major`; any other use a `notice`, a
+SARIF `note` and an `info`. Each says the API and its change, the release at the cutoff and the
+pinned one, and the note from the API diff.
+
+- **SARIF 2.1.0** (`scan --sarif FILE`, for `github/codeql-action/upload-sarif`): one rule per
+  kind of change (`removed`, `moved`, `param_removed`, `param_required`, `param_keyword_only`,
+  `param_positional_only`, `kind_changed`, `deprecated`, `dependency_switched`). A place whose
+  code uses several kinds is filed under the first that `changes_text` names (removals and
+  moves first), among those it uses in the old form when it does. Paths are relative to
+  `GITHUB_WORKSPACE` when the project is inside it.
+- **GitLab Code Quality** (`scan --gitlab-codequality FILE`, for `artifacts: reports:
+  codequality:`): the CodeClimate issue format, with `check_name` `since-cutoff/<kind>` and
+  paths relative to `CI_PROJECT_DIR`.
+- **Locations**: the line and column once the scan records them
+  ([#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)); until then line 1 of the
+  file, and the message says the finding is file-level.
+- **Fingerprints** (SARIF `partialFingerprints`, Code Quality `fingerprint`): a hash of the
+  package, the API and the path, without the versions, so that a run after a version bump
+  updates the same alerts instead of opening new ones. With nothing to report, the SARIF log
+  has no result (an upload of it closes the open alerts) and the Code Quality report is `[]`.
 
 ### The note for each API
 
@@ -745,6 +772,15 @@ notes apply to and the release they are compared from. The rest is in `scan --js
 source, and its note with `tags`, `applies_to` and `checks`) and, after `run`, `notes_detail[]`
 (each note with the model's example and what the held-out test measured; `verified` is kept,
 meaning the same as `checks.example_type_checks`).
+
+The package ships JSON Schemas (draft 2020-12) for them, in `since_cutoff/schemas`:
+[results.schema.json](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/schemas/results.schema.json)
+for results.json, `scan --json` and `run --json` (`report_schema` 3), and
+[status.schema.json](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/schemas/status.schema.json)
+for `status --json`. Each field has a one-line description. The tests check the reports
+against them, and fail on a top-level key (or a key of `used_apis`, its locations and notes)
+that the schema does not describe; the changes under `scan[].changes` follow `diff_schema`, and
+the schema lists the fields integrations read.
 
 ## What the numbers mean (and do not mean)
 

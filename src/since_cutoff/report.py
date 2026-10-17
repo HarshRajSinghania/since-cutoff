@@ -6,7 +6,7 @@ import json
 import re
 import textwrap
 from collections.abc import Callable, Collection, Mapping, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from fractions import Fraction
 from pathlib import Path
@@ -40,6 +40,7 @@ from since_cutoff.apidiff import (
     DEPRECATED as CHANGE_DEPRECATED,
 )
 from since_cutoff.baselines import ARM_SIGNATURES, ARM_TEMPLATE, ARM_VERIFIED
+from since_cutoff.cache import stable_hash
 from since_cutoff.engine import (
     CHANGE_BROKEN,
     CHANGE_FIXED,
@@ -1395,9 +1396,45 @@ def github_annotations(scan: ScanResult, env: Mapping[str, str] | None = None) -
     match is annotated only with ``--include-name-matches`` (:func:`counted`)."""
     prefix = _workspace_prefix(scan.project.root, env)
     out = []
+    for f in findings(scan, prefix):
+        p, use = f.api.package, f.use
+        props = [("file", f.path)]
+        if use.line is not None:
+            props.append(("line", str(use.line)))
+        if use.column is not None:
+            props.append(("col", str(use.column + 1)))  # 1-based in the annotation
+        props.append(("title", f"since-cutoff: {p.name} {p.locked}"))
+        level = "warning" if f.form == OLD_FORM else "notice"
+        head = ",".join(f"{k}={_escape_property(v)}" for k, v in props)
+        out.append(f"::{level} {head}::{_escape_data(f.message)}")
+    return out
+
+
+@dataclass(frozen=True)
+class Finding:
+    """One place where the project's code uses a changed API, as the CI reports have it
+    (``--annotate github``, ``--sarif``, ``--gitlab-codequality``)."""
+
+    api: UsedAPI
+    use: Use  # the most specific use at the place (places())
+    path: str  # its file, relative to the checkout when the project is in one (prefix)
+    form: str  # OLD_FORM when a use there is the old form (place_form), else USES_API
+    kind: str  # the kind of change it is filed under (finding_kind): the SARIF rule
+    message: str  # the API, its change, the versions and the note, as the annotation says it
+    # Stable across runs and version bumps: package, API and path (stable_hash), and the place's
+    # rank among the API's places in that file once the scan records lines (issue #8).
+    fingerprint: str
+
+
+def findings(scan: ScanResult, prefix: str = "") -> list[Finding]:
+    """Each place in a file of the project's code where it uses a changed API, in the order of
+    :meth:`ScanResult.used_apis`: the uses :func:`counted` counts (a name match only with
+    ``--include-name-matches``), as ``--fail-on`` counts them. ``prefix`` is the project's
+    folder in the checkout (:func:`_workspace_prefix`), put before each path."""
+    out: list[Finding] = []
+    seen: dict[tuple[str, str, str], int] = {}
     for u in counted(scan):
         p = u.package
-        title = f"since-cutoff: {p.name} {p.locked}"
         message = (
             f"{api_head(u)}. {p.name} {p.cutoff_version} was the latest release at "
             f"{_after(scan)}; {p.locked} is pinned. Note: {u.note.line} Static match; nothing "
@@ -1407,15 +1444,176 @@ def github_annotations(scan: ScanResult, env: Mapping[str, str] | None = None) -
             use = here[0]
             if not use.file:
                 continue
-            props = [("file", prefix + use.file)]
-            if use.line is not None:
-                props.append(("line", str(use.line)))
-            if use.column is not None:
-                props.append(("col", str(use.column + 1)))  # 1-based in the annotation
-            props.append(("title", title))
-            level = "warning" if place_form(here) == OLD_FORM else "notice"
-            head = ",".join(f"{k}={_escape_property(v)}" for k, v in props)
-            out.append(f"::{level} {head}::{_escape_data(message)}")
+            form = place_form(here)
+            path = prefix + use.file
+            key = (p.name, u.note.change.path, path)
+            rank = seen[key] = seen.get(key, -1) + 1
+            fingerprint = stable_hash("since-cutoff", *key, *([rank] if rank else []))
+            out.append(Finding(u, use, path, form, finding_kind(u, form), message, fingerprint))
+    return out
+
+
+def finding_kind(u: UsedAPI, form: str) -> str:
+    """The kind of change a place is filed under: the first of the API's change kinds in the
+    order :func:`changes_text` says them (removals and moves first), among those the code uses
+    in the old form when the place is the old form."""
+    changes = u.changes
+    if form == OLD_FORM:
+        changes = [c for c in changes if u.forms.get(c.id) == OLD_FORM] or changes
+    return min(changes, key=lambda c: KIND_PRIORITY.get(c.kind, 9)).kind
+
+
+# The rules of the SARIF report: one per kind of change, with what it means.
+SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
+SARIF_RULES = {
+    REMOVED: ("Removed", "An API your code uses was removed"),
+    MOVED: ("Moved", "An API your code uses moved to another import path"),
+    PARAM_REMOVED: ("ParameterRemoved", "A parameter of an API your code uses was removed"),
+    PARAM_REQUIRED: ("ParameterRequired", "An API your code uses now requires a parameter"),
+    PARAM_KEYWORD_ONLY: (
+        "ParameterKeywordOnly",
+        "A parameter of an API your code uses is now keyword-only",
+    ),
+    PARAM_POSITIONAL_ONLY: (
+        "ParameterPositionalOnly",
+        "A parameter of an API your code uses is now positional-only",
+    ),
+    KIND_CHANGED: ("KindChanged", "An API your code uses changed kind (a class became a function)"),
+    CHANGE_DEPRECATED: ("Deprecated", "An API your code uses is deprecated"),
+    DEPENDENCY_SWITCHED: (
+        "DependencySwitched",
+        "A package your code uses switched to another distribution",
+    ),
+}
+# Said of a finding whose line is unknown: the reports put it on line 1 of the file.
+FILE_LEVEL = "(File-level: since-cutoff does not record the line yet.)"
+CODE_SCANNING_HELP = (
+    "{what} in the release your project pins, after the release that was the latest at the "
+    "coding model's training cutoff: a coding agent trained before then may write the old "
+    "form. Each result names the API, the change, both versions and the note from the API "
+    "diff (what to use instead, when the library or the diff says). `since-cutoff sync` "
+    "writes these notes into AGENTS.md / CLAUDE.md. A warning is a use in the old form (as "
+    "the release at the cutoff allowed and the pinned one no longer does); a note is a use "
+    "of the API that is fine today. Found by a static match of names; nothing was run."
+)
+
+
+def sarif_report(scan: ScanResult, env: Mapping[str, str] | None = None) -> dict[str, Any]:
+    """``scan --sarif``: a SARIF 2.1.0 log for GitHub code scanning
+    (``github/codeql-action/upload-sarif``), with a rule per kind of change and a result per
+    place where the code uses a changed API (:func:`findings`): ``warning`` for the old form,
+    ``note`` otherwise, on the line and column once the scan records them (issue #8), else on
+    line 1 with the message saying so. Paths are relative to ``GITHUB_WORKSPACE`` when the
+    project is inside it. ``partialFingerprints`` keep a result the same alert across runs and
+    version bumps. With no finding, ``results`` is empty: an upload then closes the alerts of
+    the previous one."""
+    prefix = _workspace_prefix(scan.project.root, env)
+    found = findings(scan, prefix)
+    known = {**SARIF_RULES}
+    for f in found:  # a kind newer than this table still gets a rule
+        known.setdefault(f.kind, (f.kind, "An API your code uses changed"))
+    kinds = list(known)
+    rules = [
+        {
+            "id": kind,
+            "name": name,
+            "shortDescription": {"text": f"{text} after the model's training cutoff"},
+            "fullDescription": {"text": CODE_SCANNING_HELP.format(what=text)},
+            "help": {"text": CODE_SCANNING_HELP.format(what=text)},
+            "helpUri": f"{REPO_URL}/blob/main/docs/how-it-works.md",
+            "defaultConfiguration": {"level": "warning"},
+            "properties": {"tags": ["maintainability", "dependencies"]},
+        }
+        for kind, (name, text) in known.items()
+    ]
+    results = []
+    for f in found:
+        p, use = f.api.package, f.use
+        region: dict[str, int] = {"startLine": use.line if use.line is not None else 1}
+        if use.line is not None and use.column is not None:
+            region["startColumn"] = use.column + 1
+        message = f.message if use.line is not None else f"{f.message} {FILE_LEVEL}"
+        results.append(
+            {
+                "ruleId": f.kind,
+                "ruleIndex": kinds.index(f.kind),
+                "level": "warning" if f.form == OLD_FORM else "note",
+                "message": {"text": message},
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {
+                                "uri": quote(f.path),
+                                "uriBaseId": "%SRCROOT%",
+                            },
+                            "region": region,
+                        }
+                    }
+                ],
+                "partialFingerprints": {"sinceCutoffFinding/v1": f.fingerprint},
+                "properties": {
+                    "package": p.name,
+                    "locked": p.locked,
+                    "cutoffVersion": p.cutoff_version,
+                    "api": f.api.note.change.path,
+                    "form": f.form,
+                    "match": use.how,
+                    "changeKinds": list(dict.fromkeys(c.kind for c in f.api.changes)),
+                    "note": f.api.note.line,
+                },
+            }
+        )
+    return {
+        "$schema": SARIF_SCHEMA,
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "since-cutoff",
+                        "version": __version__,
+                        "semanticVersion": __version__,
+                        "informationUri": REPO_URL,
+                        "rules": rules,
+                    }
+                },
+                "results": results,
+                "properties": {
+                    "model": scan.target.model_id or None,
+                    "cutoff": scan.target.cutoff.isoformat(),
+                    "compareFrom": scan.target.compare_date.isoformat(),
+                },
+            }
+        ],
+    }
+
+
+def gitlab_codequality(scan: ScanResult, env: Mapping[str, str] | None = None) -> list[Any]:
+    """``scan --gitlab-codequality``: a GitLab Code Quality report (the CodeClimate issue
+    format GitLab reads from ``artifacts: reports: codequality``), one issue per place where
+    the code uses a changed API (:func:`findings`): severity ``major`` for the old form,
+    ``info`` otherwise; ``check_name`` ``since-cutoff/<kind>``; the line once the scan records
+    it (issue #8), else line 1 with the description saying so. Paths are relative to
+    ``CI_PROJECT_DIR`` when the project is inside it. The fingerprint is the package, the API
+    and the file (not the versions), so a version bump does not reopen every finding."""
+    prefix = _workspace_prefix(scan.project.root, env, "CI_PROJECT_DIR")
+    out: list[Any] = []
+    for f in findings(scan, prefix):
+        line = f.use.line
+        out.append(
+            {
+                "type": "issue",
+                "check_name": f"since-cutoff/{f.kind}",
+                "description": f.message if line is not None else f"{f.message} {FILE_LEVEL}",
+                "categories": ["Compatibility"],
+                "severity": "major" if f.form == OLD_FORM else "info",
+                "fingerprint": f.fingerprint,
+                "location": {
+                    "path": f.path,
+                    "lines": {"begin": line if line is not None else 1},
+                },
+            }
+        )
     return out
 
 
@@ -1429,10 +1627,13 @@ def _escape_property(text: str) -> str:
     return _escape_data(text).replace(":", "%3A").replace(",", "%2C")
 
 
-def _workspace_prefix(root: Path, env: Mapping[str, str] | None) -> str:
+def _workspace_prefix(
+    root: Path, env: Mapping[str, str] | None, variable: str = "GITHUB_WORKSPACE"
+) -> str:
     """The project's folder in the GitHub checkout (``services/api/``), "" at its root or
-    outside Actions: the path that annotations and links put before a project file."""
-    workspace = (env or {}).get("GITHUB_WORKSPACE")
+    outside Actions: the path that annotations and links put before a project file. With
+    ``CI_PROJECT_DIR``, the same in a GitLab job."""
+    workspace = (env or {}).get(variable)
     if not workspace:
         return ""
     try:

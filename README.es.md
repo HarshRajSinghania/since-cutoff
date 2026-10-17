@@ -255,7 +255,8 @@ API (se muestran 3), y `scan --all` añade todos los demás cambios a una API p�
 paquete (`--internal` añade los cambios a API internas, que cada recuento da aparte como
 «+N internal»). `scan --json` y `.since-cutoff/results.json` tienen lo mismo en `used_apis` (cada API, dónde se
 usa, sus cambios y su nota, con las etiquetas de la nota, las versiones a las que se aplica y lo
-que se comprobó), y `.since-cutoff/report.md` empieza por «Used by your code».
+que se comprobó), y `.since-cutoff/report.md` empieza por «Used by your code». El JSON
+lo describe un JSON Schema incluido en el paquete, [results.schema.json](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/schemas/results.schema.json).
 
 ### Mantener las notas al día: sync y status
 
@@ -306,7 +307,7 @@ Los códigos de salida habituales y el comportamiento de `--force` siguen aplic�
 `since-cutoff status` no usa la red ni lee el código: para cada paquete, la versión para la que
 son las notas y la que tiene el lockfile, si cambiaron otras dependencias, y si el modelo con el
 que está configurado tu agente de programación tiene una fecha de corte anterior a la de las
-notas (con el comando `sync --model` correspondiente). `status --json` es para scripts.
+notas (con el comando `sync --model` correspondiente). `status --json` es para scripts ([status.schema.json](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/src/since_cutoff/schemas/status.schema.json)).
 `status --hook` muestra una línea solo cuando las notas están desactualizadas y siempre sale con
 0, por ejemplo:
 
@@ -811,6 +812,50 @@ pull request), `report` (la ruta del informe completo) y, con `check-notes`, `no
 (`up-to-date`, `out-of-date`, `edited-by-hand` o `error`). Un cambio accesible desde varias rutas
 de importación se cuenta una sola vez.
 
+### Code scanning de GitHub (SARIF)
+
+`scan --sarif ARCHIVO` escribe un informe SARIF 2.1.0, que `github/codeql-action/upload-sarif`
+sube a code scanning: cada archivo que usa una API modificada se convierte en una alerta en la
+pestaña Security del repositorio y en los checks de la pull request, un aviso (*warning*) para
+la forma antigua y una nota (*note*) en los demás casos, con el cambio, las dos versiones y la
+nota en su mensaje. Cada tipo de cambio es una regla (`removed`, `moved`, `param_removed`,
+`deprecated`, ...). Una alerta sigue siendo la misma entre ejecuciones y subidas de versión (su
+huella es el paquete, la API y el archivo), y una subida sin nada que informar cierra las que
+estén abiertas. Hasta que el análisis registre las líneas ([#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)), cada alerta está en la
+línea 1 de su archivo y lo dice.
+
+```yaml
+# .github/workflows/since-cutoff-sarif.yml
+name: since-cutoff code scanning
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # para subir el informe
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MohammadHijjawi97/since-cutoff@v0
+        with:
+          model: anthropic:claude-sonnet-4-5
+          args: --sarif since-cutoff.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: ${{ !cancelled() }}
+        with:
+          sarif_file: since-cutoff.sarif
+          category: since-cutoff
+```
+
+Ejecútalo en la rama principal además de en las pull requests, para que code scanning sepa qué
+alertas añade cada pull request. Code scanning es gratuito en los repositorios públicos; los
+privados necesitan GitHub Code Security. `--sarif` requiere since-cutoff 0.7.0 o posterior
+(`since-cutoff-version`). Fuera de la Action: `since-cutoff scan --model ... --sarif
+since-cutoff.sarif`, y después el mismo paso de subida.
+
 ### pre-commit
 
 ```yaml
@@ -848,10 +893,29 @@ since-cutoff sync --check
 since-cutoff run --quick --fail-on-stale --json > since-cutoff.json
 ```
 
-`--markdown -` escribe el resumen en stdout, y en stderr solo el progreso y la ruta del informe,
-igual que `--json`. En un archivo, una tubería o un registro de CI no hay barra de progreso
-animada, y la salida se compone con 160 columnas de ancho (`COLUMNS` fija otro ancho). Códigos
-de salida:
+Para las merge requests de GitLab, `--gitlab-codequality ARCHIVO` escribe un informe de Code
+Quality: una incidencia por cada archivo que usa una API modificada (`major` para la forma
+antigua, `info` en los demás casos; comprobación `since-cutoff/<kind>`), con su ruta relativa a
+`CI_PROJECT_DIR` y la nota en su descripción. Sus huellas no incluyen las versiones, así que una
+subida de versión no reabre todas las incidencias. Añádelo como artefacto:
+
+```yaml
+# .gitlab-ci.yml
+since-cutoff:
+  image: python:3.12-slim
+  script:
+    - pip install since-cutoff
+    - since-cutoff scan --model anthropic:claude-sonnet-4-5 --gitlab-codequality gl-code-quality.json
+  artifacts:
+    when: always
+    reports:
+      codequality: gl-code-quality.json
+```
+
+`--markdown -`, `--sarif -` y `--gitlab-codequality -` escriben el informe en stdout, y en stderr
+solo el progreso y la ruta del informe, igual que `--json`. En un archivo, una tubería o un
+registro de CI no hay barra de progreso animada, y la salida se compone con 160 columnas de ancho
+(`COLUMNS` fija otro ancho). Códigos de salida:
 
 - `0` éxito;
 - `1` error (por ejemplo, `run` no pudo sondear ningún cambio de API o no pudo puntuar ninguna
@@ -983,6 +1047,7 @@ reservadas; `verified` se mantiene y significa lo mismo que `checks.example_type
 - **Muestra dónde usa tu código una API modificada** (por ahora, nombres de archivo) en la
   terminal y en `.since-cutoff/`, y no lo envía a ningún sitio. Lo que compartas depende de ti:
   `--markdown` y `--annotate github` lo ponen en el resumen y las anotaciones de un trabajo de CI,
+  `--sarif` y `--gitlab-codequality` en code scanning de GitHub y en las merge requests de GitLab,
   y la herramienta MCP `project_changes` se lo da al agente que la llamó, que pasa los resultados
   de las herramientas a su modelo.
 - **Guarda** los resultados en `.since-cutoff/` dentro de tu proyecto (el propio directorio se
@@ -1021,8 +1086,9 @@ reservadas; `verified` se mantiene y significa lo mismo que `checks.example_type
   método leído sobre un valor cuya clase el código no muestra puede contar solo por su nombre,
   cuando ese nombre pertenece a una única API con cambios y no es un nombre común ni un miembro
   de un tipo integrado o de la biblioteca estándar: esa coincidencia `[name match]` no aparece
-  en ningún informe, ni en las notas, ni en `--fail-on` ni en `--annotate` salvo que se indique
-  `--include-name-matches` (`include_name_matches` por MCP), porque la mayoría son un método
+  en ningún informe, ni en las notas, ni en `--fail-on`, `--annotate`, `--sarif` ni
+  `--gitlab-codequality` salvo que se indique `--include-name-matches` (`include_name_matches`
+  por MCP), porque la mayoría son un método
   homónimo de otra biblioteca. Un parámetro que pasó a ser obligatorio, solo por nombre o
   solo posicional aparece siempre como «uses this API», nunca como «old form», por ahora.
 - Una nota solo nombra un sustituto cuando el propio texto de obsolescencia de la biblioteca lo

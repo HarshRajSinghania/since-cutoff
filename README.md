@@ -758,7 +758,7 @@ Without `paths`, the job also runs when a code change starts using a changed API
 | `fail-on-changes` | `false` | fail the step when a dependency changed its API after the cutoff |
 | `check-notes` | `false` | also run `since-cutoff sync --check`, which writes nothing, and fail the job when the notes in AGENTS.md / CLAUDE.md are out of date or the block was edited by hand; the notes keep the model they were written for, and `model` (and `cutoff`) serve a project with no block yet |
 | `step-summary` | `true` | add the Markdown summary to the job summary |
-| `pr-comment` | `false` | on pull requests, post the summary as one comment and edit it on each run; needs `permissions: pull-requests: write` |
+| `pr-comment` | `false` | (since 0.7.0) on pull requests, post the summary as one comment and edit it on each run; needs `permissions: pull-requests: write` |
 | `cache` | `true` | keep PyPI metadata, package sources and API diffs between runs (also when `fail-on-changes` fails the job) |
 | `args` | | more `since-cutoff scan` arguments, e.g. `--all-deps --limit 20` |
 | `since-cutoff-version` | `0.5.0` | the since-cutoff release to run, or `latest` |
@@ -767,12 +767,17 @@ Without `paths`, the job also runs when a code change starts using a changed API
 API in the old form, and annotates each file that uses one: a warning for the old form, a notice
 otherwise.
 
-With `pr-comment: true` the summary is also a comment on the pull request, where reviewers read
-it: the first run posts it, and later runs edit that comment instead of adding one, so it always
-describes the latest push, also when the scan no longer finds anything. The job's token must be
-allowed to write to pull requests:
+With `pr-comment: true` (since 0.7.0) the summary is also a comment on the pull request, where
+reviewers read it: the first run posts it, and later runs edit that comment instead of adding
+one, so it always describes the latest push, also when the scan no longer finds anything. The
+job's token must be allowed to write to pull requests:
 
 ```yaml
+# one run per pull request at a time, so that an older run cannot overwrite a newer comment
+concurrency:
+  group: since-cutoff-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -788,14 +793,19 @@ jobs:
 ```
 
 On a pull request from a fork the token can only read, so the step prints a notice and the
-summary stays in the job summary; on other events (a push) it posts nothing. A summary longer
-than a comment can be (65,536 characters) is cut after a whole line, with a link to the job
-summary. The comment is found again by a hidden `<!-- since-cutoff:pr-comment -->` marker.
+summary stays in the job summary; on other events (a push) it posts nothing. Do not run it on
+`pull_request_target` with a checkout of the pull request's head to get comments on forks: that
+runs the fork's code with a token that can write to your repository (the step posts nothing
+there for a fork either). A summary longer than a comment can be (65,536 characters) is cut
+after a whole line, with a link to the job summary. The comment is found again by a hidden
+marker, `<!-- since-cutoff:pr-comment -->` for the project root and
+`<!-- since-cutoff:pr-comment:DIR -->` for a `working-directory`, so two steps scanning two
+projects keep a comment each; if there are two for one project, the newest is edited.
 
 Outputs: `changed-packages` (comma-separated), `changes` (breaking changes), `deprecations`,
-`markdown` (the summary's path, for example for a step of your own), `report`
-(the full report's path) and, with `check-notes`, `notes` (`up-to-date`, `out-of-date`,
-`edited-by-hand` or `error`). A change reachable under several import paths is counted once.
+`markdown` (the summary's path, for example for a step of your own), `report` (the full
+report's path) and, with `check-notes`, `notes` (`up-to-date`, `out-of-date`, `edited-by-hand`
+or `error`). A change reachable under several import paths is counted once.
 
 ### pre-commit
 
@@ -847,7 +857,7 @@ output is laid out 160 columns wide (`COLUMNS` sets another width). Exit codes:
 - `4` `sync`: the block was edited by hand, and nothing was written without `--force`;
 - `141` the output was closed early (piped into `head`, for example).
 
-### Docker
+### Docker (since 0.7.0)
 
 Each release is also an image, `ghcr.io/mohammadhijjawi97/since-cutoff:X.Y.Z` and `:latest`, for
 linux/amd64 and linux/arm64, for CI systems that run tools from containers:

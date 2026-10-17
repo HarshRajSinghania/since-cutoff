@@ -459,16 +459,21 @@ jobs:
 | `fail-on-changes` | `false` | 有依赖在截止日期之后改了 API 时，让这一步失败 |
 | `check-notes` | `false` | 同时运行 `since-cutoff sync --check`（不写入任何内容），当 AGENTS.md / CLAUDE.md 中的说明已过时或区块被手动修改过时，让任务失败；说明沿用写入时的模型，`model`（和 `cutoff`）用于还没有区块的项目 |
 | `step-summary` | `true` | 把 Markdown 摘要加到任务摘要（job summary）中 |
-| `pr-comment` | `false` | 在 pull request 上把摘要发成一条评论，之后每次运行都编辑这条评论；需要 `permissions: pull-requests: write` |
+| `pr-comment` | `false` | （0.7.0 起）在 pull request 上把摘要发成一条评论，之后每次运行都编辑这条评论；需要 `permissions: pull-requests: write` |
 | `cache` | `true` | 在多次运行之间保留 PyPI 元数据、包源码和 API 对比结果（`fail-on-changes` 让任务失败时也会保留） |
 | `args` | | 额外的 `since-cutoff scan` 参数，例如 `--all-deps --limit 20` |
 | `since-cutoff-version` | `0.5.0` | 要运行的 since-cutoff 版本，或 `latest` |
 
 `args: --fail-on old-form --annotate github` 只在你的代码以旧写法用到有变更的 API 时让任务失败，并为每个用到这类 API 的文件添加注解：旧写法为警告（warning），其他情况为提示（notice）。
 
-设置 `pr-comment: true` 时，摘要还会作为评论出现在 pull request 上，也就是审阅者阅读的地方：第一次运行发布这条评论，之后的运行编辑它而不是再加一条，所以它总是对应最新一次 push，扫描不再发现任何问题时也会如实更新。任务的 token 需要有写入 pull request 的权限：
+设置 `pr-comment: true`（0.7.0 起）时，摘要还会作为评论出现在 pull request 上，也就是审阅者阅读的地方：第一次运行发布这条评论，之后的运行编辑它而不是再加一条，所以它总是对应最新一次 push，扫描不再发现任何问题时也会如实更新。任务的 token 需要有写入 pull request 的权限：
 
 ```yaml
+# 每个 pull request 同一时间只运行一次，旧的运行就不会覆盖新的评论
+concurrency:
+  group: since-cutoff-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -483,7 +488,7 @@ jobs:
           pr-comment: true
 ```
 
-来自 fork 的 pull request 的 token 只能读取，这时这一步只打印一条提示（notice），摘要只出现在任务摘要中；在其他事件（例如 push）上它不发布任何内容。超过评论长度上限（65,536 个字符）的摘要会在完整的一行之后截断，并附上指向任务摘要的链接。评论通过一个隐藏标记 `<!-- since-cutoff:pr-comment -->` 来识别。
+来自 fork 的 pull request 的 token 只能读取，这时这一步只打印一条提示（notice），摘要只出现在任务摘要中；在其他事件（例如 push）上它不发布任何内容。不要为了在 fork 的 pull request 上也得到评论而在 `pull_request_target` 上检出 pull request 的 head 来运行它：那样会用一个能写入你仓库的 token 运行 fork 的代码（而且对 fork 的 pull request，这一步在那里同样不发布任何内容）。超过评论长度上限（65,536 个字符）的摘要会在完整的一行之后截断，并附上指向任务摘要的链接。评论通过一个隐藏标记来识别：项目根目录是 `<!-- since-cutoff:pr-comment -->`，`working-directory` 是 `<!-- since-cutoff:pr-comment:DIR -->`，所以扫描两个项目的两个步骤各自保留一条评论；同一个项目有两条时，编辑最新的那条。
 
 输出：`changed-packages`（逗号分隔）、`changes`（破坏性变更数）、`deprecations`、`markdown`（摘要文件的路径，例如供你自己的步骤使用）、`report`（完整报告的路径），以及设置 `check-notes` 时的 `notes`（`up-to-date`、`out-of-date`、`edited-by-hand` 或 `error`）。能通过多个导入路径访问的同一个变更只计一次。
 
@@ -524,7 +529,7 @@ since-cutoff run --quick --fail-on-stale --json > since-cutoff.json
 - `4` `sync`：区块被手动修改过，没有 `--force` 时不写入任何内容；
 - `141` 输出被提前关闭（例如通过管道传给了 `head`）。
 
-### Docker
+### Docker（0.7.0 起）
 
 每个版本也会发布为镜像 `ghcr.io/mohammadhijjawi97/since-cutoff:X.Y.Z` 和 `:latest`，支持 linux/amd64 和 linux/arm64，供在容器中运行工具的 CI 系统使用：
 

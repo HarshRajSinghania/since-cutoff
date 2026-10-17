@@ -343,15 +343,17 @@ def test_action_saves_its_cache_before_it_fails() -> None:
     assert 'exit "$SC_STATUS"' in report and "::error title=since-cutoff::" in report
 
 
-# A stand-in for the gh CLI: it logs each call, lists the comment ids in $GH_EXISTING, keeps the
-# body it is given, and fails a read or a write when asked to.
+# A stand-in for the gh CLI: it logs each call (and the host it would talk to), prints
+# $GH_COMMENTS as the listing (what the real --jq makes of the comments: "id author first-line"
+# each), keeps the body it is given, and fails a read or a write when asked to.
 _FAKE_GH = """\
 #!/usr/bin/env bash
 printf '%s\\n' "$*" >> "$GH_LOG"
+printf '%s\\n' "${GH_HOST:-}" >> "$GH_LOG.hosts"
 case "$*" in
   *--paginate*)
     if [ -n "${GH_FAIL_READ:-}" ]; then echo "HTTP 403: Resource not accessible" >&2; exit 1; fi
-    if [ -n "${GH_EXISTING:-}" ]; then printf '%s\\n' $GH_EXISTING; fi ;;
+    if [ -n "${GH_COMMENTS:-}" ]; then printf '%s\\n' "$GH_COMMENTS"; fi ;;
   *)
     if [ -n "${GH_FAIL_WRITE:-}" ]; then echo "HTTP 403: Resource not accessible" >&2; exit 1; fi
     for arg in "$@"; do
@@ -392,7 +394,7 @@ class _CommentStep:
         (bin_dir / "gh").chmod(0o755)
         self.log, self.body = tmp_path / "gh.log", tmp_path / "posted.md"
         self.env = {
-            **os.environ,
+            **{k: v for k, v in os.environ.items() if k not in ("GH_HOST", "LC_ALL")},
             "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
             "GH_LOG": str(self.log),
             "GH_BODY": str(self.body),
@@ -403,6 +405,7 @@ class _CommentStep:
             "GITHUB_RUN_ID": "99",
             "SC_MARKDOWN": "",
             "SC_STEP_SUMMARY": "true",
+            "SC_WORKDIR": ".",
             "SC_PR": "7",
             "SC_HEAD_REPO": "o/r",
             "SC_HEAD_SHA": "abcdef0123456789",
@@ -430,9 +433,28 @@ class _CommentStep:
     def posted(self) -> str:
         return self.body.read_bytes().decode()
 
+    def hosts(self) -> list[str]:
+        return (self.tmp / "gh.log.hosts").read_text(encoding="utf-8").splitlines()
+
 
 MARKER = "<!-- since-cutoff:pr-comment -->"
 RUN_URL = "https://github.com/o/r/actions/runs/99"
+BOT = "github-actions[bot]"
+
+
+def _rendered_structure(markdown: str) -> tuple[int, bool]:
+    """The <details> left open outside code fences, and whether a fence is left open."""
+    depth, fence = 0, ""
+    for line in markdown.splitlines():
+        stripped = line.lstrip(" ")
+        if fence:
+            if stripped.rstrip(" ").startswith(fence) and not stripped.strip(fence[0] + " "):
+                fence = ""
+        elif match := re.match(r"(`{3,}|~{3,})", stripped):
+            fence = match.group(1)
+        else:
+            depth += line.count("<details") - line.count("</details>")
+    return depth, bool(fence)
 
 
 def test_pr_comment_posts_the_summary_then_edits_that_comment(tmp_path) -> None:
@@ -441,37 +463,86 @@ def test_pr_comment_posts_the_summary_then_edits_that_comment(tmp_path) -> None:
 
     # The first run finds no comment of its own and creates one.
     out, calls = step.run()
-    assert calls[0].startswith("api --paginate repos/o/r/issues/7/comments --jq ")
-    assert '.user.login == "github-actions[bot]"' in calls[0]
-    assert f'.body | startswith("{MARKER}")' in calls[0]
+    assert calls[0] == (
+        "api --paginate repos/o/r/issues/7/comments --jq "
+        r'.[] | "\(.id) \(.user.login) \((.body // "") | split("\n") | .[0])"'
+    )
     assert calls[1].startswith("api --method POST repos/o/r/issues/7/comments -F body=@")
     assert "issuecomment-1" in out
     assert step.posted() == (
         f"{MARKER}\n## since-cutoff scan\n\n- 1 of 9 dependencies changed its API\n\n"
         f"<sub>Updated for abcdef0 by the since-cutoff action ([workflow run]({RUN_URL})).</sub>\n"
     )
+    assert step.hosts() == ["github.com", "github.com"]
 
-    # A later run edits the first comment with the marker.
+    # A later run edits the comment that github-actions[bot] started with this marker: not one by
+    # someone else, quoting it, nor the comment for another working-directory.
     step.log.unlink()
     step.summary("## since-cutoff scan\n\n- 0 of 9 dependencies changed their API\n")
-    _, calls = step.run(GH_EXISTING="42 43")
+    out, calls = step.run(
+        GH_COMMENTS="\n".join(
+            [
+                f"41 someone {MARKER}",
+                f"42 {BOT} {MARKER}\r",
+                f"43 {BOT} <!-- since-cutoff:pr-comment:services/api -->",
+                f"44 {BOT} ## since-cutoff scan",
+                "45 someone",
+            ]
+        )
+    )
     assert calls[1].startswith("api --method PATCH repos/o/r/issues/comments/42 -F body=@")
     assert "- 0 of 9 dependencies" in step.posted()
+    assert "::notice" not in out
+
+
+def test_pr_comment_edits_the_newest_of_two_and_says_so(tmp_path) -> None:
+    step = _CommentStep(tmp_path)
+    step.summary("## since-cutoff scan\n")
+    out, calls = step.run(GH_COMMENTS=f"45 {BOT} {MARKER}\n42 {BOT} {MARKER}\n")
+    assert calls[1].startswith("api --method PATCH repos/o/r/issues/comments/45 -F body=@")
+    assert (
+        "::notice title=since-cutoff::pr-comment: pull request #7 has 2 since-cutoff comments for "
+        "the project root; the newest (45) is edited, the others are left as they are"
+    ) in out
+
+
+@pytest.mark.parametrize(
+    ("workdir", "marker"),
+    [
+        (".", MARKER),
+        ("./", MARKER),
+        ("", MARKER),
+        ("services/api", "<!-- since-cutoff:pr-comment:services/api -->"),
+        ("./services/api/", "<!-- since-cutoff:pr-comment:services/api -->"),
+        ("services\\api", "<!-- since-cutoff:pr-comment:services/api -->"),
+        ("a-->b", "<!-- since-cutoff:pr-comment:a--b -->"),
+    ],
+)
+def test_pr_comment_marker_names_the_working_directory(tmp_path, workdir, marker) -> None:
+    # Two steps (or a matrix) scanning two projects keep a comment each.
+    step = _CommentStep(tmp_path)
+    step.summary("## since-cutoff scan\n")
+    _, calls = step.run(SC_WORKDIR=workdir, GH_COMMENTS=f"42 {BOT} {marker}")
+    assert step.posted().splitlines()[0] == marker
+    assert calls[1].startswith("api --method PATCH repos/o/r/issues/comments/42 ")
 
 
 def test_pr_comment_cuts_a_long_summary_and_links_to_the_job_summary(tmp_path) -> None:
     step = _CommentStep(tmp_path)
-    package = "<details><summary><b>pkg{n}</b></summary>\n\n" + "- `é.f` changed\n" * 40
+    package = "<details><summary><b>pkg{n}</b></summary>\n\n" + "- `变更.f` 已更改\n" * 40
     step.summary(
         "## since-cutoff scan\n\n"
         + "\n</details>\n\n".join(package.format(n=n) for n in range(400))
         + "\n</details>\n"
     )
-    step.run()
+    # Counted in bytes also in a UTF-8 locale (LC_ALL=C), so never over in any count: without
+    # it, gawk would count characters and keep about 64,000 of them, over 150,000 bytes here.
+    step.run(LANG="C.UTF-8", LC_ALL="C.UTF-8")
     posted = step.posted()
-    assert len(posted) <= 65536 < len((tmp_path / "summary.md").read_text(encoding="utf-8"))
+    assert len(posted.encode()) <= 65536 < len((tmp_path / "summary.md").read_bytes())
     assert posted.startswith(MARKER + "\n## since-cutoff scan\n")
     assert posted.count("<details>") == posted.count("</details>") > 0
+    assert _rendered_structure(posted) == (0, False)
     assert f"cut here: the [job summary]({RUN_URL}) has all of it." in posted
     assert posted.rstrip().endswith("</sub>")
 
@@ -482,11 +553,57 @@ def test_pr_comment_cuts_a_long_summary_and_links_to_the_job_summary(tmp_path) -
     assert "(`step-summary: true` adds all of it to the [job summary]" in posted
 
 
+def test_pr_comment_leaves_room_for_the_marker_and_the_footer(tmp_path) -> None:
+    # An ASCII summary a little under 65,536 bytes: posted whole, the marker, the note and the
+    # footer would take the comment over the limit, so it is cut.
+    step = _CommentStep(tmp_path)
+    line = "- `pkg.module.function` changed its signature\n"
+    step.summary("## since-cutoff scan\n\n" + line * (65400 // len(line)))
+    step.run()
+    posted = step.posted()
+    assert 65000 < len((tmp_path / "summary.md").read_bytes()) <= 65536
+    assert len(posted) <= 65536
+    assert f"cut here: the [job summary]({RUN_URL}) has all of it." in posted
+
+
+def test_pr_comment_closes_a_code_fence_the_cut_falls_in(tmp_path) -> None:
+    # The notes block (report.py) is a ```markdown fence inside <details>: cut inside the fence,
+    # the closing </details>, the note and the footer would render as code.
+    step = _CommentStep(tmp_path)
+    head = "## since-cutoff scan\n\n<details><summary><b>pkg</b></summary>\n\n- `pkg.f` changed\n\n</details>\n"
+    notes = (
+        "\n<details><summary>40 notes ready for AGENTS.md (`since-cutoff sync` writes them), "
+        "about 900 tokens</summary>\n\n```markdown\n<!-- since-cutoff:start -->\n"
+        + "".join(f"- `pkg.f{n}` takes `timeout`; a <details> block shows it\n" for n in range(40))
+        + "<!-- since-cutoff:end -->\n```\n\n</details>\n"
+    )
+    step.summary(head + notes)
+    step.run(SINCE_CUTOFF_COMMENT_MAX_BYTES=str(len(head) + len(notes) // 2))
+    posted = step.posted()
+    assert "- `pkg.f39`" not in posted and "- `pkg.f5`" in posted  # cut in the fence
+    assert _rendered_structure(posted) == (0, False)
+    body = posted.split("\n<!-- since-cutoff:start -->\n", 1)[1]
+    assert re.search(r"\n```\n</details>\n\n\*\*The summary is longer than a comment", body)
+
+    # A longer fence is closed by one as long; ~~~ by ~~~.
+    step.summary(
+        "## since-cutoff scan\n\n<details>\n\n~~~~text\n" + "x\n" * 100 + "~~~~\n</details>\n"
+    )
+    step.run(SINCE_CUTOFF_COMMENT_MAX_BYTES="100")
+    assert "\n~~~~\n</details>\n\n**The summary" in step.posted()
+    assert _rendered_structure(step.posted()) == (0, False)
+
+
 @pytest.mark.parametrize(
     ("env", "notice"),
     [
         ({"SC_PR": "", "GITHUB_EVENT_NAME": "push"}, "not a pull request (push), so no comment"),
         ({"SC_HEAD_REPO": "fork/r"}, "the token of a pull request from a fork cannot comment"),
+        ({"SC_HEAD_REPO": ""}, "the token of a pull request from a fork cannot comment"),
+        (
+            {"SC_HEAD_REPO": "fork/r", "GITHUB_EVENT_NAME": "pull_request_target"},
+            "the pull request is from a fork, so pull_request_target posts no comment",
+        ),
     ],
 )
 def test_pr_comment_skips_pushes_and_forks_with_a_notice(tmp_path, env, notice) -> None:
@@ -496,13 +613,39 @@ def test_pr_comment_skips_pushes_and_forks_with_a_notice(tmp_path, env, notice) 
     assert calls == []
 
 
+def test_pr_comment_on_pull_request_target_from_this_repository_posts(tmp_path) -> None:
+    step = _CommentStep(tmp_path)
+    step.summary("## since-cutoff scan\n")
+    _, calls = step.run(GITHUB_EVENT_NAME="pull_request_target")
+    assert calls[1].startswith("api --method POST repos/o/r/issues/7/comments ")
+
+
 def test_pr_comment_warns_without_failing_when_the_token_cannot_write(tmp_path) -> None:
     step = _CommentStep(tmp_path)
     out, calls = step.run(GH_FAIL_READ="1")
-    assert "could not read the pull request's comments" in out and len(calls) == 1
+    assert (
+        "::warning title=since-cutoff::pr-comment: could not read the comments of pull request #7 "
+        "on github.com (HTTP 403: Resource not accessible); the job needs permissions: "
+        "pull-requests: write"
+    ) in out
+    assert len(calls) == 1
     out, calls = step.run(GH_FAIL_WRITE="1")
-    assert "::warning title=since-cutoff::pr-comment: could not write the comment" in out
-    assert "pull-requests: write" in out
+    assert (
+        "::warning title=since-cutoff::pr-comment: could not write the comment on pull request #7 "
+        "on github.com (HTTP 403: Resource not accessible)"
+    ) in out
+
+
+def test_pr_comment_names_the_enterprise_server_and_a_missing_gh(tmp_path) -> None:
+    step = _CommentStep(tmp_path)
+    out, _ = step.run(GITHUB_SERVER_URL="https://ghe.example.com", GH_FAIL_READ="1")
+    assert "could not read the comments of pull request #7 on ghe.example.com (" in out
+    assert step.hosts() == ["ghe.example.com"]  # gh talks to that server, not github.com
+    # Only bash builtins run before the step looks for gh.
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    out, _ = step.run(PATH=str(empty))
+    assert "::warning title=since-cutoff::pr-comment: gh not found" in out
 
 
 def test_pr_comment_says_when_the_scan_wrote_no_summary(tmp_path) -> None:
@@ -519,7 +662,7 @@ def test_pr_comment_dry_run_writes_the_call_and_the_comment_to_a_file(tmp_path) 
     step = _CommentStep(tmp_path)
     step.summary("## since-cutoff scan\n")
     dry = tmp_path / "dry-run.txt"
-    out, calls = step.run(SINCE_CUTOFF_COMMENT_DRY_RUN=str(dry), GH_EXISTING="42")
+    out, calls = step.run(SINCE_CUTOFF_COMMENT_DRY_RUN=str(dry), GH_COMMENTS=f"42 {BOT} {MARKER}")
     assert len(calls) == 1 and "--paginate" in calls[0]  # it reads, and writes nothing
     assert "Dry run: gh api --method PATCH repos/o/r/issues/comments/42" in out
     lines = dry.read_text(encoding="utf-8").splitlines()
@@ -593,6 +736,7 @@ def test_tokens_are_read_only_unless_a_job_needs_to_write() -> None:
             scopes = re.findall(r"^ +([\w-]+): write$", lines, re.M)
             writes |= {(name, job, scope) for scope in scopes}
     assert writes == {
+        ("ci.yml", "pr-comment", "pull-requests"),  # the action's pr-comment, posted for real
         ("release.yml", "publish", "id-token"),  # PyPI trusted publishing
         ("release.yml", "mcp-registry", "id-token"),  # mcp-publisher login github-oidc
         ("release.yml", "github-release", "contents"),  # gh release create
@@ -604,6 +748,22 @@ def test_tokens_are_read_only_unless_a_job_needs_to_write() -> None:
     publish = _jobs(_workflows()["release.yml"])["publish"]
     assert "\n    environment: pypi\n" in publish
     assert "uses: pypa/gh-action-pypi-publish@" in publish
+
+
+def test_pr_comment_posts_for_real_only_on_this_repositorys_pull_requests() -> None:
+    # The job that can write to pull requests runs for pull requests from this repository only,
+    # with no secret but its own token; the dry run in the action job covers forks.
+    jobs = _jobs(_workflows()["ci.yml"])
+    live = jobs["pr-comment"]
+    assert (
+        "\n    if: github.event_name == 'pull_request' && "
+        "github.event.pull_request.head.repo.full_name == github.repository\n"
+    ) in live
+    assert "secrets." not in live and "pull_request_target" not in _workflows()["ci.yml"]
+    assert live.count("uses: ./\n") == 2 and live.count('pr-comment: "true"') == 2
+    assert "SINCE_CUTOFF_COMMENT_DRY_RUN" not in live
+    assert "SINCE_CUTOFF_COMMENT_DRY_RUN" in jobs["action"]
+    assert "\n      pull-requests: read\n" in jobs["action"]
 
 
 def test_scorecard_can_publish_its_results() -> None:

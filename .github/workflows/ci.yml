@@ -100,7 +100,8 @@ jobs:
     # network job it talks to PyPI and models.dev; it never calls a model.
     name: action (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    # pr-comment reads the pull request's comments; its dry run (below) writes none.
+    # pr-comment reads the pull request's comments; its dry run (below) writes none. It covers
+    # pull requests from forks too; the pr-comment job posts for real on this repository's own.
     permissions:
       contents: read
       pull-requests: read
@@ -155,13 +156,85 @@ jobs:
           if [ -n "$PR" ] && [ "$HEAD_REPO" = "$GITHUB_REPOSITORY" ]; then
             cat "$comment"
             grep -Eq "^gh api --method (POST repos/$GITHUB_REPOSITORY/issues/$PR/comments|PATCH repos/$GITHUB_REPOSITORY/issues/comments/[0-9]+) " "$comment"
-            [ "$(sed -n 3p "$comment")" = "<!-- since-cutoff:pr-comment -->" ]
+            [ "$(sed -n 3p "$comment")" = "<!-- since-cutoff:pr-comment:examples/agent-app -->" ]
             grep -q "^## since-cutoff scan" "$comment"
             grep -q "<b>huggingface-hub</b>" "$comment"
             grep -q "^<sub>Updated for [0-9a-f]\{7\} by the since-cutoff action" "$comment"
           else
             test ! -e "$comment"
           fi
+
+  pr-comment:
+    # pr-comment for real, on this repository's own pull requests only (a fork's token cannot
+    # write, and the job has no secret but its token): the first run on a pull request creates
+    # the comment, and each later run, and the second scan below, edits that comment.
+    name: action (pr-comment)
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      MARKER: "<!-- since-cutoff:pr-comment:examples/agent-app -->"
+      # The marked comments of github-actions[bot], found independently of the action's own code.
+      MARKED: >-
+        .[] | select(.user.login == "github-actions[bot]" and (.body | startswith(env.MARKER))) | .id
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: The comment before this run
+        run: |
+          set -euo pipefail
+          before="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --jq "$MARKED")"
+          [ "$(grep -c . <<< "$before" || true)" -le 1 ]
+          echo "BEFORE=$before" >> "$GITHUB_ENV"
+          echo "Comment before this run: ${before:-none}"
+      - name: Scan examples/agent-app and comment
+        uses: ./
+        with:
+          model: anthropic:claude-haiku-4-5
+          working-directory: examples/agent-app
+          pr-comment: "true"
+          since-cutoff-version: local
+      - name: Check that there is one comment, created or edited
+        run: |
+          set -euo pipefail
+          ids="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --jq "$MARKED")"
+          [ "$(grep -c . <<< "$ids" || true)" -eq 1 ]
+          if [ -z "$BEFORE" ]; then action=created; else [ "$ids" = "$BEFORE" ]; action=edited; fi
+          comment="$(gh api "repos/$GITHUB_REPOSITORY/issues/comments/$ids")"
+          body="$(jq -r .body <<< "$comment")"
+          printf '%s\n' "$body"
+          [ "$(head -n 1 <<< "$body" | tr -d '\r')" = "$MARKER" ]
+          grep -q "^## since-cutoff scan" <<< "$body"
+          grep -q "<b>huggingface-hub</b>" <<< "$body"
+          grep -qF "Updated for ${HEAD_SHA:0:7} by the since-cutoff action ([workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID))" <<< "$body"
+          url="$(jq -r .html_url <<< "$comment")"
+          echo "pr-comment $action $url" | tee -a "$GITHUB_STEP_SUMMARY"
+          { echo "COMMENT=$ids"; echo "FIRST_BODY=$(sha256sum <<< "$body" | cut -d' ' -f1)"; } >> "$GITHUB_ENV"
+      - name: Scan again with another summary (edits the comment)
+        uses: ./
+        with:
+          model: anthropic:claude-haiku-4-5
+          working-directory: examples/agent-app
+          only: huggingface-hub
+          step-summary: "false"
+          pr-comment: "true"
+          since-cutoff-version: local
+      - name: Check that the same comment was edited
+        run: |
+          set -euo pipefail
+          ids="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --jq "$MARKED")"
+          [ "$ids" = "$COMMENT" ]
+          body="$(gh api "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT" --jq .body)"
+          printf '%s\n' "$body"
+          [ "$(sha256sum <<< "$body" | cut -d' ' -f1)" != "$FIRST_BODY" ]
+          [ "$(head -n 1 <<< "$body" | tr -d '\r')" = "$MARKER" ]
+          grep -q "<b>huggingface-hub</b>" <<< "$body"
+          echo "pr-comment edited again by a second scan in this job (comment $COMMENT)" | tee -a "$GITHUB_STEP_SUMMARY"
 
   build:
     runs-on: ubuntu-latest

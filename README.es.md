@@ -797,7 +797,7 @@ modificada.
 | `fail-on-changes` | `false` | hace fallar el paso cuando una dependencia cambió su API después de la fecha de corte |
 | `check-notes` | `false` | ejecuta también `since-cutoff sync --check`, que no escribe nada, y hace fallar el trabajo cuando las notas de AGENTS.md / CLAUDE.md están desactualizadas o el bloque se editó a mano; las notas conservan el modelo para el que se escribieron, y `model` (y `cutoff`) sirven para un proyecto que aún no tiene bloque |
 | `step-summary` | `true` | añade el resumen en Markdown al resumen del trabajo |
-| `pr-comment` | `false` | en las pull requests, publica el resumen como un único comentario y lo edita en cada ejecución; requiere `permissions: pull-requests: write` |
+| `pr-comment` | `false` | (desde la 0.7.0) en las pull requests, publica el resumen como un único comentario y lo edita en cada ejecución; requiere `permissions: pull-requests: write` |
 | `cache` | `true` | conserva entre ejecuciones los metadatos de PyPI, el código fuente de los paquetes y los diffs de API (también cuando `fail-on-changes` hace fallar el trabajo) |
 | `args` | | más argumentos para `since-cutoff scan`, p. ej. `--all-deps --limit 20` |
 | `since-cutoff-version` | `0.5.0` | la versión de since-cutoff que se ejecuta, o `latest` |
@@ -806,12 +806,17 @@ modificada.
 API modificada en la forma antigua, y anota cada archivo que usa una: un aviso (*warning*) para la
 forma antigua y una nota (*notice*) en los demás casos.
 
-Con `pr-comment: true` el resumen también aparece como comentario en la pull request, donde lo
-leen los revisores: la primera ejecución lo publica y las siguientes editan ese comentario en
-lugar de añadir otro, así que siempre describe el último push, también cuando el análisis ya no
-encuentra nada. El token del trabajo debe poder escribir en las pull requests:
+Con `pr-comment: true` (desde la 0.7.0) el resumen también aparece como comentario en la pull
+request, donde lo leen los revisores: la primera ejecución lo publica y las siguientes editan ese
+comentario en lugar de añadir otro, así que siempre describe el último push, también cuando el
+análisis ya no encuentra nada. El token del trabajo debe poder escribir en las pull requests:
 
 ```yaml
+# una sola ejecución por pull request a la vez, para que una antigua no sobrescriba el comentario
+concurrency:
+  group: since-cutoff-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -828,14 +833,21 @@ jobs:
 
 En una pull request desde un fork el token solo puede leer, así que el paso muestra una nota
 (*notice*) y el resumen queda solo en el resumen del trabajo; en otros eventos (un push) no
-publica nada. Un resumen más largo de lo que admite un comentario (65 536 caracteres) se corta
-tras una línea completa, con un enlace al resumen del trabajo. El comentario se vuelve a
-encontrar por una marca oculta, `<!-- since-cutoff:pr-comment -->`.
+publica nada. No lo ejecutes con `pull_request_target` y un checkout de la rama de la pull
+request para tener comentarios en los forks: así se ejecuta el código del fork con un token que
+puede escribir en tu repositorio (y el paso tampoco publica nada ahí para un fork). Un resumen
+más largo de lo que admite un comentario (65 536 caracteres) se corta tras una línea completa,
+con un enlace al resumen del trabajo. El comentario se vuelve a encontrar por una marca oculta,
+`<!-- since-cutoff:pr-comment -->` para la raíz del proyecto y
+`<!-- since-cutoff:pr-comment:DIR -->` para un `working-directory`, así que dos pasos que
+analizan dos proyectos conservan un comentario cada uno; si hay dos para un mismo proyecto, se
+edita el más reciente.
 
 Salidas: `changed-packages` (separados por comas), `changes` (cambios incompatibles),
-`deprecations`, `markdown` (la ruta del resumen, por ejemplo para un paso propio), `report` (la ruta del informe completo) y, con `check-notes`, `notes`
-(`up-to-date`, `out-of-date`, `edited-by-hand` o `error`). Un cambio accesible desde varias rutas
-de importación se cuenta una sola vez.
+`deprecations`, `markdown` (la ruta del resumen, por ejemplo para un paso propio), `report` (la
+ruta del informe completo) y, con `check-notes`, `notes` (`up-to-date`, `out-of-date`,
+`edited-by-hand` o `error`). Un cambio accesible desde varias rutas de importación se cuenta una
+sola vez.
 
 ### pre-commit
 
@@ -891,7 +903,7 @@ de salida:
 - `4` `sync`: el bloque se editó a mano y no se escribió nada sin `--force`;
 - `141` la salida se cerró antes de tiempo (por ejemplo, al pasarla por una tubería a `head`).
 
-### Docker
+### Docker (desde la 0.7.0)
 
 Cada versión es también una imagen, `ghcr.io/mohammadhijjawi97/since-cutoff:X.Y.Z` y `:latest`,
 para linux/amd64 y linux/arm64, para los sistemas de CI que ejecutan las herramientas en
@@ -921,11 +933,12 @@ since-cutoff:
 ```
 
 El punto de entrada es `since-cutoff` y el directorio de trabajo `/src`; sin argumentos, la
-imagen inicia el servidor MCP por stdio (`docker run --rm -i ghcr.io/mohammadhijjawi97/since-cutoff`).
-Se ejecuta con un usuario sin privilegios de root y guarda su caché en `/cache` (monta ahí un
-volumen para conservarla entre ejecuciones). Incluye `scan`, `sync`, `status` y `mcp`, pero no el
-extra `run`: `run` necesita `pip install "since-cutoff[run]"`, la clave de API de su modelo y, para
-los modelos `claude-code:`, la CLI claude, que la imagen no tiene.
+imagen inicia el servidor MCP por stdio
+(`docker run --rm -i ghcr.io/mohammadhijjawi97/since-cutoff`). Se ejecuta con un usuario sin
+privilegios de root y guarda su caché en `/cache` (monta ahí un volumen para conservarla entre
+ejecuciones). Incluye `scan`, `sync`, `status` y `mcp`, pero no el extra `run`: `run` necesita
+`pip install "since-cutoff[run]"`, la clave de API de su modelo y, para los modelos
+`claude-code:`, la CLI claude, que la imagen no tiene.
 
 ## Cómo funciona
 

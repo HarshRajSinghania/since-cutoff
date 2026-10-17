@@ -801,7 +801,8 @@ def test_code_scanning_keys_each_alert_on_package_api_and_file(scan: ScanResult)
 
 def test_sarif_names_each_dependency_it_could_not_check(scan: ScanResult) -> None:
     """A skipped dependency has no result, so an upload closes its alerts: the invocation
-    says the run is incomplete and why, for whoever reads the log (code scanning does not)."""
+    says the run is incomplete and why, for whoever reads the log (code scanning keeps the
+    results, and only flags the analysis as an unsuccessful tool execution)."""
     scan.packages += [
         PackageScan("big", "9", "uv.lock", True, reason="big==9 is 200 MB, above the limit"),
         PackageScan("odd", None, "requirements.txt", True),
@@ -861,6 +862,14 @@ def test_sarif_keeps_within_what_one_upload_takes(scan: ScanResult, monkeypatch)
 )
 def test_semantic_version_says_a_pep_440_version_as_semver(version, semantic) -> None:
     assert report.semantic_version(version) == semantic
+
+
+def test_sarif_says_a_pre_release_of_since_cutoff_as_semver(scan: ScanResult, monkeypatch) -> None:
+    """A release is the same in PEP 440 and SemVer, a pre-release is not: semanticVersion is
+    what semantic_version() makes of it, not the version again."""
+    monkeypatch.setattr(report, "__version__", "0.7.0rc1")
+    driver = report.sarif_report(scan)["runs"][0]["tool"]["driver"]
+    assert (driver["version"], driver["semanticVersion"]) == ("0.7.0rc1", "0.7.0-rc.1")
 
 
 def test_sarif_and_codequality_point_at_the_line_once_it_is_known(
@@ -987,10 +996,15 @@ def test_no_ci_report_when_no_dependency_could_be_checked(
     assert cli.main(argv) == 1
     out = " ".join(capsys.readouterr().out.split())
     assert "No dependency could be checked" in out
-    assert "Not written: the SARIF report and the GitLab Code Quality report" in out
+    assert (
+        "The SARIF report and the GitLab Code Quality report were not written (empty, an upload "
+        "would show every open finding as fixed)." in out
+    )
     assert not (tmp_path / "sc.sarif").exists() and not (tmp_path / "gl.json").exists()
     assert cli.main([*argv[:-4], "--sarif", "-"]) == 1
-    assert capsys.readouterr().out == ""  # nothing on stdout either
+    captured = capsys.readouterr()
+    assert captured.out == ""  # nothing on stdout either
+    assert "The SARIF report was not written (empty," in " ".join(captured.err.split())
 
 
 # -------------------------------------------------------------------------- MCP

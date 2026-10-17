@@ -888,11 +888,12 @@ quand un envoi ultérieur l'a de nouveau. Ainsi :
   restent telles quelles.
 - Quand certaines n'ont pas pu l'être (code 0, les raisons dans le journal), le rapport le
   dit : `runs[0].invocations[0].executionSuccessful` vaut `false`, et ses
-  `toolExecutionNotifications` nomment chaque paquet ignoré et pourquoi. Code scanning ne tient
-  compte ni de l'un ni de l'autre : l'envoi ferme comme corrigées les alertes ouvertes de ces
-  paquets, et le prochain envoi qui les vérifie les rouvre. Elles ne restent ouvertes que si ce
-  rapport n'est pas envoyé ; pour n'envoyer qu'un rapport où toutes les dépendances ont été
-  vérifiées, remplacez l'étape d'envoi ci-dessus par ces deux étapes :
+  `toolExecutionNotifications` nomment chaque paquet ignoré et pourquoi. Code scanning traite
+  quand même les résultats, et signale seulement l'analyse comme une exécution de l'outil en
+  échec (« unsuccessful tool execution ») : l'envoi ferme comme corrigées les alertes
+  ouvertes de ces paquets, et le prochain envoi qui les vérifie les rouvre. Elles ne restent
+  ouvertes que si ce rapport n'est pas envoyé ; pour n'envoyer qu'un rapport où toutes les
+  dépendances ont été vérifiées, remplacez l'étape d'envoi ci-dessus par ces deux étapes :
 
   ```yaml
         - id: sarif  # complete=true quand toutes les dépendances ont été vérifiées

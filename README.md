@@ -835,11 +835,12 @@ upload has it again. So:
   they were.
 - When some could not be checked (exit code 0, the reasons in the job's log), the report
   says so: `runs[0].invocations[0].executionSuccessful` is `false`, and its
-  `toolExecutionNotifications` name each skipped package and why. Code scanning does not act
-  on either: the upload closes the open alerts of those packages as fixed, and the next upload
-  that checks them reopens them. They stay open only if that report is not uploaded; to upload
-  only a report in which every dependency was checked, use these two steps in place of the
-  upload step above:
+  `toolExecutionNotifications` name each skipped package and why. Code scanning still
+  processes the results, and only flags the analysis as an unsuccessful tool execution: the
+  upload closes the open alerts of those packages as fixed, and the next upload that checks
+  them reopens them. They stay open only if that report is not uploaded; to upload only a
+  report in which every dependency was checked, use these two steps in place of the upload
+  step above:
 
   ```yaml
         - id: sarif  # complete=true when every dependency was checked

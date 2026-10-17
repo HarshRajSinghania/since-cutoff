@@ -1502,9 +1502,10 @@ CODE_SCANNING_HELP = (
     "of the API that is fine today. Found by a static match of names; nothing was run."
 )
 # What GitHub code scanning takes in one upload ("SARIF support for code scanning"): it rejects
-# a run with more results (and shows the 5,000 most severe of one), and an upload larger than
-# 10 MB. upload-sarif sends the log gzip-compressed and base64-encoded (codeql-action's
-# upload-lib.ts), which is what is measured.
+# a run with more results (and shows the 5,000 most severe of one), and a gzip-compressed SARIF
+# file larger than 10 MB. The cap is deliberately stricter than that: it is measured on the log
+# as upload-sarif sends it, gzip-compressed and then base64-encoded (codeql-action's
+# upload-lib.ts), which is about a third larger than the gzip file.
 SARIF_MAX_RESULTS = 25_000
 SARIF_MAX_UPLOAD = 10_000_000
 # PEP 440 versions that SARIF's semanticVersion (Semantic Versioning 2.0.0) can say.

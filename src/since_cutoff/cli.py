@@ -1039,9 +1039,10 @@ def _cmd_run(args: argparse.Namespace, ui: Console, json_mode: bool) -> int:
             "[red]No dependency could be checked[/red] (see the reasons above; is PyPI reachable?)."
         )
         if withheld:
+            what = " and ".join(withheld)
             ui.print(
-                f"[dim]Not written: {' and '.join(withheld)} (empty, an upload would show every "
-                "open finding as fixed).[/dim]"
+                f"[dim]{what[0].upper()}{what[1:]} {'were' if len(withheld) > 1 else 'was'} "
+                "not written (empty, an upload would show every open finding as fixed).[/dim]"
             )
         return 1
     if args.command == "run" and not scan.changed:

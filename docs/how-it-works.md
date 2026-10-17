@@ -310,15 +310,18 @@ pinned one, and the note from the API diff.
   no result (an upload of it closes the open alerts) and the Code Quality report is `[]`. With
   no dependency checked, `scan` writes neither and exits with code 1. With some skipped, the
   SARIF run's `invocations[0]` has `executionSuccessful: false` and one error-level
-  `toolExecutionNotifications` entry per skipped package, with why. Code scanning does not act
-  on them: an upload closes the alerts of the skipped packages as fixed, and they reopen when
-  a later upload checks them again; the README's "Use in CI" shows how to upload only a
-  complete log. The Code Quality format has no such field, and a merge request shows those
-  issues as fixed.
-- **Limits**: one upload to code scanning takes at most 25,000 results in a run and 10 MB
-  (gzip-compressed and base64-encoded, as upload-sarif sends it), and shows the 5,000 most
-  severe results of a run. Above the limits, the `note` results are left out first, then the
-  `warning` ones, and a warning-level notification says how many.
+  `toolExecutionNotifications` entry per skipped package, with why. Code scanning still
+  processes the results, so an upload closes the alerts of the skipped packages as fixed, and
+  they reopen when a later upload checks them again; it only flags the analysis as an
+  unsuccessful tool execution (a warning on the analysis in the code scanning analyses API).
+  The README's "Use in CI" shows how to upload only a complete log. The Code Quality format
+  has no such field, and a merge request shows those issues as fixed.
+- **Limits**: one upload to code scanning takes at most 25,000 results in a run and a SARIF
+  file of 10 MB gzip-compressed, and shows the 5,000 most severe results of a run. The 10 MB
+  is deliberately measured stricter than that: on the log as upload-sarif sends it,
+  gzip-compressed and then base64-encoded, about a third larger than the gzip file. Above the
+  limits, the `note` results are left out first, then the `warning` ones, and a warning-level
+  notification says how many.
 - **Version**: `driver.version` is since-cutoff's; `semanticVersion` is the same release in
   Semantic Versioning (`0.7.0rc1` is `0.7.0-rc.1`).
 

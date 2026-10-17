@@ -876,11 +876,12 @@ subida posterior vuelve a tenerla. Por eso:
   alertas quedan como estaban.
 - Cuando algunas no se pudieron comprobar (código 0, con los motivos en el registro), el
   informe lo dice: `runs[0].invocations[0].executionSuccessful` es `false`, y sus
-  `toolExecutionNotifications` nombran cada paquete omitido y el motivo. Code scanning no tiene
-  en cuenta ninguno de los dos: la subida cierra como corregidas las alertas abiertas de esos
-  paquetes, y la siguiente subida que los compruebe las reabre. Solo siguen abiertas si ese
-  informe no se sube; para subir solo un informe en el que se comprobaron todas las
-  dependencias, usa estos dos pasos en lugar del paso de subida de arriba:
+  `toolExecutionNotifications` nombran cada paquete omitido y el motivo. Code scanning procesa
+  igualmente los resultados, y solo marca el análisis como una ejecución fallida de la
+  herramienta (*unsuccessful tool execution*): la subida cierra como corregidas las alertas
+  abiertas de esos paquetes, y la siguiente subida que los compruebe las reabre. Solo siguen
+  abiertas si ese informe no se sube; para subir solo un informe en el que se comprobaron
+  todas las dependencias, usa estos dos pasos en lugar del paso de subida de arriba:
 
   ```yaml
         - id: sarif  # complete=true cuando se comprobaron todas las dependencias

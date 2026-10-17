@@ -123,8 +123,15 @@ def text_of(lines: list[Any]) -> str:
 
 
 # ------------------------------------------------------------------ the terminal
+# What the changes came after: the day the comparison releases were published by (30 days
+# before the cutoff), not the cutoff; --cutoff gave the cutoff, not the model's listing.
+HEAD = (
+    "Your code uses 2 APIs that changed after 2025-07-01, 30 days before the cutoff given for "
+    "claude-sonnet-4-5 (2025-07-31)"
+)
 GOLDEN = """\
-Your code uses 2 APIs that changed after claude-sonnet-4-5's training cutoff (2025-07-31)
+Your code uses 2 APIs that changed after 2025-07-01, 30 days before the cutoff given for
+  claude-sonnet-4-5 (2025-07-31)
 
 toylib 1.0 -> 2.0 (1.0 was the latest release 30 days before the cutoff; pyproject.toml pins 2.0)
   Client.send: temperature was removed; stream is now keyword-only                          old form
@@ -178,15 +185,16 @@ def test_the_cli_prints_the_project_first_and_all_adds_0_3_layout(
 ) -> None:
     assert cli.main(["scan", str(app), *CUTOFF]) == 0
     out = capsys.readouterr().out
-    first = out.index("Your code uses 2 APIs that changed after claude-sonnet-4-5's")
+    first = out.index(HEAD)  # on one line: the log is 160 columns wide
     assert out.index("• Diffing the API of 1 package") < first < out.index("Full report:")
-    assert GOLDEN in out.replace("\r\n", "\n")
+    golden = GOLDEN.replace(GOLDEN.split("\n\n")[0], HEAD, 1)
+    assert golden in out.replace("\r\n", "\n")
     # The rest is one line: no panel, table or per-package list without --all.
     assert "since-cutoff · claude-sonnet-4-5" not in out and "5 breaking, 1 deprecated" not in out
 
     assert cli.main(["scan", str(app), *CUTOFF, "--all", "--limit", "3"]) == 0
     full = capsys.readouterr().out
-    assert GOLDEN.rsplit("\n", 1)[0] in full  # the same first section, less "Also changed"
+    assert golden.rsplit("\n", 1)[0] in full  # the same first section, less "Also changed"
     assert "`--all` lists them" not in full
     # Then 0.3's layout exactly as render_console and render_scan_changes print it.
     expected = io.StringIO()
@@ -220,8 +228,8 @@ def test_nothing_used(tmp_path, cache, fake_pypi) -> None:
     root = make_app(tmp_path, main="import json\n", other=None)
     scan = scan_app(root, cache, fake_pypi, date(2025, 7, 31))
     assert text_of(scan_lines(scan)) == (
-        "Your code uses none of the APIs that changed after claude-sonnet-4-5's training cutoff "
-        "(2025-07-31).\n"
+        "Your code uses none of the APIs that changed after 2025-07-01, 30 days before the cutoff "
+        "given for\n  claude-sonnet-4-5 (2025-07-31).\n"
         "Changed in your dependencies, not seen in your code: 6 changes in toylib. `--all` "
         "lists them.\n"
         "No notes to write."
@@ -229,7 +237,10 @@ def test_nothing_used(tmp_path, cache, fake_pypi) -> None:
     data = to_json(scan)
     assert data["used"]["apis"] == 0 and data["used_apis"] == []
     md = render_scan_markdown(scan)
-    assert "**Your code uses none of the APIs that changed after the cutoff**" in md
+    assert (
+        "**Your code uses none of the APIs that changed after 2025-07-01, 30 days before the "
+        "cutoff**" in md
+    )
     assert "| where | API |" not in md and "notes ready" not in md
     assert "Your code uses none of the APIs that changed after" in render_markdown(scan)
 
@@ -238,8 +249,8 @@ def test_no_dependency_changed(tmp_path, cache, fake_pypi) -> None:
     root = make_app(tmp_path, pin="toylib==1.0")
     scan = scan_app(root, cache, fake_pypi, date(2025, 7, 31))
     assert text_of(scan_lines(scan)) == (
-        "1 dependency checked; none changed its API after claude-sonnet-4-5's training cutoff "
-        "(2025-07-31)."
+        "1 dependency checked; none changed its API after 2025-07-01, 30 days before the cutoff "
+        "given for\n  claude-sonnet-4-5 (2025-07-31)."
     )
     assert "## Used by your code" not in render_markdown(scan)
 
@@ -624,7 +635,9 @@ def test_the_markdown_summary_leads_with_a_table_and_links(scan: ScanResult, app
     env = {"GITHUB_REPOSITORY": "o/r", "GITHUB_SHA": "abc123", "GITHUB_WORKSPACE": str(app.parent)}
     md = render_scan_markdown(scan, env=env)
     head, rest = md.split("| where | API | change | form | replacement |", 1)
-    assert head.endswith("**Your code uses 2 APIs that changed after the cutoff**\n\n")
+    assert head.endswith(
+        "**Your code uses 2 APIs that changed after 2025-07-01, 30 days before the cutoff**\n\n"
+    )
     rows = [line for line in rest.splitlines() if line.startswith("| [")]
     assert rows == [
         "| [main.py](https://github.com/o/r/blob/abc123/app/main.py)<br>"
@@ -661,8 +674,9 @@ def test_report_md_starts_with_what_the_code_uses(scan: ScanResult) -> None:
     md = render_markdown(scan)
     assert md.index("## Used by your code") < md.index("## Summary")
     assert (
-        "Your code uses 2 APIs that changed after claude-sonnet-4-5's training cutoff "
-        "(2025-07-31), 1 of them in the old form. Old form: valid for 1.0;" in md
+        "Your code uses 2 APIs that changed after 2025-07-01, 30 days before the cutoff given "
+        "for claude-sonnet-4-5 (2025-07-31), 1 of them in the old form. Old form: valid for 1.0;"
+        in md
     )
     assert (
         "### toylib 1.0 -> 2.0 (1.0 was the latest release 30 days before the cutoff; "
@@ -733,17 +747,31 @@ def test_annotations_warn_on_the_old_form_and_note_the_rest(scan: ScanResult, ap
     # The comparison release is the latest one 30 days before the cutoff, not the one at it.
     assert lines[0].split("::", 2)[2] == (
         "Client.send: temperature was removed; stream is now keyword-only. toylib 1.0 is the "
-        "comparison release (the latest one published at least 30 days before "
-        f"claude-sonnet-4-5's training cutoff, 2025-07-31); 2.0 is pinned. {note}"
+        "comparison release (the latest one published at least 30 days before the cutoff "
+        f"given for claude-sonnet-4-5, 2025-07-31); 2.0 is pinned. {note}"
     )
     assert all("\n" not in line for line in lines)
     # With a margin of 0 it is the latest release at the cutoff itself.
     scan.target.margin = 0
     assert github_annotations(scan)[0].split("::", 2)[2] == (
         "Client.send: temperature was removed; stream is now keyword-only. toylib 1.0 was the "
-        "latest release at claude-sonnet-4-5's training cutoff (2025-07-31); 2.0 is pinned. "
+        "latest release at the cutoff given for claude-sonnet-4-5 (2025-07-31); 2.0 is pinned. "
         f"{note}"
     )
+    # The cutoff of the model's listing is its training cutoff; without a model, the cutoff.
+    scan.target.margin = 30
+    listed = replace(scan, target=replace(scan.target, cutoff_source="models.dev"))
+    assert (
+        "toylib 1.0 is the comparison release (the latest one published at least 30 days before "
+        "claude-sonnet-4-5's training cutoff, 2025-07-31); 2.0 is pinned."
+    ) in github_annotations(listed)[0]
+    alone = replace(scan, target=ModelTarget.cutoff_only(date(2025, 7, 31)))
+    assert (
+        "toylib 1.0 is the comparison release (the latest one published at least 30 days before "
+        "the cutoff, 2025-07-31); 2.0 is pinned."
+    ) in github_annotations(alone)[0]
+    alone.target.margin = 1
+    assert "at least 1 day before the cutoff, 2025-07-31" in github_annotations(alone)[0]
 
 
 def test_annotate_prints_to_stdout_and_needs_it_to_itself(app, capsys, fake_cli) -> None:
@@ -765,8 +793,8 @@ def test_project_changes_starts_with_the_used_apis(tmp_path, cache, fake_pypi) -
     tools = Tools(cache, registry=ModelRegistry(cache, offline=True), pypi=fake_pypi)
     out = tools.project_changes(str(root), model="claude-sonnet-4-5")
     assert (
-        "- Your code uses 2 APIs that changed after the cutoff, 1 in the old form (as the "
-        "comparison release allowed; a static name match)" in out
+        "- Your code uses 2 APIs that changed after 2025-07-01 (30 days before the cutoff), 1 in "
+        "the old form (as the comparison release allowed; a static name match)" in out
     )
     section = out.split("## Your code uses these changed APIs\n")[1].split("\n## ")[0]
     assert section.lstrip().startswith(
@@ -781,7 +809,10 @@ def test_project_changes_starts_with_the_used_apis(tmp_path, cache, fake_pypi) -
 
     quiet_app = make_app(tmp_path / "q", main="import json\n", other=None)
     quiet = tools.project_changes(str(quiet_app), cutoff="2025-07")
-    assert "- Your code uses none of the APIs that changed after the cutoff" in quiet
+    assert (
+        "- Your code uses none of the APIs that changed after 2025-07-01 (30 days before the "
+        "cutoff)" in quiet
+    )
     assert "## Your code uses these changed APIs" not in quiet
 
 
@@ -1053,6 +1084,91 @@ def test_scan_and_sync_say_how_many_name_matches_they_hid(tmp_path, cache, capsy
     assert report.hidden_name_matches(plain) == 0
     assert "matched by name alone" not in text_of(scan_lines(plain, width=120))
     assert "matched by name alone" not in render_markdown(plain)
+
+
+RESAMPLE_V1 = {
+    "resamp/__init__.py": "from resamp.core import Frame, read_csv\n\n__all__ = ['Frame', 'read_csv']\n",
+    "resamp/core.py": (
+        "class Frame:\n"
+        "    def resample(self, rule: str, kind: str = '', axis: int = 0) -> 'Frame':\n"
+        "        return self\n\n\n"
+        "def read_csv(path: str) -> Frame:\n"
+        "    return Frame()\n"
+    ),
+}
+RESAMPLE_V2 = {
+    "resamp/__init__.py": RESAMPLE_V1["resamp/__init__.py"],
+    "resamp/core.py": (
+        "class Frame:\n"
+        "    def resample(self, rule: str) -> 'Frame':\n"
+        "        return self\n\n\n"
+        "def read_csv(path: str) -> Frame:\n"
+        "    return Frame()\n"
+    ),
+}
+
+
+def test_the_hidden_name_matches_are_counted_by_place(tmp_path, cache) -> None:
+    """One call passing two removed keywords, ``frame.resample("D", kind="period", axis=1)``,
+    counted twice (once per changed parameter), while --include-name-matches adds one place.
+    The count is also in report.md next to an API that is shown, in the Markdown summary, the
+    MCP answer (which names include_name_matches), results.json and sync --json; run's
+    report.md names the command that has the flag; and sync says which files each line is
+    for when the blocks were written for different cutoffs."""
+    from since_cutoff.engine import RunResult
+    from since_cutoff.sync import hidden_name_match_lines, propose, read_target, sync_json
+
+    trees = {
+        ("resamp", v): SourceTree("resamp", v, write_tree(tmp_path / f"resamp-{v}", f), ("resamp",))
+        for v, f in (("1.0", RESAMPLE_V1), ("2.0", RESAMPLE_V2))
+    }
+    pypi = FakePyPI(cache, {"resamp": [("1.0", "2025-01-10"), ("2.0", "2025-10-01")]}, trees)
+    files = {
+        "requirements.txt": "resamp==2.0\n",
+        "typed.py": "import resamp\n\nresamp.read_csv('x').resample('D', kind='period')\n",
+        "one.py": "import resamp\n\ndef tidy(df):\n    df.resample('D', kind='period', axis=1)\n",
+    }
+    root = write_tree(tmp_path / "app", files)
+    scan = scan_app(root, cache, pypi, date(2025, 7, 31))
+    [used] = scan.used_apis()  # typed.py: a path match
+    assert {u.file for u in used.uses} == {"typed.py"}
+    shown = replace(scan, name_matches=True)
+    [both] = shown.used_apis()
+    assert sorted({u.file for u in both.uses if u.how == NAME_ONLY}) == ["one.py"]
+    assert sum(u.how == NAME_ONLY for u in both.uses) == 2  # kind and axis, one place
+    assert report.hidden_name_matches(scan) == 1
+    assert HIDDEN_ONE in text_of(scan_lines(scan, width=200))
+    md = render_markdown(scan)
+    assert "Your code uses 1 API that changed" in md and f"\n{HIDDEN_ONE}.\n" in md
+    ran = render_markdown(scan, RunResult(scan))
+    assert (
+        "1 use matched by name alone is hidden; `since-cutoff scan --include-name-matches` shows "
+        "it." in ran
+    )
+    assert f"- {HIDDEN_ONE}\n" in render_scan_markdown(scan)
+    assert to_json(scan)["name_matches_hidden"] == 1
+    assert to_json(shown)["name_matches_hidden"] == 0
+    tools = Tools(cache, registry=ModelRegistry(cache, offline=True), pypi=pypi)
+    answer = tools.project_changes(str(root), cutoff="2025-07-31")
+    assert "- 1 use matched by name alone is hidden; include_name_matches=true shows it" in answer
+    asked = tools.project_changes(str(root), cutoff="2025-07-31", include_name_matches=True)
+    assert "matched by name alone" not in asked
+    # sync: one line for one scan; with two, each line says which files it is for.
+    earlier = scan_app(root, cache, pypi, date(2025, 6, 30))
+    agents = propose(scan, read_target(root, root / "AGENTS.md"))
+    claude = propose(earlier, read_target(root, root / "CLAUDE.md"))
+    assert agents.name_matches_hidden == 1
+    assert sync_json([agents], 0, set())["targets"][0]["name_matches_hidden"] == 1
+    scans = {(agents.model, agents.cutoff): scan, (claude.model, claude.cutoff): earlier}
+    assert hidden_name_match_lines([agents], scans) == [HIDDEN_ONE]
+    assert hidden_name_match_lines([agents, claude], scans) == [
+        f"AGENTS.md: {HIDDEN_ONE}",
+        f"CLAUDE.md: {HIDDEN_ONE}",
+    ]
+    # The same API in another file is another place: 2, not 1 API nor 3 uses.
+    two = {**files, "two.py": "import resamp\n\ndef more(df):\n    df.resample('D', axis=1)\n"}
+    scan = scan_app(write_tree(tmp_path / "two", two), cache, pypi, date(2025, 7, 31))
+    assert report.hidden_name_matches(scan) == 2
 
 
 def test_annotations_and_fail_on_count_per_use_not_per_api(tmp_path, cache) -> None:

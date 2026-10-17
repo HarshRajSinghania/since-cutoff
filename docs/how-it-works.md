@@ -68,7 +68,16 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
    `settings.cutoff_margin`. A package that had only pre-releases by the comparison date is
    compared with the newest of them (development releases do not count). A package first
    released after it, or whose release then only reserved the name (no modules, or only empty
-   ones), is reported as first released after the cutoff (within the margin of it, when it was).
+   ones), is new to the model: the reports say it was first released after the cutoff, "first
+   released within 30 days of the cutoff (2025-07-15)", or "the comparison release 0.0.1 was an
+   empty placeholder". As a release within the margin is older than the cutoff, the reports say
+   what changed after the day compared from, not after the cutoff: "Your code uses 2 APIs that
+   changed after 2025-07-01, 30 days before claude-sonnet-4-5's training cutoff (2025-07-31)".
+   A metapackage (no API of its own, only requirements on the packages that have one:
+   llama-index, docling, griffe 2) is reported as information, with what the scan did with each
+   of its parts: checked like any other dependency, could not be checked, left out by
+   `--only`/`--exclude`, pinned by the lockfile as a dependency of a dependency (which
+   `--all-deps` checks), or not a dependency of the project at all.
 4. **The API diff.** Both versions are downloaded once (wheels, falling back to sdists; only
    `.py`/`.pyi` files are extracted) and loaded *statically* with
    [griffe](https://mkdocstrings.github.io/griffe/). A module the pinned release ships
@@ -245,13 +254,15 @@ unpacking, `:=` and `except ... as err`.
 
 Such a name match is hidden by default: no report (the terminal, report.md, the JSON lists, the
 MCP answers), no note and no count of `--fail-on` or `--annotate github` has it, as on ordinary
-code most of them are another library's method of the same name. `scan` (the terminal and
-report.md) and `sync` say how many they left out ("2 uses matched by name alone are hidden;
---include-name-matches shows them"), and nothing when there is none. `--include-name-matches` (on
-`scan` and `sync`; `include_name_matches` for the MCP `project_changes`) shows them: the
-reports tag each such use `[name match]` (the terminal next to its label and its place, the
-Markdown summary in the form column, the JSON as `"match": "name_only"`), its note is written,
-and CI counts it. CI counts per use: an API matched through a path in one file does not bring
+code most of them are another library's method of the same name. `scan` (the terminal,
+report.md and the Markdown summary), `sync` and the MCP `project_changes` say in how many places
+they left one out ("2 uses matched by name alone are hidden; --include-name-matches shows
+them"; a call passing two removed keywords is one place), and nothing when there is none;
+`results.json`, `scan --json` and `sync --json` have the count as `name_matches_hidden`.
+`--include-name-matches` (on `scan` and `sync`; `include_name_matches` for the MCP
+`project_changes`) shows them: the reports tag each such use `[name match]` (the terminal next
+to its label and its place, the Markdown summary in the form column, the JSON as
+`"match": "name_only"`), its note is written, and CI counts it. CI counts per use: an API matched through a path in one file does not bring
 its name-only places in other files along. The block does not keep the choice, so give the flag
 on every sync.
 
@@ -527,7 +538,8 @@ What it prints, from the sample project:
 - with the uses matched by a method's name alone left out (the default), and at least one of
   them in the code: "1 use matched by name alone is hidden; --include-name-matches shows it"
   (`scan` prints the same line, and report.md has it under "Used by your code"; nothing when
-  there is none).
+  there is none). With blocks written for different cutoffs, each such line starts with the
+  files it is for ("CLAUDE.md: 1 use matched by name alone is hidden; ...").
 - a hand edit: "The since-cutoff block in AGENTS.md was edited by hand; sync would replace it
   (diff above). Move your text below `<!-- since-cutoff:end -->`, or run
   `since-cutoff sync --force`."
@@ -589,7 +601,7 @@ starts (0.4.0 and later).
 4. **Scoring.** The code is type-checked with
    [basedpyright](https://github.com/DetachHead/basedpyright) (the `"since-cutoff[run]"`
    extra) twice: against the locked version
-   and against the cutoff version, each in an isolated environment that contains that package
+   and against the comparison release, each in an isolated environment that contains that package
    version and its own runtime dependencies, nothing else. Only diagnostics that involve the
    package count (other imports are absent from the environment and are ignored):
 

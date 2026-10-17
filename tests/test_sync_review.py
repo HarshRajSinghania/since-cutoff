@@ -49,7 +49,7 @@ from since_cutoff.notes import (
     render_block,
     render_legacy_block,
 )
-from since_cutoff.project import Project, scan_file
+from since_cutoff.project import Dependency, Project, scan_file
 from since_cutoff.pypi import SourceTree
 from since_cutoff.report import scan_lines
 from since_cutoff.sync import EXIT_OK, EXIT_OUT_OF_DATE, _counts, versions_phrase
@@ -617,16 +617,17 @@ def test_fail_on_may_be_given_twice(sc, tmp_path, capsys) -> None:
 def test_sync_says_a_metapackage_is_information_not_a_warning(sc, tmp_path, monkeypatch) -> None:
     """A metapackage's parts are dependencies of their own, checked like any other: sync says
     so after a ``•``, not as a dependency that could not be checked, after a ``!``, naming the
-    parts it checked and those it did not."""
+    parts it checked and those it did not. sync has no --all-deps: 0.6.0 told it to pass one
+    for a part the lockfile pins."""
     root = make_app(tmp_path)
     given = (
         "meta 1.0 is a metapackage with no API of its own; its parts are checked like any other "
-        "dependency when the project depends on them: toylib>=1, other<2"
+        "dependency when the project depends on them: toylib>=1, pinned>=1, other<2"
     )
     reason = (
         "meta 1.0 is a metapackage with no API of its own; checked like any other dependency: "
-        "toylib; not checked, as the project does not depend on it directly: other (--all-deps "
-        "checks those its lockfile pins)"
+        "toylib; not checked, as the project depends on it only through other packages: pinned; "
+        "not checked, as the project does not depend on it directly: other"
     )
     make_engine = cli.Engine
 
@@ -637,6 +638,7 @@ def test_sync_says_a_metapackage_is_information_not_a_warning(sc, tmp_path, monk
         def with_a_metapackage(project: Project, target: ModelTarget) -> ScanResult:
             result = scan(project, target)
             result.packages.append(PackageScan("meta", "1.0", "uv.lock", True, reason=given))
+            result.project.dependencies.append(Dependency("pinned", "1.0", False, "uv.lock"))
             return result
 
         made.scan = with_a_metapackage  # type: ignore[method-assign]
@@ -647,7 +649,7 @@ def test_sync_says_a_metapackage_is_information_not_a_warning(sc, tmp_path, monk
     lines = [" ".join(line.split()) for line in out.splitlines()]
     assert code == EXIT_OK and f"• {reason}" in lines
     assert not any(line.startswith("!") and "meta 1.0" in line for line in lines)
-    assert "could not be checked" not in out
+    assert "could not be checked" not in out and "--all-deps" not in out
 
 
 def test_a_scan_warning_is_printed_once(sc, tmp_path) -> None:

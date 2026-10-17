@@ -296,7 +296,7 @@ FLOW = {
                 "aucun appel au modèle",
                 [
                     f"Verrouillage{NBSP}: vos versions exactes",
-                    "La version 30 jours avant la date limite",
+                    "La version 30 jours avant la date limite du modèle",
                     "Diff statique de l'API avec griffe",
                 ],
             ),

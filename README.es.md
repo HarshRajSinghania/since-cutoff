@@ -75,7 +75,8 @@ corte: los modelos conocen peor las semanas anteriores a su fecha de corte):
 
 ```console
 $ uvx since-cutoff scan --model anthropic:claude-sonnet-4-5
-Your code uses 2 APIs that changed after claude-sonnet-4-5's training cutoff (2025-07-31)
+Your code uses 2 APIs that changed after 2025-07-01, 30 days before claude-sonnet-4-5's training
+  cutoff (2025-07-31)
 
 huggingface-hub 0.33.1 -> 2.0.0 (0.33.1 was the latest release 30 days before the cutoff;
   pyproject.toml pins 2.0.0)
@@ -192,10 +193,11 @@ están fijadas, la herramienta usa la versión más reciente):
 | openai | 1.93.0 | 3.19.2 | 24 cambios incompatibles, 6 obsolescencias nuevas (+5 internas) |
 
 Cada biblioteca se compara desde su última versión publicada al menos 30 días antes de la fecha
-de corte (el margen por defecto del análisis). En ese proyecto, 7 de las 9 dependencias
-cambiaron su API pública después de la fecha de corte. El diff estático señala 331 cambios
-incompatibles y 24 obsolescencias nuevas en API públicas, y 139 cambios en API internas; el
-código del proyecto usa 2 de las API modificadas.
+de corte (el margen por defecto del análisis), así que un cambio puede ser de las últimas
+semanas antes de la fecha de corte. En ese proyecto, 7 de las 9 dependencias cambiaron su API
+pública desde esa versión. El diff estático señala 331 cambios incompatibles y 24
+obsolescencias nuevas en API públicas, y 139 cambios en API internas; el código del proyecto
+usa 2 de las API modificadas.
 
 No es cosa de un modelo ni de un proveedor. En 36 bibliotecas de IA de Python muy usadas y 21
 modelos de OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, Moonshot y Mistral, incluso el modelo
@@ -249,7 +251,7 @@ uvx --with basedpyright since-cutoff run
 
 Lo que muestra `scan` para el proyecto de ejemplo, completo:
 
-<p align="center"><img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/scan.svg" width="100%" alt="since-cutoff scan --model anthropic:claude-sonnet-4-5 en el proyecto de ejemplo. Tu código usa 2 API que cambiaron después de la fecha de corte de entrenamiento de claude-sonnet-4-5 (2025-07-31). huggingface-hub 0.33.1 -> 2.0.0: hf_hub_download, usada en app/main.py, ya no tiene force_filename, local_dir_use_symlinks, resume_download ni proxies en su firma; su nota lleva la etiqueta [diff], y una línea Runtime dice que el código fuente de la 2.0.0 todavía los gestiona, así que las llamadas que los pasan pueden ejecutarse con un aviso. anthropic 0.56.0 -> 1.8.0: Messages.create, llamada en app/main.py, ya no acepta temperature, top_k ni top_p; su nota lleva la etiqueta [diff]. 2 notas listas para AGENTS.md; qué significan uses this API y [diff]; otros 348 cambios en 7 paquetes que el código no usa, y 139 cambios en API internas."></p>
+<p align="center"><img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/scan.svg" width="100%" alt="since-cutoff scan --model anthropic:claude-sonnet-4-5 en el proyecto de ejemplo. Tu código usa 2 API que cambiaron después del 2025-07-01, 30 días antes de la fecha de corte de entrenamiento de claude-sonnet-4-5 (2025-07-31). huggingface-hub 0.33.1 -> 2.0.0: hf_hub_download, usada en app/main.py, ya no tiene force_filename, local_dir_use_symlinks, resume_download ni proxies en su firma; su nota lleva la etiqueta [diff], y una línea Runtime dice que el código fuente de la 2.0.0 todavía los gestiona, así que las llamadas que los pasan pueden ejecutarse con un aviso. anthropic 0.56.0 -> 1.8.0: Messages.create, llamada en app/main.py, ya no acepta temperature, top_k ni top_p; su nota lleva la etiqueta [diff]. 2 notas listas para AGENTS.md; qué significan uses this API y [diff]; otros 348 cambios en 7 paquetes que el código no usa, y 139 cambios en API internas."></p>
 
 Las dos API aparecen como «uses this API»; un archivo que pasara `resume_download=True` o
 `temperature=0.2` las convertiría en «old form». `scan -v` lista todos los archivos que usan una
@@ -1025,8 +1027,10 @@ reservadas; `verified` se mantiene y significa lo mismo que `checks.example_type
   de un tipo integrado o de la biblioteca estándar: esa coincidencia `[name match]` no aparece
   en ningún informe, ni en las notas, ni en `--fail-on` ni en `--annotate` salvo que se indique
   `--include-name-matches` (`include_name_matches` por MCP), porque la mayoría son un método
-  homónimo de otra biblioteca; `scan` y `sync` dicen cuántos usos ocultaron. Un parámetro que pasó a ser obligatorio, solo por nombre o
-  solo posicional aparece siempre como «uses this API», nunca como «old form», por ahora.
+  homónimo de otra biblioteca; `scan`, `sync` y `project_changes` dicen cuántos usos ocultaron
+  (`name_matches_hidden` en results.json). Un parámetro que pasó a ser obligatorio, solo por
+  nombre o solo posicional aparece siempre como «uses this API», nunca como «old form», por
+  ahora.
 - Una nota solo nombra un sustituto cuando el propio texto de obsolescencia de la biblioteca lo
   indica. Los consejos que solo están en una guía de migración (el
   [MIGRATION.md](https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md) de

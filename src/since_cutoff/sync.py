@@ -42,7 +42,7 @@ from since_cutoff.engine import (
     dependency_pairs,
     scanned_dependencies,
 )
-from since_cutoff.models import DEFAULT_CUTOFF_MARGIN
+from since_cutoff.models import DEFAULT_CUTOFF_MARGIN, compare_date, days_text
 from since_cutoff.notes import (
     BLOCK_END,
     BLOCK_VERSION,
@@ -191,7 +191,7 @@ def block_margin(meta: dict[str, Any]) -> int:
 
 def margin_text(margin: int) -> str:
     """``30 days before the cutoff``, or ``the cutoff itself``."""
-    return f"{margin} days before the cutoff" if margin else "the cutoff itself"
+    return f"{days_text(margin)} before the cutoff" if margin else "the cutoff itself"
 
 
 # ------------------------------------------------------------------ sync
@@ -220,6 +220,9 @@ class Proposal:
     notes: int
     # Days before the cutoff the comparison releases were published by (--cutoff-margin).
     margin: int = DEFAULT_CUTOFF_MARGIN
+    # The places matched by a member's name alone that the scan hid (report.hidden_name_matches;
+    # 0 with --include-name-matches).
+    name_matches_hidden: int = 0
     # SCOPE_IMPORTED: APIs noted per package (``--per-package``, or the block's own choice).
     per_package: int = IMPORTED_APIS
     changes: list[Change] = field(default_factory=list)
@@ -257,11 +260,13 @@ def propose(
     keeps the same version, the code still uses their API and the model and cutoff are the
     same (:func:`_kept_notes`); the notes from the diff are then built again without those
     APIs, so that a bullet one of them shared with other APIs still names the others. A
-    section goes when its package is no longer a dependency, is no newer than the release at
-    the cutoff, or has no changed API the code uses. When the notes are the same as those in
-    the file, the block stays exactly as it is, even if another version of since-cutoff wrote
-    it.
+    section goes when its package is no longer a dependency, is no newer than the release it
+    is compared from, or has no changed API the code uses. When the notes are the same as those
+    in the file, the block stays exactly as it is, even if another version of since-cutoff
+    wrote it.
     """
+    from since_cutoff.report import hidden_name_matches  # not for status --hook
+
     model, cutoff = scan.target.model_id, scan.target.cutoff
     same = target.basis == (model, cutoff)
     old = target.block
@@ -309,6 +314,7 @@ def propose(
         target, model, cutoff, scope, versions_from, block, new_text, action, len(notes)
     )
     proposal.margin = scan.target.margin
+    proposal.name_matches_hidden = hidden_name_matches(scan)
     proposal.per_package = per_package
     proposal.retest = retest
     proposal.apis = {n.line: tuple(n.apis) for n in notes}
@@ -541,9 +547,10 @@ def _dropped(scan: ScanResult, p: PackageScan | None, name: str, scope: str) -> 
         return f"its API {why}", f"{name}'s API {why}"
     if p.status == NEW:
         if scan.target.released_within_margin(p):
-            when = (
-                f"first released {p.first_released}, within {scan.target.margin} days of the cutoff"
-            )
+            margin = days_text(scan.target.margin)
+            when = f"first released {p.first_released}, within {margin} of the cutoff"
+        elif p.cutoff_version:  # the comparison release was an empty placeholder
+            when = f"empty at its comparison release {p.cutoff_version}"
         else:
             when = "first released after the cutoff"
         why = f"{when}, and your code no longer imports it"
@@ -582,14 +589,20 @@ def hidden_name_match_lines(
 ) -> list[str]:
     """``2 uses matched by name alone are hidden; --include-name-matches shows them``, once
     per scan the proposals come from, as ``scan`` says it (:func:`report.hidden_name_matches`);
-    nothing for a scan with none."""
+    nothing for a scan with none. With several scans (AGENTS.md and CLAUDE.md written for
+    different cutoffs), each line starts with the files of its scan."""
     from since_cutoff.report import hidden_name_matches_text  # not for status --hook
 
+    keys = list(dict.fromkeys((p.model, p.cutoff) for p in proposals))
     out: list[str] = []
-    for key in dict.fromkeys((p.model, p.cutoff) for p in proposals):
+    for key in keys:
         text = hidden_name_matches_text(scans[key])
-        if text and text not in out:
-            out.append(text)
+        if not text:
+            continue
+        if len(keys) > 1:
+            names = [p.target.name for p in proposals if (p.model, p.cutoff) == key]
+            text = f"{_joined(names)}: {text}"
+        out.append(text)
     return out
 
 
@@ -601,7 +614,8 @@ def up_to_date_text(p: Proposal, scan: ScanResult) -> str:
             none = "none of the packages your code imports changed their API"
         else:
             none = "your code uses none of the APIs that changed"
-        text = f"{name}: no notes to write; {none} after {after_text(p.model, p.cutoff)}."
+        after = after_text(p.model, p.cutoff, p.margin)
+        text = f"{name}: no notes to write; {none} after {after}."
         if p.scope == SCOPE_USED and any(s.imported for s in scan.changed):
             available = scan.scope_notes(SCOPE_IMPORTED, per_package=p.per_package)
             packages = {n.change.package for n in available}
@@ -659,13 +673,19 @@ def basis_text(model: str, cutoff: date) -> str:
     return f"{model} (cutoff {day})" if model else f"the cutoff {day}"
 
 
-def after_text(model: str, cutoff: date) -> str:
-    """``claude-sonnet-4-5's training cutoff (2025-07-31)``, as scan says it."""
+def after_text(model: str, cutoff: date, margin: int = 0) -> str:
+    """``claude-sonnet-4-5's training cutoff (2025-07-31)``, as scan says it; with a margin,
+    the day the comparison releases were published by first (``2025-07-01, 30 days before
+    claude-sonnet-4-5's training cutoff (2025-07-31)``)."""
     names = model_names(model)
     day = cutoff.isoformat()
     if len(names) > 1:
-        return f"the earliest training cutoff of {_joined(names)} ({day})"
-    return f"{model}'s training cutoff ({day})" if model else f"the cutoff ({day})"
+        text = f"the earliest training cutoff of {_joined(names)} ({day})"
+    else:
+        text = f"{model}'s training cutoff ({day})" if model else f"the cutoff ({day})"
+    if not margin:
+        return text
+    return f"{compare_date(cutoff, margin).isoformat()}, {days_text(margin)} before {text}"
 
 
 # ---------------------------------------------------------------- status
@@ -941,6 +961,7 @@ def sync_json(
                 "model": p.model,
                 "cutoff": p.cutoff.isoformat(),
                 "cutoff_margin": p.margin,
+                "name_matches_hidden": p.name_matches_hidden,
                 "scope": p.scope,
                 "notes": p.notes,
                 "changes": [

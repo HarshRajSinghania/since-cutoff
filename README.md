@@ -71,7 +71,8 @@ cutoff least):
 
 ```console
 $ uvx since-cutoff scan --model anthropic:claude-sonnet-4-5
-Your code uses 2 APIs that changed after claude-sonnet-4-5's training cutoff (2025-07-31)
+Your code uses 2 APIs that changed after 2025-07-01, 30 days before claude-sonnet-4-5's training
+  cutoff (2025-07-31)
 
 huggingface-hub 0.33.1 -> 2.0.0 (0.33.1 was the latest release 30 days before the cutoff;
   pyproject.toml pins 2.0.0)
@@ -183,9 +184,10 @@ unpinned, the tool uses the latest release):
 | openai | 1.93.0 | 3.19.2 | 24 breaking changes, 6 new deprecations (+5 internal) |
 
 Each library is compared from its latest release published at least 30 days before the cutoff
-(the scan's default margin). In that project, 7 of 9 dependencies changed their public API after
-the cutoff. The static diff flags 331 breaking changes and 24 new deprecations in public APIs, and
-139 changes to internal ones; the project's code uses 2 of the changed APIs.
+(the scan's default margin), so a change can be from the last weeks before the cutoff. In that
+project, 7 of 9 dependencies changed their public API since that release. The static diff flags
+331 breaking changes and 24 new deprecations in public APIs, and 139 changes to internal ones;
+the project's code uses 2 of the changed APIs.
 
 It is not one model or one vendor. Across 36 widely used Python AI libraries and 21 models from
 OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, Moonshot and Mistral, even the newest model
@@ -236,7 +238,7 @@ uvx --with basedpyright since-cutoff run
 
 What `scan` prints for the sample project, in full:
 
-<p align="center"><img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/scan.svg" width="100%" alt="since-cutoff scan --model anthropic:claude-sonnet-4-5 on the sample project. Your code uses 2 APIs that changed after claude-sonnet-4-5's training cutoff (2025-07-31). huggingface-hub 0.33.1 -> 2.0.0: hf_hub_download, used in app/main.py, no longer has force_filename, local_dir_use_symlinks, resume_download and proxies in its signature; its note is tagged [diff], and a Runtime line says that 2.0.0's source still handles them, so calls passing them may run with a warning. anthropic 0.56.0 -> 1.8.0: Messages.create, called in app/main.py, no longer accepts temperature, top_k and top_p; its note is tagged [diff]. 2 notes ready for AGENTS.md; what uses this API and [diff] mean; 348 more changes in 7 packages that the code does not use, and 139 changes to internal APIs."></p>
+<p align="center"><img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/scan.svg" width="100%" alt="since-cutoff scan --model anthropic:claude-sonnet-4-5 on the sample project. Your code uses 2 APIs that changed after 2025-07-01, 30 days before claude-sonnet-4-5's training cutoff (2025-07-31). huggingface-hub 0.33.1 -> 2.0.0: hf_hub_download, used in app/main.py, no longer has force_filename, local_dir_use_symlinks, resume_download and proxies in its signature; its note is tagged [diff], and a Runtime line says that 2.0.0's source still handles them, so calls passing them may run with a warning. anthropic 0.56.0 -> 1.8.0: Messages.create, called in app/main.py, no longer accepts temperature, top_k and top_p; its note is tagged [diff]. 2 notes ready for AGENTS.md; what uses this API and [diff] mean; 348 more changes in 7 packages that the code does not use, and 139 changes to internal APIs."></p>
 
 Both APIs are "uses this API"; a file that passed `resume_download=True` or `temperature=0.2`
 would make them "old form". `scan -v` lists every file that uses an API (3 are shown), and
@@ -971,10 +973,9 @@ meaning the same as `checks.example_type_checks`).
   changed API's and neither a common one nor a member of a built-in or standard-library type:
   such a `[name match]` is hidden from every report, the notes, `--fail-on` and `--annotate`
   unless `--include-name-matches` is given (`include_name_matches` over MCP), as most are
-  another library's method of the same name; `scan` and `sync` say how many uses they hid. A
-  parameter that became
-  required, keyword-only or positional-only is always "uses this API", never "old form", for
-  now.
+  another library's method of the same name; `scan`, `sync` and `project_changes` say how many
+  uses they hid (`name_matches_hidden` in results.json). A parameter that became required,
+  keyword-only or positional-only is always "uses this API", never "old form", for now.
 - A note names a replacement only when the library's own deprecation text states it. Advice that
   is only in a migration guide (anthropic's
   [MIGRATION.md](https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md)

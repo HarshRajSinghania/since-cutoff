@@ -392,7 +392,7 @@ def test_counts_of_one_are_singular(tmp_path, cache, fake_pypi) -> None:
     console = Console(width=200, record=True)
     render_console(console, scan)
     text = console.export_text()
-    assert "0 of 1 dependency changed its API after the cutoff" in text
+    assert "0 of 1 dependency changed its API after 2025-07-01, 30 days before the cutoff" in text
     assert "app · 1 dependency · " in text
     # Nothing is listed above it, so it is not "1 more".
     assert "1 dependency was not flagged (released before the cutoff" in text
@@ -408,53 +408,198 @@ def test_one_unchecked_dependency_is_not_an_example(tmp_path, cache, fake_pypi) 
     assert "1 of 1 dependency could not be checked: installed from git, not from PyPI" in lines
 
 
+LLAMA = "llama-index 0.14.25 is a metapackage with no API of its own"
+
+
+def _meta(parts: str) -> PackageScan:
+    """llama-index as pypi._metapackage reports it, with these parts."""
+    reason = (
+        f"{LLAMA}; its parts are checked like any other dependency when the project depends on "
+        f"them: {parts}"
+    )
+    return PackageScan("llama-index", "0.14.25", "uv.lock", True, reason=reason)
+
+
 def test_a_metapackage_is_information_not_a_dependency_that_could_not_be_checked(
     tmp_path, cache, fake_pypi
 ) -> None:
     """``llama-index 0.14.25 is a metapackage ...`` read as an error after "1 of 3 dependencies
     could not be checked": its parts are dependencies of their own, checked like any other when
-    the project depends on them. The line names the parts the scan checked and those it did not
-    (0.6.0 said "its parts are ... checked like any other" of parts it never checked), and the
-    table rows say the same, not "not checked"."""
-    from since_cutoff.report import render_markdown, render_scan_markdown, scan_lines
+    the project depends on them. The line says what the scan did with each part: 0.6.0 said
+    "not checked, as the project does not depend on them directly" of a part the project pins
+    directly but the scan could not check or --exclude left out, and told sync and --all-deps
+    runs to pass --all-deps."""
+    from since_cutoff.project import Dependency
+    from since_cutoff.report import render_markdown, render_scan, render_scan_markdown, scan_lines
 
-    reason = (
-        "llama-index 0.14.25 is a metapackage with no API of its own; its parts are checked like "
-        "any other dependency when the project depends on them: toylib<3,>=1, "
-        "llama-index-llms-openai<0.7,>=0.6.0, llama-index-embeddings-openai>=0.5"
+    scan = scan_app(make_app(tmp_path), cache, fake_pypi, date(2025, 7, 31))
+    git = "installed from git+https://github.com/run-llama/llama_index.git, not from PyPI"
+    scan.packages.append(PackageScan("llama-index-core", None, "uv.lock", True, reason=git))
+    scan.project.dependencies += [
+        Dependency("llama-index-cli", "0.5.0", True, "uv.lock"),
+        Dependency("llama-index-llms-openai", "0.6.1", False, "uv.lock"),
+    ]
+    scan.left_out = frozenset({"llama-index-cli"})
+    # Parts as the metapackage names them: TOYLIB is the toylib the scan checked.
+    scan.packages.append(
+        _meta(
+            "TOYLIB<3,>=1, llama-index-core<0.15,>=0.14.25, llama-index-cli>=0.5, "
+            "Llama-Index-LLMs-OpenAI<0.7,>=0.6.0, nltk>3.8.1"
+        )
     )
     meta = (
-        "llama-index 0.14.25 is a metapackage with no API of its own; checked like any other "
-        "dependency: toylib; not checked, as the project does not depend on them directly: "
-        "llama-index-llms-openai and llama-index-embeddings-openai (--all-deps checks those its "
-        "lockfile pins)"
+        f"{LLAMA}; checked like any other dependency: TOYLIB; could not be checked: "
+        "llama-index-core; left out by --only/--exclude: llama-index-cli; not checked, as the "
+        "project depends on it only through other packages: Llama-Index-LLMs-OpenAI (--all-deps "
+        "checks it); not checked, as the project does not depend on it directly: nltk"
     )
-    scan = scan_app(make_app(tmp_path), cache, fake_pypi, date(2025, 7, 31))
-    scan.packages.append(PackageScan("llama-index", "0.14.25", "uv.lock", True, reason=reason))
-    scan.packages[-1].status = SKIPPED
-    for lines in (headline(scan, None), scan_lines(scan, width=300)):
-        assert meta in [t.plain for t in lines]
-        assert [t.style for t in lines if t.plain == meta] == ["dim"]
-        assert not any("could not be checked" in t.plain for t in lines)
-    row = (
-        "metapackage (no API of its own; parts checked: toylib; not checked: "
-        "llama-index-llms-openai, llama-index-embeddings-openai)"
-    )
-    assert f"| llama-index | 0.14.25 (-) | - | {row} |" in render_markdown(scan)
-    assert f"| llama-index | 0.14.25 | - | {row} |" in render_scan_markdown(scan)
+    for lines in (headline(scan, None), scan_lines(scan, width=400)):
+        texts = [t.plain for t in lines]
+        assert meta in texts and [t.style for t in lines if t.plain == meta] == ["dim"]
+        # The part that failed is the one dependency that could not be checked.
+        assert f"1 of 3 dependencies could not be checked: {git}" in texts
+    # sync and the MCP tools have no --all-deps; after --all-deps, it would not help.
+    plain = meta.replace(" (--all-deps checks it)", "")
+    assert report.metapackage_text(scan, scan.packages[-1], hint=False) == plain
+    scan.all_deps = True
+    assert report.metapackage_text(scan, scan.packages[-1]) == plain
+    scan.all_deps = False
+    # The tables: information, compared from nothing, with the count of parts checked.
+    cell = "metapackage (no API of its own; 1 of 5 parts checked)"
+    assert f"| llama-index | 0.14.25 (-) | - | {cell} |" in render_markdown(scan)
+    assert f"| llama-index | 0.14.25 | - | {cell} |" in render_scan_markdown(scan)
     console = Console(width=300, record=True)
-    render_console(console, scan)
-    assert row in console.export_text() and "not checked (" not in console.export_text()
-    # None of its parts checked, or all of them: one clause.
-    scan.packages[-1].reason = reason.replace("toylib<3,>=1, ", "")
-    assert report.metapackage_text(scan, scan.packages[-1]).endswith(
-        "no API of its own; its parts are not checked, as the project does not depend on them "
-        "directly: llama-index-llms-openai and llama-index-embeddings-openai (--all-deps checks "
-        "those its lockfile pins)"
+    render_console(console, scan, verbose=True)
+    text = console.export_text()
+    assert cell in text and "app · 3 dependencies (1 not checked) ·" in text
+    # scan --all: its line once, not again in the panel.
+    console = Console(width=400, record=True)
+    render_scan(console, scan, show_all=True)
+    assert console.export_text().count(LLAMA) == 1
+    # results.json: every part, by what the scan did with it.
+    rows = {r["package"]: r for r in report.to_json(scan)["packages"]}
+    assert rows["llama-index"]["metapackage"] == {
+        "checked": ["TOYLIB"],
+        "could_not_be_checked": ["llama-index-core"],
+        "left_out": ["llama-index-cli"],
+        "transitive": ["Llama-Index-LLMs-OpenAI"],
+        "not_declared": ["nltk"],
+    }
+    assert rows["toylib"]["metapackage"] is None
+    # MCP: information under the counts, not a dependency that could not be checked (its
+    # `only` leaves dependencies out; it has no --all-deps), and in no count.
+    answer = mcp_server._render_project(scan, Target(date(2025, 7, 31), "given"), [], 10)
+    assert answer.startswith("# app: 1 of 2 dependencies checked")
+    assert "; not checked: 1\n" in answer
+    assert (
+        f"- {LLAMA}; checked like any other dependency: TOYLIB; could not be checked: "
+        "llama-index-core; left out by `only`: llama-index-cli; not checked, as the project "
+        "depends on it only through other packages: Llama-Index-LLMs-OpenAI; not checked, as "
+        "the project does not depend on it directly: nltk\n"
+    ) in answer
+    failed = answer.split("## Could not be checked\n")[1]
+    assert "- llama-index-core: installed from git" in failed and "- llama-index:" not in failed
+    # One clause: "its part(s) ...".
+    one = {
+        "toylib>=1": "its part is checked like any other dependency: toylib",
+        "toylib>=1, toylib<3": "its part is checked like any other dependency: toylib",
+        "llama-index-core": "its part could not be checked: llama-index-core",
+        "llama-index-cli": "its part was left out by --only/--exclude: llama-index-cli",
+        "nltk, regex": (
+            "its parts are not checked, as the project does not depend on them directly: nltk "
+            "and regex"
+        ),
+    }
+    for parts, said in one.items():
+        assert report.metapackage_text(scan, _meta(parts)) == f"{LLAMA}; {said}"
+    # pyobjc 11.1 has 159 parts: a few, and how many more (results.json has them all).
+    many = _meta(", ".join(f"pyobjc-framework-{i}" for i in range(159)))
+    assert report.metapackage_text(scan, many).endswith(
+        "directly: pyobjc-framework-0, pyobjc-framework-1, pyobjc-framework-2, "
+        "pyobjc-framework-3, pyobjc-framework-4 and 154 more"
     )
-    scan.packages[-1].reason = reason.split(": toylib")[0] + ": toylib<3,>=1"
-    assert report.metapackage_text(scan, scan.packages[-1]).endswith(
-        "no API of its own; its part is checked like any other dependency: toylib"
+    assert len(report.metapackage_parts(scan, many)["not_declared"]) == 159
+    # A reason that lists no part is shown as it is.
+    bare = PackageScan("llama-index", "0.14.25", "uv.lock", True, reason=LLAMA)
+    assert report.metapackage_text(scan, bare) == LLAMA
+    assert report._metapackage_cell(scan, bare) == "metapackage (no API of its own)"
+
+
+def test_a_project_whose_only_dependency_is_a_metapackage_is_checked(
+    tmp_path, cache, fake_pypi, capsys, monkeypatch
+) -> None:
+    """requirements.txt ``llama-index==0.14.25`` (or docling, pydantic-ai, griffe 2): scan and
+    sync failed with "No dependency could be checked (... is PyPI reachable?)", although a
+    metapackage is information. A dependency that failed still makes it a failure."""
+    monkeypatch.setenv("SINCE_CUTOFF_CACHE", str(tmp_path / "cli-cache"))
+    failed = PackageScan("toylib", "2.0", "pyproject.toml", True, reason="toylib==2.0 is 99 MB")
+    packages = [_meta("llama-index-core>=0.14")]
+
+    def engine(settings: Settings, **kw: Any) -> Engine:
+        made = Engine(settings, **{**kw, "pypi": fake_pypi})
+        scan = made.scan
+
+        def these(project: Project, target: ModelTarget) -> ScanResult:
+            result = scan(project, target)
+            result.packages[:] = list(packages)
+            return result
+
+        made.scan = these  # type: ignore[method-assign]
+        return made
+
+    monkeypatch.setattr(cli, "Engine", engine)
+    root = make_app(tmp_path)
+    argv = [str(root), "--model", "anthropic:claude-sonnet-4-5", *CUTOFF]
+    assert cli.main(["scan", *argv]) == 0
+    out = " ".join(capsys.readouterr().out.split())
+    assert "No dependency could be checked" not in out
+    assert f"{LLAMA}; its part is not checked, as the project does not depend on it" in out
+    assert cli.main(["sync", *argv, "--dry-run"]) == 0
+    assert "no dependency could be checked" not in capsys.readouterr().err
+    packages.append(failed)
+    assert cli.main(["scan", *argv]) == 1
+    assert "No dependency could be checked" in capsys.readouterr().out
+    assert cli.main(["sync", *argv, "--dry-run"]) != 0
+    assert "no dependency could be checked: toylib==2.0 is 99 MB" in capsys.readouterr().err
+
+
+def test_a_margin_of_one_day_is_one_day() -> None:
+    """--cutoff-margin 1 (or SINCE_CUTOFF_CUTOFF_MARGIN=1) read "1 days before the cutoff" in
+    scan, sync --check, the MCP tools and the notes."""
+    from since_cutoff import notes, sync
+
+    target = ModelTarget.cutoff_only(date(2026, 5, 11), margin=1)
+    assert target.compare_when == "1 day before the cutoff"
+    assert target.changed_after == "2026-05-10, 1 day before the cutoff"
+    assert sync.margin_text(1) == "1 day before the cutoff"
+    assert sync.margin_text(2) == "2 days before the cutoff"
+    assert sync.after_text("m", date(2026, 5, 11), 1) == (
+        "2026-05-10, 1 day before m's training cutoff (2026-05-11)"
+    )
+    assert Target(date(2026, 5, 11), "given", margin=1).compared_from == (
+        ", comparing from releases up to 2026-05-10 (1 day before it)"
+    )
+    note = notes.new_package_note("httpx2", "2.13.1", "2026-05-11", margin=1)
+    assert "first appeared on PyPI on 2026-05-11, within 1 day before the cutoff" in note.line
+    fresh = PackageScan("httpx2", "2.13.1", "uv.lock", True, True, NEW, first_released="2026-05-11")
+    scan = ScanResult(Project(Path("app"), [], "uv.lock"), target, [fresh])
+    assert "(first released 2026-05-11, within 1 day of the cutoff)" in report._new_package_text(
+        scan, fresh
+    )
+
+
+def test_sync_says_a_dropped_placeholder_was_empty_at_its_comparison_release() -> None:
+    """sync said a package whose comparison release was an empty placeholder was "first
+    released after the cutoff" when the code stopped importing it: its name existed before."""
+    from since_cutoff import sync
+    from since_cutoff.project import Dependency
+
+    zen = PackageScan("zen", "0.5", "uv.lock", True, False, NEW, cutoff_version="0.0.0")
+    project = Project(Path("app"), [Dependency("zen", "0.5", True, "uv.lock")], "uv.lock")
+    scan = ScanResult(project, ModelTarget.cutoff_only(date(2025, 7, 31)), [zen])
+    assert sync._dropped(scan, zen, "zen", "used") == (
+        "empty at its comparison release 0.0.0, and your code no longer imports it",
+        "zen was empty at its comparison release 0.0.0, and your code no longer imports it",
     )
 
 
@@ -462,13 +607,38 @@ SRC = Path(__file__).resolve().parents[1] / "src" / "since_cutoff"
 # What a message may not call the release a scan compares from since 0.6: by default it is the
 # latest one published --cutoff-margin (30) days before the cutoff, not the one at it.
 AT_THE_CUTOFF = re.compile(
-    r"release at the (?:model's )?(?:training )?cutoff|\bat cutoff\b|\{\} at the cutoff\b", re.I
+    r"release at (?:the |your |the model's )?(?:training )?cutoff"
+    r"|release at \{\}"
+    r"|\bat cutoff\b"
+    r"|\{\} at the cutoff\b"
+    r"|\b(?:one|empty|current|latest) at (?:the |your |the model's )?(?:training )?cutoff\b"
+    r"|(?<![\w-])cutoff version"
+    r"|on or before (?:the |your |the model's )(?:training )?cutoff",
+    re.I,
 )
+# The text of a margin of 0, where the comparison release is the one at the cutoff
+# (report._compared_from); and "0 compares from the latest release at the cutoff itself".
+MARGIN_0 = {"{} {} was the latest release at {}"}
+# What agents read besides the program's output: the skill and the plugin manifests.
+SHIPPED = [
+    "skills/since-cutoff/SKILL.md",
+    ".codex-plugin/plugin.json",
+    ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
+    "plugin.json",
+    "gemini-extension.json",
+    "server.json",
+    "glama.json",
+    "action.yml",
+    # The JSON Schemas of the reports, where there are any: their descriptions are read too.
+    *sorted(p.relative_to(ROOT).as_posix() for p in SRC.glob("schemas/*.json")),
+]
 
 
 def _messages(path: Path) -> list[str]:
     """The string literals of a module but its docstrings and other bare strings (comments are
-    not in the tree): an f-string with ``{}`` for each value, implicit concatenation joined."""
+    not in the tree): an f-string with ``{}`` for each value, implicit concatenation joined.
+    Of mcp_server.py, also the docstrings of the Tools methods: the MCP tools' descriptions."""
     tree = ast.parse(path.read_text(encoding="utf-8"))
     bare = {
         id(node.value)
@@ -490,31 +660,155 @@ def _messages(path: Path) -> list[str]:
             and id(node) not in bare | inner
         ):
             out.append(node.value)
+        elif isinstance(node, ast.ClassDef) and node.name == "Tools":
+            out += [
+                " ".join((ast.get_docstring(f) or "").split())
+                for f in node.body
+                if isinstance(f, ast.FunctionDef)
+            ]
     return out
+
+
+def _at_the_cutoff(text: str) -> list[str]:
+    """What ``text`` says that AT_THE_CUTOFF bans, with its words around it, the lines joined;
+    nothing for the text of a margin of 0."""
+    if text in MARGIN_0:
+        return []
+    flat = " ".join(text.split())
+    return [
+        flat[max(0, m.start() - 40) : m.end() + 20]
+        for m in AT_THE_CUTOFF.finditer(flat)
+        if not flat[m.end() :].startswith(" itself")
+    ]
 
 
 def test_no_message_calls_the_comparison_release_the_release_at_the_cutoff() -> None:
     """GitHub annotations said "fastapi 0.115.14 was the latest release at claude-sonnet-4-5's
-    training cutoff", the tables' column was "at cutoff", and the old-form legend "valid for
-    the release at the cutoff", of a release from 30 days before it. Only the text of a margin
-    of 0 may say so ("0 compares from the latest release at the cutoff itself")."""
+    training cutoff", the tables' column was "at cutoff", the old-form legend "valid for the
+    release at the cutoff", the progress line "released after their cutoff version", the
+    skill "the latest release on or before the model's training cutoff" and the Codex plugin
+    "the release at the model's training cutoff", of a release from 30 days before it. Only
+    the text of a margin of 0 may say so."""
     found = [
         f"{path.name}: {text}"
         for path in sorted(SRC.rglob("*.py"))
         for text in _messages(path)
-        if AT_THE_CUTOFF.search(text) and "at the cutoff itself" not in text
+        if _at_the_cutoff(text)
+    ]
+    found += [
+        f"{name}: {said}"
+        for name in SHIPPED
+        for said in _at_the_cutoff((ROOT / name).read_text(encoding="utf-8"))
     ]
     assert found == []
-    # The check sees what it is for.
-    assert AT_THE_CUTOFF.search("0.60.0 was the latest release at the cutoff")
-    assert AT_THE_CUTOFF.search("| package | you use | at cutoff | status |")
-    assert AT_THE_CUTOFF.search("{} at the cutoff was an empty placeholder")
-    assert not AT_THE_CUTOFF.search("first released after the cutoff")
-    assert any(
-        AT_THE_CUTOFF.search(text)
-        for text in _messages(SRC / "cli.py")
-        if "at the cutoff itself" in text
+    # The check sees what it is for: 0.6.0's annotation, column, legend, progress line and
+    # placeholder reason, and the skill's and plugin's wording.
+    for said in (
+        "{}. {} {} was the latest release at {}; {} is pinned. Note: {} Static match.",
+        "| package | you use | at cutoff | status |",
+        "valid for the release at the cutoff; the pinned release {}",
+        "Diffing the API of {} cutoff version",
+        "{} at the cutoff was an empty placeholder",
+        "empty at the cutoff",
+        "the public API of the latest release on or before the model's training cutoff",
+        "between the release at the model's training cutoff and the version you pin",
+        "renamed or deprecated after the release at your training cutoff",
+    ):
+        assert _at_the_cutoff(said), said
+    for fine in (
+        "first released after the cutoff",
+        "the since-cutoff version that wrote it",
+        "0 compares from the latest release at the cutoff itself",
+        *MARGIN_0,
+    ):
+        assert not _at_the_cutoff(fine), fine
+    # Tool descriptions are read: a description that said so would be found.
+    assert any("cutoff_margin" in text for text in _messages(SRC / "mcp_server.py"))
+
+
+# What a report may not say of a scan with a margin: a release within the margin is older than
+# the cutoff, so neither "at the cutoff" nor "changed after the cutoff" is true of it.
+NOT_AT_MARGIN = re.compile(
+    r"\bat (?:the |your |the model's )?(?:training )?cutoff\b(?! itself)"
+    r"|changed (?:its |their )?(?:API )?after the cutoff"
+    r"|first released after the cutoff(?! or within)",
+    re.I,
+)
+
+
+def test_no_report_says_at_the_cutoff_of_a_scan_with_a_margin(tmp_path, cache, fake_pypi) -> None:
+    """What every report and MCP answer says of a scan with the default margin of 30 days, with
+    a changed dependency, one first released within the margin, an empty placeholder and a
+    metapackage: none says "at the cutoff" or "changed after the cutoff" (a test of the string
+    literals misses text built with +, .format or %). With a margin of 0, they do."""
+    from since_cutoff.report import (
+        github_annotations,
+        render_markdown,
+        render_scan,
+        render_scan_markdown,
+        to_json,
     )
+
+    root = make_app(tmp_path)
+    (root / "extra.py").write_text("import fresh\nimport zen\n")
+
+    def scanned(margin: int) -> ScanResult:
+        engine = Engine(
+            Settings(
+                model="anthropic:claude-sonnet-4-5", cutoff=date(2025, 7, 31), cutoff_margin=margin
+            ),
+            store=cache,
+            llm_cache=cache,
+            pypi=fake_pypi,
+        )
+        scan = engine.scan(load_project(root), engine.resolve_target(allow_calls=False))
+        within = PackageScan("fresh", "1.0", "pyproject.toml", True, True, NEW)
+        within.first_released = "2025-07-15"
+        within.reason = f"first released within {margin} days of the cutoff (2025-07-15)"
+        empty = PackageScan("zen", "0.5", "pyproject.toml", True, True, NEW, cutoff_version="0.0")
+        empty.reason = "the comparison release 0.0 was an empty placeholder"
+        scan.packages += [within, empty, _meta("toylib>=1, nltk")]
+        return scan
+
+    scan = scanned(30)
+
+    def said(scan: ScanResult) -> list[str]:
+        console = Console(width=200, record=True)
+        render_scan(console, scan, show_all=True, verbose=True)
+        texts = [
+            console.export_text(),
+            render_markdown(scan),
+            render_scan_markdown(scan),
+            *github_annotations(scan),
+            str(to_json(scan)),
+        ]
+        return [line for text in texts for line in text.splitlines() if NOT_AT_MARGIN.search(line)]
+
+    assert said(scan) == []
+    tools = Tools(cache, registry=ModelRegistry(cache, offline=True), pypi=fake_pypi)
+    project = mcp_server._render_project(scan, Target(date(2025, 7, 31), "given"), [], 10)
+    for answer in (
+        project,
+        tools.project_changes(str(root), model="claude-sonnet-4-5", cutoff="2025-07-31"),
+        tools.api_changes("toylib==2.0", cutoff="2025-07-31"),
+        tools.api_changes("toylib==2.0", cutoff="2024-06-15"),  # no release by 2024-05-16
+    ):
+        assert [line for line in answer.splitlines() if NOT_AT_MARGIN.search(line)] == []
+    assert (
+        "- Your code imports zen 0.5: the comparison release 0.0 was an empty placeholder, so its "
+        "whole API came after that release" in project
+    )
+    assert "## First released after the cutoff or within 30 days before it" in project
+    # The tables label the new ones by their reason, not "first released after the cutoff".
+    md = render_markdown(scan)
+    assert "| first released within 30 days of the cutoff (2025-07-15), imported by your" in md
+    assert "| the comparison release 0.0 was an empty placeholder, imported by your code |" in md
+    # With a margin of 0 the comparison release is the one at the cutoff, and they say so.
+    zero = said(scanned(0))
+    assert any(
+        "was the latest release at the cutoff given for claude-sonnet-4-5" in s for s in zero
+    )
+    assert any("changed their API after the cutoff" in s for s in zero)
 
 
 def test_a_git_reference_is_named_in_the_skip_reason(tmp_path) -> None:
@@ -891,7 +1185,8 @@ def test_a_placeholder_release_at_the_cutoff_means_the_api_is_new(tmp_path, cach
     }
     tools = Tools(cache, registry=ModelRegistry(cache, offline=True), pypi=pypi)
     out = tools.api_changes("zensical==0.0.50", cutoff="2025-02-28")
-    assert "0.0.0 was an empty placeholder" in out and "breaking" not in out
+    assert "0.0.0, the release compared from, was an empty placeholder" in out
+    assert "breaking" not in out and "after your reported training cutoff" not in out
 
 
 # -------------------------------------------------------------------- models

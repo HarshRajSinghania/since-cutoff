@@ -152,8 +152,10 @@ def test_the_first_screen_quotes_what_the_scan_writes(name: str) -> None:
     assert sections[2].count("```console") == 1
     lines = console.splitlines()
     assert lines[0] == "$ uvx since-cutoff scan --model anthropic:claude-sonnet-4-5"
-    assert lines[1] == (
-        "Your code uses 2 APIs that changed after claude-sonnet-4-5's training cutoff (2025-07-31)"
+    # After the day the comparison releases were published by, not after the cutoff.
+    assert _unwrapped(console.split("\n\n", 1)[0].split("\n", 1)[1]) == (
+        "Your code uses 2 APIs that changed after 2025-07-01, 30 days before claude-sonnet-4-5's "
+        "training cutoff (2025-07-31)"
     )
     note = _anthropic_note()
     assert note.endswith(" [diff]")

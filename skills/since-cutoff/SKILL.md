@@ -17,9 +17,10 @@ report what it prints.
 
 ## Overview
 
-- `since-cutoff scan` compares, for each dependency, the public API of the latest release on or
-  before the model's training cutoff with the version the project pins (a static diff, no model
-  calls), and lists the changed APIs the code uses.
+- `since-cutoff scan` compares, for each dependency, the public API of the latest release
+  published at least 30 days before the model's training cutoff (`--cutoff-margin`; 0 compares
+  from the cutoff itself) with the version the project pins (a static diff, no model calls), and
+  lists the changed APIs the code uses.
 - `since-cutoff sync` writes notes from that diff into a marked block in AGENTS.md or CLAUDE.md
   and keeps them in step with the lockfile; `since-cutoff status` checks the block offline, and
   `since-cutoff unapply` removes it.
@@ -83,13 +84,14 @@ report what it prints.
 ## Output
 
 - The terminal: the model, its training cutoff and where the tool read the model, the
-  dependencies that changed after the cutoff, and the changed APIs the code uses, each with its
-  note. `run` adds the result card of step 6.
+  dependencies that changed since the release each is compared from, and the changed APIs the
+  code uses, each with its note. `run` adds the result card of step 6.
 - `.since-cutoff/report.md`: the full report. Read it when the user wants details.
 - The notes block in AGENTS.md or CLAUDE.md, written only by `sync --yes` or `run --apply`. The
   notes in it are API reference facts about the versions the project pins: what was removed,
-  renamed or deprecated after the release at your training cutoff, each tagged with what was
-  checked, for example `[diff]` (a static comparison of the two releases' public APIs),
+  renamed or deprecated after the release they compare from (the latest one published at least
+  30 days before your training cutoff), each tagged with what was checked, for example `[diff]`
+  (a static comparison of the two releases' public APIs),
   `[diff + library]` (the library's own deprecation text names the replacement),
   `[diff + move checked]`, `[diff + metadata]` (the two releases' Requires-Dist: the package
   requires another library, such as `httpx2` instead of `httpx`, and its API takes that

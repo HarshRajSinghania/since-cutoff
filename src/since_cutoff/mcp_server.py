@@ -66,6 +66,7 @@ from since_cutoff.models import (
     ModelInfo,
     ModelRegistry,
     compare_date,
+    days_text,
     listing_note,
     parse_cutoff,
     parse_margin,
@@ -85,8 +86,11 @@ from since_cutoff.report import (
     api_display,
     changes_text,
     counts_text,
+    hidden_name_matches_text,
     installed_text,
     internal_changes,
+    is_metapackage,
+    metapackage_text,
     places,
     public_changes,
     use_text,
@@ -171,7 +175,7 @@ class Target:
             return ""
         return (
             f", comparing from releases up to {self.compare_date.isoformat()} "
-            f"({self.margin} days before it)"
+            f"({days_text(self.margin)} before it)"
         )
 
 
@@ -335,8 +339,8 @@ class Tools:
             old = at_cutoff
             if target.margin:
                 old_role = (
-                    f"the newest release on or before {target.compare_date}, {target.margin} "
-                    f"days before the cutoff {target.cutoff} ({target.label})"
+                    f"the newest release on or before {target.compare_date}, "
+                    f"{days_text(target.margin)} before the cutoff {target.cutoff} ({target.label})"
                 )
             else:
                 old_role = f"the newest release on or before {target.cutoff} ({target.label})"
@@ -490,9 +494,12 @@ class Tools:
         One of `model` or `cutoff` is required.
 
         Returns Markdown: a heading with the number of dependencies checked and where their
-        versions came from; bullets with the cutoff, how many of the changed APIs the project's
-        code uses, and how many dependencies changed, were first released after the cutoff, are
-        unchanged, or could not be checked; then "## Your code uses these changed APIs": each
+        versions came from; bullets with the cutoff and the day the comparison releases were
+        published by, how many dependencies changed since then, were first released after it,
+        are unchanged, or could not be checked, each metapackage (no API of its own) with which
+        of its parts were checked, how many uses matched by a name alone were left out (unless
+        `include_name_matches`), and how many of the changed APIs the project's code uses;
+        then "## Your code uses these changed APIs": each
         changed API the code uses, with what changed, "old form" (the code uses it as the
         comparison release allowed) or "uses this API", the files that use it (at most 3),
         the note to follow with its tag ([diff]: from the static diff; [library]: the
@@ -709,14 +716,18 @@ def _render_project(
     scan: ScanResult, target: Target, only: list[str], limit: int, internal: bool = False
 ) -> str:
     project = scan.project
+    # A metapackage has no API of its own: information on its parts, not a dependency that
+    # could not be checked, and in no count.
+    metas = [p for p in scan.packages if is_metapackage(p)]
     by_status: dict[str, list[PackageScan]] = {}
     for p in scan.packages:
-        by_status.setdefault(p.status, []).append(p)
+        if p not in metas:
+            by_status.setdefault(p.status, []).append(p)
     changed = by_status.get(CHANGED, [])  # in the order of Engine.scan: imported ones first
     quiet = sorted(by_status.get(KNOWN, []) + by_status.get(UNCHANGED, []), key=lambda p: p.name)
     new, skipped = by_status.get(NEW, []), by_status.get(SKIPPED, [])
-    total = _plural(len(scan.packages), "dependency", "dependencies")
-    checked = len(scan.packages) - len(skipped)
+    total = _plural(len(scan.packages) - len(metas), "dependency", "dependencies")
+    checked = len(scan.packages) - len(metas) - len(skipped)
     out = [
         f"# {project.root.name}: {f'{checked} of {total}' if skipped else total} checked "
         f"(versions from {project.version_source})",
@@ -730,10 +741,16 @@ def _render_project(
     out += [f"- Warning: {reexport_warning(p)}" for p in scan.packages if p.reexported]
     if scan.stale:
         out.append(f"- Warning: {stale_warning(scan.stale)}")
+    after = "that day" if scan.target.margin else "it"
     out.append(
-        f"- API changed after the cutoff: {len(changed)}; first released after it: {len(new)}; "
-        f"unchanged or older: {len(quiet)}; not checked: {len(skipped)}"
+        f"- API changed after {_since(scan)}: {len(changed)}; first released after {after}: "
+        f"{len(new)}; unchanged or older: {len(quiet)}; not checked: {len(skipped)}"
     )
+    # MCP has no --all-deps, and its `only` is what leaves the project's own dependencies out.
+    out += [f"- {metapackage_text(scan, p, hint=False, left_out_by='`only`')}" for p in metas]
+    hidden = hidden_name_matches_text(scan, "include_name_matches=true")
+    if hidden:
+        out.append(f"- {hidden}")
     known = {canonicalize_name(d.name) for d in project.dependencies}
     missing = sorted({canonicalize_name(s) for s in only} - known)
     if missing:
@@ -743,7 +760,13 @@ def _render_project(
     tail: list[str] = []
     if new:
         within = [p for p in new if scan.target.released_within_margin(p)]
-        when = f"after the cutoff or within {scan.target.margin} days before it" if within else ""
+        # The API of an empty comparison release came after the day the scan compares from.
+        placeholder = scan.target.margin and any(p.cutoff_version for p in new)
+        when = (
+            f"after the cutoff or within {days_text(scan.target.margin)} before it"
+            if within or placeholder
+            else ""
+        )
         tail += [
             "",
             f"## First released {when or 'after the cutoff'} (so they may be missing from your "
@@ -794,26 +817,13 @@ def _used_section(scan: ScanResult) -> list[str]:
     PROJECT_BUDGET, then the dependencies first released after the cutoff that the code
     imports; the bullet before it says how many APIs there are."""
     used = scan.used_apis()
-    imported = [
-        (
-            f"- Your code imports {p.name} {p.locked}, first released {p.first_released}: "
-            f"within {scan.target.margin} days before your reported training cutoff, so little "
-            "or none of its API may be in your training data."
-        )
-        if scan.target.released_within_margin(p)
-        else (
-            f"- Your code imports {p.name} {p.locked}, first released "
-            f"{p.first_released or 'after the cutoff'}: released after your reported training "
-            "cutoff, so its whole API may be missing from your training data."
-        )
-        for p in scan.new_imported()
-    ]
+    imported = [_imported_text(scan, p) for p in scan.new_imported()]
     if not used:
-        none = ["- Your code uses none of the APIs that changed after the cutoff"]
+        none = [f"- Your code uses none of the APIs that changed after {_since(scan)}"]
         return [*(none if scan.changed else []), *imported]
     old = sum(u.form == OLD_FORM for u in used)
     out = [
-        f"- Your code uses {_plural(len(used), 'API')} that changed after the cutoff, "
+        f"- Your code uses {_plural(len(used), 'API')} that changed after {_since(scan)}, "
         f"{old or 'none'} in the old form (as the comparison release allowed; a static name "
         "match)",
         "",
@@ -830,6 +840,39 @@ def _used_section(scan: ScanResult) -> list[str]:
     for line in imported:
         out += ["", line]
     return out
+
+
+def _since(scan: ScanResult) -> str:
+    """What the changes project_changes reports came after: ``2025-07-01 (30 days before the
+    cutoff)``, the day the comparison releases were published by, or ``the cutoff`` with a
+    margin of 0: a release published within the margin is older than the cutoff."""
+    target = scan.target
+    if not target.margin:
+        return "the cutoff"
+    return f"{target.compare_date.isoformat()} ({target.compare_when})"
+
+
+def _imported_text(scan: ScanResult, p: PackageScan) -> str:
+    """project_changes' bullet for a dependency the code imports that has no comparison
+    release: first released within the margin, after the cutoff, or after an empty placeholder."""
+    name = f"{p.name} {p.locked}"
+    if scan.target.released_within_margin(p):
+        return (
+            f"- Your code imports {name}, first released {p.first_released}: within "
+            f"{days_text(scan.target.margin)} before your reported training cutoff, so little "
+            "or none of its API may be in your training data."
+        )
+    if p.cutoff_version:
+        return (
+            f"- Your code imports {name}: the comparison release {p.cutoff_version} was an empty "
+            "placeholder, so its whole API came after that release and may be missing from your "
+            "training data."
+        )
+    return (
+        f"- Your code imports {name}, first released {p.first_released or 'after the cutoff'}: "
+        "released after your reported training cutoff, so its whole API may be missing from "
+        "your training data."
+    )
 
 
 def _used_entry(scan: ScanResult, u: UsedAPI) -> list[str]:
@@ -923,31 +966,37 @@ def _size(lines: list[str]) -> int:
 
 
 def _placeholder_note(old: Release, new: Release) -> str:
+    """The reply when the release compared from was an empty placeholder: with a margin, it is
+    the latest one published that many days before the cutoff, so the API that came after it
+    may be older than the cutoff."""
     return (
-        f"{old.version} was an empty placeholder that only reserved the name: the API of "
-        f"{new.version} was released after your reported training cutoff, so it may be missing "
-        "from your training data. Read its documentation or source before using it."
+        f"{old.version}, the release compared from, was an empty placeholder that only reserved "
+        f"the name: the API of {new.version} came after it, so it may be missing from your "
+        "training data. Read its documentation or source before using it."
     )
 
 
 def _newer_than_cutoff(
     name: str, latest: Release, target: Target, stale: dict[str, date] | None = None
 ) -> str:
-    """The reply when the package had no release by the cutoff; with ``stale`` (the day of the
-    older cached release list it rests on, see :meth:`Tools._stale_of`), the same warning as
-    the other replies, since a release that copy does not know may be older than the cutoff."""
+    """The reply when the package had no release by the day the scan compares from (the
+    cutoff, or ``margin`` days before it); with ``stale`` (the day of the older cached
+    release list it rests on, see :meth:`Tools._stale_of`), the same warning as the other
+    replies, since a release that copy does not know may be older than the cutoff."""
     before = (
-        f"{target.compare_date.isoformat()}, {target.margin} days before the cutoff "
+        f"{target.compare_date.isoformat()}, {days_text(target.margin)} before the cutoff "
         f"{target.cutoff.isoformat()}"
         if target.margin
         else target.cutoff.isoformat()
     )
+    by = target.compare_date.isoformat() if target.margin else "the cutoff"
+    when = "after, or shortly before," if target.margin else "after"
     text = (
-        f"# {name}: no release on or before the cutoff\n\n"
+        f"# {name}: no release on or before {by}\n\n"
         f"{name} had no release on or before {before} "
         f"({target.label}); {latest.version} was published {_day(latest)}. Its whole API was "
-        "released after, or shortly before, your reported training cutoff, so it may be "
-        "missing from your training data: read its documentation or source before using it.\n"
+        f"released {when} your reported training cutoff, so it may be missing from your "
+        "training data: read its documentation or source before using it.\n"
     )
     if stale:
         text += f"\n- Warning: {stale_warning(stale)}\n"

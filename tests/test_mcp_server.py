@@ -184,7 +184,7 @@ def test_the_tools_say_when_a_release_list_is_an_older_copy(tmp_path, tools, fak
     assert warning in out.splitlines()
     # Also when the copy shows no release by the cutoff: a release it does not know may be one.
     out = tools.api_changes("toylib", cutoff="2024-01")
-    assert out.startswith("# toylib: no release on or before the cutoff\n")
+    assert out.startswith("# toylib: no release on or before 2024-01-01\n")
     assert warning in out.splitlines()
 
 
@@ -303,7 +303,9 @@ def test_api_changes_with_explicit_versions(tools: Tools) -> None:
 
 def test_api_changes_for_a_package_newer_than_the_model(tools: Tools) -> None:
     out = tools.api_changes("toylib", cutoff="2024-01")
-    assert "no release on or before the cutoff" in out
+    # The heading names the day compared from: with a margin, no release by the cutoff is
+    # not what the scan found (httpx2 had 2.2.0 out before a 2026-05-31 cutoff).
+    assert out.startswith("# toylib: no release on or before 2024-01-01\n")
     assert (
         "toylib had no release on or before 2024-01-01, 30 days before the cutoff 2024-01-31" in out
     )
@@ -425,7 +427,7 @@ def test_only_imported_packages_get_your_code_marks(tmp_path: Path, cache: DiskC
 def test_project_changes_reports_quiet_and_new_dependencies(tools: Tools, tmp_path: Path) -> None:
     root = make_app(tmp_path, pin="toylib==1.0")
     known = tools.project_changes(str(root), cutoff="2025-07")
-    assert "API changed after the cutoff: 0" in known
+    assert "API changed after 2025-07-01 (30 days before the cutoff): 0" in known
     assert (
         "Not listed (released before the cutoff, or no breaking change since): toylib 1.0" in known
     )
@@ -578,8 +580,8 @@ def test_long_calls_report_progress(tools: Tools, tmp_path: Path) -> None:
     assert [m for _, _, m in project] == [
         "Checking 1 dependency on PyPI",
         "Checking 1 dependency on PyPI (1 of 1)",
-        "Diffing the API of 1 package released after its cutoff version",
-        "Diffing the API of 1 package released after its cutoff version (1 of 1)",
+        "Diffing the API of 1 package released after its comparison release",
+        "Diffing the API of 1 package released after its comparison release (1 of 1)",
     ]
     done = [d for d, _, _ in project]
     assert done == sorted(set(done))  # strictly increasing, as MCP requires

@@ -98,6 +98,11 @@ def compare_date(cutoff: date, margin: int = DEFAULT_CUTOFF_MARGIN) -> date:
     return cutoff - timedelta(days=max(0, margin))
 
 
+def days_text(margin: int) -> str:
+    """``30 days``, ``1 day``: a margin in words, as every text about it says it."""
+    return f"{margin} day" if margin == 1 else f"{margin} days"
+
+
 def _maybe_date(value: Any) -> date | None:
     if not value or not isinstance(value, str):
         return None

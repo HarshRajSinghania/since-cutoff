@@ -73,7 +73,7 @@ from since_cutoff.apidiff import (
     signature_parameters,
 )
 from since_cutoff.errors import SinceCutoffError
-from since_cutoff.models import DEFAULT_CUTOFF_MARGIN, compare_date
+from since_cutoff.models import DEFAULT_CUTOFF_MARGIN, compare_date, days_text
 
 BLOCK_START = "<!-- since-cutoff:start -->"
 BLOCK_END = "<!-- since-cutoff:end -->"
@@ -1513,7 +1513,7 @@ def new_package_note(
     when = f"on {first_released}, after the cutoff" if first_released else "after the cutoff"
     known = "the model has no training data on it"
     if margin is not None and first_released:
-        when = f"on {first_released}, within {margin} days before the cutoff"
+        when = f"on {first_released}, within {days_text(margin)} before the cutoff"
         known = "the model has little or no training data on it"
     pinned = f"{version} (released {released})" if released else version
     text = f"{package} first appeared on PyPI {when}; {known}. The project pins {pinned}."

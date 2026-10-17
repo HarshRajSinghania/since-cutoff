@@ -444,13 +444,17 @@ def headline(
                 )
             )
     checked = s["dependencies_checked"]
-    lines.append(
-        Text.assemble(
-            (f"{s['dependencies_changed']} of {checked}", "bold yellow"),
-            f" {_deps_word(checked)} changed {'its' if checked == 1 else 'their'} API "
-            f"after {scan.target.changed_after}",
+    no_api = _no_api_text(scan)
+    if no_api:  # not "0 of 0 dependencies changed"
+        lines.append(Text(no_api, style="bold"))
+    else:
+        lines.append(
+            Text.assemble(
+                (f"{s['dependencies_changed']} of {checked}", "bold yellow"),
+                f" {_deps_word(checked)} changed {'its' if checked == 1 else 'their'} API "
+                f"after {scan.target.changed_after}",
+            )
         )
-    )
     internal = s.get("internal_changes", 0)
     if s["breaking_changes"] or s["deprecations"] or internal:
         lines.append(
@@ -461,13 +465,18 @@ def headline(
             )
         )
     if s["dependencies_newer_than_model"]:
-        new = s["dependencies_newer_than_model"]
-        # A dependency first released within the margin existed at the cutoff.
-        within = any(scan.target.released_within_margin(p) for p in scan.packages)
-        when = scan.target.compare_when if within else "at the cutoff"
-        lines.append(Text(f"{_deps(new)} did not exist yet {when}", style="dim"))
+        # One whose comparison release was an empty placeholder existed, but not its API.
+        empty = sum(is_placeholder(p) for p in scan.packages)
+        new = s["dependencies_newer_than_model"] - empty
+        if new:
+            # A dependency first released within the margin existed at the cutoff.
+            within = any(scan.target.released_within_margin(p) for p in scan.packages)
+            when = scan.target.compare_when if within else "at the cutoff"
+            lines.append(Text(f"{_deps(new)} did not exist yet {when}", style="dim"))
+        if empty:
+            lines.append(Text(_placeholders_text(scan, empty), style="dim"))
     if s["dependencies_skipped"]:
-        not_checked = _not_checked(scan, s["dependencies_total"])
+        not_checked = _not_checked(scan)
         lines += [Text(t, style=style) for t, style in not_checked]
     if run is not None and run.probes:
         p = s["probes"]
@@ -650,11 +659,14 @@ def render_console(
     else:
         title = f"since-cutoff · custom cutoff {s['cutoff']}"
     failed = sum(not is_metapackage(p) for p in scan.skipped)  # a metapackage is information
-    sub = Text(
-        f"{scan.project.root.name} · {_deps(s['dependencies_total'])}"
-        + (f" ({failed} not checked)" if failed else "")
-        + f" · versions from {s['version_source']}"
-    )
+    # A metapackage is in no total, as in the MCP answer: it is counted apart.
+    metas = sum(is_metapackage(p) for p in scan.packages)
+    total = len(scan.packages) - metas
+    deps = _deps(total) + (f" ({failed} not checked)" if failed else "")
+    if metas:
+        apart = _plural(metas, "metapackage")
+        deps = f"{deps} and {apart}" if total else apart
+    sub = Text(f"{scan.project.root.name} · {deps} · versions from {s['version_source']}")
     # Not the lines printed already (``scan --all``: a metapackage's, by scan_lines).
     lines = [t for t in headline(scan, run, s) if t.plain not in shown]
     # rich fits a panel to its body and title but not to its subtitle, which it would cut: size
@@ -976,6 +988,8 @@ def scan_lines(
         prose(f"Your code uses {_plural(len(used), 'API')} that changed after {after}", "bold")
     elif scan.changed:
         prose(f"Your code uses none of the APIs that changed after {after}.", "bold")
+    elif _no_api_text(scan):  # not "0 dependencies checked; none changed its API"
+        prose(f"{_no_api_text(scan)}.", "bold")
     else:
         checked = _deps(len(scan.packages) - len(scan.skipped))
         prose(
@@ -1027,7 +1041,7 @@ def scan_lines(
     hidden = hidden_name_matches_text(scan)
     if hidden:
         prose(hidden, "dim")
-    for text, style in _not_checked(scan, len(scan.packages)):
+    for text, style in _not_checked(scan):
         prose(text, style)
     out += [Text(f"! {w}", "yellow") for w in scan.warnings if w not in shown]
     return out
@@ -1036,6 +1050,34 @@ def scan_lines(
 def is_metapackage(p: PackageScan) -> bool:
     """A dependency skipped as a metapackage (errors.METAPACKAGE): information, not a failure."""
     return p.status == SKIPPED and bool(p.reason) and METAPACKAGE in (p.reason or "")
+
+
+def _no_api_text(scan: ScanResult) -> str | None:
+    """``No API to compare: the only dependency is a metapackage``, when every dependency the
+    scan has is a metapackage (llama-index alone in requirements.txt), which the reports say
+    instead of "0 of 0 dependencies changed their API"; None otherwise."""
+    metas = sum(is_metapackage(p) for p in scan.packages)
+    if not metas or metas != len(scan.packages):
+        return None
+    if metas == 1:
+        return "No API to compare: the only dependency is a metapackage"
+    return f"No API to compare: all {metas} dependencies are metapackages"
+
+
+def is_placeholder(p: PackageScan) -> bool:
+    """A dependency new to the model (NEW) because its comparison release was an empty
+    placeholder (Engine._placeholder: zensical 0.0.0): it existed then, but not its API."""
+    return p.status == NEW and bool(p.cutoff_version)
+
+
+def _placeholders_text(scan: ScanResult, n: int) -> str:
+    """``1 dependency's latest release 30 days before the cutoff was an empty placeholder``:
+    the headline's count of :func:`is_placeholder` dependencies, apart from those that did not
+    exist yet (``at the cutoff`` with a margin of 0)."""
+    when = scan.target.compare_when
+    if n == 1:
+        return f"1 dependency's latest release {when} was an empty placeholder"
+    return f"{n} dependencies' latest releases {when} were empty placeholders"
 
 
 # What the scan did with each part of a metapackage (metapackage_parts), in the order its line
@@ -1146,11 +1188,12 @@ def _metapackage_cell(scan: ScanResult, p: PackageScan) -> str:
     return f"metapackage (no API of its own; {checked} of {_plural(total, 'part')} checked)"
 
 
-def _not_checked(scan: ScanResult, total: int | None = None) -> list[tuple[str, str]]:
+def _not_checked(scan: ScanResult) -> list[tuple[str, str]]:
     """The lines on the dependencies the scan skipped, with their style: "N of M could not be
-    checked" for those it failed on, and each metapackage as information (it has no API of
-    its own, and its parts are dependencies of their own: errors.METAPACKAGE), saying what the
-    scan did with its parts (:func:`metapackage_text`)."""
+    checked" for those it failed on (M: the dependencies but the metapackages, as in the MCP
+    answer), and each metapackage as information (it has no API of its own, and its parts are
+    dependencies of their own: errors.METAPACKAGE), saying what the scan did with its parts
+    (:func:`metapackage_text`)."""
     meta = [metapackage_text(scan, p) for p in scan.skipped if is_metapackage(p)]
     failed = [p for p in scan.skipped if not is_metapackage(p)]
     lines = []
@@ -1158,7 +1201,7 @@ def _not_checked(scan: ScanResult, total: int | None = None) -> list[tuple[str, 
         first = next((p.reason for p in failed if p.reason), "")
         if first:
             first = ("; for example: " if len(failed) > 1 else ": ") + clip(first, REASON_WIDTH)
-        of = _deps(len(scan.packages) if total is None else total)
+        of = _deps(len(scan.packages) - len(meta))
         lines.append((f"{len(failed)} of {of} could not be checked{first}", "yellow"))
     return lines + [(text, "dim") for text in meta]  # PARTS_SHOWN parts per clause: not clipped
 
@@ -1591,7 +1634,8 @@ def hidden_name_matches_text(scan: ScanResult, flag: str = "--include-name-match
 def fail_reason(scan: ScanResult, conditions: set[str]) -> str | None:
     """Why ``scan --fail-on`` exits with code 3, or None: ``old-form`` when the code uses a
     changed API in the old form, ``used`` when it uses one at all, ``changes`` when any
-    dependency changed its API after the cutoff (``--fail-on-changes``). A name match counts
+    dependency changed its API since the release it is compared from (``--fail-on-changes``;
+    by default the latest one published 30 days before the cutoff). A name match counts
     only with ``--include-name-matches`` (:func:`counted`)."""
     used = counted(scan) if conditions & {"used", "old-form"} else []
     old = [u for u in used if u.form == OLD_FORM]

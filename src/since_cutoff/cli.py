@@ -472,7 +472,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--fail-on",
         choices=FAIL_ON,
         action="append",
-        help="exit with code 3 (for CI) when a dependency changed its API after the cutoff "
+        help="exit with code 3 (for CI) when a dependency changed its API since the release it "
+        "is compared from, by default the latest one published 30 days before the cutoff "
         "(changes), when your code uses an API that changed (used), or when it uses one in the "
         "old form (old-form); repeat it for several",
     )

@@ -728,8 +728,9 @@ class ScanResult:
 
     def new_package_notes(self) -> list[Note]:
         """One note (:func:`notes.new_package_note`, ``[metadata]``) for each dependency first
-        released after the cutoff, or within the margin before it, that the project's code
-        imports (:meth:`new_imported`)."""
+        released after the cutoff, or within the margin before it, or whose comparison release
+        was an empty placeholder, that the project's code imports (:meth:`new_imported`)."""
+        target = self.target
         return [
             new_package_note(
                 p.name,
@@ -738,7 +739,10 @@ class ScanResult:
                 p.summary,
                 p.changelog,
                 p.locked_date,
-                self.target.margin if self.target.released_within_margin(p) else None,
+                target.margin if target.released_within_margin(p) or p.cutoff_version else None,
+                # A NEW dependency with a comparison release: an empty placeholder.
+                placeholder=p.cutoff_version,
+                by=target.compare_date.isoformat() if p.cutoff_version else None,
             )
             for p in self.new_imported()
         ]

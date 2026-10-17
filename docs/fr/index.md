@@ -90,8 +90,8 @@ et **Claude Opus 4.6** (mai 2025). Les tâches et les notes ont été rédigées
 3. **Des réponses sans rien à consulter.** Le modèle reçoit la tâche et le numéro de la version
    épinglée, sans outils, sans accès au web, sans fichiers du projet.
 4. **Une évaluation par un vérificateur de types, à deux reprises.** La réponse est vérifiée avec
-   basedpyright par rapport à la version de comparaison (la plus récente à la date limite du
-   modèle), puis par rapport à la version épinglée, chacune dans un environnement isolé avec ses propres dépendances. Seules comptent les
+   basedpyright par rapport à la version de comparaison (celle de l'étape 1), puis par rapport
+   à la version épinglée, chacune dans un environnement isolé avec ses propres dépendances. Seules comptent les
    erreurs de connaissance de l'API (noms, imports et paramètres inconnus, arguments manquants,
    arité), jamais les remarques liées à la rigueur du typage.
    - **stale** : valide pour la version de comparaison, invalide pour la version épinglée

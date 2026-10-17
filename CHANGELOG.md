@@ -58,7 +58,14 @@
   before the cutoff gets the note too, which says so ("first appeared on PyPI on 2025-07-15,
   within 30 days before the cutoff; the model has little or no training data on it"), and `sync`
   drops the note once the code no longer imports the package ("first released 2025-07-15, within
-  30 days of the cutoff, and your code no longer imports it").
+  30 days of the cutoff, and your code no longer imports it"). One whose comparison release was
+  an empty placeholder existed, but not its API, and its note says that ("zensical's latest
+  release by 2025-07-01 (0.0.0) was an empty placeholder; the model has little or no training
+  data on its API"), not that it "first appeared on PyPI after the cutoff". The headline counts
+  these apart ("1 dependency's latest release 30 days before the cutoff was an empty
+  placeholder"), not among the dependencies that "did not exist yet", and so does the MCP
+  `project_changes` answer ("only an empty placeholder by that day: 1", under a heading of
+  their own).
 - The comparison release is the latest release published at least 30 days before the model's
   training cutoff, not at the cutoff itself. A model's training data lags its stated cutoff, so
   it knows the last weeks before the cutoff least: llama-index-core 0.13.0, which removed
@@ -99,8 +106,14 @@
   of 1 is "1 day", not "1 days". In the docs, the README's table of the sample project gives its
   versions 30 days before the cutoff, as the Quick start does (openai 1.93.0, 24 breaking
   changes; 331 breaking changes in all), and the "How it works" diagram says "Release 30 days
-  before the model's cutoff" in every language. A test fails on a message, a tool description,
-  the skill or a plugin manifest that calls the comparison release the release at the cutoff
+  before the model's cutoff" in every language. `--fail-on changes` and the action's
+  `fail-on-changes` fail when a dependency "changed its API since the release it is compared
+  from (by default the latest one published 30 days before the cutoff)", as `scan --help`,
+  action.yml, the READMEs' action table and exit codes and docs/reference.md now say (they said
+  "after the cutoff"), and `status` says the same of a file with no notes; the docs site's
+  scoring step names the comparison release as the one from its first step, not "the newest at
+  the model's cutoff". A test fails on a message, a tool description, the skill, a plugin
+  manifest or docs/reference.md that calls the comparison release the release at the cutoff
   ("release at the cutoff", "cutoff version", "on or before the model's training cutoff"), but
   in the text of a margin of 0, and on a report or MCP answer for a scan with a margin that
   says "at the cutoff" or "changed after the cutoff".
@@ -230,9 +243,13 @@
   most 5 parts are named per clause
   ("and 154 more" for pyobjc 11.1); `results.json` lists them all under the package's
   `metapackage`. Its row in the dependency tables reads "metapackage (no API of its own; 1 of 4
-  parts checked)", compared from "-", and it is in no count of dependencies not checked; a
-  project whose only dependency is a metapackage (llama-index, docling, pydantic-ai, griffe 2)
-  no longer fails with "No dependency could be checked (... is PyPI reachable?)".
+  parts checked)", compared from "-", and it is in no count of dependencies, in the terminal as
+  in the MCP answer: "1 of 2 dependencies could not be checked" and "app · 2 dependencies (1 not
+  checked) and 1 metapackage" (the terminal said "1 of 3" and "3 dependencies"). A project whose
+  only dependency is a metapackage (llama-index, docling, pydantic-ai, griffe 2) no longer
+  fails with "No dependency could be checked (... is PyPI reachable?)", and its reports say "No
+  API to compare: the only dependency is a metapackage" instead of "0 of 0 dependencies changed
+  their API" (`scan --all`, report.md, the Markdown summary) or "0 dependencies checked".
 - `sync --json`'s help says it needs `--yes`, `--check` or `--dry-run`, and the README that
   stdout stays empty whenever sync fails, not only on a usage error.
 - basedpyright, which only `run` uses, is an extra: `pip install "since-cutoff[run]"`, or

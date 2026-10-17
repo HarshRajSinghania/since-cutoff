@@ -278,7 +278,8 @@ class Note:
         compared = f"{c.from_version} vs {c.to_version}, diff schema {DIFF_SCHEMA}"
         if c.kind == NEW_PACKAGE:
             change = (
-                f"the release list and metadata of {c.package} on PyPI: no release by the cutoff"
+                f"the release list and metadata of {c.package} on PyPI: no release by the day "
+                "compared from, or only an empty placeholder"
             )
         elif c.kind == DEPENDENCY_SWITCHED:
             change = (
@@ -1494,6 +1495,8 @@ def new_package_note(
     changelog: str | None = None,
     released: str | None = None,
     margin: int | None = None,
+    placeholder: str | None = None,
+    by: str | None = None,
 ) -> Note:
     """The one bullet for a package first released after the cutoff that the project's code
     imports: no release existed at the cutoff to compare with, so there is no diff, and the
@@ -1504,7 +1507,10 @@ def new_package_note(
     :func:`pypi.changelog_url`), each left out when unknown. ``margin``: the package was first
     released that many days before the cutoff or fewer (ModelTarget.released_within_margin),
     after the day the scan compares from, which the bullet says instead of "after the cutoff".
-    Tagged ``[metadata]``; about 50 tokens.
+    ``placeholder``: the version of the release the scan compared from, the latest one
+    published by ``by`` (ISO), which was an empty placeholder (zensical 0.0.0): the package
+    existed, but not its API, so the bullet says that instead; with a ``margin`` (not 0), the
+    API may be older than the cutoff. Tagged ``[metadata]``; about 50 tokens.
 
     ``httpx2 first appeared on PyPI on 2026-05-11, after the cutoff; the model has no training
     data on it. The project pins 2.13.1 (released 2026-09-23). Summary: The next generation
@@ -1517,6 +1523,13 @@ def new_package_note(
         known = "the model has little or no training data on it"
     pinned = f"{version} (released {released})" if released else version
     text = f"{package} first appeared on PyPI {when}; {known}. The project pins {pinned}."
+    if placeholder:
+        latest = f"latest release by {by}" if by else "comparison release"
+        some = "little or no" if margin else "no"
+        text = (
+            f"{package}'s {latest} ({placeholder}) was an empty placeholder; the model has "
+            f"{some} training data on its API. The project pins {pinned}."
+        )
     if summary:
         text += f" Summary: {safe_text(summary, 120).rstrip('.')}."
     if changelog:

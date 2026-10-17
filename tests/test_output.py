@@ -456,8 +456,9 @@ def test_a_metapackage_is_information_not_a_dependency_that_could_not_be_checked
     for lines in (headline(scan, None), scan_lines(scan, width=400)):
         texts = [t.plain for t in lines]
         assert meta in texts and [t.style for t in lines if t.plain == meta] == ["dim"]
-        # The part that failed is the one dependency that could not be checked.
-        assert f"1 of 3 dependencies could not be checked: {git}" in texts
+        # The part that failed is the one dependency that could not be checked, of the two that
+        # are not metapackages (the MCP answer's count below; 0.6.0 said "1 of 3").
+        assert f"1 of 2 dependencies could not be checked: {git}" in texts
     # sync and the MCP tools have no --all-deps; after --all-deps, it would not help.
     plain = meta.replace(" (--all-deps checks it)", "")
     assert report.metapackage_text(scan, scan.packages[-1], hint=False) == plain
@@ -471,7 +472,8 @@ def test_a_metapackage_is_information_not_a_dependency_that_could_not_be_checked
     console = Console(width=300, record=True)
     render_console(console, scan, verbose=True)
     text = console.export_text()
-    assert cell in text and "app · 3 dependencies (1 not checked) ·" in text
+    # The metapackage is in no total, as in the MCP answer below ("1 of 2 dependencies").
+    assert cell in text and "app · 2 dependencies (1 not checked) and 1 metapackage ·" in text
     # scan --all: its line once, not again in the panel.
     console = Console(width=400, record=True)
     render_scan(console, scan, show_all=True)
@@ -603,6 +605,126 @@ def test_sync_says_a_dropped_placeholder_was_empty_at_its_comparison_release() -
     )
 
 
+def _placeholder_scan(margin: int) -> ScanResult:
+    """zensical 0.5, whose comparison release 0.0.0 was an empty placeholder, imported by the
+    code, next to a dependency first released after the cutoff."""
+    from since_cutoff.project import Dependency
+
+    zen = PackageScan("zensical", "0.5", "uv.lock", True, True, NEW, cutoff_version="0.0.0")
+    zen.reason = "the comparison release 0.0.0 was an empty placeholder"
+    zen.locked_date = "2025-09-01"
+    late = PackageScan("late", "1.0", "uv.lock", True, False, NEW, first_released="2025-09-02")
+    deps = [Dependency(p.name, p.locked, True, "uv.lock") for p in (zen, late)]
+    project = Project(Path("app"), deps, "uv.lock", imported_modules={"zensical"})
+    target = ModelTarget.cutoff_only(date(2025, 7, 31), margin=margin)
+    return ScanResult(project, target, [zen, late])
+
+
+def test_an_empty_placeholder_is_counted_apart_from_what_did_not_exist_yet() -> None:
+    """zensical 0.0.0, an empty placeholder, was its comparison release: the headline counted
+    it among the dependencies that "did not exist yet at the cutoff", the MCP answer among
+    those "first released after that day", and its AGENTS.md note said it "first appeared on
+    PyPI after the cutoff". It existed, but not its API."""
+    from since_cutoff.notes import TAG_METADATA
+
+    scan = _placeholder_scan(30)
+    lines = [t.plain for t in headline(scan, None)]
+    assert "1 dependency did not exist yet at the cutoff" in lines  # late alone
+    assert "1 dependency's latest release 30 days before the cutoff was an empty placeholder" in (
+        lines
+    )
+    assert "2 dependencies did not exist yet at the cutoff" not in lines
+    answer = mcp_server._render_project(scan, Target(date(2025, 7, 31), "given"), [], 10)
+    assert (
+        "- API changed after 2025-07-01 (30 days before the cutoff): 0; first released after "
+        "that day: 1; only an empty placeholder by that day: 1; unchanged or older: 0; not "
+        "checked: 0\n"
+    ) in answer
+    first, empty = answer.split("## First released after the cutoff ")[1].split(
+        "## Only an empty placeholder by 2025-07-01, 30 days before the cutoff (so their API may "
+        "be missing from your training data)\n"
+    )
+    assert "- late 1.0" in first and "zensical" not in first
+    assert "- zensical 0.5 (2025-09-01); the comparison release 0.0.0 was an empty placeholder" in (
+        empty
+    )
+    [note] = scan.new_package_notes()
+    assert note.line == (
+        "zensical's latest release by 2025-07-01 (0.0.0) was an empty placeholder; the model has "
+        "little or no training data on its API. The project pins 0.5 (released 2025-09-01). "
+        "[metadata]"
+    )
+    assert note.tag_list == (TAG_METADATA,)
+    assert "first appeared" not in note.line and "after the cutoff" not in note.line
+    assert note.checks()["change"] == (
+        "the release list and metadata of zensical on PyPI: no release by the day compared from, "
+        "or only an empty placeholder"
+    )
+    # With a margin of 0 the placeholder is the one at the cutoff, and its API came after it.
+    scan = _placeholder_scan(0)
+    lines = [t.plain for t in headline(scan, None)]
+    assert "1 dependency's latest release at the cutoff was an empty placeholder" in lines
+    answer = mcp_server._render_project(scan, Target(date(2025, 7, 31), "given", margin=0), [], 10)
+    assert "first released after it: 1; only an empty placeholder by it: 1;" in answer
+    assert "## Only an empty placeholder by the cutoff (so their API" in answer
+    [note] = scan.new_package_notes()
+    assert note.line.startswith(
+        "zensical's latest release by 2025-07-31 (0.0.0) was an empty placeholder; the model has "
+        "no training data on its API."
+    )
+    # Two of them.
+    two = _placeholder_scan(30)
+    two.packages[1] = PackageScan("zen", "2", "uv.lock", True, False, NEW, cutoff_version="0.1")
+    lines = [t.plain for t in headline(two, None)]
+    assert "2 dependencies' latest releases 30 days before the cutoff were empty placeholders" in (
+        lines
+    )
+    assert not any("did not exist yet" in line for line in lines)
+
+
+def test_a_scan_of_metapackages_alone_says_there_is_no_api_to_compare() -> None:
+    """requirements.txt with llama-index alone: ``scan --all``'s panel, report.md and the
+    Markdown summary said "0 of 0 dependencies changed their API", and the panel's subtitle
+    counted the metapackage among the dependencies, which the MCP answer does not."""
+    from since_cutoff.project import Dependency
+
+    meta = _meta("llama-index-core>=0.14")
+    project = Project(
+        Path("app"), [Dependency("llama-index", "0.14.25", True, "uv.lock")], "uv.lock"
+    )
+    scan = ScanResult(project, ModelTarget.cutoff_only(date(2025, 7, 31)), [meta])
+    said = "No API to compare: the only dependency is a metapackage"
+    assert headline(scan, None)[0].plain == said
+    texts = [
+        report.render_markdown(scan),
+        report.render_scan_markdown(scan),
+        "\n".join(t.plain for t in report.scan_lines(scan, width=200)),
+    ]
+    console = Console(width=200, record=True)
+    report.render_scan(console, scan, show_all=True)
+    texts.append(console.export_text())
+    assert all(said in text and "0 of 0" not in text for text in texts)
+    assert "0 dependencies checked" not in texts[2]
+    assert "app · 1 metapackage · versions from uv.lock" in texts[3]
+    # The MCP answer counts no metapackage either.
+    answer = mcp_server._render_project(scan, Target(date(2025, 7, 31), "given"), [], 10)
+    assert answer.startswith("# app: 0 dependencies checked")
+    # Two metapackages; and one next to a dependency, which is counted.
+    scan.packages.append(PackageScan("docling", "2.0", "uv.lock", True, reason=meta.reason))
+    assert headline(scan, None)[0].plain == (
+        "No API to compare: all 2 dependencies are metapackages"
+    )
+    scan.packages.append(
+        PackageScan("toylib", "2.0", "uv.lock", True, status=CHANGED, cutoff_version="1.0")
+    )
+    assert headline(scan, None)[0].plain == (
+        "1 of 1 dependency changed its API after 2025-07-01, 30 days before the cutoff"
+    )
+    console = Console(width=200, record=True)
+    render_console(console, scan)
+    assert "app · 1 dependency and 2 metapackages · versions from uv.lock" in console.export_text()
+
+
 SRC = Path(__file__).resolve().parents[1] / "src" / "since_cutoff"
 # What a message may not call the release a scan compares from since 0.6: by default it is the
 # latest one published --cutoff-margin (30) days before the cutoff, not the one at it.
@@ -632,6 +754,9 @@ SHIPPED = [
     "action.yml",
     # The JSON Schemas of the reports, where there are any: their descriptions are read too.
     *sorted(p.relative_to(ROOT).as_posix() for p in SRC.glob("schemas/*.json")),
+    # The reference of the variables and exit codes (#88), which describes --cutoff-margin
+    # and --fail-on as the code does.
+    "docs/reference.md",
 ]
 
 
@@ -687,8 +812,9 @@ def test_no_message_calls_the_comparison_release_the_release_at_the_cutoff() -> 
     training cutoff", the tables' column was "at cutoff", the old-form legend "valid for the
     release at the cutoff", the progress line "released after their cutoff version", the
     skill "the latest release on or before the model's training cutoff" and the Codex plugin
-    "the release at the model's training cutoff", of a release from 30 days before it. Only
-    the text of a margin of 0 may say so."""
+    "the release at the model's training cutoff", of a release from 30 days before it, and
+    docs/reference.md "0 compares from the latest release at the cutoff". Only the text of a
+    margin of 0 may say so, as "at the cutoff itself"."""
     found = [
         f"{path.name}: {text}"
         for path in sorted(SRC.rglob("*.py"))

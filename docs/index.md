@@ -77,7 +77,7 @@ Two models were tested: **Claude Haiku 4.5** (training cutoff February 2025) and
 3. **Answers with nothing to look things up in.** The model gets the task and the pinned version
    number, and no tools, no web, no project files.
 4. **Scoring by a type checker, twice.** The answer is type-checked with basedpyright against the
-   comparison release (the one from step 1) and against the pinned version, each in
+   comparison release (the newest at the model's cutoff) and against the pinned version, each in
    an isolated environment with that version's own dependencies. Only API-knowledge errors count (unknown
    names, imports and parameters, missing arguments, arity), never type-strictness complaints.
    - **stale**: valid for the comparison release, invalid for the pinned one

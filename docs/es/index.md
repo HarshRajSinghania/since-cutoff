@@ -90,7 +90,7 @@ y **Claude Opus 4.6** (mayo de 2025). Las tareas y las notas las escribió Claud
 3. **Respuestas sin nada que consultar.** El modelo recibe la tarea y el número de la versión
    fijada, sin herramientas, sin web y sin archivos del proyecto.
 4. **Puntuación con un verificador de tipos, dos veces.** La respuesta se verifica con
-   basedpyright frente a la versión de comparación (la del paso 1)
+   basedpyright frente a la versión de comparación (la más reciente en la fecha de corte del modelo)
    y frente a la versión fijada, cada una en un entorno aislado con sus propias dependencias. Solo cuentan los errores de
    conocimiento de la API (nombres, importaciones y parámetros desconocidos, argumentos que
    faltan, aridad), nunca los avisos del modo estricto de tipado.

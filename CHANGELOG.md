@@ -110,10 +110,9 @@
   `fail-on-changes` fail when a dependency "changed its API since the release it is compared
   from (by default the latest one published 30 days before the cutoff)", as `scan --help`,
   action.yml, the READMEs' action table and exit codes and docs/reference.md now say (they said
-  "after the cutoff"), and `status` says the same of a file with no notes; the docs site's
-  scoring step names the comparison release as the one from its first step, not "the newest at
-  the model's cutoff". A test fails on a message, a tool description, the skill, a plugin
-  manifest or docs/reference.md that calls the comparison release the release at the cutoff
+  "after the cutoff"), and `status` says the same of a file with no notes. A test fails on a
+  message, a tool description, the skill, a plugin manifest or docs/reference.md that calls the
+  comparison release the release at the cutoff
   ("release at the cutoff", "cutoff version", "on or before the model's training cutoff"), but
   in the text of a margin of 0, and on a report or MCP answer for a scan with a margin that
   says "at the cutoff" or "changed after the cutoff".

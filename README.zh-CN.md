@@ -188,7 +188,9 @@ since-cutoff: the library notes in AGENTS.md are out of date: anthropic 1.8.0 in
 更多选项：
 
 - `sync --scope imported` 还会为你的代码导入的每个有变更的包，写出最可能有影响的那些变更的说明（每个包最多 5 个 API），适用于还没有用到任何有变更 API 的代码。遇到这种情况时，`scan` 会提示这个选项。
-- `sync --suggestions` 会加上锁定版本中那些只是与被移除内容相似的名称，并标为 `[not confirmed]`。区块会记录这两个选择，之后的 sync 会沿用它们。
+- `sync --profile evaluated` 就是基准测试所测量的配置：`--scope imported`，每个包最多 5 个 API（等同于同时给出这两个选项）。默认范围 `used` 只为你的代码已经调用的有变更 API 写说明，因此写出区块的项目更少、区块也更短，但基准测试没有测过它。自被测版本（0.4.1）以来，说明的措辞有所变化；而且那个版本是与截止日期当时的版本比较的：加上 `--cutoff-margin 0` 即可从同一天开始比较。
+- `sync --header-only` 只写开头部分：截止日期之后有变更的包，每个包附上锁定版本和用来比较的版本，以及要求遵循这些内容的说明，不写变更条目（`--no-header-only` 会重新写入它们）。这就是基准测试中“仅开头”一组所用的区块：更短（只有一个包时约 250 个 token，完整区块为 285 到 505 个），它告诉 agent 该检查哪些包，但不说明改了什么、应改用什么。不给 `--scope` 时，新写的开头部分会列出你的代码导入的包。
+- `sync --suggestions` 会加上锁定版本中那些只是与被移除内容相似的名称，并标为 `[not confirmed]`。区块会记录这些选择（范围、每个包的 API 数、仅开头、相似名称），之后的 sync 会沿用它们。
 - `since-cutoff run --apply` 写入的说明带有 `[type-checked]` 标签。只要它所在的包版本不变、你的代码仍在用那个 API，`sync` 就会保留它，代替同一 API 由 diff 得出的说明。
 
 Claude Code 会读取 CLAUDE.md；只有在没有 CLAUDE.md，或者 CLAUDE.md 用一行 `@AGENTS.md` 导入了 AGENTS.md 时，才会读取 AGENTS.md（[记忆文档](https://code.claude.com/docs/en/memory)，英文）；Codex、Cursor 和 Copilot 读取 AGENTS.md；Gemini CLI 读取 GEMINI.md，只有当它的 settings.json 中的 `context.fileName` 列出 AGENTS.md 时才会读取 AGENTS.md（`"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}`；[GEMINI.md 文档](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md)，英文）。两个文件都在、还没有说明块时，如果 CLAUDE.md 导入了 AGENTS.md，说明只写进 AGENTS.md；没有导入时，两个文件都写（[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)），`scan`、`sync` 和 `status` 会说明怎样只保留一份：在 CLAUDE.md 中加一行 `@AGENTS.md`，再运行 `since-cutoff unapply --target CLAUDE.md`。已经只在 AGENTS.md 中的说明块会留在那里；CLAUDE.md 没有导入它时，它们会给出提示。两个文件都有说明块、之后 CLAUDE.md 又导入了 AGENTS.md 时，它们会提示 CLAUDE.md 中是第二份副本，并给出同样的 `unapply` 命令。代码片段或代码块中的 `@AGENTS.md` 不算导入。
@@ -269,7 +271,7 @@ npx skills add MohammadHijjawi97/since-cutoff
 
 **写进 AGENTS.md 还是 CLAUDE.md？** `sync` 写进 AGENTS.md；只有 CLAUDE.md 时写进 CLAUDE.md；CLAUDE.md 没有导入 AGENTS.md 时两个文件都写（[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)）；两者中已经有区块的，就写进那个（`--target` 可以指定任意文件）。Claude Code 读取 CLAUDE.md，只有当 CLAUDE.md 用一行 `@AGENTS.md` 导入了 AGENTS.md 时才会读取 AGENTS.md；Codex、Cursor 和 Copilot 读取 AGENTS.md；Gemini CLI 读取 GEMINI.md，只有当 `context.fileName` 列出 AGENTS.md 时才会读取它（`"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}`）。要只保留一份，就在 CLAUDE.md 中加上 `@AGENTS.md`，再运行 `since-cutoff unapply --target CLAUDE.md`；两个文件都有区块时，`scan`、`sync` 和 `status` 会提示这一点，只在 AGENTS.md 中的区块没有被导入时也会提示。此后 `sync` 会更新每个有区块的文件，`status` 也会逐个报告。
 
-**这些说明要花多少 token？** Agent 每一轮都会读取这个区块。对示例项目来说，区块约 410 个 token，其中两条说明约 140 个；其余是开头说明，写明模型和截止日期并解释各个标签（按每 4 个字符一个 token 计算，与 since-cutoff 自己的算法一致）。`sync` 只为你的代码用到的有变更 API 写说明（`--scope imported` 为每个导入的包最多再加 5 条），模型写的说明最多 60 个英文单词。在基准测试中，区块在 285 到 505 个 token 之间，带说明的会话消耗的总 token 数是不带说明的 0.73 倍。`run` 会报告每个区块的 token 数。
+**这些说明要花多少 token？** Agent 每一轮都会读取这个区块。对示例项目来说，区块约 410 个 token，其中两条说明约 140 个；其余是开头说明，写明模型和截止日期并解释各个标签（按每 4 个字符一个 token 计算，与 since-cutoff 自己的算法一致）。`sync` 只为你的代码用到的有变更 API 写说明（`--scope imported` 为每个导入的包最多再加 5 条；`--header-only` 不写说明，只保留开头部分和每个包一行），模型写的说明最多 60 个英文单词。在基准测试中，区块在 285 到 505 个 token 之间，带说明的会话消耗的总 token 数是不带说明的 0.73 倍。`run` 会报告每个区块的 token 数。
 
 **能离线用吗？** `status` 完全不访问网络。`scan` 和 `sync` 需要从 PyPI 获取每个包的版本列表（缓存 12 小时；PyPI 无法访问时，使用更早的缓存副本，并在输出中说明它是哪一天的），以及每个有变更的包的源码；源码和对比结果都会缓存，所以之后的运行只需几秒。训练截止日期来自 models.dev，并内置一份快照供离线使用。
 
@@ -341,7 +343,7 @@ huggingface-hub 那条说明并不完全准确：`resume_download` 是在 1.0 �
 | 工具 | 回答什么 |
 |---|---|
 | `api_changes(package, model, symbol=...)` | 一个库从默认在模型截止日期至少 30 天之前发布的版本到最新（或指定）版本之间改了什么，破坏性变更排在最前 |
-| `project_changes(project_dir, model)` | 对项目的每个依赖按锁定版本做同样的检查，从你的代码用到的有变更 API 开始：每个 API 列出用到它的文件（最多 3 个）、它的说明、运行时提示，以及相似但未确认为替代项的名称 |
+| `project_changes(project_dir, model)` | 对项目的每个依赖按锁定版本做同样的检查，从你的代码用到的有变更 API 开始：每个 API 列出用到它的文件（最多 3 个）、它的说明、运行时提示，以及相似但未确认为替代项的名称；传入 `header_only=true` 时，只返回 `sync --header-only` 写入的开头部分（代码导入的有变更的包及其版本） |
 | `model_cutoff(model)` | 模型的训练截止日期，来自 [models.dev](https://models.dev) |
 
 Agent 传入自己的模型 id，所以结果涵盖的是这个模型训练截止日期之后的变更。这些工具只静态读取 PyPI 和包的源码：不调用模型，不需要 API key，不执行任何包代码。

@@ -324,9 +324,23 @@ Más opciones:
 - `sync --scope imported` también anota los cambios con más probabilidad de importar en cada
   paquete modificado que importa tu código (hasta 5 API por paquete), para código que aún no usa
   ninguna de las API modificadas. `scan` lo sugiere en ese caso.
+- `sync --profile evaluated` es la configuración que midió el benchmark: `--scope imported` con
+  hasta 5 API por paquete (lo mismo que dar ambas opciones). El alcance por defecto, `used`, solo
+  anota las API modificadas que tu código ya llama, así que escribe un bloque en menos proyectos
+  y más corto, pero el benchmark no lo probó. La redacción de las notas ha cambiado desde la
+  versión medida (0.4.1), y esa versión comparaba con la versión publicada en la fecha de corte:
+  añade `--cutoff-margin 0` para comparar desde el mismo día.
+- `sync --header-only` escribe solo el encabezado: los paquetes que cambiaron después de la fecha
+  de corte, cada uno con su versión fijada y la versión con la que se compara, y la instrucción de
+  seguirlos, sin líneas de cambios (`--no-header-only` las vuelve a escribir). Es el bloque del
+  brazo «solo encabezado» del benchmark: más corto (unos 250 tokens con un paquete, frente a 285 a
+  505 de los bloques completos), y le dice al agente qué paquetes revisar, pero no qué cambió ni
+  qué usar en su lugar. Sin `--scope`, un encabezado nuevo lista los paquetes que importa tu
+  código.
 - `sync --suggestions` añade los nombres de la versión fijada que solo se parecen a lo que se
-  eliminó, con la etiqueta `[not confirmed]`. El bloque registra ambas opciones, y las siguientes
-  ejecuciones de sync las mantienen.
+  eliminó, con la etiqueta `[not confirmed]`. El bloque registra estas opciones (el alcance, las
+  API por paquete, solo el encabezado, las sugerencias), y las siguientes ejecuciones de sync las
+  mantienen.
 - Las notas que escribió `since-cutoff run --apply` llevan la etiqueta `[type-checked]`. `sync`
   conserva cada una, en lugar de la nota del diff para la misma API, mientras su paquete mantenga
   la misma versión y tu código siga usando esa API.
@@ -525,8 +539,9 @@ AGENTS.md no se importa. A partir de entonces `sync` actualiza cada archivo que 
 de ejemplo ocupa unos 410 tokens, de los cuales las dos notas son unos 140; el resto es la
 cabecera, que nombra el modelo y la fecha de corte y explica las etiquetas (contando cuatro
 caracteres por token, como hace since-cutoff). `sync` escribe notas solo para las API modificadas
-que usa tu código (`--scope imported` añade hasta 5 por paquete importado), y una nota escrita
-por el modelo tiene como máximo 60 palabras. En el benchmark, los bloques ocupaban entre 285 y
+que usa tu código (`--scope imported` añade hasta 5 por paquete importado; `--header-only` omite
+las notas y deja el encabezado y una línea por paquete), y una nota escrita por el modelo tiene
+como máximo 60 palabras. En el benchmark, los bloques ocupaban entre 285 y
 505 tokens, y las sesiones con las notas consumieron 0,73 veces los tokens totales de las
 sesiones sin ellas. `run` indica el tamaño de cada bloque en tokens.
 
@@ -662,7 +677,7 @@ Ofrece tres herramientas de solo lectura:
 | herramienta | qué responde |
 |---|---|
 | `api_changes(package, model, symbol=...)` | qué cambió en una biblioteca entre la versión publicada al menos 30 días antes de la fecha de corte del modelo (por defecto) y la más reciente (o una versión concreta), con los cambios incompatibles primero |
-| `project_changes(project_dir, model)` | lo mismo para cada dependencia de un proyecto en su versión fijada, empezando por las API modificadas que usa tu código: para cada una, los archivos que la usan (3 como máximo), su nota, la advertencia sobre el tiempo de ejecución y los nombres parecidos, no confirmados como sustitutos |
+| `project_changes(project_dir, model)` | lo mismo para cada dependencia de un proyecto en su versión fijada, empezando por las API modificadas que usa tu código: para cada una, los archivos que la usan (3 como máximo), su nota, la advertencia sobre el tiempo de ejecución y los nombres parecidos, no confirmados como sustitutos; con `header_only=true`, solo el encabezado que escribe `sync --header-only` (los paquetes modificados que importa el código y sus versiones) |
 | `model_cutoff(model)` | la fecha de corte de entrenamiento de un modelo, según [models.dev](https://models.dev) |
 
 El agente pasa su propio identificador de modelo, así que la respuesta cubre lo que cambió después

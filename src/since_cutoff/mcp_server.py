@@ -451,6 +451,7 @@ class Tools:
         include_internal: bool = False,
         cutoff_margin: int | None = None,
         include_name_matches: bool = False,
+        header_only: bool = False,
         *,
         progress: ProgressFn | None = None,
     ) -> str:
@@ -495,6 +496,11 @@ class Tools:
             include_name_matches: also list the methods matched by their name alone, on a
                 value whose class the code does not show (tagged "[name match]"); left out by
                 default, as most are another library's method of the same name.
+            header_only: return only the short header that `since-cutoff sync --header-only`
+                writes: each changed package the project imports, with its pinned version and
+                the release it is compared from, and the instruction to follow them; no change
+                lines (default false; `limit_per_package` and `include_internal` then do not
+                apply).
 
         One of `model` or `cutoff` is required.
 
@@ -518,7 +524,10 @@ class Tools:
         within the margin before it), those whose comparison release was an empty placeholder,
         and those that could not be checked. The answer stays under about 24,000 characters: past
         that, the remaining changed dependencies get one line each, under "N more with API
-        changes"; pass them in `only` to see their changes.
+        changes"; pass them in `only` to see their changes. With `header_only`: the header's
+        Markdown alone, "## Library changes after the model's training cutoff", a paragraph,
+        then one "**<package> <pinned>** (compared from <old>)" line per package, or one
+        sentence when no package the project imports changed.
         """
         target = self._target(model, cutoff, margin=cutoff_margin)
         project = load_project(_project_root(project_dir))
@@ -537,6 +546,8 @@ class Tools:
         # Two stages: look every dependency up, then diff the ones that changed.
         reporter = _Progress(progress, stages=2) if progress else None
         scan = self._engine(settings, reporter).scan(project, model_target)
+        if header_only:
+            return _render_header(scan, target)
         return _render_project(
             scan, target, settings.include, max(1, limit_per_package), include_internal
         )
@@ -842,6 +853,21 @@ def _render_project(
         room -= _size(section)
         shown += 1
     return "\n".join(out + _brief(changed[shown:]) + tail) + "\n"
+
+
+def _render_header(scan: ScanResult, target: Target) -> str:
+    """project_changes with ``header_only``: the block ``sync --header-only`` writes for a
+    project with no block yet (the imported scope), without its markers and meta line."""
+    notes = scan.scope_notes(SCOPE_IMPORTED)
+    block = scan.notes_block(notes, scope=SCOPE_IMPORTED, header_only=True)
+    if block is None:
+        return (
+            f"No package this project imports changed its API after the cutoff "
+            f"{target.cutoff.isoformat()} ({target.label}){target.compared_from}, at the "
+            f"versions from {scan.project.version_source}.\n"
+        )
+    lines = block.splitlines()
+    return "\n".join(lines[2:-1]) + "\n"  # without the start marker, meta line and end marker
 
 
 def _used_section(scan: ScanResult) -> list[str]:

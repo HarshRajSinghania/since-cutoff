@@ -330,9 +330,23 @@ Autres options :
 - `sync --scope imported` note aussi les changements les plus susceptibles de compter dans chaque
   paquet modifié qu'importe votre code (jusqu'à 5 API par paquet), pour du code qui n'utilise
   encore aucune des API modifiées. `scan` le suggère dans ce cas.
+- `sync --profile evaluated` est la configuration mesurée par le benchmark : `--scope imported`
+  avec jusqu'à 5 API par paquet (comme si l'on donnait les deux options). La portée par défaut,
+  `used`, ne note que les API modifiées que votre code appelle déjà : elle écrit un bloc dans
+  moins de projets, et plus court, mais le benchmark ne l'a pas testée. La formulation des notes
+  a changé depuis la version mesurée (0.4.1), qui comparait avec la version publiée à la date
+  limite : ajoutez `--cutoff-margin 0` pour comparer à partir du même jour.
+- `sync --header-only` n'écrit que l'en-tête : les paquets qui ont changé après la date limite,
+  chacun avec sa version épinglée et la version à laquelle il est comparé, et la consigne de les
+  suivre, sans lignes de changement (`--no-header-only` les écrit de nouveau). C'est le bloc du
+  bras « en-tête seul » du benchmark : plus court (environ 250 tokens avec un paquet, contre 285
+  à 505 pour les blocs complets), il indique à l'agent quels paquets vérifier, mais pas ce qui a
+  changé ni quoi utiliser à la place. Sans `--scope`, un nouvel en-tête liste les paquets
+  qu'importe votre code.
 - `sync --suggestions` ajoute les noms de la version épinglée qui ressemblent seulement à ce qui a
-  été supprimé, avec l'étiquette `[not confirmed]`. Le bloc enregistre ces deux choix, et les
-  exécutions suivantes de sync les conservent.
+  été supprimé, avec l'étiquette `[not confirmed]`. Le bloc enregistre ces choix (la portée, les
+  API par paquet, l'en-tête seul, les suggestions), et les exécutions suivantes de sync les
+  conservent.
 - Les notes écrites par `since-cutoff run --apply` portent l'étiquette `[type-checked]`. `sync`
   conserve chacune d'elles, à la place de la note tirée du diff pour la même API, tant que son
   paquet garde la même version et que votre code utilise encore cette API.
@@ -533,8 +547,9 @@ Ensuite `sync` met à jour chaque fichier qui a un bloc, et `status` rend compte
 d'exemple, il fait environ 410 tokens, dont environ 140 pour les deux notes ; le reste est
 l'en-tête, qui nomme le modèle et la date limite et explique les étiquettes (à raison de quatre
 caractères par token, comme le compte since-cutoff). `sync` n'écrit des notes que pour les API
-modifiées qu'utilise votre code (`--scope imported` en ajoute jusqu'à 5 par paquet importé), et
-une note rédigée par le modèle fait au plus 60 mots. Dans le benchmark, les blocs faisaient de 285
+modifiées qu'utilise votre code (`--scope imported` en ajoute jusqu'à 5 par paquet importé ;
+`--header-only` laisse les notes de côté et garde l'en-tête et une ligne par paquet), et une note
+rédigée par le modèle fait au plus 60 mots. Dans le benchmark, les blocs faisaient de 285
 à 505 tokens, et les sessions avec les notes ont consommé 0,73 fois le total de tokens des
 sessions sans elles. `run` indique la taille de chaque bloc en tokens.
 
@@ -671,7 +686,7 @@ Il propose trois outils en lecture seule :
 | outil | répond à |
 |---|---|
 | `api_changes(package, model, symbol=...)` | ce qui a changé dans une bibliothèque entre la version publiée au moins 30 jours avant la date limite du modèle (par défaut) et la dernière version (ou une version donnée), incompatibilités franches en premier |
-| `project_changes(project_dir, model)` | la même chose pour chaque dépendance d'un projet, à sa version épinglée, en commençant par les API modifiées qu'utilise votre code : pour chacune, les fichiers qui l'utilisent (3 au plus), sa note, la mise en garde sur l'exécution et les noms qui lui ressemblent, non confirmés comme remplaçants |
+| `project_changes(project_dir, model)` | la même chose pour chaque dépendance d'un projet, à sa version épinglée, en commençant par les API modifiées qu'utilise votre code : pour chacune, les fichiers qui l'utilisent (3 au plus), sa note, la mise en garde sur l'exécution et les noms qui lui ressemblent, non confirmés comme remplaçants ; avec `header_only=true`, seulement l'en-tête qu'écrit `sync --header-only` (les paquets modifiés qu'importe le code et leurs versions) |
 | `model_cutoff(model)` | la date limite d'entraînement d'un modèle, d'après [models.dev](https://models.dev) |
 
 L'agent transmet son propre identifiant de modèle : la réponse couvre donc ce qui a changé

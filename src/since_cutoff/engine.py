@@ -944,8 +944,11 @@ class ScanResult:
             )
         return notes + self.new_package_notes()
 
-    def notes_block(self, notes: list[Note], scope: str = SCOPE_USED) -> str | None:
-        """The AGENTS.md block (format 2) for ``notes``, or None when there are none."""
+    def notes_block(
+        self, notes: list[Note], scope: str = SCOPE_USED, *, header_only: bool = False
+    ) -> str | None:
+        """The AGENTS.md block (format 2) for ``notes``, or None when there are none;
+        ``header_only``: the header and the package lines only (notes.render_block)."""
         if not notes:
             return None
         return render_block(
@@ -956,6 +959,7 @@ class ScanResult:
             deps=self.deps_hash(),
             scope=scope,
             margin=self.target.margin,
+            header_only=header_only,
         )
 
 

@@ -225,6 +225,10 @@ class Proposal:
     name_matches_hidden: int = 0
     # SCOPE_IMPORTED: APIs noted per package (``--per-package``, or the block's own choice).
     per_package: int = IMPORTED_APIS
+    # ``--header-only`` (or the block's own choice): the header and the package lines, no
+    # change lines; ``notes`` is then 0 and ``packages`` says how many package lines there are.
+    header_only: bool = False
+    packages: int = 0
     changes: list[Change] = field(default_factory=list)
     # Packages whose [type-checked] notes were dropped because their version changed, with
     # the version they were for (`since-cutoff run --only <pkg>` tests the model again).
@@ -250,9 +254,14 @@ def propose(
     scope: str = SCOPE_USED,
     suggestions: bool = False,
     per_package: int | None = None,
+    header_only: bool = False,
 ) -> Proposal:
     """The block sync writes into ``target`` for ``scan`` (its model and cutoff), the file's
     text after that, and why it changes.
+
+    ``header_only`` (``sync --header-only``): the block names the packages the notes are about,
+    with their versions, and has no change lines (notes.render_block); there are then no
+    ``[type-checked]`` notes to keep.
 
     The notes are :meth:`ScanResult.scope_notes` (``per_package``: how many APIs a package
     gets with SCOPE_IMPORTED; :data:`IMPORTED_APIS` by default). The ``[type-checked]`` notes of the block in
@@ -275,7 +284,7 @@ def propose(
     kept: list[Note] = []
     retest: dict[str, str] = {}
     replaced: set[str] = set()
-    if same and old is not None:
+    if same and old is not None and not header_only:
         kept, retest, replaced = _kept_notes(old, notes)
     if replaced:
         # A [type-checked] note replaces the note from the diff for its API: the others' notes
@@ -298,6 +307,7 @@ def propose(
             "suggestions": suggestions,
             "per_package": per_package,
             "margin": scan.target.margin,
+            "header_only": header_only,
         }
         block = render_block(notes, **options)
         tool = target.meta.get("tool")
@@ -311,13 +321,23 @@ def propose(
     else:
         new_text, action = target.text, None
     proposal = Proposal(
-        target, model, cutoff, scope, versions_from, block, new_text, action, len(notes)
+        target,
+        model,
+        cutoff,
+        scope,
+        versions_from,
+        block,
+        new_text,
+        action,
+        0 if header_only else len(notes),
     )
     proposal.margin = scan.target.margin
     proposal.name_matches_hidden = hidden_name_matches(scan)
     proposal.per_package = per_package
+    proposal.header_only = header_only
+    proposal.packages = len({(n.change.package, n.change.to_version) for n in notes})
     proposal.retest = retest
-    proposal.apis = {n.line: tuple(n.apis) for n in notes}
+    proposal.apis = {} if header_only else {n.line: tuple(n.apis) for n in notes}
     if not proposal.changed:
         proposal.action = None
     else:
@@ -410,6 +430,21 @@ def _changes(scan: ScanResult, target: TargetFile, p: Proposal, *, same: bool) -
                 f"it is for {was_scope}, not {SCOPE_TEXT[p.scope]}",
             )
         )
+    # Header only on either side: the change lines are not compared, package by package.
+    was_header = old.meta.get("header_only") is True
+    headers = was_header or p.header_only
+    if new is not None and was_header != p.header_only:
+        out.append(
+            Change(
+                None,
+                "now the header only, no change lines (--header-only)"
+                if p.header_only
+                else "now with the change lines (it was the header only; --no-header-only)",
+                "it has change lines, not the header only (--header-only)"
+                if p.header_only
+                else "it is the header only, without the change lines (--no-header-only)",
+            )
+        )
     by_name = {s.name: s for s in scan.packages}
     old_packages = old.packages
     new_packages = new.packages if new is not None else {}
@@ -417,6 +452,15 @@ def _changes(scan: ScanResult, target: TargetFile, p: Proposal, *, same: bool) -
         was, now = old_packages.get(name), new_packages.get(name)
         if was is None:
             assert now is not None
+            if p.header_only:
+                out.append(
+                    Change(
+                        name,
+                        f"{name} {now.version} added to the header",
+                        f"{name} {now.version} is not in the header",
+                    )
+                )
+                continue
             count = _plural(len(now.bullets), "note")
             out.append(
                 Change(
@@ -430,8 +474,8 @@ def _changes(scan: ScanResult, target: TargetFile, p: Proposal, *, same: bool) -
             done, state = _dropped(scan, by_name.get(name), name, p.scope)
             out.append(Change(name, f"{name} dropped ({done})", state))
             continue
-        old_lines = [_line(b) for b in was.bullets]
-        new_lines = [_line(b) for b in now.bullets]
+        old_lines = [] if headers else [_line(b) for b in was.bullets]
+        new_lines = [] if headers else [_line(b) for b in now.bullets]
         added = [line for line in new_lines if line not in old_lines]
         gone = [line for line in old_lines if line not in new_lines]
         what = _counts(added, gone, p.apis, name)
@@ -446,16 +490,27 @@ def _changes(scan: ScanResult, target: TargetFile, p: Proposal, *, same: bool) -
             where = scan.versions_from(by_name[name]) if name in by_name else p.versions_from
             # After a hand edit, the text sync replaces is not the one it wrote: no counts.
             counted = "" if target.edited else f", {what}"
+            counts = "" if headers else f" ({_plural(len(new_lines), 'note')}{counted})"
             out.append(
                 Change(
                     name,
-                    f"{name} checked again for {now.version} "
-                    f"({_plural(len(new_lines), 'note')}{counted}){again}",
+                    f"{name} checked again for {now.version}{counts}{again}",
                     f"{name} {was.version} in the notes, {now.version} in {where}",
                 )
             )
         elif target.edited:
             continue  # "replaced the text edited by hand" says it
+        elif headers and was.cutoff_version != now.cutoff_version:
+            out.append(
+                Change(
+                    name,
+                    f"{name} {now.version}: now compared from {now.cutoff_version}",
+                    f"{name} {now.version} is compared from {now.cutoff_version} now, not "
+                    f"{was.cutoff_version}",
+                )
+            )
+        elif headers:
+            continue
         elif added or gone or was.cutoff_version != now.cutoff_version:
             out.append(
                 Change(
@@ -628,16 +683,24 @@ def up_to_date_text(p: Proposal, scan: ScanResult) -> str:
                 )
         return text + " Nothing written."
     return (
-        f"{name} is up to date: {_plural(p.notes, 'note')} for {basis_text(p.model, p.cutoff)}, "
+        f"{name} is up to date: {contents_text(p)} for {basis_text(p.model, p.cutoff)}, "
         f"versions from {p.versions_from}. Nothing written."
     )
+
+
+def contents_text(p: Proposal) -> str:
+    """What the block holds, as sync says it: ``2 notes``, or with ``--header-only``, ``a
+    header for 2 packages``."""
+    if p.header_only:
+        return f"a header for {_plural(p.packages, 'package')}"
+    return _plural(p.notes, "note")
 
 
 def out_of_date_text(p: Proposal) -> str:
     """``sync --check``'s line for a file whose block would change."""
     name = p.target.name
     if p.target.block is None:
-        why = f"it has no since-cutoff notes; {_plural(p.notes, 'note')} to write"
+        why = f"it has no since-cutoff notes; {contents_text(p)} to write"
     else:
         why = "; ".join(c.state for c in p.changes)
     return f"{name} is out of date: {why}. Run {SYNC}."
@@ -646,7 +709,7 @@ def out_of_date_text(p: Proposal) -> str:
 def written_text(p: Proposal) -> str:
     """What sync says about a file it wrote."""
     name = p.target.name
-    count = _plural(p.notes, "note")
+    count = contents_text(p)
     done = "; ".join(c.done for c in p.changes)
     if p.action == "created":
         return f"Created {name} with {count}."
@@ -741,6 +804,7 @@ class TargetStatus:
             "cutoff_margin": block_margin(meta) if block is not None else None,
             "tool": meta.get("tool"),
             "scope": meta.get("scope"),
+            "header_only": meta.get("header_only") is True if block is not None else None,
             "versions_from": meta.get("versions_from"),
             "edited": block.edited if block is not None else None,
             "packages": [p.to_dict() for p in self.packages],
@@ -965,6 +1029,8 @@ def sync_json(
                 "name_matches_hidden": p.name_matches_hidden,
                 "scope": p.scope,
                 "notes": p.notes,
+                "header_only": p.header_only,
+                "packages": p.packages,
                 "changes": [
                     {"package": c.package, "done": c.done, "state": c.state} for c in p.changes
                 ],

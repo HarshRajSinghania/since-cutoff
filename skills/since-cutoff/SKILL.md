@@ -74,7 +74,9 @@ report what it prints.
    `since-cutoff sync --yes`: it writes the notes from the API diff into a marked block in
    AGENTS.md (or CLAUDE.md if that is the file the project uses) and, run again later, keeps
    them in step with the lockfile. When `scan` suggests `sync --scope imported` (the code uses
-   none of the changed APIs yet), add it to both commands. After `run`, `--apply` writes that
+   none of the changed APIs yet), add it to both commands. When the user asks for the
+   configuration the benchmark measured, use `--profile evaluated`; for the shortest block
+   (the changed packages and their versions, no change lines), `--header-only`. After `run`, `--apply` writes that
    run's notes in place of the whole block; `since-cutoff sync` then adds the notes from the
    diff for the other changed APIs the code uses, keeping the run's `[type-checked]` ones.
    `since-cutoff unapply` removes the block again. `since-cutoff status` says, without the

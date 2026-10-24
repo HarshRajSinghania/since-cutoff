@@ -10,6 +10,21 @@
   and in real agent contexts the block costs about 0.4% of a context but is repaid by the
   affected contexts alone (at a fixed saving per affected context) only once 14-49% of them need a
   changed API (measured: 0.8-7%), so its effect on the other contexts decides. No code changes.
+- `sync --header-only` writes only the block's header: the packages whose API changed since the
+  release they are compared from, each with its pinned version and that release, and the
+  instruction to follow them ("Where these lines conflict with what you remember, follow these
+  lines."), with no change lines. The header is the full block's word for word, so the block is the one the
+  benchmark's header-only arm used (the full block with every `- ` line removed). The meta line
+  records `"header_only": true`, so later syncs keep it; `--no-header-only` writes the change
+  lines again, and sync says the switch once, not as notes dropped or added package by package.
+  With no `--scope` and no block yet, a header lists the packages the code imports. `sync --json`
+  gives `header_only` and `packages` (package lines) for each target, and `status --json` gives
+  `header_only`. The MCP tool `project_changes` takes `header_only` and then returns that
+  header's Markdown for the imported scope instead of its usual report.
+- `sync --profile evaluated` selects the configuration the benchmark measured: `--scope imported`
+  with up to 5 APIs per package. Another `--scope` or `--per-package` with it is an error. The
+  default scope stays `used`; the README says what each choice costs, and that the measured
+  release (0.4.1) compared from the release at the cutoff (`--cutoff-margin 0`).
 - A package whose sources the running Python cannot parse could not be checked, and the scan
   says so, instead of reporting no changes: on Python 3.10, numpy 2.5.4's `__init__.pyi` (PEP
   695 `type` statements) and 2.3.1's (a PEP 646 `*tuple[...]` in a subscript) failed to load

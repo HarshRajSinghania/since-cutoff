@@ -1840,6 +1840,7 @@ def render_block(
     suggestions: bool = False,
     per_package: int | None = None,
     margin: int = DEFAULT_CUTOFF_MARGIN,
+    header_only: bool = False,
 ) -> str:
     """The notes block (format 2) for AGENTS.md / CLAUDE.md.
 
@@ -1853,6 +1854,13 @@ def render_block(
     is recorded in the meta line, only when set, so that the next ``sync`` keeps it; so is
     ``per_package`` (``sync --scope imported --per-package N``), only when it is not the
     default (:data:`IMPORTED_APIS`) and the scope is SCOPE_IMPORTED.
+
+    ``header_only`` (``sync --header-only``) writes the header and one line per package (its
+    pinned version and the release it is compared from) and no change lines: the block the
+    paper's header-only arm (H) used, which was the full block with every ``- `` line removed.
+    The header is the full block's, word for word, so the two differ only in the change lines
+    and in the meta line, which records ``"header_only": true`` so that the next ``sync``
+    keeps it.
 
     Packages are in alphabetical order, and each package's bullets by the API they are about
     (a switched dependency first), so that the block does not depend on the order the notes
@@ -1873,6 +1881,8 @@ def render_block(
         # cutoff, which the header says (a block from before the margin said "at the cutoff").
         compared = f" (compared from {olds[0]})" if len(olds) == 1 else ""
         body += ["", f"**{pkg} {version}**{compared}"]
+        if header_only:
+            continue
         seen: set[str] = set()
         # A switched dependency first: it concerns every object of it the code hands over.
         for n in sorted(items, key=lambda n: (n.change.kind != DEPENDENCY_SWITCHED, n.api, n.line)):
@@ -1901,6 +1911,8 @@ def render_block(
         meta["suggestions"] = True
     if scope == SCOPE_IMPORTED and per_package and per_package != IMPORTED_APIS:
         meta["per_package"] = per_package
+    if header_only:
+        meta["header_only"] = True
     if checked:
         meta["checked"] = checked
     return f"{BLOCK_START}\n{_meta_line(meta)}\n{text}{BLOCK_END}\n"

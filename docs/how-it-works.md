@@ -490,7 +490,7 @@ comes a meta line, an HTML comment holding JSON:
 | `deps` | a hash of the dependencies and their versions (an unpinned one by its declared range), so `status` sees a change offline |
 | `body` | a hash of the block's text after the meta line, with line breaks normalised, so a hand edit shows |
 | `scope` | `used` (the changed APIs the code uses), `imported` (`sync --scope imported`) or `failures` (a `run --apply` block) |
-| `suggestions`, `checked`, `added_eol` | only when needed: `sync --suggestions` was used; the API each `[type-checked]` bullet is about; the line break since-cutoff added to a file that did not end with one, which `unapply` takes away again |
+| `suggestions`, `per_package`, `header_only`, `checked`, `added_eol` | only when needed: `sync --suggestions` was used; `sync --per-package N` with another number than 5 (imported scope only); `sync --header-only` was used (no bullets); the API each `[type-checked]` bullet is about; the line break since-cutoff added to a file that did not end with one, which `unapply` takes away again |
 
 Then the title "## Library changes after the model's training cutoff", a header that names the
 model, the cutoff and the day the comparison releases were published by ("the training cutoff
@@ -498,7 +498,9 @@ of `claude-sonnet-4-5` (2025-07-31, comparing from releases up to 2025-07-01)"),
 versions come from and the since-cutoff version, says what the tags mean, that no library code
 was run, and "Where these lines conflict with what you remember, follow these lines", and one
 group per package: `**anthropic 1.8.0** (compared from 0.56.0)`, the release the notes compare
-from, followed by its bullets.
+from, followed by its bullets. A `sync --header-only` block is the same block without the bullets:
+the header word for word and the package lines, which is what the benchmark's header-only arm
+used (the full block with every `- ` line removed).
 
 ### `sync`
 
@@ -550,8 +552,13 @@ file:
    each, classes, functions and modules before constants and type aliases. A subpackage whose
    modules all moved to one new parent, leaving nothing public behind, is one change; a name
    bound to a method (`duplicate_space = api.duplicate_space`) and the method are one API.
-   `--suggestions` adds similar names, tagged `[not confirmed]`. The block records all three,
-   and later syncs keep them.
+   `--suggestions` adds similar names, tagged `[not confirmed]`. `--header-only` writes the
+   header and the package lines and no bullets (with no `--scope` and no block, the scope is
+   `imported`); `--no-header-only` writes the bullets again, and sync says the switch once
+   rather than as notes added or dropped package by package. `--profile evaluated` is
+   `--scope imported --per-package 5`, the configuration the benchmark measured; another
+   `--scope` or `--per-package` with it is an error. The block records all of these, and later
+   syncs keep them.
 6. **Hand edits.** When the text after the meta line no longer matches its `body` hash, sync
    shows the diff, writes nothing and exits with code 4, unless `--force`. A block that 0.3 wrote
    is upgraded, keeping its model. When the notes are unchanged, a block another since-cutoff

@@ -276,7 +276,9 @@ uvx --with basedpyright since-cutoff run
 
 `run` funciona con Claude Code (como plugin), Anthropic, OpenAI, OpenRouter, DeepSeek, Ollama y
 cualquier servidor compatible con OpenAI; `scan`, `sync` y `status` solo necesitan la fecha de
-corte del modelo. `since-cutoff status` (sin conexión), `sync --check`, los
+corte del modelo. `sync --profile evaluated` escribe las notas como las midió el benchmark (el
+alcance importado, hasta 5 API por paquete), y `sync --header-only` solo su encabezado: los
+paquetes modificados y sus versiones. `since-cutoff status` (sin conexión), `sync --check`, los
 [hooks de pre-commit](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.es.md#pre-commit)
 y una [GitHub Action](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.es.md#github-action)
 avisan cuando las notas se quedan atrás; `since-cutoff mcp` permite a cualquier cliente MCP

@@ -39,9 +39,9 @@ if TYPE_CHECKING:
     from since_cutoff.sync import DetectedModel, TargetFile
     from since_cutoff.taskfile import write_tasks
 
-    # A target file, the model and cutoff its block is written for, its scope, --suggestions
-    # and --per-package.
-    _Plan = tuple[TargetFile, ModelTarget, str, bool, int]
+    # A target file, the model and cutoff its block is written for, its scope, --suggestions,
+    # --per-package and --header-only.
+    _Plan = tuple[TargetFile, ModelTarget, str, bool, int, bool]
 
 
 class _LazyImport:
@@ -69,6 +69,12 @@ FAIL_ON = ("changes", "used", "old-form")
 # ``sync --per-package``'s default: since_cutoff.notes.IMPORTED_APIS, copied so that building
 # the parser (--help) does not import notes and the API diff; test_startup.py keeps them equal.
 IMPORTED_APIS = 5
+# ``sync --profile``: named settings for --scope and --per-package. "evaluated" is the notes
+# configuration the benchmark measured (docs/benchmark.md): the imported scope, up to 5 APIs
+# per package (more where the code uses more).
+PROFILES: dict[str, dict[str, Any]] = {
+    "evaluated": {"scope": "imported", "per_package": IMPORTED_APIS},
+}
 # ``--cutoff-margin``'s default and environment variable: since_cutoff.models'
 # DEFAULT_CUTOFF_MARGIN and CUTOFF_MARGIN_VAR, copied so that building the parser does not
 # import models (and the network code with it); test_startup.py keeps them equal.
@@ -559,6 +565,23 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="N",
         help=f"with --scope imported: APIs noted per package (default: {IMPORTED_APIS}, or what "
         "the block was written with; a package whose modules all moved counts as one)",
+    )
+    sync.add_argument(
+        "--header-only",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="write only the header: the packages whose API changed since the release they are "
+        "compared from, each with its pinned version and that release, and the instruction to "
+        "follow them; no change lines (a much shorter block, the one the benchmark's header-only arm "
+        "used). Without --scope and without a block, the scope is imported. The block keeps "
+        "the choice; --no-header-only writes the change lines again",
+    )
+    sync.add_argument(
+        "--profile",
+        choices=sorted(PROFILES),
+        help="evaluated: the configuration the benchmark measured (--scope imported "
+        f"--per-package {IMPORTED_APIS}); --scope or --per-package with other values is an "
+        "error. The block keeps the scope and the budget, so later syncs need no --profile",
     )
     sync.add_argument(
         "--suggestions",
@@ -1136,6 +1159,7 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     from since_cutoff.models import parse_cutoff
     from since_cutoff.notes import (
         IMPORTED_APIS,
+        SCOPE_IMPORTED,
         SCOPE_USED,
         agents_import_tip,
         apply_block,
@@ -1164,6 +1188,7 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     except ValueError as exc:
         raise SinceCutoffError(str(exc)) from exc
     margin = _cutoff_margin(args)
+    _apply_profile(args)
     project = load_project(Path(args.path))
     targets = [read_target(project.root, p) for p in block_targets(project.root, args.target)]
     store = DiskCache()
@@ -1176,7 +1201,12 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
         if basis is None:
             given = given or _sync_model(args.model, cutoff, project.root, store, reporter, margin)
             basis = given
-        scope = args.scope or t.scope or SCOPE_USED
+        # As --suggestions: the block keeps --header-only unless the flag says otherwise.
+        header_only = (
+            t.meta.get("header_only") is True if args.header_only is None else args.header_only
+        )
+        # A header with no scope said lists the packages the code imports, as the benchmark's.
+        scope = args.scope or t.scope or (SCOPE_IMPORTED if header_only else SCOPE_USED)
         suggestions = t.meta.get("suggestions") is True
         # As --suggestions: the block keeps the choice unless the flag says otherwise.
         written_with = t.meta.get("per_package")
@@ -1193,6 +1223,7 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
                 scope,
                 suggestions if args.suggestions is None else args.suggestions,
                 per_package,
+                header_only,
             )
         )
     scans = _sync_scans(args, project, plans, store, reporter, out)
@@ -1203,8 +1234,9 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
             scope=scope,
             suggestions=suggestions,
             per_package=per_package,
+            header_only=header_only,
         )
-        for t, basis, scope, suggestions, per_package in plans
+        for t, basis, scope, suggestions, per_package, header_only in plans
     ]
     changed = [p for p in proposals if p.changed]
     written: set[str] = set()
@@ -1268,6 +1300,22 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
     if any(p.target.text for p in changed):
         out.print("[dim]Text outside the since-cutoff markers is unchanged.[/dim]")
     return finish(EXIT_OK)
+
+
+def _apply_profile(args: argparse.Namespace) -> None:
+    """``sync --profile NAME``: its --scope and --per-package, into ``args``. Giving either
+    flag with another value than the profile's is an error, not a silent override."""
+    if not args.profile:
+        return
+    for name, value in PROFILES[args.profile].items():
+        given = getattr(args, name)
+        if given is not None and given != value:
+            flag = "--" + name.replace("_", "-")
+            raise SinceCutoffError(
+                f"--profile {args.profile} sets {flag} {value}; {flag} {given} contradicts it "
+                f"(drop one of them)"
+            )
+        setattr(args, name, value)
 
 
 def _sync_scans(

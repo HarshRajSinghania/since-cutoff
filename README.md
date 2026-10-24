@@ -310,8 +310,21 @@ More options:
 - `sync --scope imported` also notes the changes most likely to matter in each changed package
   your code imports (up to 5 APIs per package), for code that uses none of the changed APIs yet.
   `scan` suggests it when that is the case.
+- `sync --profile evaluated` is the configuration the benchmark measured: `--scope imported`
+  with up to 5 APIs per package (the same as giving both flags). The default scope, `used`,
+  notes only the changed APIs your code already calls, so it writes a block in fewer projects
+  and a shorter one, but the benchmark did not test it. The notes' wording has changed since the
+  release that was measured (0.4.1), and that release compared from the release at the cutoff:
+  add `--cutoff-margin 0` to compare from the same day.
+- `sync --header-only` writes only the header: the packages whose API changed since the release
+  they are compared from, each with its pinned version and that release, and the instruction to
+  follow them, with no change lines (`--no-header-only` writes them again). It is the block of the
+  benchmark's header-only arm: shorter (about 250 tokens with one package, against 285 to 505
+  for the full blocks), and it tells the agent which packages to check, but not what changed
+  or what to use instead. Without `--scope`, a new header lists the packages your code imports.
 - `sync --suggestions` adds the names in the pinned version that merely look similar to what was
-  removed, tagged `[not confirmed]`. The block records both choices, and later syncs keep them.
+  removed, tagged `[not confirmed]`. The block records these choices (the scope, the APIs per
+  package, the header only, the suggestions), and later syncs keep them.
 - Notes that `since-cutoff run --apply` wrote are tagged `[type-checked]`. `sync` keeps each one,
   in place of the note from the diff for the same API, while its package keeps the same version
   and your code still uses that API.
@@ -495,8 +508,9 @@ then on `sync` updates every file that has a block, and `status` reports each.
 sample project it is about 410 tokens, of which the two notes are about 140; the rest is the
 header that names the model and the cutoff and says what the tags mean (counted at four
 characters per token, as since-cutoff does). `sync` writes notes only for the changed APIs your
-code uses (`--scope imported` adds up to 5 per imported package), and a model-written note has
-at most 60 words. In the benchmark, the blocks were 285 to 505 tokens, and sessions with the
+code uses (`--scope imported` adds up to 5 per imported package; `--header-only` leaves the
+notes out and keeps the header and one line per package), and a model-written note has at most
+60 words. In the benchmark, the blocks were 285 to 505 tokens, and sessions with the
 notes used 0.73 times the total tokens of sessions without them. `run` reports each block's size
 in tokens.
 
@@ -618,7 +632,7 @@ since my training cutoff?" before it writes code. It has three read-only tools a
 | tool | answers |
 |---|---|
 | `api_changes(package, model, symbol=...)` | what changed in one library between the release published at least 30 days before the model's cutoff (by default) and the latest (or a given) version, hard breaks first |
-| `project_changes(project_dir, model)` | the same for every dependency of a project at its pinned version, starting with the changed APIs your code uses: for each, the files that use it (at most 3), its note, the runtime caveat and names that look similar, not confirmed as replacements |
+| `project_changes(project_dir, model)` | the same for every dependency of a project at its pinned version, starting with the changed APIs your code uses: for each, the files that use it (at most 3), its note, the runtime caveat and names that look similar, not confirmed as replacements; with `header_only=true`, only the header `sync --header-only` writes (the changed packages the code imports and their versions) |
 | `model_cutoff(model)` | a model's training cutoff, from [models.dev](https://models.dev) |
 
 | prompt | asks the agent to |

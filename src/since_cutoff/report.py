@@ -444,7 +444,7 @@ def headline(
                 )
             )
     checked = s["dependencies_checked"]
-    no_api = _no_api_text(scan)
+    no_api = no_api_text(scan)
     if no_api:  # not "0 of 0 dependencies changed"
         lines.append(Text(no_api, style="bold"))
     else:
@@ -988,8 +988,8 @@ def scan_lines(
         prose(f"Your code uses {_plural(len(used), 'API')} that changed after {after}", "bold")
     elif scan.changed:
         prose(f"Your code uses none of the APIs that changed after {after}.", "bold")
-    elif _no_api_text(scan):  # not "0 dependencies checked; none changed its API"
-        prose(f"{_no_api_text(scan)}.", "bold")
+    elif no_api_text(scan):  # not "0 dependencies checked; none changed its API"
+        prose(f"{no_api_text(scan)}.", "bold")
     else:
         checked = _deps(len(scan.packages) - len(scan.skipped))
         prose(
@@ -1052,7 +1052,7 @@ def is_metapackage(p: PackageScan) -> bool:
     return p.status == SKIPPED and bool(p.reason) and METAPACKAGE in (p.reason or "")
 
 
-def _no_api_text(scan: ScanResult) -> str | None:
+def no_api_text(scan: ScanResult) -> str | None:
     """``No API to compare: the only dependency is a metapackage``, when every dependency the
     scan has is a metapackage (llama-index alone in requirements.txt), which the reports say
     instead of "0 of 0 dependencies changed their API"; None otherwise."""

@@ -248,7 +248,8 @@
   only dependency is a metapackage (llama-index, docling, pydantic-ai, griffe 2) no longer
   fails with "No dependency could be checked (... is PyPI reachable?)", and its reports say "No
   API to compare: the only dependency is a metapackage" instead of "0 of 0 dependencies changed
-  their API" (`scan --all`, report.md, the Markdown summary) or "0 dependencies checked".
+  their API" (`scan --all`, report.md, the Markdown summary) or "0 dependencies checked" (the
+  terminal, and the heading of MCP `project_changes`, which also drops its line of zero counts).
 - `sync --json`'s help says it needs `--yes`, `--check` or `--dry-run`, and the README that
   stdout stays empty whenever sync fails, not only on a usage error.
 - basedpyright, which only `run` uses, is an extra: `pip install "since-cutoff[run]"`, or

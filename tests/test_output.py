@@ -706,14 +706,18 @@ def test_a_scan_of_metapackages_alone_says_there_is_no_api_to_compare() -> None:
     assert all(said in text and "0 of 0" not in text for text in texts)
     assert "0 dependencies checked" not in texts[2]
     assert "app · 1 metapackage · versions from uv.lock" in texts[3]
-    # The MCP answer counts no metapackage either.
+    # The MCP answer says the same, and has no line of zero counts.
     answer = mcp_server._render_project(scan, Target(date(2025, 7, 31), "given"), [], 10)
-    assert answer.startswith("# app: 0 dependencies checked")
+    assert answer.startswith(f"# app: {said} (versions from uv.lock)")
+    assert "0 dependencies checked" not in answer and "not checked: 0" not in answer
+    assert "- llama-index " in answer  # its parts are still listed
     # Two metapackages; and one next to a dependency, which is counted.
     scan.packages.append(PackageScan("docling", "2.0", "uv.lock", True, reason=meta.reason))
     assert headline(scan, None)[0].plain == (
         "No API to compare: all 2 dependencies are metapackages"
     )
+    answer = mcp_server._render_project(scan, Target(date(2025, 7, 31), "given"), [], 10)
+    assert answer.startswith("# app: No API to compare: all 2 dependencies are metapackages")
     scan.packages.append(
         PackageScan("toylib", "2.0", "uv.lock", True, status=CHANGED, cutoff_version="1.0")
     )
@@ -723,6 +727,9 @@ def test_a_scan_of_metapackages_alone_says_there_is_no_api_to_compare() -> None:
     console = Console(width=200, record=True)
     render_console(console, scan)
     assert "app · 1 dependency and 2 metapackages · versions from uv.lock" in console.export_text()
+    answer = mcp_server._render_project(scan, Target(date(2025, 7, 31), "given"), [], 10)
+    assert answer.startswith("# app: 1 dependency checked (versions from uv.lock)")
+    assert "- API changed after " in answer
 
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "since_cutoff"

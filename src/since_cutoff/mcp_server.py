@@ -92,6 +92,7 @@ from since_cutoff.report import (
     is_metapackage,
     is_placeholder,
     metapackage_text,
+    no_api_text,
     places,
     public_changes,
     use_text,
@@ -494,8 +495,8 @@ class Tools:
 
         One of `model` or `cutoff` is required.
 
-        Returns Markdown: a heading with the number of dependencies checked and where their
-        versions came from; bullets with the cutoff and the day the comparison releases were
+        Returns Markdown: a heading with the number of dependencies checked (or "No API to
+        compare" when every dependency is a metapackage) and where their versions came from; bullets with the cutoff and the day the comparison releases were
         published by, how many dependencies changed since then, were first released after it,
         had only an empty placeholder release by then (when any did), are unchanged, or could
         not be checked, each metapackage (no API of its own) with which
@@ -735,9 +736,11 @@ def _render_project(
     new = [p for p in new if p not in empty]
     total = _plural(len(scan.packages) - len(metas), "dependency", "dependencies")
     checked = len(scan.packages) - len(metas) - len(skipped)
+    # Nothing but metapackages: what scan and report.md say, not "0 dependencies checked".
+    no_api = no_api_text(scan)
+    heading = no_api or f"{f'{checked} of {total}' if skipped else total} checked"
     out = [
-        f"# {project.root.name}: {f'{checked} of {total}' if skipped else total} checked "
-        f"(versions from {project.version_source})",
+        f"# {project.root.name}: {heading} (versions from {project.version_source})",
         "",
         f"- Cutoff {target.cutoff.isoformat()} ({target.label}){target.compared_from}",
     ]
@@ -750,10 +753,12 @@ def _render_project(
         out.append(f"- Warning: {stale_warning(scan.stale)}")
     after = "that day" if scan.target.margin else "it"
     placeholders = f"; only an empty placeholder by {after}: {len(empty)}" if empty else ""
-    out.append(
-        f"- API changed after {_since(scan)}: {len(changed)}; first released after {after}: "
-        f"{len(new)}{placeholders}; unchanged or older: {len(quiet)}; not checked: {len(skipped)}"
-    )
+    if not no_api:  # with no API, every count would be 0
+        out.append(
+            f"- API changed after {_since(scan)}: {len(changed)}; first released after {after}: "
+            f"{len(new)}{placeholders}; unchanged or older: {len(quiet)}; "
+            f"not checked: {len(skipped)}"
+        )
     # MCP has no --all-deps, and its `only` is what leaves the project's own dependencies out.
     out += [f"- {metapackage_text(scan, p, hint=False, left_out_by='`only`')}" for p in metas]
     hidden = hidden_name_matches_text(scan, "include_name_matches=true")

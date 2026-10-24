@@ -32,7 +32,7 @@ pipx install since-cutoff    # 或：pip install since-cutoff
 
 `run` 用 [basedpyright](https://github.com/DetachHead/basedpyright) 对模型的回答做类型检查，这是一个 180 MB 的 extra，其他命令都用不到：`pip install "since-cutoff[run]"`（或 `pipx install "since-cutoff[run]"`）会安装它，`uvx --with basedpyright since-cutoff run` 则不用安装就能在这次运行中加上它；没有它时，`run` 会立即停止并说明原因。
 
-请在项目根目录运行。它会读取 `uv.lock`、`poetry.lock`、`pdm.lock`、`pylock.toml`、`Pipfile.lock`、`requirements*.txt`、`pyproject.toml`、`Pipfile` 或 `.venv`（不读取 `setup.py` 和 `setup.cfg`）。不加 `--model` 时，它使用你的编程 Agent 所配置的模型，从 Claude Code、Codex、Gemini CLI、OpenCode 或 Aider 的设置中读取；要使用其他模型，请传入 `--model`（见[选择模型](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#选择模型)）。`scan`、`sync` 和 `status` 不调用模型，也不需要 API key；`run` 会把提示词发送给模型服务商，消耗你的 API 额度或 Claude Code 用量。
+请在项目根目录运行。它会读取 `uv.lock`、`poetry.lock`、`pdm.lock`、`pylock.toml`、`Pipfile.lock`、`requirements*.txt`、`pyproject.toml`、`Pipfile`、conda `environment.yml` 的 `pip:` 部分或 `.venv`（不读取 `setup.py` 和 `setup.cfg`）。不加 `--model` 时，它使用你的编程 Agent 所配置的模型，从 Claude Code、Codex、Gemini CLI、OpenCode 或 Aider 的设置中读取；要使用其他模型，请传入 `--model`（见[选择模型](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#选择模型)）。`scan`、`sync` 和 `status` 不调用模型，也不需要 API key；`run` 会把提示词发送给模型服务商，消耗你的 API 额度或 Claude Code 用量。
 
 在编程 Agent 中，可以由技能替你运行这些命令：见[在 Claude Code 中使用](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#在-claude-code-中使用)和[在其他编程 Agent 中使用](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#在其他编程-agent-中使用)。[MCP 服务器](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#在任意-agent-中使用mcp)把同样的对比结果提供给任意 Agent。
 
@@ -70,7 +70,7 @@ anthropic 0.56.0 -> 1.8.0 (0.56.0 was the latest release 30 days before the cuto
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 
 **huggingface-hub 2.0.0** (compared from 0.33.1)
-- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases (2.0.0). [diff]
+- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases for the changes since 0.33.1. [diff]
 <!-- since-cutoff:end -->
 ```
 
@@ -175,7 +175,7 @@ uvx --with basedpyright since-cutoff run
 | `since-cutoff sync --json --dry-run` | 以 JSON 输出提议；不写入任何内容 | 0 |
 | `since-cutoff status` | 离线比较区块与 lockfile | 0 已是最新，或没有区块；3 已过时；1 标记损坏 |
 
-区块被手动修改过时，`sync` 和 `sync --check` 会显示 diff，不写入任何内容，并以退出码 4 结束；`sync --force` 会替换它。说明所涉及的某个包无法检查时（例如 PyPI 无法访问），`sync` 不写入任何内容，并以退出码 1 结束。
+区块被手动修改过时，`sync` 和 `sync --check` 会显示 diff，不写入任何内容，并以退出码 4 结束；`sync --force` 会替换它。说明所涉及的某个包无法检查时（例如 PyPI 无法访问，或运行它的 Python 无法解析其源码），`sync` 不写入任何内容，并以退出码 1 结束。
 
 `sync --json` 需要搭配 `--yes`、`--check` 或 `--dry-run`；缺少其中之一时，它不询问，直接以退出码 2 结束。标准输出只包含 JSON；sync 失败时标准输出为空（用法错误，退出码 2；或其他错误，例如无法访问 PyPI，退出码 1）；进度、diff 和错误都输出到 stderr。对象包含 `exit_code`、`tip`（sync 关于 AGENTS.md 和 CLAUDE.md 的提示，没有时为 null）和 `targets`。每个目标文件报告 `target`、`action`、`changed`、`edited`、`written`、`model`、`cutoff`、`scope`、`notes`、`changes`（每个包的 `package`、`done` 和 `state`）、`retest` 和 `diff_lines`。`written` 用来区分已应用的提议、预览和被拒绝的手动修改。通常的退出码和 `--force` 的行为仍然适用。
 
@@ -265,7 +265,7 @@ npx skills add MohammadHijjawi97/since-cutoff
 
 **什么内容会被发送到哪里？** `scan`、`sync`、`status`、MCP 服务器、GitHub Action 和 pre-commit 钩子只读取 PyPI（元数据和 wheel 文件）和 models.dev，不向任何模型发送任何内容。`run` 会向你选择的模型服务商发送提示词：包名、版本、有变更 API 的公开签名和文档字符串、生成的任务，以及（为了写说明）模型自己的回答；绝不会发送你的源代码。哪些文件用到了有变更的 API，会显示在终端和 `.since-cutoff/` 中，只有你主动发送时才会传到别处：用 `--markdown` 生成的 CI 摘要，或调用了 MCP 工具 `project_changes` 的 Agent。没有遥测。详见[它会运行、发送和保存什么](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#它会运行发送和保存什么)和 [PRIVACY.md](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/PRIVACY.md)（英文）。
 
-**为什么有些说明写着“since-cutoff found no replacement”？** 只有当库自己的弃用文本写明了替代写法、且这个名称存在于你锁定的版本中时，说明才会给出替代写法（标签 `[diff + library]`）。否则，说明陈述变更，并给出该包的变更日志（其 PyPI 元数据中的 Changelog 链接，否则是它在 GitHub 上的 releases 页面）和锁定的版本；PyPI 两者都没有列出时，才指出没有找到替代写法：猜出来的替代写法会被 Agent 照着用，比不给更糟。锁定版本中那些只是名字相似的内容，会在终端中以“not confirmed as replacements”显示；`sync --suggestions` 会把它们写进说明，标为 `[not confirmed]`。当锁定版本的方法仍带有 `extra_body` 参数时（例如 anthropic 的 `Messages.create()`），说明会指出这一点，因为从签名中移除的请求参数可能仍被 API 接受。
+**为什么有些说明写着“since-cutoff found no replacement”？** 只有当库自己的弃用文本写明了替代写法、且这个名称存在于你锁定的版本中时，说明才会给出替代写法（标签 `[diff + library]`）。否则，说明陈述变更，并指向该包的变更日志（其 PyPI 元数据中的 Changelog 链接，否则是它在 GitHub 上的 releases 页面），查看自对照版本以来的变更；PyPI 两者都没有列出时，才指出没有找到替代写法：猜出来的替代写法会被 Agent 照着用，比不给更糟。锁定版本中那些只是名字相似的内容，会在终端中以“not confirmed as replacements”显示；`sync --suggestions` 会把它们写进说明，标为 `[not confirmed]`。当锁定版本的方法仍带有 `extra_body` 参数时（例如 anthropic 的 `Messages.create()`），说明会指出这一点，因为从签名中移除的请求参数可能仍被 API 接受。
 
 **写进 AGENTS.md 还是 CLAUDE.md？** `sync` 写进 AGENTS.md；只有 CLAUDE.md 时写进 CLAUDE.md；CLAUDE.md 没有导入 AGENTS.md 时两个文件都写（[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)）；两者中已经有区块的，就写进那个（`--target` 可以指定任意文件）。Claude Code 读取 CLAUDE.md，只有当 CLAUDE.md 用一行 `@AGENTS.md` 导入了 AGENTS.md 时才会读取 AGENTS.md；Codex、Cursor 和 Copilot 读取 AGENTS.md。要只保留一份，就在 CLAUDE.md 中加上 `@AGENTS.md`，再运行 `since-cutoff unapply --target CLAUDE.md`；两个文件都有区块时，`scan`、`sync` 和 `status` 会提示这一点，只在 AGENTS.md 中的区块没有被导入时也会提示。此后 `sync` 会更新每个有区块的文件，`status` 也会逐个报告。
 
@@ -436,7 +436,7 @@ Not listed: 58 breaking changes, 0 new deprecations (removed or moved 30, parame
 name: since-cutoff
 on:
   pull_request:
-    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
+    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/environment.y*ml", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -457,7 +457,7 @@ jobs:
 | `only`、`exclude` | | 逗号分隔的 PyPI 包名 |
 | `cutoff` | | 覆盖训练截止日期（`YYYY-MM` 或 `YYYY-MM-DD`） |
 | `cutoff-margin` | | 从截止日期前这么多天发布的最新版本开始对比（since-cutoff 的默认值是 30；`0` 表示从截止日期当天算起） |
-| `fail-on-changes` | `false` | 有依赖在截止日期之后改了 API 时，让这一步失败 |
+| `fail-on-changes` | `false` | 有依赖相对于它的对比版本（默认是截止日期前 30 天发布的最新版本）改了 API 时，让这一步失败 |
 | `check-notes` | `false` | 同时运行 `since-cutoff sync --check`（不写入任何内容），当 AGENTS.md / CLAUDE.md 中的说明已过时或区块被手动修改过时，让任务失败；说明沿用写入时的模型，`model`（和 `cutoff`）用于还没有区块的项目 |
 | `step-summary` | `true` | 把 Markdown 摘要加到任务摘要（job summary）中 |
 | `cache` | `true` | 在多次运行之间保留 PyPI 元数据、包源码和 API 对比结果（`fail-on-changes` 让任务失败时也会保留） |
@@ -481,9 +481,11 @@ repos:
       - id: since-cutoff-sync  # 让 AGENTS.md 中的说明保持最新；args: [--check] 只检查
 ```
 
-`since-cutoff-scan` 在 lockfile、requirements 文件或 `pyproject.toml` 变更时运行，并打印扫描结果；需要在 `args` 里给出 `--model`。`since-cutoff-sync` 在这些文件或 AGENTS.md、CLAUDE.md 变更时运行，并更新说明；如果它修改了文件，这个钩子就会失败，和其他会修改文件的 pre-commit 钩子一样：把文件加入暂存区后重新提交即可。使用 `args: [--check]` 时，它不修改任何内容，只要说明已过时就失败。它沿用说明写入时的模型；写第一个区块时，请给它指定一个：`args: [--model=anthropic:claude-sonnet-4-5]`。这两个钩子都要访问 PyPI，所以在 pre-commit.ci 上请跳过它们（`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`）。`since-cutoff-status` 不需要联网：说明与 lockfile 不一致时它会失败。
+`since-cutoff-scan` 在 lockfile、requirements 文件、conda `environment.yml` 或 `pyproject.toml` 变更时运行，并打印扫描结果；需要在 `args` 里给出 `--model`。`since-cutoff-sync` 在这些文件或 AGENTS.md、CLAUDE.md 变更时运行，并更新说明；如果它修改了文件，这个钩子就会失败，和其他会修改文件的 pre-commit 钩子一样：把文件加入暂存区后重新提交即可。使用 `args: [--check]` 时，它不修改任何内容，只要说明已过时就失败。它沿用说明写入时的模型；写第一个区块时，请给它指定一个：`args: [--model=anthropic:claude-sonnet-4-5]`。这两个钩子都要访问 PyPI，所以在 pre-commit.ci 上请跳过它们（`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`）。`since-cutoff-status` 不需要联网：说明与 lockfile 不一致时它会失败。
 
 ### 其他 CI
+
+配置 CI 时，可参考[环境变量、文件和退出码参考](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/reference.md)（英文）。
 
 ```bash
 # 适用于任何 CI 的 Markdown 摘要；你的代码以旧写法用到有变更的 API 时，退出码为 3
@@ -501,7 +503,7 @@ since-cutoff run --quick --fail-on-stale --json > since-cutoff.json
 - `0` 正常；
 - `1` 出错（例如 `run` 没能探测任何 API 变更，或没有任何模型回答能被打分；或 `sync` 无法检查其说明所涉及的某个包）；
 - `2` 用法错误；
-- `3` 检查未通过：`scan --fail-on changes`、`used` 或 `old-form`（有依赖在截止日期之后改了 API、你的代码用到了有变更的 API，或以旧写法用到它；`--fail-on-changes` 等同于 `--fail-on changes`），`run --fail-on-stale`（发现了过时的 API 用法），或 `sync --check`、`status` 发现说明已过时（以及 `sync` 没有写入时）；
+- `3` 检查未通过：`scan --fail-on changes`、`used` 或 `old-form`（有依赖相对于它的对比版本改了 API，默认的对比版本是截止日期前 30 天发布的最新版本；你的代码用到了有变更的 API，或以旧写法用到它；`--fail-on-changes` 等同于 `--fail-on changes`；无论哪一项，运行它的 Python 无法解析其源码的依赖也算未通过），`run --fail-on-stale`（发现了过时的 API 用法），或 `sync --check`、`status` 发现说明已过时（以及 `sync` 没有写入时）；
 - `4` `sync`：区块被手动修改过，没有 `--force` 时不写入任何内容；
 - `141` 输出被提前关闭（例如通过管道传给了 `head`）。
 
@@ -534,10 +536,10 @@ since-cutoff 从不单独使用“verified”（已验证）这个词。每条�
 
 | 标签 | 检查了什么 | 没有检查什么 |
 |---|---|---|
-| `[diff]` | 这个变更出现在对两个版本公开 API 的静态对比（griffe）中：默认在模型训练截止日期至少 30 天之前发布的最新版本，以及你的项目锁定的版本。源码只被读取，不被导入。只有 `[diff]` 时，说明不会给出任何替代项：它转述库自己的弃用说明中的话（“there is no replacement for `resume_download`”，没有替代项），或者给出该包的变更日志（其 PyPI 元数据中的 Changelog 链接，否则是它在 GitHub 上的 releases 页面）和锁定的版本，或者在 PyPI 两者都没有列出时，说明 since-cutoff 在那段文字中没有找到替代项。 | 行为，以及调用是否仍能运行：锁定的版本可能仍会接受一个已移除的参数并发出警告，比如 huggingface-hub 2.0.0 对 `resume_download` 就是这样。当锁定版本的源码仍会处理某个参数时，终端、report.md、MCP 工具和 JSON 会加上一行“Runtime:”；区块中不写，因为建议是一样的。你的模型是否会写错。 |
+| `[diff]` | 这个变更出现在对两个版本公开 API 的静态对比（griffe）中：默认在模型训练截止日期至少 30 天之前发布的最新版本，以及你的项目锁定的版本。源码只被读取，不被导入。只有 `[diff]` 时，说明不会给出任何替代项：它转述库自己的弃用说明中的话（“there is no replacement for `resume_download`”，没有替代项），或者指向该包的变更日志（其 PyPI 元数据中的 Changelog 链接，否则是它在 GitHub 上的 releases 页面），查看自对照版本以来的变更，或者在 PyPI 两者都没有列出时，说明 since-cutoff 在那段文字中没有找到替代项。 | 行为，以及调用是否仍能运行：锁定的版本可能仍会接受一个已移除的参数并发出警告，比如 huggingface-hub 2.0.0 对 `resume_download` 就是这样。当锁定版本的源码仍会处理某个参数时，终端、report.md、MCP 工具和 JSON 会加上一行“Runtime:”；区块中不写，因为建议是一样的。你的模型是否会写错。 |
 | `[diff + library]` | 同 `[diff]`，并且库自己的弃用说明（docstring、docstring 中某个参数的条目、`@deprecated` 消息或 `warnings.warn` 文本，来自旧版本；对于弃用，则来自锁定版本）明确给出了替代项（“Use `stop` instead”），而且这个名称在你锁定的版本中存在。只是作为建议提到某个名称的文字，会在 `[diff]` 下引用，不被当作替代项。 | 替代项的行为是否相同。 |
 | `[diff + move checked]` | 同 `[diff]`，并且就能统计的方面而言，新路径上的对象就是同一个对象：类或模块至少保留了旧对象一半的公开名称，函数保留了它的参数，值保持不变。 | 行为。 |
-| `[diff + metadata]` | 旧版本的 Requires-Dist（其 wheel 的 METADATA）列出了一个锁定的版本不再列出的库，而公开 API 中原先用到该库类型的位置（参数、返回类型、属性、基类、重新导出）改为用到锁定的版本所依赖的另一个库的类型，或它自带的旧库副本的类型，旧库的类型一个也没有留下：openai 3.x、anthropic 1.8、huggingface-hub 2.0 和 mcp 2.2 在原先接受 `httpx` 对象的地方改为接受 `httpx2` 对象。单独的 `[metadata]` 标记的是你的代码导入的、在截止日期之后（或截止日期前的余量天数内）才首次发布的包的那一条说明：没有任何版本可以对比，所以说明给出它首次发布的日期、它在 PyPI 上的简介和它的变更日志链接。 | 行为：锁定的版本是否仍接受旧库的对象（根据各自的源码，openai 3 会转换其中一部分，anthropic 1.8 会抛出 `TypeError`）。终端、report.md、MCP 工具和 JSON 会加上一行“Installed:”（你的项目，包括其虚拟环境，是否仍有旧库）和一行“Runtime:”，指出锁定版本的源码在哪里仍提到它。 |
+| `[diff + metadata]` | 旧版本的 Requires-Dist（其 wheel 的 METADATA）列出了一个锁定的版本不再列出的库，而公开 API 中原先用到该库类型的位置（参数、返回类型、属性、基类、重新导出）改为用到锁定的版本所依赖的另一个库的类型，或它自带的旧库副本的类型，旧库的类型一个也没有留下：openai 3.x、anthropic 1.8、huggingface-hub 2.0 和 mcp 2.2 在原先接受 `httpx` 对象的地方改为接受 `httpx2` 对象。单独的 `[metadata]` 标记的是你的代码导入的、在截止日期之后（或截止日期前的余量天数内）才首次发布的包，或对比版本只是一个空的占位版本（zensical 0.0.0）的包的那一条说明：没有任何带 API 的版本可以对比，所以说明给出它首次发布的日期（或那个占位版本的版本号）、它在 PyPI 上的简介和它的变更日志链接。 | 行为：锁定的版本是否仍接受旧库的对象（根据各自的源码，openai 3 会转换其中一部分，anthropic 1.8 会抛出 `TypeError`）。终端、report.md、MCP 工具和 JSON 会加上一行“Installed:”（你的项目，包括其虚拟环境，是否仍有旧库）和一行“Runtime:”，指出锁定版本的源码在哪里仍提到它。 |
 | `[diff; probable rename]` | 位置相同、类型注解相同的参数换了新名字，且锁定版本 docstring 中的版本说明（`.. versionadded::`、`.. versionchanged::`）没有说新参数是新增的或旧参数已被移除。这是推测，并标明为推测。 | 它是否就是同一个参数。 |
 | `[type-checked]` | 由模型在 `since-cutoff run` 中写出，因为它的示例通过了下面的类型检查而被保留。 | 行为；这条说明的解释在它展示的名称之外是否也正确。 |
 | `[not confirmed]` | 仅在使用 `sync --suggestions` 时出现：锁定版本中与被移除内容相似的名称（这时说明条目的标签写作 `[diff; not confirmed]`）。 | 其中任何一个能替代它。 |
@@ -563,6 +565,8 @@ AGENTS.md 中的区块包含带标签的说明条目，以及每个包的说明�
 
 ## 它会运行、发送和保存什么
 
+[参考文档](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/reference.md)（英文）列出了它读取的环境变量，以及它读取和写入的文件。
+
 - **不运行任何包代码，也不运行模型写的代码。** 包只做静态读取（griffe 关闭 inspection；只解压 `.py`/`.pyi` 文件，并检查路径和大小）。模型的回答只在本地用 basedpyright 做类型检查。
 - **获取**：从 PyPI 获取公开的包元数据和 wheel，从 models.dev 获取模型的训练截止日期（内置快照，可离线使用）。Git、本地路径、workspace 和私有源中的依赖，绝不会按名称去公共 PyPI 上查找。`status` 不获取任何内容。
 - **发送**：只有 `run` 会发送提示词，并且只发给你选择的模型服务商，内容包括包名、版本、变更 API 的公开签名和文档字符串、生成的任务，以及（用于写说明的）模型自己的回答。从不包含你的源代码。`scan`、`sync`、`status`、MCP 服务器、GitHub Action 和 pre-commit 钩子不向任何模型发送任何内容。
@@ -575,6 +579,7 @@ AGENTS.md 中的区块包含带标签的说明条目，以及每个包的说明�
 - 目前仅支持 Python。下一步是 TypeScript（`.d.ts` 对比、`tsc`）（[#1](https://github.com/MohammadHijjawi97/since-cutoff/issues/1)）。
 - 类型检查器能发现错误的名称、错误的参数和 PEP 702 弃用，但看不到签名不变而行为改变的情况，也看不到只在运行时发出警告的弃用。`scan` 还会列出用库自己的装饰器（名称包含 "deprecat"）声明的弃用，以及已被移除、但模块仍通过 `__getattr__` 提供并发出警告的名称；不过 `run` 不会探测这些弃用。
 - 对比只覆盖公开 API：`_private` 名称，以及包内自带的测试、基准测试和示例，都会被跳过。
+- 源码由运行 since-cutoff 的 Python 解析，它读不懂更新版本的语法：在 Python 3.10 上，numpy 2.5（其 stub 中有 PEP 695 的 `type` 语句）无法检查。扫描会说明这一点以及哪个 Python 可以（“run since-cutoff with Python 3.12 or later to check it”），`--fail-on` 也会因此判定未通过。请用你的项目所用的 Python 或更新的版本运行 since-cutoff。
 - “Your code uses”（你的代码用到了）是逐个文件的静态匹配：导入（包括重新导出的名称）、调用、属性读取和关键字参数；方法调用的接收者会根据包自身的注解确定类型（`df = pd.read_csv(...)` 是一个 `DataFrame`；一个类连同它的基类一起计入，跨越你锁定的各个包）。它不追踪 `getattr` 这类动态访问，目前只指出文件，不指出行号（[#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)）。在代码没有显示其类的值上读取的方法，可以只按名称计入：这个名称仅属于一个有变更的 API，既不是常见名称，也不是内置类型或标准库类型的成员。除非给出 `--include-name-matches`（通过 MCP 时为 `include_name_matches`），这种 `[name match]` 不会出现在任何报告、说明、`--fail-on` 和 `--annotate` 中，因为它们大多是另一个库中同名的方法；`scan`、`sync` 和 `project_changes` 会说明隐藏了多少处这样的用法（results.json 中的 `name_matches_hidden`）。变为必需、仅限关键字或仅限位置的参数，目前总是显示为“uses this API”，从不显示为“old form”。
 - 只有当库自己的弃用说明明确给出替代项时，说明才会写出替代项。只出现在迁移指南里的建议（anthropic 的 [MIGRATION.md](https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md) 建议对仍接受 `temperature` 的旧模型使用 `extra_body`）不会出现在说明中。
 - 探测的是破坏性变更中按优先级排序的一个**样本**（你的代码已经用到的符号优先），而不是全部。

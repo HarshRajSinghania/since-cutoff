@@ -109,13 +109,16 @@ def test_other_dependencies_changed(status, synced) -> None:
 def test_never_run(status, sc, tmp_path) -> None:
     """No block is not out of date: a project whose code uses no changed API has none, and
     sync writes none, so status must not fail it (the pre-commit status hook could never
-    pass) or tell the user to run sync; ``sync --check`` says whether notes are needed."""
+    pass) or tell the user to run sync; ``sync --check`` says whether notes are needed. The
+    notes are for APIs changed since the comparison release, not "after the cutoff"."""
     root = make_app(tmp_path)
     code, out = status(root)
     assert code == EXIT_OK
     assert out.splitlines() == [
         "AGENTS.md: no since-cutoff notes. `since-cutoff sync` writes them if your code uses an "
-        "API that changed after the cutoff (`since-cutoff sync --check` says whether it does).",
+        "API that changed since the release its package is compared from (by default the "
+        "latest one published 30 days before the cutoff); `since-cutoff sync --check` says "
+        "whether it does.",
         "No notes to check.",
     ]
     code, out = status(root, "--json")

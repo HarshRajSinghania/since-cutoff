@@ -47,10 +47,11 @@ installs it, and `uvx --with basedpyright since-cutoff run` adds it to a run wit
 without it, `run` stops at once and says so.
 
 Run it from your project root. It reads `uv.lock`, `poetry.lock`, `pdm.lock`, `pylock.toml`,
-`Pipfile.lock`, `requirements*.txt`, `pyproject.toml`, `Pipfile` or a `.venv` (not `setup.py` or
-`setup.cfg`). Without `--model` it uses the model your coding agent is set up with, from the
-Claude Code, Codex, Gemini CLI, OpenCode or Aider settings; for any other model, pass `--model`
-(see [Choosing the model](https://github.com/MohammadHijjawi97/since-cutoff#choosing-the-model)).
+`Pipfile.lock`, `requirements*.txt`, `pyproject.toml`, `Pipfile`, the `pip:` block of a conda
+`environment.yml` or a `.venv` (not `setup.py` or `setup.cfg`). Without `--model` it uses the
+model your coding agent is set up with, from the Claude Code, Codex, Gemini CLI, OpenCode or
+Aider settings; for any other model, pass `--model` (see
+[Choosing the model](https://github.com/MohammadHijjawi97/since-cutoff#choosing-the-model)).
 `scan`, `sync` and `status` call no model and need no API key; `run` sends prompts to the model
 provider and uses your API credits or Claude Code usage.
 
@@ -107,7 +108,7 @@ diff). For the sample project, the block ends with:
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 
 **huggingface-hub 2.0.0** (compared from 0.33.1)
-- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases (2.0.0). [diff]
+- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases for the changes since 0.33.1. [diff]
 <!-- since-cutoff:end -->
 ```
 
@@ -281,7 +282,8 @@ nothing, and the file keeps its bytes and modification time.
 
 When the block was edited by hand, `sync` and `sync --check` show the diff, write nothing and
 exit with code 4; `sync --force` replaces it. When a package the notes are about cannot be
-checked (PyPI unreachable), `sync` writes nothing and exits with code 1.
+checked (PyPI unreachable, or sources the running Python cannot parse), `sync` writes nothing
+and exits with code 1.
 
 `sync --json` requires `--yes`, `--check` or `--dry-run`; without one it exits with code 2
 without prompting. Stdout contains only JSON, and stays empty when sync fails (a usage error,
@@ -467,8 +469,8 @@ and [PRIVACY.md](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/PRI
 **Why do some notes say "since-cutoff found no replacement"?** A note names a replacement only
 when the library's own deprecation text states one and that name exists in your pinned version
 (tag `[diff + library]`). Otherwise the note states the change and points at the package's
-changelog with the pinned version (the Changelog URL in its PyPI metadata, else its GitHub
-releases page), or, when PyPI lists neither, says that no replacement was found: a guessed
+changelog for the changes since the comparison release (the Changelog URL in its PyPI
+metadata, else its GitHub releases page), or, when PyPI lists neither, says that no replacement was found: a guessed
 replacement that an agent then follows is worse than none. Names in the pinned
 version that merely look similar are shown in the terminal as "not confirmed as replacements";
 `sync --suggestions` writes them into the notes, tagged `[not confirmed]`. Where the pinned method
@@ -737,7 +739,7 @@ and models.dev: no model calls, no API key.
 name: since-cutoff
 on:
   pull_request:
-    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
+    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/environment.y*ml", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -758,7 +760,7 @@ Without `paths`, the job also runs when a code change starts using a changed API
 | `only`, `exclude` | | comma-separated PyPI names |
 | `cutoff` | | override the training cutoff (`YYYY-MM` or `YYYY-MM-DD`) |
 | `cutoff-margin` | | compare from the latest release published this many days before the cutoff (since-cutoff's default is 30; `0` compares from the cutoff itself) |
-| `fail-on-changes` | `false` | fail the step when a dependency changed its API after the cutoff |
+| `fail-on-changes` | `false` | fail the step when a dependency changed its API since the release it is compared from (by default the latest one published 30 days before the cutoff) |
 | `check-notes` | `false` | also run `since-cutoff sync --check`, which writes nothing, and fail the job when the notes in AGENTS.md / CLAUDE.md are out of date or the block was edited by hand; the notes keep the model they were written for, and `model` (and `cutoff`) serve a project with no block yet |
 | `step-summary` | `true` | add the Markdown summary to the job summary |
 | `cache` | `true` | keep PyPI metadata, package sources and API diffs between runs (also when `fail-on-changes` fails the job) |
@@ -787,16 +789,19 @@ repos:
       - id: since-cutoff-sync  # keeps the notes in AGENTS.md current; args: [--check] only checks
 ```
 
-`since-cutoff-scan` runs when a lockfile, a requirements file or `pyproject.toml` changes, and
-prints the scan; give it `--model` in `args`. `since-cutoff-sync` runs when one of those files,
-AGENTS.md or CLAUDE.md changes, and updates the notes; when it changes the file, the hook fails,
-as pre-commit hooks that change files do: add the file and commit again. With `args: [--check]`
-it changes nothing and fails while the notes are out of date. It keeps the model the notes were
-written for; for a first block, give it one: `args: [--model=anthropic:claude-sonnet-4-5]`. Both
-need PyPI, so skip them on pre-commit.ci (`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`).
-`since-cutoff-status` needs no network: it fails when the notes do not match the lockfile.
+`since-cutoff-scan` runs when a lockfile, a requirements file, a conda `environment.yml` or
+`pyproject.toml` changes, and prints the scan; give it `--model` in `args`. `since-cutoff-sync`
+runs when one of those files, AGENTS.md or CLAUDE.md changes, and updates the notes; when it
+changes the file, the hook fails, as pre-commit hooks that change files do: add the file and
+commit again. With `args: [--check]` it changes nothing and fails while the notes are out of
+date. It keeps the model the notes were written for; for a first block, give it one:
+`args: [--model=anthropic:claude-sonnet-4-5]`. Both need PyPI, so skip them on pre-commit.ci
+(`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`). `since-cutoff-status` needs no network:
+it fails when the notes do not match the lockfile.
 
 ### Other CI
+
+See the [environment, files and exit-code reference](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/reference.md) when configuring CI.
 
 ```bash
 # Markdown summary for any CI; exit code 3 if your code uses a changed API in the old form
@@ -818,8 +823,10 @@ output is laid out 160 columns wide (`COLUMNS` sets another width). Exit codes:
   `sync` could not check a package its notes are about);
 - `2` usage error;
 - `3` a check failed: `scan --fail-on changes`, `used` or `old-form` (a dependency changed its
-  API after the cutoff, your code uses a changed API, or uses one in the old form;
-  `--fail-on-changes` is `--fail-on changes`), `run --fail-on-stale` (stale API use found), or
+  API since the release it is compared from, by default the latest one published 30 days
+  before the cutoff; your code uses a changed API, or uses one in the old form;
+  `--fail-on-changes` is `--fail-on changes`; with any of them, also a dependency the running
+  Python cannot parse the sources of), `run --fail-on-stale` (stale API use found), or
   notes out of date with `sync --check` or `status` (and `sync`, when it did not write them);
 - `4` `sync`: the block was edited by hand, and nothing was written without `--force`;
 - `141` the output was closed early (piped into `head`, for example).
@@ -870,10 +877,10 @@ was checked, and nothing else is claimed:
 
 | tag | what was checked | what was not |
 |---|---|---|
-| `[diff]` | The change is in a static comparison (griffe) of the public APIs of two releases: the latest release published at least 30 days before the model's training cutoff (by default), and the version your project pins. The sources are read, not imported. With `[diff]` alone, no replacement is named: the note says what the library's own deprecation text says ("there is no replacement for `resume_download`"), or points at the package's changelog (the Changelog URL in its PyPI metadata, else its GitHub releases page) with the pinned version, or, when PyPI lists neither, that since-cutoff found no replacement in that text. | Behaviour, and whether a call still runs: the pinned release may still accept a removed parameter with a warning, as huggingface-hub 2.0.0 does for `resume_download`. The terminal, report.md, the MCP tools and the JSON add a "Runtime:" line when the pinned source still handles one; the block does not, since the advice is the same. Whether your model gets it wrong. |
+| `[diff]` | The change is in a static comparison (griffe) of the public APIs of two releases: the latest release published at least 30 days before the model's training cutoff (by default), and the version your project pins. The sources are read, not imported. With `[diff]` alone, no replacement is named: the note says what the library's own deprecation text says ("there is no replacement for `resume_download`"), or points at the package's changelog (the Changelog URL in its PyPI metadata, else its GitHub releases page) for the changes since the comparison release, or, when PyPI lists neither, that since-cutoff found no replacement in that text. | Behaviour, and whether a call still runs: the pinned release may still accept a removed parameter with a warning, as huggingface-hub 2.0.0 does for `resume_download`. The terminal, report.md, the MCP tools and the JSON add a "Runtime:" line when the pinned source still handles one; the block does not, since the advice is the same. Whether your model gets it wrong. |
 | `[diff + library]` | As `[diff]`, and the library's own deprecation text (a docstring, a parameter's docstring entry, an `@deprecated` message or a `warnings.warn` text, in the older release or, for a deprecation, in the pinned one) states the replacement ("Use `stop` instead"), and that name exists in your pinned version. Text that only mentions a name as advice is quoted under `[diff]`, not taken as a replacement. | That the replacement behaves the same. |
 | `[diff + move checked]` | As `[diff]`, and the object at the new path is the same object as far as can be counted: a class or module keeps at least half of the old one's public names, a function keeps its parameters, a value is the same. | Behaviour. |
-| `[diff + metadata]` | The older release's Requires-Dist (its wheel's METADATA) lists a library the pinned one does not, and places in the public API that named that library's types (parameters, return types, attributes, base classes, re-exports) name the types of another library the pinned release requires, or of a copy of the old one it ships, with none of the old library left: openai 3.x, anthropic 1.8, huggingface-hub 2.0 and mcp 2.2 take `httpx2` objects where they took `httpx` ones. `[metadata]` alone marks the one bullet for a package first released after the cutoff (or within the margin before it) that your code imports: there is no release to compare from, so the note gives the date of its first release, its PyPI summary and its changelog URL. | Behaviour: whether the pinned release still accepts the old library's objects (openai 3 converts some, anthropic 1.8 raises `TypeError`, according to their sources). The terminal, report.md, the MCP tools and the JSON add an "Installed:" line (whether your project, its virtual environment included, still has the old library) and a "Runtime:" line that points to where the pinned source still names it. |
+| `[diff + metadata]` | The older release's Requires-Dist (its wheel's METADATA) lists a library the pinned one does not, and places in the public API that named that library's types (parameters, return types, attributes, base classes, re-exports) name the types of another library the pinned release requires, or of a copy of the old one it ships, with none of the old library left: openai 3.x, anthropic 1.8, huggingface-hub 2.0 and mcp 2.2 take `httpx2` objects where they took `httpx` ones. `[metadata]` alone marks the one bullet for a package first released after the cutoff (or within the margin before it), or whose comparison release was an empty placeholder (zensical 0.0.0), that your code imports: there is no release with an API to compare from, so the note gives the date of its first release (or the placeholder's version), its PyPI summary and its changelog URL. | Behaviour: whether the pinned release still accepts the old library's objects (openai 3 converts some, anthropic 1.8 raises `TypeError`, according to their sources). The terminal, report.md, the MCP tools and the JSON add an "Installed:" line (whether your project, its virtual environment included, still has the old library) and a "Runtime:" line that points to where the pinned source still names it. |
 | `[diff; probable rename]` | A parameter in the same position, with the same annotation, has a new name, and no version note in the pinned release's docstring (`.. versionadded::`, `.. versionchanged::`) says that one was added or the other removed. A guess, labelled as one. | That it is the same parameter. |
 | `[type-checked]` | Written by a model during `since-cutoff run` and kept because its example passed the type check below. | Behaviour; that the bullet's explanation is true beyond the names it shows. |
 | `[not confirmed]` | Only with `sync --suggestions`: names in the pinned version that look similar to what was removed (the bullet's tag then reads `[diff; not confirmed]`). | That any of them replaces it. |
@@ -922,6 +929,8 @@ meaning the same as `checks.example_type_checks`).
 
 ## What it runs, sends and stores
 
+The [reference](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/reference.md) lists environment variables and files read or written.
+
 - **Runs no package code and no model-written code.** Packages are read statically (griffe with
   inspection off; only `.py`/`.pyi` files are extracted, with path and size checks). The model's
   answers are only type-checked, locally, with basedpyright.
@@ -963,6 +972,11 @@ meaning the same as `checks.example_type_checks`).
   `__getattr__`, but `run` does not probe them.
 - The diff covers the public API: `_private` names, and test suites, benchmarks and examples
   shipped inside a package, are skipped.
+- The sources are parsed by the Python that runs since-cutoff, which cannot read syntax of a
+  newer one: on Python 3.10, numpy 2.5 (PEP 695 `type` statements in its stub) cannot be
+  checked. The scan says so and which Python can ("run since-cutoff with Python 3.12 or later
+  to check it"), and `--fail-on` fails on it. Run since-cutoff with the Python your project
+  uses, or a newer one.
 - "Your code uses" is a static match, file by file: imports (re-exported names included),
   calls, attribute reads and keyword arguments, with the receiver of a method call typed from
   the package's own annotations (`df = pd.read_csv(...)` is a `DataFrame`; a class counts with

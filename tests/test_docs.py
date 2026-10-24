@@ -4,7 +4,9 @@
 - the scan output and the note on the README's first screen are what the code writes;
 - "What 'verified' means" names every evidence tag as notes.py writes it;
 - no English page says "verified" on its own;
-- every link to a heading of a README or docs page finds that heading.
+- every link to a heading of a README or docs page finds that heading;
+- docs/reference.md has a row for every environment variable the code reads, and none for one
+  it does not.
 
 Only README.md ships in the sdist, so a page that is not there is skipped.
 """
@@ -12,13 +14,16 @@ Only README.md ships in the sdist, so a page that is not there is skipped.
 from __future__ import annotations
 
 import argparse
+import ast
 import re
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import pytest
 
 from since_cutoff.apidiff import PARAM_REMOVED, APIChange
 from since_cutoff.cli import build_parser
+from since_cutoff.hosts import ENV_VARS
 from since_cutoff.notes import (
     TAG_DIFF,
     TAG_LIBRARY,
@@ -30,14 +35,17 @@ from since_cutoff.notes import (
     diff_note,
     tag_text,
 )
+from since_cutoff.providers import OPENAI_COMPATIBLE
 from since_cutoff.report import NOTES_READY
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src" / "since_cutoff"
 REPO_URL = "https://github.com/MohammadHijjawi97/since-cutoff"
 READMES = ("README.md", "README.zh-CN.md", "README.es.md", "README.fr.md")
 PAGES = (
     *READMES,
     "docs/how-it-works.md",
+    "docs/reference.md",
     "docs/index.md",
     "docs/es/index.md",
     "docs/fr/index.md",
@@ -49,6 +57,7 @@ PAGES = (
 )
 ENGLISH = (
     "README.md",
+    "docs/reference.md",
     "docs/how-it-works.md",
     "docs/index.md",
     "docs/ai-stack.md",
@@ -64,6 +73,169 @@ def _text(name: str) -> str:
     if not path.exists():
         pytest.skip(f"{name} is not part of this checkout")
     return path.read_text(encoding="utf-8")
+
+
+# Rows of docs/reference.md for variables since-cutoff does not read by name: Python's urllib
+# and ssl read the proxy and certificate settings, and run removes CLAUDE_CODE_ENTRYPOINT from
+# the environment of its `claude` subprocess.
+NOT_READ_BY_NAME = {
+    "HTTPS_PROXY",
+    "HTTP_PROXY",
+    "NO_PROXY",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    "CLAUDE_CODE_ENTRYPOINT",
+}
+_ENV_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
+_MAPPING_READS = ("get", "pop", "setdefault")
+
+
+def _module_name(path: Path) -> str:
+    """``src/since_cutoff/providers/claude_code.py`` -> ``since_cutoff.providers.claude_code``."""
+    parts = path.relative_to(SRC.parent).with_suffix("").parts
+    return ".".join(parts[:-1] if parts[-1] == "__init__" else parts)
+
+
+def _env_reads(modules: Mapping[str, str]) -> set[str]:
+    """The environment variables the code reads by name, given each module's source by the
+    module's name: ``os.environ.get("X")``, ``os.getenv("X")``, ``os.environ["X"]``,
+    ``"X" in os.environ``, ``os.environ.setdefault("X", ...)``, the same on a mapping given for
+    the environment (``env.get("X")``, ``(env or {}).get("X")``), hosts' ``places.var("X")``,
+    and each of them with a module constant for the name (``os.environ.get(CUTOFF_MARGIN_VAR)``,
+    ``os.environ.get(models.CUTOFF_MARGIN_VAR)``). A bare constant is the one its own module
+    defines, ``models.NAME`` the one a module named ``models`` defines; one that is not there
+    (imported, say) counts with the value of each module that defines it.
+    """
+    trees = {module: ast.parse(source) for module, source in modules.items()}
+    constants: dict[str, dict[str, object]] = {
+        module: {
+            target.id: node.value.value
+            for node in tree.body
+            if isinstance(node, (ast.Assign, ast.AnnAssign))
+            and isinstance(node.value, ast.Constant)
+            for target in (node.targets if isinstance(node, ast.Assign) else [node.target])
+            if isinstance(target, ast.Name)
+        }
+        for module, tree in trees.items()
+    }
+
+    def lookup(constant: str, homes: Iterable[str]) -> set[object]:
+        here = {constants[m][constant] for m in homes if constant in constants[m]}
+        return here or {c[constant] for c in constants.values() if constant in c}
+
+    def names(node: ast.expr, module: str) -> set[str]:
+        values: set[object] = set()
+        if isinstance(node, ast.Constant):
+            values = {node.value}
+        elif isinstance(node, ast.Name):
+            values = lookup(node.id, [module])
+        elif isinstance(node, ast.Attribute):  # models.CUTOFF_MARGIN_VAR
+            base = node.value
+            named = base.attr if isinstance(base, ast.Attribute) else getattr(base, "id", "")
+            values = lookup(node.attr, [m for m in constants if m.rsplit(".", 1)[-1] == named])
+        return {v for v in values if isinstance(v, str) and _ENV_NAME.fullmatch(v)}
+
+    def environment(node: ast.expr) -> bool:
+        if isinstance(node, ast.IfExp):
+            return environment(node.body) or environment(node.orelse)
+        if isinstance(node, ast.BoolOp):
+            return any(environment(value) for value in node.values)
+        last = node.attr if isinstance(node, ast.Attribute) else getattr(node, "id", "")
+        return last in ("environ", "env")
+
+    found: set[str] = set()
+    for module, tree in trees.items():
+        for node in ast.walk(tree):
+            key: ast.expr | None = None
+            if isinstance(node, ast.Call) and node.args:
+                func = node.func
+                called = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
+                on_env = isinstance(func, ast.Attribute) and environment(func.value)
+                if called in ("getenv", "var") or (on_env and called in _MAPPING_READS):
+                    key = node.args[0]
+            elif isinstance(node, ast.Subscript) and environment(node.value):
+                key = node.slice
+            elif (
+                isinstance(node, ast.Compare)
+                and isinstance(node.ops[0], (ast.In, ast.NotIn))
+                and environment(node.comparators[0])
+            ):
+                key = node.left
+            if key is not None:
+                found |= names(key, module)
+    return found
+
+
+def _env_table(text: str) -> set[str]:
+    """The variables in the Variable column of the page's environment variables table."""
+    section = text.split("## Environment variables", 1)[1].split("\n## ", 1)[0]
+    rows = [line.split("|") for line in section.splitlines() if line.startswith("| ")]
+    return {name for row in rows[1:] for name in re.findall(r"`([A-Z][A-Z0-9_]+)`", row[2])}
+
+
+def test_reference_lists_environment_variables_read_by_the_code() -> None:
+    documented = _env_table(_text("docs/reference.md"))
+    modules = {_module_name(p): p.read_text(encoding="utf-8") for p in SRC.rglob("*.py")}
+    names = _env_reads(modules) | set(ENV_VARS)
+    # Provider keys are read through a variable (os.environ.get(key_env)): add them.
+    names.update(key for _, key in OPENAI_COMPATIBLE.values() if key)
+    assert not names - documented, f"no row for {sorted(names - documented)}"
+    stale = documented - names - NOT_READ_BY_NAME
+    assert not stale, f"rows for variables the code does not read: {sorted(stale)}"
+
+
+def test_the_environment_check_finds_each_way_of_reading_a_variable() -> None:
+    source = """
+import os
+MARGIN_VAR = "SINCE_CUTOFF_CONSTANT"
+TYPED_VAR: str = "SINCE_CUTOFF_TYPED"
+KEY = "SINCE_CUTOFF_OWN"
+a = os.environ.get("SINCE_CUTOFF_GET")
+b = os.getenv("SINCE_CUTOFF_GETENV", "")
+c = os.environ["SINCE_CUTOFF_ITEM"]
+d = "SINCE_CUTOFF_IN" in os.environ
+e = os.environ.get(MARGIN_VAR), os.getenv(TYPED_VAR)
+f = (os.environ if env is None else env).get("SINCE_CUTOFF_MAPPING")
+g = (env or {}).get("SINCE_CUTOFF_OR"), self.env.get("SINCE_CUTOFF_ATTRIBUTE")
+h = places.var("SINCE_CUTOFF_VAR")
+i = settings.get("NOT_THE_ENVIRONMENT"), os.environ.get("lowercase"), os.environ.get(name)
+j = os.environ.get(models.KEY), environ.get("SINCE_CUTOFF_BARE"), getenv(NAME_VAR)
+k = os.environ.get(KEY), os.environ.setdefault("SINCE_CUTOFF_SETDEFAULT", "1")
+"""
+    # KEY is a different variable in each module: a bare KEY is the reading module's own,
+    # models.KEY is models', and neither is the last module's, in either order. NAME_VAR is
+    # defined only in models, as if imported from there.
+    modules = {
+        "pkg.cli": source,
+        "pkg.models": 'KEY = "SINCE_CUTOFF_MODULE"\nNAME_VAR = "SINCE_CUTOFF_MODULE_NAME"\n',
+        "pkg.other": 'KEY = "SINCE_CUTOFF_ELSEWHERE"\n',
+    }
+    expected = {
+        "SINCE_CUTOFF_MODULE",
+        "SINCE_CUTOFF_MODULE_NAME",
+        "SINCE_CUTOFF_OWN",
+        "SINCE_CUTOFF_SETDEFAULT",
+        "SINCE_CUTOFF_BARE",
+        "SINCE_CUTOFF_CONSTANT",
+        "SINCE_CUTOFF_TYPED",
+        "SINCE_CUTOFF_GET",
+        "SINCE_CUTOFF_GETENV",
+        "SINCE_CUTOFF_ITEM",
+        "SINCE_CUTOFF_IN",
+        "SINCE_CUTOFF_MAPPING",
+        "SINCE_CUTOFF_OR",
+        "SINCE_CUTOFF_ATTRIBUTE",
+        "SINCE_CUTOFF_VAR",
+    }
+    assert _env_reads(modules) == expected
+    assert _env_reads(dict(reversed(modules.items()))) == expected
+    assert _module_name(SRC / "providers" / "__init__.py") == "since_cutoff.providers"
+    assert _module_name(SRC / "models.py") == "since_cutoff.models"
+    table = "## Environment variables\n\n| G | V | R | E |\n|---|---|---|---|\n"
+    assert _env_table(table + "| a | `ONE`, `TWO` | `THREE` | `FOUR` |\n\n## Files") == {
+        "ONE",
+        "TWO",
+    }
 
 
 def _options() -> dict[str, set[str]]:
@@ -169,6 +341,43 @@ def test_the_first_screen_quotes_what_the_scan_writes(name: str) -> None:
     assert f"**anthropic 1.8.0** (compared from 0.56.0)\n- {note}\n" in text
     # One command that needs no API key.
     assert "```bash\nuvx since-cutoff scan\n```" in first
+
+
+def _hub_note() -> str:
+    """The note the sample block has for ``hf_hub_download`` (huggingface-hub 0.33.1 -> 2.0.0):
+    three parameters the library says nothing replaces, and one it says nothing of, in the
+    order of 0.33.1's signature."""
+    signature = (
+        "hf_hub_download(repo_id, filename, *, proxies=None, force_filename=None, "
+        "local_dir_use_symlinks='auto', resume_download=None)"
+    )
+    changes = [
+        APIChange(
+            "huggingface-hub",
+            "0.33.1",
+            "2.0.0",
+            PARAM_REMOVED,
+            "huggingface_hub.hf_hub_download",
+            "hf_hub_download",
+            parameter=p,
+            hint=None if p == "proxies" else f"`{p}` is deprecated without replacement.",
+            old_signature=signature,
+            library_names=[],
+        )
+        for p in ("proxies", "force_filename", "local_dir_use_symlinks", "resume_download")
+    ]
+    return diff_note(
+        changes, changelog="https://github.com/huggingface/huggingface_hub/releases"
+    ).line
+
+
+@pytest.mark.parametrize("name", READMES)
+def test_the_sample_block_quotes_what_sync_writes(name: str) -> None:
+    """The second bullet of the sample block still pointed at "releases (2.0.0)", the pinned
+    version, after the notes came to say "for the changes since 0.33.1"."""
+    note = _hub_note()
+    assert note.endswith("for the changes since 0.33.1. [diff]")
+    assert f"**huggingface-hub 2.0.0** (compared from 0.33.1)\n- {note}\n" in _text(name)
 
 
 @pytest.mark.parametrize("name", [*READMES, "docs/how-it-works.md"])
@@ -293,3 +502,57 @@ def test_troubleshooting_quotes_current_source_text(fragment: str) -> None:
     )
     assert fragment in source
     assert fragment in _text("docs/troubleshooting.md")
+
+
+# What `--fail-on changes` fails on, in each README's words, and what they said before 0.6.
+FAIL_ON_CHANGES = {
+    "README.md": ("since the release it is compared from", "after the cutoff"),
+    "README.es.md": ("desde la versión con la que se compara", "después de la fecha de corte"),
+    "README.fr.md": (
+        "depuis la version à partir de laquelle elle est comparée",
+        "après la date limite",
+    ),
+    "README.zh-CN.md": ("相对于它的对比版本", "截止日期之后"),
+}
+
+
+def _flat(text: str) -> str:
+    return " ".join(text.split())
+
+
+@pytest.mark.parametrize("name", READMES)
+def test_fail_on_changes_is_said_to_fail_on_a_change_since_the_comparison_release(
+    name: str,
+) -> None:
+    """`--fail-on changes` (and the action's `fail-on-changes`) fails on a change since the
+    release a dependency is compared from, by default the latest one published 30 days before
+    the cutoff, so a change older than the cutoff counts: the action table and the exit codes
+    said "changed its API after the cutoff", as did `--help`, action.yml and
+    docs/reference.md."""
+    since, old = FAIL_ON_CHANGES[name]
+    text = _text(name)
+    [row] = [line for line in text.splitlines() if line.startswith("| `fail-on-changes` |")]
+    three = text.split("- `3` ", 1)[1].split("- `4` ", 1)[0]  # the exit codes' 3
+    for said in (row, _flat(three)):
+        assert since in said and "30" in said and old not in said, said
+    if name != "README.md":
+        return
+    # The --help of scan, the action and the reference say the same.
+    [sub] = [a for a in build_parser()._actions if isinstance(a, argparse._SubParsersAction)]
+    help_text = _flat(sub.choices["scan"]._option_string_actions["--fail-on"].help or "")
+    assert (
+        "changed its API since the release it is compared from, by default the latest one "
+        "published 30 days before the cutoff (changes)" in help_text
+    )
+    action = _flat(_text("action.yml"))
+    assert (
+        "Fail the step when any dependency changed its API since the release it is compared "
+        "from (by default the latest one published 30 days before the cutoff)." in action
+    )
+    assert "dependencies whose API changed since the release they are compared from" in action
+    [scan_row] = [line for line in _text("docs/reference.md").splitlines() if "| `scan` |" in line]
+    assert "`changes` (a dependency changed its API since the release it is compared from" in (
+        scan_row
+    )
+    for said in (help_text, action, scan_row):
+        assert "API after the cutoff" not in said

@@ -799,11 +799,12 @@ def test_mcp_2_leads_with_the_package_move_and_the_renames(tmp_path) -> None:
         "[diff + move checked]",
         "`FastMCP` is now `MCPServer`: `mcp.server.FastMCP` moved to `mcp.server.MCPServer`; "
         "import it with `from mcp.server import MCPServer`. [diff + move checked]",
-        # Its text, "Use :class:`X` for ..., or :class:`Y` for ... instead.", states both.
+        # Its text, "Use :class:`X` for ..., or :class:`Y` for ... instead.", states both, and
+        # when to use which: quoted whole (it fits QUOTE_LIMIT), the classes as code.
         "`mcp.client.auth.extensions.client_credentials.RFC7523OAuthClientProvider` was removed; "
-        "do not use it. Use `mcp.client.auth.extensions.client_credentials."
-        "ClientCredentialsOAuthProvider` or `mcp.client.auth.extensions.client_credentials."
-        "PrivateKeyJWTOAuthProvider` instead. [diff + library]",
+        'do not use it. mcp 1.28.1 said: "Use `ClientCredentialsOAuthProvider` for '
+        "client_credentials with client_id + client_secret, or `PrivateKeyJWTOAuthProvider` for "
+        'client_credentials with private_key_jwt authentication instead." [diff + library]',
     ]
     # With a bigger budget the next ones follow; the package's move still counts once, and
     # two APIs that say the same share one bullet (8 APIs, 7 notes).

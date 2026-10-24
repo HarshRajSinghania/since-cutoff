@@ -30,7 +30,7 @@ import logging
 import os
 import re
 import sys
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field, replace
 from datetime import date
@@ -51,12 +51,19 @@ from since_cutoff.apidiff import (
     PARAM_REMOVED,
     PARAM_REQUIRED,
     TIER_INTERNAL,
+    UNREAD_NEXT_TO,
+    UNREAD_SIBLING,
+    UNREAD_SYNTAX,
+    UNREAD_UNPARSED,
     APIChange,
+    UnparsedSources,
     dependency_module,
     diff_sources_with_unread,
     griffe_version,
+    is_python_specific,
     load_api,
     requirements,
+    running_python,
     unread_text,
 )
 from since_cutoff.apidiff import (
@@ -371,14 +378,21 @@ class PackageScan:
     changelog: str | None = None
     # CHANGED: modules the pinned release ships compiled, without a source or a stub, that hid
     # something the comparison release had: the diff did not report its removal, and could
-    # not compare it (issue #52; diff_sources_with_unread); and classes whose attributes a
-    # base outside the package may set, which were not compared (apidiff.UNREAD_BASE).
+    # not compare it (issue #52; diff_sources_with_unread); classes whose attributes a base
+    # outside the package may set, which were not compared (apidiff.UNREAD_BASE); and modules
+    # of either release that the running Python could not parse (apidiff.UNREAD_SYNTAX: private
+    # ones in syntax of a newer Python, with the Python that can; apidiff.UNREAD_UNPARSED).
     unread: list[str] = field(default_factory=list)
     # CHANGED: modules of the pinned release that take their names from another distribution
     # (mcp 2.3's ``mcp/types/__init__.py`` is ``from mcp_types import *``) which could not be
-    # read, with why (``"mcp-types 2.3.0, which could not be downloaded: ..."``): changes to
-    # them are not reported (Engine._siblings, reexport_warning).
+    # read, with why (``"mcp-types 2.3.0, which could not be downloaded: ..."``, or one whose
+    # sources the running Python cannot parse): changes to them are not reported
+    # (Engine._siblings, reexport_warning).
     reexported: dict[str, str] = field(default_factory=dict)
+    # SKIPPED because the running Python cannot parse sources the diff needs
+    # (apidiff.UnparsedSources; ``reason`` says which Python can): ``scan --fail-on`` fails on
+    # it, since the package may well have changed (report.fail_reason).
+    unparsed: bool = False
 
     @property
     def breaking(self) -> list[APIChange]:
@@ -486,6 +500,41 @@ def reexport_warning(s: PackageScan) -> str:
         for why, modules in by_reason.items()
     ]
     return f"{s.name} {s.locked}: " + "; ".join(parts)
+
+
+def _unparsed_sibling(
+    s: PackageScan,
+    entry: str,
+    siblings: tuple[Sequence[Sibling], Sequence[Sibling]],
+) -> None:
+    """Record in :attr:`PackageScan.reexported` the modules of ``s`` that take their names from
+    a distribution read next to a release whose sources the running Python could not parse
+    (``entry``: apidiff.UNREAD_SIBLING, by its import name and that release, with the Python
+    that can when its syntax tells), among ``siblings`` (those read next to the release at the
+    cutoff, then next to the pinned one): ``"scikit-learn 1.7.2: changes to
+    sklearn.externals.array_api_compat.numpy are not reported (re-exported from numpy 2.3.1,
+    whose sources Python 3.10 cannot parse: run since-cutoff with Python 3.11 or later to read
+    them)"``. The package itself is checked all the same."""
+    rest = entry[len(UNREAD_SIBLING) :]
+    if UNREAD_SYNTAX in rest:
+        head, _, needs = rest.partition(UNREAD_SYNTAX)
+        how = (
+            f"whose sources Python {running_python()} cannot parse: run since-cutoff with Python "
+            f"{needs} or later to read them"
+        )
+    else:
+        head = rest.partition(UNREAD_UNPARSED)[0]
+        how = f"whose sources Python {running_python()} could not parse"
+    package, _, release = head.partition(UNREAD_NEXT_TO)
+    old, new = siblings
+    side = old if release == s.cutoff_version else new if release == s.locked else [*old, *new]
+    found = [sib for sib in side if sib.package == package]
+    versions = list(dict.fromkeys(sib.version for sib in found if sib.version))
+    name = found[0].name if found else package
+    shown = f"{name} {' and '.join(versions)}" if versions else name
+    modules = list(dict.fromkeys(m for sib in found for m in sib.modules)) or [package]
+    for module in modules:
+        s.reexported.setdefault(module, f"{shown}, {how}")
 
 
 def _listed(items: list[str]) -> str:
@@ -728,8 +777,9 @@ class ScanResult:
 
     def new_package_notes(self) -> list[Note]:
         """One note (:func:`notes.new_package_note`, ``[metadata]``) for each dependency first
-        released after the cutoff, or within the margin before it, that the project's code
-        imports (:meth:`new_imported`)."""
+        released after the cutoff, or within the margin before it, or whose comparison release
+        was an empty placeholder, that the project's code imports (:meth:`new_imported`)."""
+        target = self.target
         return [
             new_package_note(
                 p.name,
@@ -738,7 +788,10 @@ class ScanResult:
                 p.summary,
                 p.changelog,
                 p.locked_date,
-                self.target.margin if self.target.released_within_margin(p) else None,
+                target.margin if target.released_within_margin(p) or p.cutoff_version else None,
+                # A NEW dependency with a comparison release: an empty placeholder.
+                placeholder=p.cutoff_version,
+                by=target.compare_date.isoformat() if p.cutoff_version else None,
             )
             for p in self.new_imported()
         ]
@@ -1416,7 +1469,7 @@ class Engine:
             self._diff_all(to_diff, locked=locked, when=target.compare_date)
         self.reporter.done()
         for s in to_diff:
-            if s.unread:
+            if unread_warning(s):
                 warnings.append(unread_warning(s))
                 self.reporter.warn(warnings[-1])
             if s.reexported:
@@ -1532,8 +1585,17 @@ class Engine:
         comparison release is read when the diff is not cached, and once to learn which
         distributions it takes names from (the diff's key names them: :meth:`_diff_key`), which
         the store then keeps (:meth:`_wanted_siblings`), so that a later scan serves the cached
-        diff from the pinned release alone, with nothing else to download."""
+        diff from the pinned release alone, with nothing else to download.
+
+        A package whose sources the running Python cannot parse (apidiff.UnparsedSources) is
+        SKIPPED, with the message as its reason (:attr:`PackageScan.unparsed`), and nothing is
+        cached for it, so that a run on a newer Python diffs it."""
         locked = locked or {}
+
+        def unchecked(s: PackageScan, exc: UnparsedSources) -> None:
+            s.status, s.reason, s.unparsed = SKIPPED, str(exc), True
+            self.reporter.advance(label=s.name)
+
         wanted: list[tuple[str, str]] = []
         for s in scans:
             assert s.cutoff_version and s.locked
@@ -1559,13 +1621,12 @@ class Engine:
                 self._siblings(self._wanted_siblings(s.name, s.locked, new) or [], locked=locked),
             )
             key = self._diff_key(s, _sibling_tags(pair))
-            cached = self.store.get("diffs", key)
+            cached = self._cached_diff(s, key)
             if cached is None:
                 missing.append((s.name, s.cutoff_version))
                 continue
             s.import_names = list(new.import_names)
-            unread = self.store.get("diffs", self._unread_key(s)) or []
-            self._finish(s, (cached, unread), key, store=False)
+            self._finish(s, cached, key, store=False, siblings=pair)
             served.add(id(s))
         trees.update(self._fetch_sources(missing))
 
@@ -1611,8 +1672,10 @@ class Engine:
             if sib.version
         )
 
+        # Each diff to compute: its scan, its cache key, the distributions read next to either
+        # release, and diff_sources_with_unread's arguments.
         pending: list[
-            tuple[PackageScan, SourceTree, SourceTree, list[str], list[Path], list[Path], str]
+            tuple[PackageScan, str, tuple[list[Sibling], list[Sibling]], dict[str, Any]]
         ] = []
         for s, old, new in ready:
             roots: dict[str, list[Path]] = {"old": [], "new": []}
@@ -1633,55 +1696,52 @@ class Engine:
                     for module in sib.modules:
                         s.reexported.setdefault(module, why)
             key = self._diff_key(s, tuple(fetched))
-            cached = self.store.get("diffs", key)
+            read_next = siblings[id(s)]
+            cached = self._cached_diff(s, key)
             if cached is not None:
-                unread = self.store.get("diffs", self._unread_key(s)) or []
-                self._finish(s, (cached, unread), key, store=False)
+                self._finish(s, cached, key, store=False, siblings=read_next)
                 continue
-            names = sorted(set(old.import_names) | set(new.import_names))
-            pending.append((s, old, new, names, roots["old"], roots["new"], key))
+            arguments: dict[str, Any] = {
+                "package": s.name,
+                "old_version": old.version,
+                "old_root": old.root,
+                "new_version": new.version,
+                "new_root": new.root,
+                "import_names": sorted(set(old.import_names) | set(new.import_names)),
+                "old_requires": old.requires,
+                "new_requires": new.requires,
+                "new_compiled": list(new.compiled),
+                "old_roots": roots["old"],
+                "new_roots": roots["new"],
+                # From the cached release lists: which Python each release allows tells syntax
+                # of a newer one from code that no Python parses (apidiff._needs_python).
+                "old_requires_python": self.pypi.requires_python(s.name, old.version),
+                "new_requires_python": self.pypi.requires_python(s.name, new.version),
+            }
+            pending.append((s, key, read_next, arguments))
 
         if len(pending) <= 1 or not self.processes or os.environ.get("SINCE_CUTOFF_NO_PROCESSES"):
-            for s, old, new, names, old_roots, new_roots, key in pending:
-                result = diff_sources_with_unread(
-                    s.name,
-                    old.version,
-                    old.root,
-                    new.version,
-                    new.root,
-                    names,
-                    old_requires=old.requires,
-                    new_requires=new.requires,
-                    new_compiled=list(new.compiled),
-                    old_roots=old_roots,
-                    new_roots=new_roots,
-                )
-                self._finish(s, result, key)
+            for s, key, read_next, arguments in pending:
+                try:
+                    result = diff_sources_with_unread(**arguments)
+                except UnparsedSources as exc:
+                    unchecked(s, exc)
+                    continue
+                self._finish(s, result, key, siblings=read_next)
             return
         workers = max(1, min(len(pending), (os.cpu_count() or 2) - 1, 6))
         pool = ProcessPoolExecutor(max_workers=workers)
         try:
             futs = {
-                pool.submit(
-                    diff_sources_with_unread,
-                    s.name,
-                    old.version,
-                    old.root,
-                    new.version,
-                    new.root,
-                    names,
-                    old_requires=old.requires,
-                    new_requires=new.requires,
-                    new_compiled=list(new.compiled),
-                    old_roots=old_roots,
-                    new_roots=new_roots,
-                ): (s, key)
-                for s, old, new, names, old_roots, new_roots, key in pending
+                pool.submit(diff_sources_with_unread, **arguments): (s, key, read_next)
+                for s, key, read_next, arguments in pending
             }
             for fut in as_completed(futs):
-                s, key = futs[fut]
+                s, key, read_next = futs[fut]
                 try:
-                    self._finish(s, fut.result(), key)
+                    self._finish(s, fut.result(), key, siblings=read_next)
+                except UnparsedSources as exc:
+                    unchecked(s, exc)
                 except Exception as exc:  # a crash in one package must not sink the run
                     s.status, s.reason = SKIPPED, f"API diff failed: {exc}"
                     self.reporter.advance(label=s.name)
@@ -1810,6 +1870,28 @@ class Engine:
         by star_imports_from_outside, a change to which moves DIFF_SCHEMA with the diff's."""
         return stable_hash("siblings", DIFF_SCHEMA, SOURCE_SCHEMA, name, version)
 
+    @staticmethod
+    def _python_key(key: str) -> str:
+        """Where a diff of sources the running Python could not all parse is kept, for this
+        Python only (:meth:`_finish`), from the key any Python's diff has."""
+        return stable_hash(key, "python", running_python())
+
+    def _cached_diff(
+        self, s: PackageScan, key: str
+    ) -> tuple[list[dict[str, Any]], list[str]] | None:
+        """The diff the store has for ``key`` and its :attr:`PackageScan.unread`: one that any
+        Python reads alike, else one that this Python made of sources it could not all parse;
+        None when there is neither."""
+        unread_key = self._unread_key(s)
+        for diff_key, kept in (
+            (key, unread_key),
+            (self._python_key(key), self._python_key(unread_key)),
+        ):
+            cached = self.store.get("diffs", diff_key)
+            if cached is not None:
+                return cached, self.store.get("diffs", kept) or []
+        return None
+
     def _finish(
         self,
         s: PackageScan,
@@ -1817,16 +1899,31 @@ class Engine:
         key: str,
         *,
         store: bool = True,
+        siblings: tuple[Sequence[Sibling], Sequence[Sibling]] = ((), ()),
     ) -> None:
-        """Take a diff (its changes, and the compiled modules that hid something), computed or
-        from the cache; only a finished diff sets :attr:`PackageScan.unread`, so a failed one
-        warns of nothing."""
+        """Take a diff (its changes, and what it could not compare), computed or from the cache;
+        only a finished diff sets :attr:`PackageScan.unread`, so a failed one warns of nothing.
+
+        A diff that left out sources the running Python could not parse
+        (apidiff.is_python_specific) is stored for this Python only (:meth:`_python_key`): a
+        newer one may read them. Of ``siblings``, the distributions read next to the release at
+        the cutoff and next to the pinned one, one whose sources it could not parse
+        (apidiff.UNREAD_SIBLING) is a re-export the scan warns of
+        (:attr:`PackageScan.reexported`)."""
         changes, unread = result
         if store:
-            self.store.set("diffs", key, changes)
+            specific = any(is_python_specific(entry) for entry in unread)
+            diff_key = self._python_key(key) if specific else key
+            unread_key = self._unread_key(s)
+            self.store.set("diffs", diff_key, changes)
             if unread:
-                self.store.set("diffs", self._unread_key(s), unread)
-        s.unread = list(unread)
+                self.store.set(
+                    "diffs", self._python_key(unread_key) if specific else unread_key, unread
+                )
+        s.unread = [e for e in unread if not e.startswith(UNREAD_SIBLING)]
+        for entry in unread:
+            if entry.startswith(UNREAD_SIBLING):
+                _unparsed_sibling(s, entry, siblings)
         s.changes = [APIChange.from_dict(c) for c in changes]
         # Module metadata alone (``__version__``) is not an API change worth flagging.
         s.status = CHANGED if s.distinct else UNCHANGED

@@ -36,7 +36,9 @@ inputs:
     required: false
     default: ""
   fail-on-changes:
-    description: Fail the step when any dependency changed its API after the cutoff.
+    description: >-
+      Fail the step when any dependency changed its API since the release it is compared
+      from (by default the latest one published 30 days before the cutoff).
     required: false
     default: "false"
   check-notes:
@@ -70,7 +72,9 @@ inputs:
 
 outputs:
   changed-packages:
-    description: Comma-separated names of the dependencies whose API changed after the cutoff.
+    description: >-
+      Comma-separated names of the dependencies whose API changed since the release they
+      are compared from.
     value: ${{ steps.scan.outputs.changed-packages }}
   changes:
     description: >-
@@ -108,7 +112,7 @@ runs:
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ runner.temp }}/since-cutoff-cache
-        key: since-cutoff-${{ runner.os }}-${{ inputs.since-cutoff-version }}-${{ hashFiles('**/uv.lock', '**/poetry.lock', '**/pdm.lock', '**/pylock*.toml', '**/Pipfile.lock', '**/requirements*.txt', '**/pyproject.toml') }}
+        key: since-cutoff-${{ runner.os }}-${{ inputs.since-cutoff-version }}-${{ hashFiles('**/uv.lock', '**/poetry.lock', '**/pdm.lock', '**/pylock*.toml', '**/Pipfile.lock', '**/requirements*.txt', '**/environment.yml', '**/environment.yaml', '**/pyproject.toml') }}
         restore-keys: |
           since-cutoff-${{ runner.os }}-${{ inputs.since-cutoff-version }}-
           since-cutoff-${{ runner.os }}-

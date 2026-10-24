@@ -896,8 +896,9 @@ def status_lines(project: Project, statuses: Sequence[TargetStatus]) -> list[str
         if s.state == NEVER_RUN:
             out.append(
                 f"{t.name}: no since-cutoff notes. {SYNC} writes them if your code uses an API "
-                "that changed after the cutoff (`since-cutoff sync --check` says whether it "
-                "does)."
+                "that changed since the release its package is compared from (by default the "
+                "latest one published 30 days before the cutoff); `since-cutoff sync --check` "
+                "says whether it does."
             )
             continue
         basis = t.basis

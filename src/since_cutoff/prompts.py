@@ -74,12 +74,17 @@ def forbidden_identifiers(change: APIChange) -> list[str]:
     return sorted(n for n in names if n and not n.startswith("__"))
 
 
+def _of(change: APIChange) -> str:
+    """`` of ReActAgent`` for a hint that is another object's text (APIChange.hint_from)."""
+    return f" of {change.hint_from}" if change.hint_from else ""
+
+
 def task_prompt(change: APIChange, import_names: list[str], n: int) -> str:
     extra = ""
     if change.moved_to:
         extra += f"\nThe object now lives at: {change.moved_to}"
     if change.hint:
-        extra += f"\nThe old version's deprecation note said: {change.hint}"
+        extra += f"\nThe old version's deprecation note{_of(change)} said: {change.hint}"
     if change.deprecation:
         extra += f"\nDeprecation message in the new version: {change.deprecation}"
     return TASK_TEMPLATE.format(
@@ -238,7 +243,7 @@ def note_prompt(
     if change.moved_to:
         extra += f"\nThe object now lives at: {change.moved_to}"
     if change.hint:
-        extra += f"\nThe old version's deprecation note said: {change.hint}"
+        extra += f"\nThe old version's deprecation note{_of(change)} said: {change.hint}"
     if change.deprecation:
         extra += f"\nDeprecation message: {change.deprecation}"
     if change.suggestions:

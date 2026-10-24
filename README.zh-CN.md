@@ -191,7 +191,7 @@ since-cutoff: the library notes in AGENTS.md are out of date: anthropic 1.8.0 in
 - `sync --suggestions` 会加上锁定版本中那些只是与被移除内容相似的名称，并标为 `[not confirmed]`。区块会记录这两个选择，之后的 sync 会沿用它们。
 - `since-cutoff run --apply` 写入的说明带有 `[type-checked]` 标签。只要它所在的包版本不变、你的代码仍在用那个 API，`sync` 就会保留它，代替同一 API 由 diff 得出的说明。
 
-Claude Code 会读取 CLAUDE.md；只有在没有 CLAUDE.md，或者 CLAUDE.md 用一行 `@AGENTS.md` 导入了 AGENTS.md 时，才会读取 AGENTS.md（[记忆文档](https://code.claude.com/docs/en/memory)，英文）；Codex、Cursor 和 Copilot 读取 AGENTS.md。两个文件都在、还没有说明块时，如果 CLAUDE.md 导入了 AGENTS.md，说明只写进 AGENTS.md；没有导入时，两个文件都写（[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)），`scan`、`sync` 和 `status` 会说明怎样只保留一份：在 CLAUDE.md 中加一行 `@AGENTS.md`，再运行 `since-cutoff unapply --target CLAUDE.md`。已经只在 AGENTS.md 中的说明块会留在那里；CLAUDE.md 没有导入它时，它们会给出提示。两个文件都有说明块、之后 CLAUDE.md 又导入了 AGENTS.md 时，它们会提示 CLAUDE.md 中是第二份副本，并给出同样的 `unapply` 命令。代码片段或代码块中的 `@AGENTS.md` 不算导入。
+Claude Code 会读取 CLAUDE.md；只有在没有 CLAUDE.md，或者 CLAUDE.md 用一行 `@AGENTS.md` 导入了 AGENTS.md 时，才会读取 AGENTS.md（[记忆文档](https://code.claude.com/docs/en/memory)，英文）；Codex、Cursor 和 Copilot 读取 AGENTS.md；Gemini CLI 读取 GEMINI.md，只有当它的 settings.json 中的 `context.fileName` 列出 AGENTS.md 时才会读取 AGENTS.md（`"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}`；[GEMINI.md 文档](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md)，英文）。两个文件都在、还没有说明块时，如果 CLAUDE.md 导入了 AGENTS.md，说明只写进 AGENTS.md；没有导入时，两个文件都写（[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)），`scan`、`sync` 和 `status` 会说明怎样只保留一份：在 CLAUDE.md 中加一行 `@AGENTS.md`，再运行 `since-cutoff unapply --target CLAUDE.md`。已经只在 AGENTS.md 中的说明块会留在那里；CLAUDE.md 没有导入它时，它们会给出提示。两个文件都有说明块、之后 CLAUDE.md 又导入了 AGENTS.md 时，它们会提示 CLAUDE.md 中是第二份副本，并给出同样的 `unapply` 命令。代码片段或代码块中的 `@AGENTS.md` 不算导入。
 
 ### 测量你的模型
 
@@ -267,7 +267,7 @@ npx skills add MohammadHijjawi97/since-cutoff
 
 **为什么有些说明写着“since-cutoff found no replacement”？** 只有当库自己的弃用文本写明了替代写法、且这个名称存在于你锁定的版本中时，说明才会给出替代写法（标签 `[diff + library]`）。否则，说明陈述变更，并指向该包的变更日志（其 PyPI 元数据中的 Changelog 链接，否则是它在 GitHub 上的 releases 页面），查看自对照版本以来的变更；PyPI 两者都没有列出时，才指出没有找到替代写法：猜出来的替代写法会被 Agent 照着用，比不给更糟。锁定版本中那些只是名字相似的内容，会在终端中以“not confirmed as replacements”显示；`sync --suggestions` 会把它们写进说明，标为 `[not confirmed]`。当锁定版本的方法仍带有 `extra_body` 参数时（例如 anthropic 的 `Messages.create()`），说明会指出这一点，因为从签名中移除的请求参数可能仍被 API 接受。
 
-**写进 AGENTS.md 还是 CLAUDE.md？** `sync` 写进 AGENTS.md；只有 CLAUDE.md 时写进 CLAUDE.md；CLAUDE.md 没有导入 AGENTS.md 时两个文件都写（[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)）；两者中已经有区块的，就写进那个（`--target` 可以指定任意文件）。Claude Code 读取 CLAUDE.md，只有当 CLAUDE.md 用一行 `@AGENTS.md` 导入了 AGENTS.md 时才会读取 AGENTS.md；Codex、Cursor 和 Copilot 读取 AGENTS.md。要只保留一份，就在 CLAUDE.md 中加上 `@AGENTS.md`，再运行 `since-cutoff unapply --target CLAUDE.md`；两个文件都有区块时，`scan`、`sync` 和 `status` 会提示这一点，只在 AGENTS.md 中的区块没有被导入时也会提示。此后 `sync` 会更新每个有区块的文件，`status` 也会逐个报告。
+**写进 AGENTS.md 还是 CLAUDE.md？** `sync` 写进 AGENTS.md；只有 CLAUDE.md 时写进 CLAUDE.md；CLAUDE.md 没有导入 AGENTS.md 时两个文件都写（[#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)）；两者中已经有区块的，就写进那个（`--target` 可以指定任意文件）。Claude Code 读取 CLAUDE.md，只有当 CLAUDE.md 用一行 `@AGENTS.md` 导入了 AGENTS.md 时才会读取 AGENTS.md；Codex、Cursor 和 Copilot 读取 AGENTS.md；Gemini CLI 读取 GEMINI.md，只有当 `context.fileName` 列出 AGENTS.md 时才会读取它（`"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}`）。要只保留一份，就在 CLAUDE.md 中加上 `@AGENTS.md`，再运行 `since-cutoff unapply --target CLAUDE.md`；两个文件都有区块时，`scan`、`sync` 和 `status` 会提示这一点，只在 AGENTS.md 中的区块没有被导入时也会提示。此后 `sync` 会更新每个有区块的文件，`status` 也会逐个报告。
 
 **这些说明要花多少 token？** Agent 每一轮都会读取这个区块。对示例项目来说，区块约 410 个 token，其中两条说明约 140 个；其余是开头说明，写明模型和截止日期并解释各个标签（按每 4 个字符一个 token 计算，与 since-cutoff 自己的算法一致）。`sync` 只为你的代码用到的有变更 API 写说明（`--scope imported` 为每个导入的包最多再加 5 条），模型写的说明最多 60 个英文单词。在基准测试中，区块在 285 到 505 个 token 之间，带说明的会话消耗的总 token 数是不带说明的 0.73 倍。`run` 会报告每个区块的 token 数。
 
@@ -397,12 +397,12 @@ gemini extensions install https://github.com/MohammadHijjawi97/since-cutoff
 `api_changes("huggingface-hub", model="claude-haiku-4-5", to_version="2.0.0")` 的返回结果（真实输出，有删节）：
 
 ```markdown
-# huggingface-hub 0.29.1 -> 2.0.0
+# huggingface-hub 0.28.0 -> 2.0.0
 
-- From 0.29.1 (2025-02-20): the newest release on or before 2025-02-28 (training cutoff of claude-haiku-4-5, from models.dev)
+- From 0.28.0 (2025-01-28): the newest release on or before 2025-01-29, 30 days before the cutoff 2025-02-28 (training cutoff of claude-haiku-4-5, from models.dev)
 - To 2.0.0 (2026-09-24): as requested
 - Warning: huggingface-hub 2.0.0: huggingface_hub.hf_file_system.HfFileSystemFile inherits from fsspec.spec.AbstractBufferedFile, which since-cutoff did not read; the attributes it sets are not compared
-- 98 breaking changes, 0 new deprecations (dependencies switched 1, removed or moved 45, parameters removed 43, parameters now required 7, changed kind 1, now keyword-only or positional-only 1, +8 internal)
+- 104 breaking changes, 0 new deprecations (dependencies switched 1, removed or moved 49, parameters removed 45, parameters now required 7, changed kind 1, now keyword-only or positional-only 1, +8 internal)
 
 ## Dependencies switched
 
@@ -420,7 +420,7 @@ gemini extensions install https://github.com/MohammadHijjawi97/since-cutoff
 - `huggingface_hub.snapshot_download(proxies=...)`: parameter `proxies` was removed; 2.0.0's source still handles `proxies` (huggingface_hub/utils/_validators.py:178), so calls passing it may run with a warning; type checkers reject it
 ...
 
-Not listed: 58 breaking changes, 0 new deprecations (removed or moved 30, parameters removed 28). Narrow with symbol="..." or raise limit.
+Not listed: 64 breaking changes, 0 new deprecations (removed or moved 34, parameters removed 30). Narrow with symbol="..." or raise limit.
 ```
 
 加上 `symbol="hf_hub_download"` 后，只列出这个函数的 8 个变更（`resume_download=`、`force_filename=`、`local_dir_use_symlinks=` 和 `proxies=`，分别出现在该函数和 `HfApi` 上）。`symbol` 也可以按代码里的调用写法传入：`client.messages.create` 会找到 `Messages.create` 的变更。这个对比读取的是签名：这四个参数在 huggingface-hub 1.0 中已从签名里去掉，回答中还会补充说明 2.0.0 的源码仍会处理它们，所以传入它们的调用可能会带着警告运行。

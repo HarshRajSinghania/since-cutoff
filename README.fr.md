@@ -652,6 +652,29 @@ en anglais). Les résultats obtenus sur vos propres projets sont les bienvenus d
 Le fonctionnement de la mesure, et ce que ces chiffres montrent ou non, en détail :
 [l'article en français](https://mohammadhijjawi97.github.io/since-cutoff/fr/).
 
+## Recherche : un bloc de dépendances vaut-il les tokens qu'il coûte ?
+
+Un rapport technique (octobre 2026) teste le bloc qu'écrit `sync` sur 1607 sessions d'agents et en porte le résultat
+dans un modèle de seuil de rentabilité, où toutes les longueurs sont comptées en appels au modèle. Les principaux
+résultats :
+
+- **Une petite économie, sur un seul modèle.** Avec Opus 5.5, le bloc a ramené le coût à 0,80 fois celui de Claude
+  Code seul dans l'étude principale (IC à 95 % : 0,70-0,90) et les tokens à 0,79 fois sur huit nouvelles tâches ; une
+  réplication n'a pas rempli sa règle enregistrée à l'avance, et Sonnet 5.5, Haiku 5.5 et un agent à poids ouverts
+  n'ont montré aucune économie détectable. Toutes les tâches ont été écrites par Opus 5.5.
+- **L'en-tête seul a fait presque aussi bien.** Aucun test enregistré à l'avance n'a distingué le bloc complet d'un
+  en-tête qui ne fait que nommer les paquets modifiés, ni d'un avertissement générique « vérifiez les signatures
+  installées ».
+- **Peu coûteux, mais pas remboursé par les seules sessions concernées.** Dans les contextes d'agent de l'auteur, un
+  bloc de 704 tokens coûte environ 0,4 % d'un contexte ; les contextes qui ont besoin d'une API modifiée ne le
+  remboursent qu'à partir de 14 à 49 % de l'ensemble des contextes, contre 0,8 à 7 % estimés.
+- **L'effet sur toutes les autres sessions tranche.** Les tâches de contrôle le situent à une économie de 6,6 %, mais
+  on ne peut pas le distinguer de zéro. Désactiver le bloc par défaut est un choix d'aversion à la perte, pas la
+  preuve d'une perte ; un vrai test A/B d'environ 2500 à 2900 sessions par groupe trancherait la question.
+
+Lisez le [rapport, les données et les scripts](https://github.com/MohammadHijjawi97/since-cutoff/tree/main/research/dependency-block-study) (en anglais) ou le [résumé sur le site de la
+documentation](https://mohammadhijjawi97.github.io/since-cutoff/research.html) (en anglais).
+
 ## Utilisation depuis n'importe quel agent (MCP)
 
 `since-cutoff mcp` est un serveur MCP qui permet à un agent de code de demander « qu'est-ce qui

@@ -1,0 +1,37 @@
+schema = "since-cutoff-bench/task@1"
+id = "ant02-raw-response"
+library = "anthropic"
+pinned = "1.8.0"
+cutoff_version = "0.115.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-silent"  # stale code raises nothing at the call site; it stores a bound method instead of a str
+timeout_s = 900
+target_files = ["app/audit.py"]
+instruction = """
+Implement `ask_with_audit` in app/audit.py.
+
+Send `prompt` as a single user message to the model in `MODEL` with max_tokens=256, using the
+SDK's raw-response interface (`with_raw_response`) because the audit log must keep the exact
+HTTP body. Return a dict with:
+  "request_id": the value of the `request-id` response header,
+  "raw_body":   the HTTP response body decoded as text (the exact JSON the API returned),
+  "answer":     the concatenated text blocks of the parsed message.
+Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#with_raw_response-returns-the-new-response-classes",
+  "anthropic-0.115.0 wheel: anthropic/_legacy_response.py LegacyAPIResponse.text is a @property ('will be turned into a method in the next major version')",
+  "anthropic-1.8.0 wheel: _legacy_response.py is gone; anthropic/_response.py APIResponse.text() is a method",
+]
+# the raw body taken from the `.text` property without calling it
+stale_patterns = [
+  '''["']raw_body["']\s*:\s*[\w.]+\.text\s*(?:,|\}|$|#)''',
+  '''\braw_body\s*=\s*[\w.]+\.text\s*(?:$|#)''',
+]
+note_keys = ['\.text\(\)|\btext\b[^\n]{0,80}\bmethod\b']
+doc_keys = ['\.text\(\)']
+answer_tokens = [".text()"]
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_review = "pass"   # reviewer's alternative correct answer (REVIEW.md): the hidden tests must accept it

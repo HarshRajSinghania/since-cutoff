@@ -1,0 +1,27 @@
+schema = "since-cutoff-bench/task@1"
+id = "st02-image-column-width"
+library = "streamlit"
+pinned = "1.66.1"
+cutoff_version = "1.58.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-silent"  # st.image(use_column_width=True) is accepted but ignored on 1.66 (deprecation warning only): images stay at native width
+timeout_s = 900
+target_files = ["shop/gallery.py"]
+instruction = """
+Implement `product_card(product)` in shop/gallery.py: show the product photo with the product name as
+its caption, and the price below it (see the docstring). The photos are small thumbnails and must be
+scaled up to fill the width of their grid column, not shown at their native size. Do not add
+dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "streamlit-1.58.0 elements/image.py: use_column_width=True or 'always' -> width='stretch' (deprecated, warning)",
+  "streamlit-1.66.1 elements/image.py: use_column_width kept as a 'compatibility no-op for pre-1.61 callers'; the value is ignored ('`use_column_width` was removed and has no effect. Use width=stretch ...') -> width stays 'content'",
+  "since-cutoff griffe scan 2026-10-22 (<study>/expansion/probes/griffe_scan_candidates_2026-10-22.json): ImageMixin.image(use_column_width) changed (keyword-only, deprecated no-op)",
+  "run (2026-10-22, /c/b/venvs/streamlit-*; <study>/expansion/probes/streamlit_image_probe_output.txt): layout width passed to create_layout_config for use_column_width=True -> 'stretch' at 1.58.0, 'content' at 1.66.1; width='stretch' and use_container_width=True -> 'stretch' in both",
+]
+stale_patterns = [
+  '''\buse_column_width\b''',
+]
+note_keys = ['use_column_width']
+doc_keys = ['width=.stretch']
+answer_tokens = ['width="stretch"', "width='stretch'"]

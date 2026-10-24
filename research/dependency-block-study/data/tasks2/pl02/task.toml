@@ -1,0 +1,28 @@
+schema = "since-cutoff-bench/task@1"
+id = "pl02-batched-csv"
+library = "polars"
+pinned = "2.0.0"
+cutoff_version = "1.42.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # pl.read_csv_batched raises AttributeRemovedError on 2.0
+timeout_s = 900
+target_files = ["ledger/totals.py"]
+instruction = """
+Implement `customer_totals` in ledger/totals.py as described in its docstring: the ledger CSV can be
+larger than memory, so read it in batches of at most `batch_size` rows (never the whole file at once)
+and call `progress(rows_done)` after each batch. Do not add dependencies. You can run the tests with
+`pytest`.
+"""
+evidence = [
+  "https://github.com/pola-rs/polars/releases/tag/py-2.0.0 (major release removing deprecated APIs)",
+  "polars-1.42.1: pl.read_csv_batched(...).next_batches(n) works (batches of batch_size rows)",
+  "polars-2.0.0: pl.read_csv_batched raises AttributeRemovedError ('was removed in version 2.0; use scan_csv instead, in conjunction with LazyFrame.collect(engine=\"streaming\")')",
+  "run (2026-10-22, scratch venvs; <study>/expansion/probes/polars_batched_probe_output.txt): scan_csv(p).collect_batches(chunk_size=1000) -> [1000, 1000, 500] in both versions; read_csv_batched works at 1.42.1 only",
+]
+stale_patterns = [
+  '''\bread_csv_batched\b''',
+  '''\.next_batches\(''',
+]
+note_keys = ['read_csv_batched']
+doc_keys = ['collect_batches|scan_csv']
+answer_tokens = ["collect_batches"]

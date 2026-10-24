@@ -1,0 +1,36 @@
+schema = "since-cutoff-bench/task@1"
+id = "ant05-async-raw-parse"
+library = "anthropic"
+pinned = "1.8.0"
+cutoff_version = "0.115.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"   # stale code gets a coroutine from parse(): AttributeError on .content (plus 'never awaited' warning)
+timeout_s = 900
+target_files = ["app/worker.py"]
+instruction = """
+Implement `triage` in app/worker.py: the async counterpart of `ask_with_limits` (app/limits.py) for
+the new queue worker.
+
+Send `ticket` as a single user message to MODEL with max_tokens=512 and the SYSTEM prompt, through
+the AsyncAnthropic client it receives. Return the same keys as `ask_with_limits` ("answer",
+"tokens_remaining", "request_id") plus "throttle": True when tokens_remaining is below
+LOW_WATERMARK, otherwise False. Take the budget from the same response as the answer: one request
+per ticket.
+
+Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md (catalogue source; the change itself is verified in the wheels below)",
+  "anthropic-0.115.0 wheel: anthropic/resources/messages/messages.py:3103 AsyncMessagesWithRawResponse.create = _legacy_response.async_to_raw_response_wrapper(...), which returns a LegacyAPIResponse (_legacy_response.py:395-409); LegacyAPIResponse.parse() is a plain method (:102) whose docstring says 'For the async client: this will become a coroutine in the next major version'",
+  "anthropic-1.0.0 and 1.8.0 wheels: _legacy_response.py is gone; 1.8.0 anthropic/resources/messages/messages.py:2997 uses async_to_raw_response_wrapper from _response.py (:802-816), which returns AsyncAPIResponse, whose parse() is `async def` (_response.py:426)",
+]
+# parse() on a raw response without await
+stale_patterns = [
+  '''(?<!await )(?<![\w.])(?:raw|response|resp|raw_response|http_response|r)\.parse\(''',
+]
+note_keys = ['\bparse\b[^\n]{0,160}\b(?:await|coroutine|async)\b|\b(?:await|coroutine|async)\b[^\n]{0,160}\bparse\b']
+doc_keys = ['await\s+[\w.]+\.parse\(']
+answer_tokens = ["await raw.parse", "await response.parse", "await resp.parse"]
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_streaming = "pass"   # with_streaming_response as an async context manager: a valid answer the hidden test must accept

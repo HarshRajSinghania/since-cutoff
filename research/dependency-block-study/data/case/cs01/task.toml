@@ -1,0 +1,34 @@
+schema = "since-cutoff-bench/task@1"
+id = "cs01-litellm-math-server-stdio"
+library = "mcp"
+pinned = "2.3.0"
+cutoff_version = "1.28.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # real repository (case study): mcp.server.fastmcp no longer exists in mcp 2.x
+timeout_s = 900
+target_files = ["tests/integration/mcp/_math_server.py"]
+instruction = """
+Bug report from CI: the MCP end-to-end tests start the math test server
+tests/integration/mcp/_math_server.py over stdio (see tests/integration/mcp/_config_mcp_e2e.yaml), and since the
+dependency upgrade recorded in pyproject.toml / uv.lock the server crashes on start, so every MCP e2e test fails.
+
+Fix the server so that it works with the locked dependencies. It must keep exactly its current behaviour: the
+tools `add` (adds MCP_ADD_OFFSET), `multiply` and `request_headers`, the prompt `greeting`, the resources
+`memo://status` and `memo://greeting/{name}`, the module-level server object named `mcp`, and the command-line
+options (stdio is the default transport).
+
+This checkout is a subset of the LiteLLM repository (the MCP client, the proxy's MCP server and the integration
+test support code, with the real pyproject.toml and uv.lock). Only the locked `mcp` package and its dependencies
+are installed in this environment, so LiteLLM's own test suites cannot run here; check your fix by running the
+server directly. Change only tests/integration/mcp/_math_server.py. The lockfile is fixed: do not add, upgrade or
+install dependencies.
+"""
+evidence = ['litellm clone BerriAI/litellm @ b6f91a221b6b9df6f8a89ec6f8264ac87d63ff5d (2026-10-21), shallow clone from the real-world scan; pyproject.toml pins mcp>=2.3.0,<3, uv.lock locks mcp 2.3.0', '<study>/analysis/realworld_audit.csv: tests/integration/mcp/_math_server.py imports FastMCP from mcp.server.fastmcp (old form, TP)', "probe 2026-10-22 (mcp 2.3.0 venv): `import mcp.server.fastmcp` -> ModuleNotFoundError ('FastMCP was renamed to MCPServer'); MCPServer.settings has no host/port fields (assignment raises ValueError); MCPServer.run(transport='streamable-http', **kwargs) forwards host/port to run_streamable_http_async", 'mcp 1.28.1 (bench venv): the original file passes the hidden tests']
+stale_patterns = [
+  '^\s*from\s+mcp\.server\.fastmcp\b',
+  '\bFastMCP\s*\(',
+]
+note_keys = ['MCPServer|mcpserver|fastmcp|FastMCP']
+doc_keys = ['MCPServer']
+answer_tokens = []
+leak_allow = ["MCPServer", "mcpserver", "httpx2", "ToolError", "extra_body", ".text()", "Httpx2"]

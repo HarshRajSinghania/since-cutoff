@@ -1,0 +1,189 @@
+{
+  "schema": "since-cutoff-bench/notes@1",
+  "tool": "since-cutoff==0.4.1 (irrelevant-content control, addendum section 11 condition R)",
+  "model": "anthropic:claude-opus-5-5",
+  "source": "research/dependency-block-study\\notes\\tasks2-opus-5-5",
+  "donor": "bench\\notes",
+  "created_at": "2026-10-22T20:47:33.286073+00:00",
+  "frozen": true,
+  "frozen_at": "2026-10-22T20:47:33.286085+00:00",
+  "tasks": {
+    "mi01": {
+      "file": "mi01.md",
+      "sha256": "429ed55f89b571ae3d12c83a39236b1c27fd85a78f440a21055eb8bca6308fe9",
+      "bytes": 1791,
+      "tokens_est": 448,
+      "empty": false,
+      "note_keys": [
+        "httpx2"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "72a98463c84b3b69d12c9dd28ace6fe01b53718df87c3584fdcdf425bf715285",
+      "source_bytes": 1796,
+      "donor_section": "**openai 3.19.2** (2.44.0 at the cutoff)"
+    },
+    "mi02": {
+      "file": "mi02.md",
+      "sha256": "429ed55f89b571ae3d12c83a39236b1c27fd85a78f440a21055eb8bca6308fe9",
+      "bytes": 1791,
+      "tokens_est": 448,
+      "empty": false,
+      "note_keys": [
+        "include_blocks"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "72a98463c84b3b69d12c9dd28ace6fe01b53718df87c3584fdcdf425bf715285",
+      "source_bytes": 1796,
+      "donor_section": "**openai 3.19.2** (2.44.0 at the cutoff)"
+    },
+    "pl01": {
+      "file": "pl01.md",
+      "sha256": "e23e31ec7ec0835955c440848c4bacdd41cd73e6da23a501b3fcbac28c96377c",
+      "bytes": 1653,
+      "tokens_est": 413,
+      "empty": false,
+      "note_keys": [
+        "empty_as_null"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c",
+      "source_bytes": 1500,
+      "donor_section": "**mcp 2.2.0** (1.28.1 at the cutoff)"
+    },
+    "pl02": {
+      "file": "pl02.md",
+      "sha256": "e23e31ec7ec0835955c440848c4bacdd41cd73e6da23a501b3fcbac28c96377c",
+      "bytes": 1653,
+      "tokens_est": 413,
+      "empty": false,
+      "note_keys": [
+        "read_csv_batched"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c",
+      "source_bytes": 1500,
+      "donor_section": "**mcp 2.2.0** (1.28.1 at the cutoff)"
+    },
+    "pl03": {
+      "file": "pl03.md",
+      "sha256": "e23e31ec7ec0835955c440848c4bacdd41cd73e6da23a501b3fcbac28c96377c",
+      "bytes": 1653,
+      "tokens_est": 413,
+      "empty": false,
+      "note_keys": [
+        "replace_strict|\\breplace\\b[^\\n]{0,80}\\bdefault\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c",
+      "source_bytes": 1500,
+      "donor_section": "**mcp 2.2.0** (1.28.1 at the cutoff)"
+    },
+    "pl04": {
+      "file": "pl04.md",
+      "sha256": "e23e31ec7ec0835955c440848c4bacdd41cd73e6da23a501b3fcbac28c96377c",
+      "bytes": 1653,
+      "tokens_est": 413,
+      "empty": false,
+      "note_keys": [
+        "streaming[^\\n]{0,80}(engine|removed)|engine[^\\n]{0,40}streaming"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c",
+      "source_bytes": 1500,
+      "donor_section": "**mcp 2.2.0** (1.28.1 at the cutoff)"
+    },
+    "pl90": {
+      "file": "pl90.md",
+      "sha256": "e23e31ec7ec0835955c440848c4bacdd41cd73e6da23a501b3fcbac28c96377c",
+      "bytes": 1653,
+      "tokens_est": 413,
+      "empty": false,
+      "note_keys": [
+        "cum_sum|cumsum"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c",
+      "source_bytes": 1500,
+      "donor_section": "**mcp 2.2.0** (1.28.1 at the cutoff)"
+    },
+    "pl91": {
+      "file": "pl91.md",
+      "sha256": "e23e31ec7ec0835955c440848c4bacdd41cd73e6da23a501b3fcbac28c96377c",
+      "bytes": 1653,
+      "tokens_est": 413,
+      "empty": false,
+      "note_keys": [
+        "group_by|groupby"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c",
+      "source_bytes": 1500,
+      "donor_section": "**mcp 2.2.0** (1.28.1 at the cutoff)"
+    },
+    "st01": {
+      "file": "st01.md",
+      "sha256": "e5c983bc93f90d8a9b122813cf12414b2a13dee9b43eebcbf5ff6a69faa61e32",
+      "bytes": 1703,
+      "tokens_est": 426,
+      "empty": false,
+      "note_keys": [
+        "\\bcache\\b[^\\n]{0,80}(removed|cache_data)"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "37dfdb981fab747808d4fdebe52a4fbf9d3ed73937a74fd5db8a9d81950ca986",
+      "source_bytes": 1745,
+      "donor_section": "**openai 3.19.2** (2.44.0 at the cutoff)"
+    },
+    "st02": {
+      "file": "st02.md",
+      "sha256": "e8c7464ef49ffb61ea531bd34e78c7d3d751c14a9f4bd817a5ba2d972b1096e0",
+      "bytes": 1796,
+      "tokens_est": 449,
+      "empty": false,
+      "note_keys": [
+        "use_column_width"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "ad581fcad34fd43ec8b2b4eb8c2a688cae3db7cfe807304a262acae68038f48e",
+      "source_bytes": 1788,
+      "donor_section": "**huggingface-hub 2.0.0** (1.21.0 at the cutoff)"
+    },
+    "st90": {
+      "file": "st90.md",
+      "sha256": "e8c7464ef49ffb61ea531bd34e78c7d3d751c14a9f4bd817a5ba2d972b1096e0",
+      "bytes": 1796,
+      "tokens_est": 449,
+      "empty": false,
+      "note_keys": [
+        "experimental_get_query_params|query_params"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "ad581fcad34fd43ec8b2b4eb8c2a688cae3db7cfe807304a262acae68038f48e",
+      "source_bytes": 1788,
+      "donor_section": "**huggingface-hub 2.0.0** (1.21.0 at the cutoff)"
+    }
+  },
+  "manifest_sha256": "4d6a7787f9f09c15e42f701de382cfbdc2924a93869ab1113d0b0c86c5297112"
+}

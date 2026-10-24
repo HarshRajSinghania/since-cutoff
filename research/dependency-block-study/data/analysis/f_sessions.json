@@ -1,0 +1,1362 @@
+{
+  "protocol": "expansion/F_PROTOCOL.md",
+  "protocol_sha256": "decb42de1b16634e2af458ad26f7f6947342bb9e60781cd8fd02257f784241d0",
+  "generated": "2026-10-24T00:19:47+00:00",
+  "tool": "since-cutoff 0.5.0 (scan --cutoff, static)",
+  "bootstrap": {
+    "B": 10000,
+    "seed": 20261001,
+    "cluster": "project"
+  },
+  "transcripts_total": 1846,
+  "exclusions": {
+    "included": 1308,
+    "X0_empty": 232,
+    "X2a_research_session": 100,
+    "X1_benchmark": 206
+  },
+  "included": {
+    "transcripts": 1308,
+    "top_level_sessions": 28,
+    "subagent_transcripts": 1281,
+    "models": {
+      "claude-sonnet-4-5-20250929": 2,
+      "claude-opus-5-5": 1120,
+      "claude-sonnet-4-6": 108,
+      "claude-fable-5-1": 76,
+      "claude-haiku-4-5-20251001": 2
+    },
+    "date_range": [
+      "2026-05-19",
+      "2026-10-23"
+    ],
+    "dates_by_month": {
+      "2026-05": 1,
+      "2026-06": 108,
+      "2026-09": 763,
+      "2026-10": 436
+    },
+    "cutoffs": {
+      "2025-07-31": 2,
+      "2026-06-30": 1196,
+      "2025-08-31": 108,
+      "2025-02-28": 2
+    }
+  },
+  "edits": {
+    "python_edit_calls": 4639,
+    "header_source": {
+      "store_views": 167,
+      "none": 1052,
+      "originalFile": 19,
+      "write": 1844,
+      "read1": 643,
+      "disk": 914
+    },
+    "edits_with_third_party_dist": 1884,
+    "edits_with_unresolved_module": 137,
+    "transcripts_with_py_and_any_unresolved": 53,
+    "transcripts_with_py_but_no_resolved_dist": 278
+  },
+  "scans_primary": {
+    "groups": 15,
+    "ok": 15,
+    "seconds_total": 280,
+    "snippets_unparseable": 608,
+    "transcripts_scanned_ok": 235,
+    "transcripts_with_dists": 235,
+    "transcripts_with_unchecked_dist": 42,
+    "edits_scanned": 1884,
+    "snippets_scanned": 1884
+  },
+  "primary": {
+    "n_transcripts": 1308,
+    "edit_any": {
+      "k": 558,
+      "n": 1308,
+      "share": 0.4266,
+      "ci95": [
+        0.1998,
+        0.9608
+      ],
+      "clusters": 170
+    },
+    "edit_py": {
+      "k": 513,
+      "n": 1308,
+      "share": 0.3922,
+      "ci95": [
+        0.1813,
+        0.882
+      ],
+      "clusters": 170
+    },
+    "newer": {
+      "k": 155,
+      "n": 1308,
+      "share": 0.1185,
+      "ci95": [
+        0.0439,
+        0.2761
+      ],
+      "clusters": 170
+    },
+    "upper": {
+      "k": 91,
+      "n": 1308,
+      "share": 0.0696,
+      "ci95": [
+        0.0243,
+        0.1617
+      ],
+      "clusters": 170
+    },
+    "upper_breaking": {
+      "k": 77,
+      "n": 1308,
+      "share": 0.0589,
+      "ci95": [
+        0.0234,
+        0.1341
+      ],
+      "clusters": 170
+    },
+    "upper_new": {
+      "k": 91,
+      "n": 1308,
+      "share": 0.0696,
+      "ci95": [
+        0.0243,
+        0.1617
+      ],
+      "clusters": 170
+    },
+    "strict": {
+      "k": 11,
+      "n": 1308,
+      "share": 0.0084,
+      "ci95": [
+        0.0007,
+        0.022
+      ],
+      "clusters": 170
+    },
+    "given_edit_py": {
+      "newer": {
+        "k": 155,
+        "n": 513,
+        "share": 0.3021,
+        "ci95": [
+          0.1981,
+          0.378
+        ],
+        "clusters": 133
+      },
+      "upper": {
+        "k": 91,
+        "n": 513,
+        "share": 0.1774,
+        "ci95": [
+          0.1121,
+          0.2194
+        ],
+        "clusters": 133
+      },
+      "upper_breaking": {
+        "k": 77,
+        "n": 513,
+        "share": 0.1501,
+        "ci95": [
+          0.1091,
+          0.1806
+        ],
+        "clusters": 133
+      },
+      "strict": {
+        "k": 11,
+        "n": 513,
+        "share": 0.0214,
+        "ci95": [
+          0.0033,
+          0.034
+        ],
+        "clusters": 133
+      }
+    },
+    "given_edit_any": {
+      "upper": {
+        "k": 91,
+        "n": 558,
+        "share": 0.1631,
+        "ci95": [
+          0.0994,
+          0.2059
+        ],
+        "clusters": 145
+      },
+      "strict": {
+        "k": 11,
+        "n": 558,
+        "share": 0.0197,
+        "ci95": [
+          0.0029,
+          0.031
+        ],
+        "clusters": 145
+      }
+    },
+    "n_clusters": 170,
+    "largest_cluster_share": 0.274
+  },
+  "primary_session_level": {
+    "n_top_level_sessions": 28,
+    "edit_py": 4,
+    "upper": 3,
+    "strict": 2,
+    "subagent_transcripts_per_session_max": 638
+  },
+  "S1_without_tool_repo": {
+    "n_transcripts": 1167,
+    "edit_any": {
+      "k": 417,
+      "n": 1167,
+      "share": 0.3573,
+      "ci95": [
+        0.1688,
+        0.9502
+      ],
+      "clusters": 169
+    },
+    "edit_py": {
+      "k": 377,
+      "n": 1167,
+      "share": 0.3231,
+      "ci95": [
+        0.1524,
+        0.8654
+      ],
+      "clusters": 169
+    },
+    "newer": {
+      "k": 92,
+      "n": 1167,
+      "share": 0.0788,
+      "ci95": [
+        0.036,
+        0.215
+      ],
+      "clusters": 169
+    },
+    "upper": {
+      "k": 55,
+      "n": 1167,
+      "share": 0.0471,
+      "ci95": [
+        0.0195,
+        0.1288
+      ],
+      "clusters": 169
+    },
+    "upper_breaking": {
+      "k": 54,
+      "n": 1167,
+      "share": 0.0463,
+      "ci95": [
+        0.0189,
+        0.1268
+      ],
+      "clusters": 169
+    },
+    "upper_new": {
+      "k": 55,
+      "n": 1167,
+      "share": 0.0471,
+      "ci95": [
+        0.0195,
+        0.1288
+      ],
+      "clusters": 169
+    },
+    "strict": {
+      "k": 7,
+      "n": 1167,
+      "share": 0.006,
+      "ci95": [
+        0.0,
+        0.0207
+      ],
+      "clusters": 169
+    },
+    "given_edit_py": {
+      "newer": {
+        "k": 92,
+        "n": 377,
+        "share": 0.244,
+        "ci95": [
+          0.1865,
+          0.3075
+        ],
+        "clusters": 132
+      },
+      "upper": {
+        "k": 55,
+        "n": 377,
+        "share": 0.1459,
+        "ci95": [
+          0.1007,
+          0.1864
+        ],
+        "clusters": 132
+      },
+      "upper_breaking": {
+        "k": 54,
+        "n": 377,
+        "share": 0.1432,
+        "ci95": [
+          0.0978,
+          0.1837
+        ],
+        "clusters": 132
+      },
+      "strict": {
+        "k": 7,
+        "n": 377,
+        "share": 0.0186,
+        "ci95": [
+          0.0,
+          0.0354
+        ],
+        "clusters": 132
+      }
+    },
+    "given_edit_any": {
+      "upper": {
+        "k": 55,
+        "n": 417,
+        "share": 0.1319,
+        "ci95": [
+          0.0889,
+          0.1722
+        ],
+        "clusters": 144
+      },
+      "strict": {
+        "k": 7,
+        "n": 417,
+        "share": 0.0168,
+        "ci95": [
+          0.0,
+          0.0318
+        ],
+        "clusters": 144
+      }
+    },
+    "n_clusters": 169,
+    "largest_cluster_share": 0.307
+  },
+  "S2_without_scratch_only_python": {
+    "n_transcripts": 1308,
+    "edit_any": {
+      "k": 558,
+      "n": 1308,
+      "share": 0.4266,
+      "ci95": [
+        0.1998,
+        0.9608
+      ],
+      "clusters": 170
+    },
+    "edit_py": {
+      "k": 426,
+      "n": 1308,
+      "share": 0.3257,
+      "ci95": [
+        0.1456,
+        0.7566
+      ],
+      "clusters": 170
+    },
+    "newer": {
+      "k": 141,
+      "n": 1308,
+      "share": 0.1078,
+      "ci95": [
+        0.0368,
+        0.2619
+      ],
+      "clusters": 170
+    },
+    "upper": {
+      "k": 79,
+      "n": 1308,
+      "share": 0.0604,
+      "ci95": [
+        0.0185,
+        0.1483
+      ],
+      "clusters": 170
+    },
+    "upper_breaking": {
+      "k": 65,
+      "n": 1308,
+      "share": 0.0497,
+      "ci95": [
+        0.0179,
+        0.1194
+      ],
+      "clusters": 170
+    },
+    "upper_new": {
+      "k": 79,
+      "n": 1308,
+      "share": 0.0604,
+      "ci95": [
+        0.0185,
+        0.1483
+      ],
+      "clusters": 170
+    },
+    "strict": {
+      "k": 6,
+      "n": 1308,
+      "share": 0.0046,
+      "ci95": [
+        0.0,
+        0.0129
+      ],
+      "clusters": 170
+    },
+    "given_edit_py": {
+      "newer": {
+        "k": 141,
+        "n": 426,
+        "share": 0.331,
+        "ci95": [
+          0.2099,
+          0.3988
+        ],
+        "clusters": 128
+      },
+      "upper": {
+        "k": 79,
+        "n": 426,
+        "share": 0.1854,
+        "ci95": [
+          0.102,
+          0.2288
+        ],
+        "clusters": 128
+      },
+      "upper_breaking": {
+        "k": 65,
+        "n": 426,
+        "share": 0.1526,
+        "ci95": [
+          0.0989,
+          0.1887
+        ],
+        "clusters": 128
+      },
+      "strict": {
+        "k": 6,
+        "n": 426,
+        "share": 0.0141,
+        "ci95": [
+          0.0,
+          0.0218
+        ],
+        "clusters": 128
+      }
+    },
+    "given_edit_any": {
+      "upper": {
+        "k": 79,
+        "n": 558,
+        "share": 0.1416,
+        "ci95": [
+          0.0637,
+          0.2013
+        ],
+        "clusters": 145
+      },
+      "strict": {
+        "k": 6,
+        "n": 558,
+        "share": 0.0108,
+        "ci95": [
+          0.0,
+          0.0188
+        ],
+        "clusters": 145
+      }
+    },
+    "n_clusters": 170,
+    "largest_cluster_share": 0.274
+  },
+  "S3_unchecked_as_changed": {
+    "n_transcripts": 1308,
+    "edit_any": {
+      "k": 558,
+      "n": 1308,
+      "share": 0.4266,
+      "ci95": [
+        0.1998,
+        0.9608
+      ],
+      "clusters": 170
+    },
+    "edit_py": {
+      "k": 513,
+      "n": 1308,
+      "share": 0.3922,
+      "ci95": [
+        0.1813,
+        0.882
+      ],
+      "clusters": 170
+    },
+    "newer": {
+      "k": 155,
+      "n": 1308,
+      "share": 0.1185,
+      "ci95": [
+        0.0439,
+        0.2761
+      ],
+      "clusters": 170
+    },
+    "upper": {
+      "k": 112,
+      "n": 1308,
+      "share": 0.0856,
+      "ci95": [
+        0.0289,
+        0.2021
+      ],
+      "clusters": 170
+    },
+    "upper_breaking": {
+      "k": 77,
+      "n": 1308,
+      "share": 0.0589,
+      "ci95": [
+        0.0234,
+        0.1341
+      ],
+      "clusters": 170
+    },
+    "upper_new": {
+      "k": 91,
+      "n": 1308,
+      "share": 0.0696,
+      "ci95": [
+        0.0243,
+        0.1617
+      ],
+      "clusters": 170
+    },
+    "strict": {
+      "k": 11,
+      "n": 1308,
+      "share": 0.0084,
+      "ci95": [
+        0.0007,
+        0.022
+      ],
+      "clusters": 170
+    },
+    "given_edit_py": {
+      "newer": {
+        "k": 155,
+        "n": 513,
+        "share": 0.3021,
+        "ci95": [
+          0.1981,
+          0.378
+        ],
+        "clusters": 133
+      },
+      "upper": {
+        "k": 112,
+        "n": 513,
+        "share": 0.2183,
+        "ci95": [
+          0.1347,
+          0.2812
+        ],
+        "clusters": 133
+      },
+      "upper_breaking": {
+        "k": 77,
+        "n": 513,
+        "share": 0.1501,
+        "ci95": [
+          0.1091,
+          0.1806
+        ],
+        "clusters": 133
+      },
+      "strict": {
+        "k": 11,
+        "n": 513,
+        "share": 0.0214,
+        "ci95": [
+          0.0033,
+          0.034
+        ],
+        "clusters": 133
+      }
+    },
+    "given_edit_any": {
+      "upper": {
+        "k": 112,
+        "n": 558,
+        "share": 0.2007,
+        "ci95": [
+          0.1189,
+          0.2635
+        ],
+        "clusters": 145
+      },
+      "strict": {
+        "k": 11,
+        "n": 558,
+        "share": 0.0197,
+        "ci95": [
+          0.0029,
+          0.031
+        ],
+        "clusters": 145
+      }
+    },
+    "n_clusters": 170,
+    "largest_cluster_share": 0.274
+  },
+  "S4_opus55_cutoff_for_all": {
+    "n_transcripts": 1308,
+    "edit_any": {
+      "k": 558,
+      "n": 1308,
+      "share": 0.4266,
+      "ci95": [
+        0.1998,
+        0.9608
+      ],
+      "clusters": 170
+    },
+    "edit_py": {
+      "k": 513,
+      "n": 1308,
+      "share": 0.3922,
+      "ci95": [
+        0.1813,
+        0.882
+      ],
+      "clusters": 170
+    },
+    "newer": {
+      "k": 154,
+      "n": 1308,
+      "share": 0.1177,
+      "ci95": [
+        0.0432,
+        0.2746
+      ],
+      "clusters": 170
+    },
+    "upper": {
+      "k": 90,
+      "n": 1308,
+      "share": 0.0688,
+      "ci95": [
+        0.0238,
+        0.1604
+      ],
+      "clusters": 170
+    },
+    "upper_breaking": {
+      "k": 76,
+      "n": 1308,
+      "share": 0.0581,
+      "ci95": [
+        0.0228,
+        0.1325
+      ],
+      "clusters": 170
+    },
+    "upper_new": {
+      "k": 90,
+      "n": 1308,
+      "share": 0.0688,
+      "ci95": [
+        0.0238,
+        0.1604
+      ],
+      "clusters": 170
+    },
+    "strict": {
+      "k": 11,
+      "n": 1308,
+      "share": 0.0084,
+      "ci95": [
+        0.0007,
+        0.022
+      ],
+      "clusters": 170
+    },
+    "given_edit_py": {
+      "newer": {
+        "k": 154,
+        "n": 513,
+        "share": 0.3002,
+        "ci95": [
+          0.1956,
+          0.3764
+        ],
+        "clusters": 133
+      },
+      "upper": {
+        "k": 90,
+        "n": 513,
+        "share": 0.1754,
+        "ci95": [
+          0.1094,
+          0.2176
+        ],
+        "clusters": 133
+      },
+      "upper_breaking": {
+        "k": 76,
+        "n": 513,
+        "share": 0.1481,
+        "ci95": [
+          0.1061,
+          0.1786
+        ],
+        "clusters": 133
+      },
+      "strict": {
+        "k": 11,
+        "n": 513,
+        "share": 0.0214,
+        "ci95": [
+          0.0033,
+          0.034
+        ],
+        "clusters": 133
+      }
+    },
+    "given_edit_any": {
+      "upper": {
+        "k": 90,
+        "n": 558,
+        "share": 0.1613,
+        "ci95": [
+          0.0967,
+          0.2043
+        ],
+        "clusters": 145
+      },
+      "strict": {
+        "k": 11,
+        "n": 558,
+        "share": 0.0197,
+        "ci95": [
+          0.0029,
+          0.031
+        ],
+        "clusters": 145
+      }
+    },
+    "n_clusters": 170,
+    "largest_cluster_share": 0.274
+  },
+  "S5_opus55_only": {
+    "n_transcripts": 1120,
+    "edit_any": {
+      "k": 518,
+      "n": 1120,
+      "share": 0.4625,
+      "ci95": [
+        0.2134,
+        0.9807
+      ],
+      "clusters": 159
+    },
+    "edit_py": {
+      "k": 481,
+      "n": 1120,
+      "share": 0.4295,
+      "ci95": [
+        0.1951,
+        0.9253
+      ],
+      "clusters": 159
+    },
+    "newer": {
+      "k": 144,
+      "n": 1120,
+      "share": 0.1286,
+      "ci95": [
+        0.0476,
+        0.3082
+      ],
+      "clusters": 159
+    },
+    "upper": {
+      "k": 85,
+      "n": 1120,
+      "share": 0.0759,
+      "ci95": [
+        0.0264,
+        0.1815
+      ],
+      "clusters": 159
+    },
+    "upper_breaking": {
+      "k": 71,
+      "n": 1120,
+      "share": 0.0634,
+      "ci95": [
+        0.025,
+        0.1465
+      ],
+      "clusters": 159
+    },
+    "upper_new": {
+      "k": 85,
+      "n": 1120,
+      "share": 0.0759,
+      "ci95": [
+        0.0264,
+        0.1815
+      ],
+      "clusters": 159
+    },
+    "strict": {
+      "k": 8,
+      "n": 1120,
+      "share": 0.0071,
+      "ci95": [
+        0.0008,
+        0.0195
+      ],
+      "clusters": 159
+    },
+    "given_edit_py": {
+      "newer": {
+        "k": 144,
+        "n": 481,
+        "share": 0.2994,
+        "ci95": [
+          0.1979,
+          0.3809
+        ],
+        "clusters": 132
+      },
+      "upper": {
+        "k": 85,
+        "n": 481,
+        "share": 0.1767,
+        "ci95": [
+          0.1084,
+          0.225
+        ],
+        "clusters": 132
+      },
+      "upper_breaking": {
+        "k": 71,
+        "n": 481,
+        "share": 0.1476,
+        "ci95": [
+          0.1044,
+          0.1791
+        ],
+        "clusters": 132
+      },
+      "strict": {
+        "k": 8,
+        "n": 481,
+        "share": 0.0166,
+        "ci95": [
+          0.0032,
+          0.0287
+        ],
+        "clusters": 132
+      }
+    },
+    "given_edit_any": {
+      "upper": {
+        "k": 85,
+        "n": 518,
+        "share": 0.1641,
+        "ci95": [
+          0.0994,
+          0.2123
+        ],
+        "clusters": 143
+      },
+      "strict": {
+        "k": 8,
+        "n": 518,
+        "share": 0.0154,
+        "ci95": [
+          0.0029,
+          0.0266
+        ],
+        "clusters": 143
+      }
+    },
+    "n_clusters": 159,
+    "largest_cluster_share": 0.29
+  },
+  "S1_and_S2": {
+    "n_transcripts": 1167,
+    "edit_any": {
+      "k": 417,
+      "n": 1167,
+      "share": 0.3573,
+      "ci95": [
+        0.1688,
+        0.9502
+      ],
+      "clusters": 169
+    },
+    "edit_py": {
+      "k": 293,
+      "n": 1167,
+      "share": 0.2511,
+      "ci95": [
+        0.1239,
+        0.6971
+      ],
+      "clusters": 169
+    },
+    "newer": {
+      "k": 78,
+      "n": 1167,
+      "share": 0.0668,
+      "ci95": [
+        0.0291,
+        0.1947
+      ],
+      "clusters": 169
+    },
+    "upper": {
+      "k": 43,
+      "n": 1167,
+      "share": 0.0368,
+      "ci95": [
+        0.0146,
+        0.108
+      ],
+      "clusters": 169
+    },
+    "upper_breaking": {
+      "k": 42,
+      "n": 1167,
+      "share": 0.036,
+      "ci95": [
+        0.014,
+        0.1057
+      ],
+      "clusters": 169
+    },
+    "upper_new": {
+      "k": 43,
+      "n": 1167,
+      "share": 0.0368,
+      "ci95": [
+        0.0146,
+        0.108
+      ],
+      "clusters": 169
+    },
+    "strict": {
+      "k": 2,
+      "n": 1167,
+      "share": 0.0017,
+      "ci95": [
+        0.0,
+        0.0067
+      ],
+      "clusters": 169
+    },
+    "given_edit_py": {
+      "newer": {
+        "k": 78,
+        "n": 293,
+        "share": 0.2662,
+        "ci95": [
+          0.1909,
+          0.328
+        ],
+        "clusters": 127
+      },
+      "upper": {
+        "k": 43,
+        "n": 293,
+        "share": 0.1468,
+        "ci95": [
+          0.0876,
+          0.195
+        ],
+        "clusters": 127
+      },
+      "upper_breaking": {
+        "k": 42,
+        "n": 293,
+        "share": 0.1433,
+        "ci95": [
+          0.0837,
+          0.1927
+        ],
+        "clusters": 127
+      },
+      "strict": {
+        "k": 2,
+        "n": 293,
+        "share": 0.0068,
+        "ci95": [
+          0.0,
+          0.015
+        ],
+        "clusters": 127
+      }
+    },
+    "given_edit_any": {
+      "upper": {
+        "k": 43,
+        "n": 417,
+        "share": 0.1031,
+        "ci95": [
+          0.0528,
+          0.1638
+        ],
+        "clusters": 144
+      },
+      "strict": {
+        "k": 2,
+        "n": 417,
+        "share": 0.0048,
+        "ci95": [
+          0.0,
+          0.0118
+        ],
+        "clusters": 144
+      }
+    },
+    "n_clusters": 169,
+    "largest_cluster_share": 0.307
+  },
+  "S6_missing_header_as_exposed": {
+    "n_transcripts": 1308,
+    "edit_any": {
+      "k": 558,
+      "n": 1308,
+      "share": 0.4266,
+      "ci95": [
+        0.1998,
+        0.9608
+      ],
+      "clusters": 170
+    },
+    "edit_py": {
+      "k": 513,
+      "n": 1308,
+      "share": 0.3922,
+      "ci95": [
+        0.1813,
+        0.882
+      ],
+      "clusters": 170
+    },
+    "newer": {
+      "k": 155,
+      "n": 1308,
+      "share": 0.1185,
+      "ci95": [
+        0.0439,
+        0.2761
+      ],
+      "clusters": 170
+    },
+    "upper": {
+      "k": 316,
+      "n": 1308,
+      "share": 0.2416,
+      "ci95": [
+        0.1224,
+        0.5455
+      ],
+      "clusters": 170
+    },
+    "upper_breaking": {
+      "k": 77,
+      "n": 1308,
+      "share": 0.0589,
+      "ci95": [
+        0.0234,
+        0.1341
+      ],
+      "clusters": 170
+    },
+    "upper_new": {
+      "k": 91,
+      "n": 1308,
+      "share": 0.0696,
+      "ci95": [
+        0.0243,
+        0.1617
+      ],
+      "clusters": 170
+    },
+    "strict": {
+      "k": 11,
+      "n": 1308,
+      "share": 0.0084,
+      "ci95": [
+        0.0007,
+        0.022
+      ],
+      "clusters": 170
+    },
+    "given_edit_py": {
+      "newer": {
+        "k": 155,
+        "n": 513,
+        "share": 0.3021,
+        "ci95": [
+          0.1981,
+          0.378
+        ],
+        "clusters": 133
+      },
+      "upper": {
+        "k": 316,
+        "n": 513,
+        "share": 0.616,
+        "ci95": [
+          0.4956,
+          0.8556
+        ],
+        "clusters": 133
+      },
+      "upper_breaking": {
+        "k": 77,
+        "n": 513,
+        "share": 0.1501,
+        "ci95": [
+          0.1091,
+          0.1806
+        ],
+        "clusters": 133
+      },
+      "strict": {
+        "k": 11,
+        "n": 513,
+        "share": 0.0214,
+        "ci95": [
+          0.0033,
+          0.034
+        ],
+        "clusters": 133
+      }
+    },
+    "given_edit_any": {
+      "upper": {
+        "k": 316,
+        "n": 558,
+        "share": 0.5663,
+        "ci95": [
+          0.4496,
+          0.7727
+        ],
+        "clusters": 145
+      },
+      "strict": {
+        "k": 11,
+        "n": 558,
+        "share": 0.0197,
+        "ci95": [
+          0.0029,
+          0.031
+        ],
+        "clusters": 145
+      }
+    },
+    "n_clusters": 170,
+    "largest_cluster_share": 0.274,
+    "transcripts_with_missing_header_edit": 251
+  },
+  "S7_missing_header_imputed": {
+    "complete_case_py_transcripts": 262,
+    "complete_case_upper_given_py": {
+      "k": 65,
+      "n": 262,
+      "share": 0.2481,
+      "ci95": [
+        0.1641,
+        0.314
+      ],
+      "clusters": 40
+    },
+    "complete_case_rate_by_category": {
+      "home": 0.5,
+      "oss": 0.244,
+      "projects": 0.296,
+      "scratch": 0.153,
+      "temp": 0.2
+    },
+    "missing_by_category": {
+      "oss": 213,
+      "projects": 34,
+      "temp": 2,
+      "scratch": 2
+    },
+    "upper_imputed": {
+      "k": 147.2,
+      "n": 1308,
+      "share": 0.1125,
+      "ci95": [
+        0.0506,
+        0.2558
+      ],
+      "clusters": 170
+    },
+    "upper_imputed_given_py": {
+      "k": 147.2,
+      "n": 513,
+      "share": 0.2869,
+      "ci95": [
+        0.235,
+        0.3308
+      ],
+      "clusters": 133
+    },
+    "note": "imputed rates held fixed in the bootstrap (CI too narrow)"
+  },
+  "by_project_category": {
+    "session": {
+      "n": 750,
+      "clusters": 25,
+      "edit_py": 0,
+      "newer": 0,
+      "upper": 0,
+      "strict": 0
+    },
+    "oss": {
+      "n": 275,
+      "clusters": 133,
+      "edit_py": 254,
+      "newer": 61,
+      "upper": 32,
+      "strict": 1
+    },
+    "scratch": {
+      "n": 84,
+      "clusters": 2,
+      "edit_py": 74,
+      "newer": 13,
+      "upper": 11,
+      "strict": 5
+    },
+    "home": {
+      "n": 10,
+      "clusters": 4,
+      "edit_py": 2,
+      "newer": 2,
+      "upper": 1,
+      "strict": 0
+    },
+    "tool_repo": {
+      "n": 141,
+      "clusters": 1,
+      "edit_py": 136,
+      "newer": 63,
+      "upper": 36,
+      "strict": 4
+    },
+    "projects": {
+      "n": 40,
+      "clusters": 1,
+      "edit_py": 40,
+      "newer": 15,
+      "upper": 10,
+      "strict": 1
+    },
+    "temp": {
+      "n": 7,
+      "clusters": 3,
+      "edit_py": 7,
+      "newer": 1,
+      "upper": 1,
+      "strict": 0
+    },
+    "desktop": {
+      "n": 1,
+      "clusters": 1,
+      "edit_py": 0,
+      "newer": 0,
+      "upper": 0,
+      "strict": 0
+    }
+  },
+  "changed_distributions_by_transcripts": {
+    "anyio": 20,
+    "hypothesis": 16,
+    "pillow": 13,
+    "mcp": 10,
+    "langchain-core": 6,
+    "fastapi": 6,
+    "polars": 6,
+    "transformers": 5,
+    "huggingface-hub": 5,
+    "matplotlib": 4,
+    "av": 4,
+    "manim": 3,
+    "inspect-ai": 3,
+    "trimesh": 2,
+    "opencv-python": 2,
+    "torchcodec": 2,
+    "starlette": 2,
+    "ultralytics": 2,
+    "pydeprecate": 2,
+    "scikit-learn": 2,
+    "zensical": 2,
+    "modelscope": 1,
+    "qdrant-client": 1,
+    "wandb": 1,
+    "mujoco": 1
+  },
+  "strict_distributions_by_transcripts": {
+    "mcp": 6,
+    "polars": 4,
+    "wandb": 1,
+    "huggingface-hub": 1
+  },
+  "n_distinct_changed_distributions": 35,
+  "n_distinct_resolved_distributions": 87,
+  "breakeven_comparison": {
+    "ranges": {
+      "benchmark_block_6_10pct": [
+        0.06,
+        0.1
+      ],
+      "real_blocks_9_30pct": [
+        0.09,
+        0.3
+      ]
+    },
+    "primary": {
+      "upper": {
+        "benchmark_block_6_10pct": "overlaps",
+        "real_blocks_9_30pct": "overlaps"
+      },
+      "strict": {
+        "benchmark_block_6_10pct": "below",
+        "real_blocks_9_30pct": "below"
+      }
+    }
+  }
+}

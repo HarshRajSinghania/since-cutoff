@@ -1,0 +1,439 @@
+{
+  "note": "exact two-sided sign-flip on per-task log median ratios (post-cutoff tasks)",
+  "signflip": {
+    "main C/A": {
+      "cost": {
+        "ratio": 0.8048035487636709,
+        "signflip_p": 0.000274658203125,
+        "tasks": 17,
+        "below_1": 15
+      },
+      "tokens": {
+        "ratio": 0.7258132372063715,
+        "signflip_p": 0.0033111572265625,
+        "tasks": 17,
+        "below_1": 13
+      }
+    },
+    "replication C/A": {
+      "cost": {
+        "ratio": 0.8500780515689105,
+        "signflip_p": 0.125335693359375,
+        "tasks": 17,
+        "below_1": 10
+      },
+      "tokens": {
+        "ratio": 0.8262575314294058,
+        "signflip_p": 0.0742950439453125,
+        "tasks": 17,
+        "below_1": 11
+      }
+    },
+    "replication H/A": {
+      "cost": {
+        "ratio": 0.9854440392185284,
+        "signflip_p": 0.8647918701171875,
+        "tasks": 17,
+        "below_1": 11
+      },
+      "tokens": {
+        "ratio": 0.9465685842105014,
+        "signflip_p": 0.580535888671875,
+        "tasks": 17,
+        "below_1": 10
+      }
+    },
+    "replication C/H": {
+      "cost": {
+        "ratio": 0.8626345258966048,
+        "signflip_p": 0.1814727783203125,
+        "tasks": 17,
+        "below_1": 12
+      },
+      "tokens": {
+        "ratio": 0.8728976908932145,
+        "signflip_p": 0.350372314453125,
+        "tasks": 17,
+        "below_1": 12
+      }
+    },
+    "new C/A": {
+      "cost": {
+        "ratio": 0.8349278205150393,
+        "signflip_p": 0.0078125,
+        "tasks": 8,
+        "below_1": 8
+      },
+      "tokens": {
+        "ratio": 0.7939553875322879,
+        "signflip_p": 0.03125,
+        "tasks": 8,
+        "below_1": 6
+      }
+    },
+    "new H/A": {
+      "cost": {
+        "ratio": 0.9411102811203381,
+        "signflip_p": 0.484375,
+        "tasks": 8,
+        "below_1": 5
+      },
+      "tokens": {
+        "ratio": 0.8599817278703156,
+        "signflip_p": 0.1171875,
+        "tasks": 8,
+        "below_1": 6
+      }
+    },
+    "new C/H": {
+      "cost": {
+        "ratio": 0.8871732009144618,
+        "signflip_p": 0.1484375,
+        "tasks": 8,
+        "below_1": 6
+      },
+      "tokens": {
+        "ratio": 0.9232235544102346,
+        "signflip_p": 0.3984375,
+        "tasks": 8,
+        "below_1": 3
+      }
+    },
+    "concurrent C/A": {
+      "cost": {
+        "ratio": 0.7914877354550935,
+        "signflip_p": 0.015625,
+        "tasks": 8,
+        "below_1": 7
+      },
+      "tokens": {
+        "ratio": 0.754099412154801,
+        "signflip_p": 0.03125,
+        "tasks": 8,
+        "below_1": 6
+      }
+    },
+    "concurrent H/A": {
+      "cost": {
+        "ratio": 0.7969145704640636,
+        "signflip_p": 0.03125,
+        "tasks": 8,
+        "below_1": 7
+      },
+      "tokens": {
+        "ratio": 0.7257692811607397,
+        "signflip_p": 0.015625,
+        "tasks": 8,
+        "below_1": 7
+      }
+    },
+    "concurrent R/A": {
+      "cost": {
+        "ratio": 0.8630174807996163,
+        "signflip_p": 0.1328125,
+        "tasks": 8,
+        "below_1": 6
+      },
+      "tokens": {
+        "ratio": 0.8094157776827791,
+        "signflip_p": 0.078125,
+        "tasks": 8,
+        "below_1": 6
+      }
+    },
+    "concurrent G/A": {
+      "cost": {
+        "ratio": 1.004513582174128,
+        "signflip_p": 0.953125,
+        "tasks": 8,
+        "below_1": 4
+      },
+      "tokens": {
+        "ratio": 0.9377871794104791,
+        "signflip_p": 0.703125,
+        "tasks": 8,
+        "below_1": 5
+      }
+    },
+    "concurrent C/H": {
+      "cost": {
+        "ratio": 0.993190192261374,
+        "signflip_p": 0.9296875,
+        "tasks": 8,
+        "below_1": 5
+      },
+      "tokens": {
+        "ratio": 1.0390346239906327,
+        "signflip_p": 0.59375,
+        "tasks": 8,
+        "below_1": 3
+      }
+    },
+    "pool main+new C/A": {
+      "cost": {
+        "ratio": 0.8143231449263677,
+        "signflip_p": 2.682209014892578e-06,
+        "tasks": 25,
+        "below_1": 23
+      },
+      "tokens": {
+        "ratio": 0.7469571237022324,
+        "signflip_p": 0.00014841556549072266,
+        "tasks": 25,
+        "below_1": 19
+      }
+    },
+    "pool repl+new C/A": {
+      "cost": {
+        "ratio": 0.8452003038101797,
+        "signflip_p": 0.008694767951965332,
+        "tasks": 25,
+        "below_1": 18
+      },
+      "tokens": {
+        "ratio": 0.8157803595833663,
+        "signflip_p": 0.007184505462646484,
+        "tasks": 25,
+        "below_1": 17
+      }
+    },
+    "sonnet C/A": {
+      "cost": {
+        "ratio": 0.944443330527657,
+        "signflip_p": 0.69256591796875,
+        "tasks": 17,
+        "below_1": 8
+      },
+      "tokens": {
+        "ratio": 0.9321384134114641,
+        "signflip_p": 0.54510498046875,
+        "tasks": 17,
+        "below_1": 9
+      }
+    },
+    "haiku C/A": {
+      "cost": {
+        "ratio": 0.9919513894036505,
+        "signflip_p": 0.9486846923828125,
+        "tasks": 17,
+        "below_1": 9
+      },
+      "tokens": {
+        "ratio": 0.9219718637017842,
+        "signflip_p": 0.2313385009765625,
+        "tasks": 17,
+        "below_1": 13
+      }
+    },
+    "main C/A w/o pilot": {
+      "cost": {
+        "ratio": 0.7840744955082127,
+        "signflip_p": 0.000244140625,
+        "tasks": 15,
+        "below_1": 14
+      },
+      "tokens": {
+        "ratio": 0.6902282328111986,
+        "signflip_p": 0.0018310546875,
+        "tasks": 15,
+        "below_1": 12
+      }
+    },
+    "replication C/A w/o pilot": {
+      "cost": {
+        "ratio": 0.9150817087786718,
+        "signflip_p": 0.30743408203125,
+        "tasks": 15,
+        "below_1": 8
+      },
+      "tokens": {
+        "ratio": 0.8740789293484235,
+        "signflip_p": 0.1771240234375,
+        "tasks": 15,
+        "below_1": 9
+      }
+    },
+    "concurrent controls G/A": {
+      "cost": {
+        "ratio": 1.555679231578871,
+        "signflip_p": 0.25,
+        "tasks": 3,
+        "below_1": 0
+      },
+      "tokens": {
+        "ratio": 1.5480370946001634,
+        "signflip_p": 0.25,
+        "tasks": 3,
+        "below_1": 0
+      }
+    }
+  },
+  "cost_per_solved": {
+    "main": {
+      "treat": 0.33700127450980394,
+      "ctrl": 0.44547312916666665,
+      "ratio": 0.756501913235984,
+      "lo": 0.6326189250004955,
+      "hi": 0.8627666577803099,
+      "tasks": 17
+    },
+    "main w/o pilot": {
+      "treat": 0.3387461511111111,
+      "ctrl": 0.4224881555555555,
+      "ratio": 0.801788515622818,
+      "lo": 0.7279309361058405,
+      "hi": 0.8793171581581725,
+      "tasks": 15
+    },
+    "replication": {
+      "treat": 0.29393983529411766,
+      "ctrl": 0.38850287659574473,
+      "ratio": 0.7565962905339713,
+      "lo": 0.5967164090714704,
+      "hi": 0.8934016094944705,
+      "tasks": 17
+    },
+    "replication w/o pilot": {
+      "treat": 0.2980475733333333,
+      "ctrl": 0.36280145,
+      "ratio": 0.8215170400596065,
+      "lo": 0.7326365947640557,
+      "hi": 0.913100221023263,
+      "tasks": 15
+    },
+    "sonnet": {
+      "treat": 0.08616765434782608,
+      "ctrl": 0.1280133342105263,
+      "ratio": 0.6731146788671073,
+      "lo": 0.46885197698116493,
+      "hi": 0.8949713840174225,
+      "tasks": 17
+    },
+    "sonnet w/o pilot": {
+      "treat": 0.08900121219512196,
+      "ctrl": 0.11696795,
+      "ratio": 0.7609025565988116,
+      "lo": 0.5666515493930937,
+      "hi": 0.9520884396842207,
+      "tasks": 15
+    },
+    "sonnet H/A": {
+      "treat": 0.10836084347826086,
+      "ctrl": 0.1280133342105263,
+      "ratio": 0.8464809087782557,
+      "lo": 0.6946375194033623,
+      "hi": 0.9871722000322987,
+      "tasks": 17
+    }
+  },
+  "summed_cost_ratio": {
+    "main C/A": 0.803783282813233,
+    "replication C/A": 0.8209874641964369,
+    "sonnet C/A": 0.8148230323128139
+  },
+  "header_share": {
+    "replication": {
+      "cost": {
+        "C/A": 0.8500780515689105,
+        "H/A": 0.9854440392185284,
+        "share": 0.09027395921360781
+      },
+      "tokens": {
+        "C/A": 0.8262575314294058,
+        "H/A": 0.9465685842105014,
+        "share": 0.28772440778493197
+      }
+    },
+    "new": {
+      "cost": {
+        "C/A": 0.8349278205150393,
+        "H/A": 0.9411102811203381,
+        "share": 0.3364278614069177
+      },
+      "tokens": {
+        "C/A": 0.7939553875322879,
+        "H/A": 0.8599817278703156,
+        "share": 0.6537747152645239
+      }
+    },
+    "concurrent": {
+      "cost": {
+        "C/A": 0.7914877354550935,
+        "H/A": 0.7969145704640636,
+        "share": 0.9707788482342948
+      },
+      "tokens": {
+        "C/A": 0.754099412154801,
+        "H/A": 0.7257692811607397,
+        "share": 1.1356761870853667
+      }
+    },
+    "pool repl+new": {
+      "cost": {
+        "C/A": 0.8452003038101797,
+        "H/A": 0.9710345959430584,
+        "share": 0.17477046377869682
+      },
+      "tokens": {
+        "C/A": 0.8157803595833663,
+        "H/A": 0.9179519958960294,
+        "share": 0.42046131429175587
+      }
+    }
+  },
+  "coverage_split_tokens": {
+    "main C/A": {
+      "covered": 0.7448776183699267,
+      "covered_tasks": 5,
+      "uncovered": 0.718014477190445,
+      "uncovered_tasks": 12
+    },
+    "replication C/A": {
+      "covered": 0.6273853440335829,
+      "covered_tasks": 5,
+      "uncovered": 0.9267036501326406,
+      "uncovered_tasks": 12
+    },
+    "replication C/H": {
+      "covered": 0.5924055575111622,
+      "covered_tasks": 5,
+      "uncovered": 1.0259041103919866,
+      "uncovered_tasks": 12
+    },
+    "new C/A": {
+      "covered": 0.5862679803932066,
+      "covered_tasks": 2,
+      "uncovered": 0.8784075803289513,
+      "uncovered_tasks": 6
+    },
+    "new C/H": {
+      "covered": 0.8181104921501975,
+      "covered_tasks": 2,
+      "uncovered": 0.9611810075712518,
+      "uncovered_tasks": 6
+    },
+    "concurrent C/A": {
+      "covered": 0.6626835495756586,
+      "covered_tasks": 2,
+      "uncovered": 0.787292425339837,
+      "uncovered_tasks": 6
+    },
+    "concurrent C/H": {
+      "covered": 0.8922162024525668,
+      "covered_tasks": 2,
+      "uncovered": 1.0931589747001542,
+      "uncovered_tasks": 6
+    }
+  },
+  "control_pass_lower_bound_one_sided_95": {
+    "21/21": 0.8670540889734766,
+    "30/30": 0.9049661471446958
+  },
+  "block_overhead_main_C_postcutoff": {
+    "mean_notes_tokens": 439.88235294117646,
+    "mean_read_tokens": 7282.529411764706,
+    "read_cost_usd": 0.0014565058823529414,
+    "one_write_cost_usd": 0.0035190588235294116,
+    "total_usd": 0.004975564705882353
+  }
+}

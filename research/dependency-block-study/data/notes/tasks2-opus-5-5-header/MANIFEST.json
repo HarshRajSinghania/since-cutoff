@@ -1,0 +1,166 @@
+{
+  "schema": "since-cutoff-bench/notes@1",
+  "tool": "since-cutoff==0.4.1 (header-only, addendum condition H)",
+  "model": "anthropic:claude-opus-5-5",
+  "source": "research/dependency-block-study\\notes\\tasks2-opus-5-5",
+  "created_at": "2026-10-22T17:30:11.696633+00:00",
+  "frozen": true,
+  "frozen_at": "2026-10-22T17:30:11.696642+00:00",
+  "tasks": {
+    "mi01": {
+      "file": "mi01.md",
+      "sha256": "ce49f7916bfef9abc30bb4bd0fdc560135789eb042c0df5f984112e5869c6cc8",
+      "bytes": 1024,
+      "tokens_est": 256,
+      "empty": false,
+      "note_keys": [
+        "httpx2"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "72a98463c84b3b69d12c9dd28ace6fe01b53718df87c3584fdcdf425bf715285"
+    },
+    "mi02": {
+      "file": "mi02.md",
+      "sha256": "ce49f7916bfef9abc30bb4bd0fdc560135789eb042c0df5f984112e5869c6cc8",
+      "bytes": 1024,
+      "tokens_est": 256,
+      "empty": false,
+      "note_keys": [
+        "include_blocks"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "72a98463c84b3b69d12c9dd28ace6fe01b53718df87c3584fdcdf425bf715285"
+    },
+    "pl01": {
+      "file": "pl01.md",
+      "sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "bytes": 932,
+      "tokens_est": 233,
+      "empty": false,
+      "note_keys": [
+        "empty_as_null"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c"
+    },
+    "pl02": {
+      "file": "pl02.md",
+      "sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "bytes": 932,
+      "tokens_est": 233,
+      "empty": false,
+      "note_keys": [
+        "read_csv_batched"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c"
+    },
+    "pl03": {
+      "file": "pl03.md",
+      "sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "bytes": 932,
+      "tokens_est": 233,
+      "empty": false,
+      "note_keys": [
+        "replace_strict|\\breplace\\b[^\\n]{0,80}\\bdefault\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c"
+    },
+    "pl04": {
+      "file": "pl04.md",
+      "sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "bytes": 932,
+      "tokens_est": 233,
+      "empty": false,
+      "note_keys": [
+        "streaming[^\\n]{0,80}(engine|removed)|engine[^\\n]{0,40}streaming"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c"
+    },
+    "pl90": {
+      "file": "pl90.md",
+      "sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "bytes": 932,
+      "tokens_est": 233,
+      "empty": false,
+      "note_keys": [
+        "cum_sum|cumsum"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c"
+    },
+    "pl91": {
+      "file": "pl91.md",
+      "sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "bytes": 932,
+      "tokens_est": 233,
+      "empty": false,
+      "note_keys": [
+        "group_by|groupby"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0d600d088e5c937b1ebd1e92fbc52a1a254df401e47b645e4bff440390cd9b3c"
+    },
+    "st01": {
+      "file": "st01.md",
+      "sha256": "434167702eb623c86ac218fe3853df04e986ff8cabdb325bdf77ea243290226b",
+      "bytes": 936,
+      "tokens_est": 234,
+      "empty": false,
+      "note_keys": [
+        "\\bcache\\b[^\\n]{0,80}(removed|cache_data)"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "37dfdb981fab747808d4fdebe52a4fbf9d3ed73937a74fd5db8a9d81950ca986"
+    },
+    "st02": {
+      "file": "st02.md",
+      "sha256": "c36b73d6bcbb18d9659e684fd015a283debc785bee7cef4593cf52308001078c",
+      "bytes": 936,
+      "tokens_est": 234,
+      "empty": false,
+      "note_keys": [
+        "use_column_width"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "ad581fcad34fd43ec8b2b4eb8c2a688cae3db7cfe807304a262acae68038f48e"
+    },
+    "st90": {
+      "file": "st90.md",
+      "sha256": "c36b73d6bcbb18d9659e684fd015a283debc785bee7cef4593cf52308001078c",
+      "bytes": 936,
+      "tokens_est": 234,
+      "empty": false,
+      "note_keys": [
+        "experimental_get_query_params|query_params"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "ad581fcad34fd43ec8b2b4eb8c2a688cae3db7cfe807304a262acae68038f48e"
+    }
+  },
+  "manifest_sha256": "7810f8190381705b0fa225d6d6c38ca34becf6cee850bea538ad6dc4c1b18b52"
+}

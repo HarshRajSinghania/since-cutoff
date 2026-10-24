@@ -1,0 +1,54 @@
+{
+ "schema": "since-cutoff-bench/openagent-run@1",
+ "study_id": "openagent-qwen3c-tasks2-2026-10-22",
+ "run_id": "pl03_A_r3_e0bf",
+ "attempt": 1,
+ "attempt_id": "pl03_A_r3_e0bf",
+ "task": "pl03",
+ "library": "polars",
+ "stratum": "post-cutoff",
+ "kind": "post-cutoff-loud",
+ "condition": "A",
+ "rep": 3,
+ "block_id": "pl03#3",
+ "order_index": 63,
+ "pilot": false,
+ "condition_config": {
+  "notes_tokens": 0,
+  "notes_covered": null
+ },
+ "agent": {
+  "scaffold": "mini-swe-agent",
+  "step_limit": 40,
+  "textbased": false,
+  "wall_limit_s": 1800,
+  "temperature": 0.7,
+  "command_timeout_s": 180
+ },
+ "wall_s": 58.8,
+ "exit": {
+  "status": "RepeatedFormatError"
+ },
+ "process": {
+  "turns": 14,
+  "commands": 11,
+  "calls": 14,
+  "input_tokens": 41274,
+  "output_tokens": 2169,
+  "total_tokens": 43443,
+  "stale_in_first_edit": false,
+  "stale_in_final": false,
+  "first_edit": {
+   "command_index": 5,
+   "stale": false
+  }
+ },
+ "valid": true,
+ "invalid_reason": null,
+ "grade": {
+  "passed": false,
+  "hidden_passed": false,
+  "visible_passed": false,
+  "lock_modified": false
+ }
+}

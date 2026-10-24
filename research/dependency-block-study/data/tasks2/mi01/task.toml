@@ -1,0 +1,33 @@
+schema = "since-cutoff-bench/task@1"
+id = "mi01-http-request-ids"
+library = "mistralai"
+pinned = "3.3.0"
+cutoff_version = "2.5.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # stale code does `import httpx`, which mistralai>=3 no longer installs (it uses httpx2)
+timeout_s = 900
+target_files = ["helpdesk/llm.py"]
+instruction = """
+Implement `build_client(api_key, transport=None)` in helpdesk/llm.py. Requirements from the platform team:
+
+1. every outgoing HTTP request to the Mistral API carries an `X-Request-ID` header with a fresh UUID4
+   (a new value for every request);
+2. every outgoing request is logged at INFO level on the logger named "helpdesk.http" as
+   "<request id> <METHOD> <URL>";
+3. when `transport` is given (the tests pass a stub transport), the HTTP client must use it.
+
+The lockfile is fixed: do not add or install dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "mistralai-3.3.0 METADATA: Requires-Dist httpx2 (no httpx); mistralai-2.5.0 required httpx (probe 2026-10-22: `import httpx` -> ModuleNotFoundError in a clean mistralai==3.3.0 env)",
+  "mistralai 3.x signatures: Mistral.do_request / files.download use httpx2.Request / httpx2.Response (2.5.0: httpx.Request / httpx.Response); <study>/expansion/probes/mistral_probe_output.txt",
+  "https://github.com/mistralai/client-python/releases/tag/v3.0.0 (2026-09-28, major release)",
+]
+# legacy httpx (not httpx2)
+stale_patterns = [
+  '^\s*import\s+httpx\b(?!2)',
+  '^\s*from\s+httpx\b(?!2)[\w.]*\s+import\b',
+]
+note_keys = ['httpx2']
+doc_keys = ['httpx2|Httpx2']
+answer_tokens = ["httpx2", "Httpx2"]

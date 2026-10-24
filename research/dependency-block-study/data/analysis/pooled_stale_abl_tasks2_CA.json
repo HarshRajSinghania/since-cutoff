@@ -1,0 +1,53 @@
+{
+  "pair": "C vs A",
+  "exclude": [],
+  "studies": {
+    "abl-opus55-2026-10-22": {
+      "A_stale": "7/51",
+      "C_stale": "0/51",
+      "A_rate": 0.13725490196078433,
+      "C_rate": 0.0,
+      "fisher_p_run_level": 0.01253862499652027,
+      "tasks_with_difference": 4,
+      "tasks_favouring_C": 4,
+      "tasks_favouring_A": 0,
+      "signflip_p_task_level": 0.125,
+      "per_task": {
+        "ant01": {
+          "A": "3/3",
+          "C": "0/3"
+        },
+        "ant04": {
+          "A": "2/3",
+          "C": "0/3"
+        },
+        "ant05": {
+          "A": "1/3",
+          "C": "0/3"
+        },
+        "oai02": {
+          "A": "1/3",
+          "C": "0/3"
+        }
+      }
+    },
+    "tasks2-opus55-2026-10-22": {
+      "A_stale": "0/24",
+      "C_stale": "0/24",
+      "A_rate": 0.0,
+      "C_rate": 0.0,
+      "fisher_p_run_level": 1.0,
+      "tasks_with_difference": 0,
+      "tasks_favouring_C": 0,
+      "tasks_favouring_A": 0,
+      "signflip_p_task_level": 1.0,
+      "per_task": {}
+    }
+  },
+  "pooled_X2": {
+    "tasks": 25,
+    "tasks_with_difference": 4,
+    "mean_rate_difference": 0.09333333333333332,
+    "signflip_p": 0.125
+  }
+}

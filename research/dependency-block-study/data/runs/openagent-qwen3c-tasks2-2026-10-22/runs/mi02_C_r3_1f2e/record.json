@@ -1,0 +1,54 @@
+{
+ "schema": "since-cutoff-bench/openagent-run@1",
+ "study_id": "openagent-qwen3c-tasks2-2026-10-22",
+ "run_id": "mi02_C_r3_1f2e",
+ "attempt": 1,
+ "attempt_id": "mi02_C_r3_1f2e",
+ "task": "mi02",
+ "library": "mistralai",
+ "stratum": "post-cutoff",
+ "kind": "post-cutoff-silent",
+ "condition": "C",
+ "rep": 3,
+ "block_id": "mi02#3",
+ "order_index": 29,
+ "pilot": false,
+ "condition_config": {
+  "notes_tokens": 423,
+  "notes_covered": false
+ },
+ "agent": {
+  "scaffold": "mini-swe-agent",
+  "step_limit": 40,
+  "textbased": false,
+  "wall_limit_s": 1800,
+  "temperature": 0.7,
+  "command_timeout_s": 180
+ },
+ "wall_s": 254.1,
+ "exit": {
+  "status": "Submitted"
+ },
+ "process": {
+  "turns": 22,
+  "commands": 22,
+  "calls": 22,
+  "input_tokens": 119489,
+  "output_tokens": 1950,
+  "total_tokens": 121439,
+  "stale_in_first_edit": false,
+  "stale_in_final": false,
+  "first_edit": {
+   "command_index": 18,
+   "stale": false
+  }
+ },
+ "valid": true,
+ "invalid_reason": null,
+ "grade": {
+  "passed": false,
+  "hidden_passed": false,
+  "visible_passed": true,
+  "lock_modified": false
+ }
+}

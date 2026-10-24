@@ -1,0 +1,44 @@
+schema = "since-cutoff-bench/task@1"
+id = "pd02-elementwise-format"
+library = "pandas"
+pinned = "3.0.6"
+# since-cutoff's rule (highest final, non-yanked release on or before the end of the 2026-06 knowledge month):
+# 3.0.4 (2026-06-28) is yanked, so 3.0.3 (2026-05-11). The removal happened in 3.0.0 (2026-01-21), before the
+# cutoff, so for Opus 5.5 this task is a control. It is a treatment for claude-haiku-4-5 (cutoff 2025-02).
+cutoff_version = "3.0.3"
+# the last pandas 2 environment (shared with pd01): DataFrame.applymap still exists there, deprecated
+stale_version = "2.3.2"
+stratum = "pre-cutoff-control"
+kind = "pre-cutoff-loud"  # stale code raises AttributeError: 'DataFrame' object has no attribute 'applymap'
+timeout_s = 900
+target_files = ["app/report.py"]
+# review 2026-09-27: the repo no longer contains a module that uses the old API (broken at the pinned version);
+# existing library use in repo/ is working code only (REVIEW.md, PROTOCOL.md section 12).
+instruction = """
+Implement `format_for_display(table)` in app/report.py. It gets the account x month table from
+`monthly_pnl` and must return a new table with the same index and columns in which every cell is
+a string in accounting style:
+
+- amounts with thousands separators and two decimals: 12500 -> "12,500.00";
+- negative amounts in parentheses instead of a minus sign: -634.2 -> "(634.20)";
+- zero -> "-";
+- missing -> "" (empty string).
+
+Do not modify the input table. Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "pandas-2.3.2 wheel: pandas/core/frame.py:10477 `def applymap(self, func, na_action=None, **kwargs)`, docstring '.. deprecated:: 2.1.0 DataFrame.applymap has been deprecated. Use DataFrame.map instead.'; :10525 FutureWarning, then `return self.map(func, na_action=na_action, **kwargs)`; `def map` at :10383 ('.. versionadded:: 2.1.0')",
+  "pandas-3.0.0 / 3.0.3 / 3.0.6 wheels: pandas/core/frame.py has no `def applymap` (only `def map` at :12478 / :12494 / :12496, docstring 'DataFrame.applymap was deprecated and renamed to DataFrame.map'); pandas/io/formats/style.py also drops Styler.applymap (2.3.2 :2092)",
+  "run: the stale solution raises AttributeError at 3.0.6 and passes with a FutureWarning at 2.3.2 (bench validate)",
+  "https://pandas.pydata.org/docs/whatsnew/v3.0.0.html (removal of prior version deprecations)",
+]
+# regexes (Python re, MULTILINE) that mark the old API in an edit or in the final diff (comments ignored)
+stale_patterns = [
+  '\.applymap\s*\(',
+]
+# regexes that must ALL match the frozen notes for the change to count as covered by them
+note_keys = ['\bapplymap\b']
+# regexes that must ALL match the Context7 tool results for `doc_hit`
+doc_keys = ['DataFrame\.map\b|\bdf\.map\(']
+# literal strings that must not appear in repo/ or the instruction (added to bench.toml's global list)
+answer_tokens = ["DataFrame.map", ".map("]

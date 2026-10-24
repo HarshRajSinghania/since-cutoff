@@ -1,0 +1,23 @@
+{
+  "pair": "C vs H",
+  "exclude": [],
+  "studies": {
+    "tasks2-opus55-2026-10-22": {
+      "H_stale": "1/24",
+      "C_stale": "0/24",
+      "H_rate": 0.041666666666666664,
+      "C_rate": 0.0,
+      "fisher_p_run_level": 1.0,
+      "tasks_with_difference": 1,
+      "tasks_favouring_C": 1,
+      "tasks_favouring_H": 0,
+      "signflip_p_task_level": 1.0,
+      "per_task": {
+        "mi01": {
+          "H": "1/3",
+          "C": "0/3"
+        }
+      }
+    }
+  }
+}

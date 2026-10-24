@@ -1,0 +1,311 @@
+{
+  "schema": "since-cutoff-bench/notes@1",
+  "tool": "since-cutoff==0.4.1",
+  "model": "anthropic:claude-sonnet-4-5",
+  "source": "generated",
+  "created_at": "2026-10-22T20:51:58+00:00",
+  "frozen": true,
+  "tasks": {
+    "mi01": {
+      "file": "mi01.md",
+      "sha256": "e851a97928b6abfc483eb693d94e36d3a16c2cf20bfce4992ce15a0a7cf94a00",
+      "bytes": 1684,
+      "tokens_est": 421,
+      "empty": false,
+      "note_keys": [
+        "httpx2"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "mi02": {
+      "file": "mi02.md",
+      "sha256": "e851a97928b6abfc483eb693d94e36d3a16c2cf20bfce4992ce15a0a7cf94a00",
+      "bytes": 1684,
+      "tokens_est": 421,
+      "empty": false,
+      "note_keys": [
+        "include_blocks"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl01": {
+      "file": "pl01.md",
+      "sha256": "f2a850fde3be099e0cf7d60b318c7ea79a1b3aa46157caed9c53958a29a59b19",
+      "bytes": 1576,
+      "tokens_est": 394,
+      "empty": false,
+      "note_keys": [
+        "empty_as_null"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl02": {
+      "file": "pl02.md",
+      "sha256": "f2a850fde3be099e0cf7d60b318c7ea79a1b3aa46157caed9c53958a29a59b19",
+      "bytes": 1576,
+      "tokens_est": 394,
+      "empty": false,
+      "note_keys": [
+        "read_csv_batched"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl03": {
+      "file": "pl03.md",
+      "sha256": "f2a850fde3be099e0cf7d60b318c7ea79a1b3aa46157caed9c53958a29a59b19",
+      "bytes": 1576,
+      "tokens_est": 394,
+      "empty": false,
+      "note_keys": [
+        "replace_strict|\\breplace\\b[^\\n]{0,80}\\bdefault\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl04": {
+      "file": "pl04.md",
+      "sha256": "f2a850fde3be099e0cf7d60b318c7ea79a1b3aa46157caed9c53958a29a59b19",
+      "bytes": 1576,
+      "tokens_est": 394,
+      "empty": false,
+      "note_keys": [
+        "streaming[^\\n]{0,80}(engine|removed)|engine[^\\n]{0,40}streaming"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl90": {
+      "file": "pl90.md",
+      "sha256": "f2a850fde3be099e0cf7d60b318c7ea79a1b3aa46157caed9c53958a29a59b19",
+      "bytes": 1576,
+      "tokens_est": 394,
+      "empty": false,
+      "note_keys": [
+        "cum_sum|cumsum"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl91": {
+      "file": "pl91.md",
+      "sha256": "f2a850fde3be099e0cf7d60b318c7ea79a1b3aa46157caed9c53958a29a59b19",
+      "bytes": 1576,
+      "tokens_est": 394,
+      "empty": false,
+      "note_keys": [
+        "group_by|groupby"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "st01": {
+      "file": "st01.md",
+      "sha256": "6f8d8e3083cf403269c672bd19a40b50b1bb7c2b09d337efecc8f1691d9e43fa",
+      "bytes": 1554,
+      "tokens_est": 388,
+      "empty": false,
+      "note_keys": [
+        "\\bcache\\b[^\\n]{0,80}(removed|cache_data)"
+      ],
+      "note_keys_found": [
+        "\\bcache\\b[^\\n]{0,80}(removed|cache_data)"
+      ],
+      "coverage": 1.0,
+      "covered": true,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "st02": {
+      "file": "st02.md",
+      "sha256": "0c26c9a4f00060bc1b1e1e0a95aedbcf2e7ed551edf69bed4b3eda0ad37c99c5",
+      "bytes": 1589,
+      "tokens_est": 397,
+      "empty": false,
+      "note_keys": [
+        "use_column_width"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "st90": {
+      "file": "st90.md",
+      "sha256": "0c26c9a4f00060bc1b1e1e0a95aedbcf2e7ed551edf69bed4b3eda0ad37c99c5",
+      "bytes": 1589,
+      "tokens_est": 397,
+      "empty": false,
+      "note_keys": [
+        "experimental_get_query_params|query_params"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-sonnet-4-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    }
+  },
+  "frozen_at": "2026-10-22T20:51:58+00:00",
+  "manifest_sha256": "a0fc991454f8dfe050885b2c1875ab4e2f30d9ea7d8a3bb9d353011042c7254e"
+}

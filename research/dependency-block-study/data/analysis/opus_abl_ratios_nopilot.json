@@ -1,0 +1,178 @@
+{
+  "study": "abl-opus55-2026-10-22",
+  "excluded_tasks": [
+    "ant01",
+    "mcp01"
+  ],
+  "runs_analysed": 153,
+  "totals_by_condition": {
+    "A": {
+      "runs": 51.0,
+      "passed": 47.0,
+      "list_cost_usd": 18.259635199999998,
+      "cli_cost_usd": 18.259635199999998,
+      "compactions": 0.0,
+      "budget_stops": 0.0
+    },
+    "C": {
+      "runs": 51.0,
+      "passed": 51.0,
+      "list_cost_usd": 14.990931600000003,
+      "cli_cost_usd": 14.990931600000001,
+      "compactions": 0.0,
+      "budget_stops": 0.0
+    },
+    "H": {
+      "runs": 51.0,
+      "passed": 51.0,
+      "list_cost_usd": 17.347967200000003,
+      "cli_cost_usd": 17.347967200000003,
+      "compactions": 0.0,
+      "budget_stops": 0.0
+    }
+  },
+  "ratios": {
+    "post-cutoff": {
+      "C/A": {
+        "total_tokens": {
+          "ratio": 0.8740789293484235,
+          "lo": 0.7248701928904993,
+          "hi": 1.0346817005097708,
+          "tasks": 15
+        },
+        "list_cost_usd": {
+          "ratio": 0.9150817087786718,
+          "lo": 0.7779198545499256,
+          "hi": 1.0438734348648193,
+          "tasks": 15
+        },
+        "cli_cost_usd": {
+          "ratio": 0.9150817087786717,
+          "lo": 0.7779198545499255,
+          "hi": 1.0438734348648193,
+          "tasks": 15
+        },
+        "turns": {
+          "ratio": 0.9414722761460158,
+          "lo": 0.8704957186193746,
+          "hi": 1.013346043152384,
+          "tasks": 15
+        },
+        "wall_s": {
+          "ratio": 0.9384576536123781,
+          "lo": 0.8077340530201813,
+          "hi": 1.0765572734254727,
+          "tasks": 15
+        },
+        "output_tokens": {
+          "ratio": 0.9174606003746653,
+          "lo": 0.8391624023605938,
+          "hi": 1.0021643496669919,
+          "tasks": 15
+        }
+      },
+      "H/A": {
+        "total_tokens": {
+          "ratio": 0.8992157192437594,
+          "lo": 0.7551220678925827,
+          "hi": 1.0573146087092136,
+          "tasks": 15
+        },
+        "list_cost_usd": {
+          "ratio": 0.9699922806275085,
+          "lo": 0.8074350589327062,
+          "hi": 1.160391011405565,
+          "tasks": 15
+        },
+        "cli_cost_usd": {
+          "ratio": 0.9699922806275085,
+          "lo": 0.8074350589327061,
+          "hi": 1.1603910114055653,
+          "tasks": 15
+        },
+        "turns": {
+          "ratio": 0.9147471961260125,
+          "lo": 0.8489476014024645,
+          "hi": 0.9831635693674801,
+          "tasks": 15
+        },
+        "wall_s": {
+          "ratio": 0.9270962460150239,
+          "lo": 0.8195013218008178,
+          "hi": 1.0425377457397833,
+          "tasks": 15
+        },
+        "output_tokens": {
+          "ratio": 0.9555758746947134,
+          "lo": 0.8609192334069115,
+          "hi": 1.0593676449259115,
+          "tasks": 15
+        }
+      },
+      "C/H": {
+        "total_tokens": {
+          "ratio": 0.9720458735791719,
+          "lo": 0.8651834787559606,
+          "hi": 1.101364185134392,
+          "tasks": 15
+        },
+        "list_cost_usd": {
+          "ratio": 0.9433907125391616,
+          "lo": 0.8330203179134757,
+          "hi": 1.06624832523671,
+          "tasks": 15
+        },
+        "cli_cost_usd": {
+          "ratio": 0.9433907125391616,
+          "lo": 0.8330203179134757,
+          "hi": 1.06624832523671,
+          "tasks": 15
+        },
+        "turns": {
+          "ratio": 1.0292158097157171,
+          "lo": 0.9682514102220311,
+          "hi": 1.1056701301843184,
+          "tasks": 15
+        },
+        "wall_s": {
+          "ratio": 1.0122548307645396,
+          "lo": 0.9124955214818795,
+          "hi": 1.1254564947504058,
+          "tasks": 15
+        },
+        "output_tokens": {
+          "ratio": 0.9601127703938475,
+          "lo": 0.8617260722196785,
+          "hi": 1.0820931529161346,
+          "tasks": 15
+        }
+      }
+    },
+    "controls": {
+      "C/A": {
+        "total_tokens": null,
+        "list_cost_usd": null,
+        "cli_cost_usd": null,
+        "turns": null,
+        "wall_s": null,
+        "output_tokens": null
+      },
+      "H/A": {
+        "total_tokens": null,
+        "list_cost_usd": null,
+        "cli_cost_usd": null,
+        "turns": null,
+        "wall_s": null,
+        "output_tokens": null
+      },
+      "C/H": {
+        "total_tokens": null,
+        "list_cost_usd": null,
+        "cli_cost_usd": null,
+        "turns": null,
+        "wall_s": null,
+        "output_tokens": null
+      }
+    }
+  }
+}

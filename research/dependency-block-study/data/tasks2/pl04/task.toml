@@ -1,0 +1,27 @@
+schema = "since-cutoff-bench/task@1"
+id = "pl04-streaming-engine"
+library = "polars"
+pinned = "2.0.0"
+cutoff_version = "1.42.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # LazyFrame.collect(streaming=True) raises ArgumentRemovedError on 2.0 (deprecated-but-working at 1.42.1)
+timeout_s = 900
+target_files = ["reports/daily.py"]
+instruction = """
+Implement `daily_revenue(path)` in reports/daily.py as its docstring describes. The events export is far
+larger than the reporting box's memory, so the query must run on Polars' streaming engine. Do not add
+dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "polars-1.42.1: LazyFrame.collect(streaming=True) works and warns 'the `streaming` parameter was deprecated in 1.25.0; use `engine` instead.'",
+  "polars-2.0.0: LazyFrame.collect(streaming=True) raises ArgumentRemovedError ('... has been removed in version 2.0. Use `engine=\"streaming\"` instead.')",
+  "https://github.com/pola-rs/polars/releases/tag/py-2.0.0 (major release removing deprecated APIs)",
+  "polars-2.0.0 LazyFrame.collect docstring (lazyframe/frame.py:2101-2104): engine='auto' without an affinity runs on the streaming engine (independent review 2026-10-22, POLARS_VERBOSE=1: 2.0.0 logs polars-stream, 1.42.1 in-memory); the hidden test counts 'auto' as streaming on polars>=2 and as in-memory on 1.x",
+  "run (2026-10-22, /c/b/venvs/polars-*; <study>/expansion/probes/polars_streaming_probe_output.txt): collect(engine='streaming'), collect_all(engine='streaming') and Config.set_engine_affinity('streaming') work in both versions",
+]
+stale_patterns = [
+  '''\bstreaming\s*=\s*True''',
+]
+note_keys = ['streaming[^\n]{0,80}(engine|removed)|engine[^\n]{0,40}streaming']
+doc_keys = ['engine=.streaming']
+answer_tokens = ['engine="streaming"', "engine='streaming'", "set_engine_affinity"]

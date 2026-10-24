@@ -1,0 +1,71 @@
+{
+  "schema": "since-cutoff-bench/notes@1",
+  "tool": "since-cutoff==0.4.1",
+  "model": "anthropic:claude-opus-5-5",
+  "source": "generated",
+  "created_at": "2026-10-22T21:04:40+00:00",
+  "frozen": true,
+  "tasks": {
+    "cs01": {
+      "file": "cs01.md",
+      "sha256": "13cbaaf93e77d3039d1f97b5c5033f3f3c0b0804043f57f2db59a67642f4cd16",
+      "bytes": 6120,
+      "tokens_est": 1530,
+      "empty": false,
+      "note_keys": [
+        "MCPServer|mcpserver|fastmcp|FastMCP"
+      ],
+      "note_keys_found": [
+        "MCPServer|mcpserver|fastmcp|FastMCP"
+      ],
+      "coverage": 1.0,
+      "covered": true,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "cs02": {
+      "file": "cs02.md",
+      "sha256": "13cbaaf93e77d3039d1f97b5c5033f3f3c0b0804043f57f2db59a67642f4cd16",
+      "bytes": 6120,
+      "tokens_est": 1530,
+      "empty": false,
+      "note_keys": [
+        "MCPServer|mcpserver|fastmcp|FastMCP",
+        "settings[^\\n]{0,80}\\b(host|port)\\b|run[^\\n]{0,80}\\b(host|port)\\b"
+      ],
+      "note_keys_found": [
+        "MCPServer|mcpserver|fastmcp|FastMCP"
+      ],
+      "coverage": 0.5,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\since-cutoff==0.4.1\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    }
+  },
+  "frozen_at": "2026-10-22T21:04:40+00:00",
+  "manifest_sha256": "4653c8459d0275f50afc1d658d7b65031eaf147d2d834cad397ed3d391e3b32f"
+}

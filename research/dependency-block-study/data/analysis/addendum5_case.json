@@ -1,0 +1,145 @@
+{
+  "study": "case-opus55-2026-10-22",
+  "totals": {
+    "A": {
+      "runs": 10.0,
+      "passed": 6.0,
+      "list_cost_usd": 5.1454378,
+      "budget_stops": 0.0,
+      "compactions": 0.0,
+      "mean_list_cost_usd": 0.51454378
+    },
+    "C": {
+      "runs": 10.0,
+      "passed": 8.0,
+      "list_cost_usd": 4.3192102,
+      "budget_stops": 0.0,
+      "compactions": 0.0,
+      "mean_list_cost_usd": 0.43192102
+    }
+  },
+  "per_task": {
+    "cs01": {
+      "A": {
+        "n": 5,
+        "passed": 1,
+        "median_tokens": 653020,
+        "median_list_cost_usd": 0.5425,
+        "median_turns": 29,
+        "mean_list_cost_usd": 0.5658,
+        "stale_first_edit": "0/5",
+        "median_wall_s": 102.4
+      },
+      "C": {
+        "n": 5,
+        "passed": 3,
+        "median_tokens": 481631,
+        "median_list_cost_usd": 0.4689,
+        "median_turns": 23,
+        "mean_list_cost_usd": 0.4726,
+        "stale_first_edit": "0/5",
+        "median_wall_s": 77.2
+      },
+      "C_over_A_run_bootstrap": {
+        "total_tokens": {
+          "ratio": 0.7375440262166549,
+          "lo": 0.5766268066317393,
+          "hi": 1.200865185628444
+        },
+        "list_cost_usd": {
+          "ratio": 0.8642879472909643,
+          "lo": 0.6794956132332789,
+          "hi": 1.0900109167260237
+        },
+        "turns": {
+          "ratio": 0.7931034482758621,
+          "lo": 0.7419354838709677,
+          "hi": 1.0
+        },
+        "wall_s": {
+          "ratio": 0.75390625,
+          "lo": 0.6378018318068276,
+          "hi": 1.1494140625
+        }
+      }
+    },
+    "cs02": {
+      "A": {
+        "n": 5,
+        "passed": 5,
+        "median_tokens": 471746,
+        "median_list_cost_usd": 0.4507,
+        "median_turns": 30,
+        "mean_list_cost_usd": 0.4633,
+        "stale_first_edit": "0/5",
+        "median_wall_s": 105.4
+      },
+      "C": {
+        "n": 5,
+        "passed": 5,
+        "median_tokens": 460947,
+        "median_list_cost_usd": 0.3812,
+        "median_turns": 24,
+        "mean_list_cost_usd": 0.3913,
+        "stale_first_edit": "0/5",
+        "median_wall_s": 93.6
+      },
+      "C_over_A_run_bootstrap": {
+        "total_tokens": {
+          "ratio": 0.9771084439507701,
+          "lo": 0.5941824654187154,
+          "hi": 1.2318705405027282
+        },
+        "list_cost_usd": {
+          "ratio": 0.845712673061452,
+          "lo": 0.6814766567738506,
+          "hi": 1.05324442105478
+        },
+        "turns": {
+          "ratio": 0.8,
+          "lo": 0.5333333333333333,
+          "hi": 1.04
+        },
+        "wall_s": {
+          "ratio": 0.8880455407969639,
+          "lo": 0.5525383707201889,
+          "hi": 1.187120291616039
+        }
+      }
+    }
+  },
+  "ratios_geo_2tasks": {
+    "C/A": {
+      "total_tokens": {
+        "ratio": 0.8489172490895339,
+        "lo": 0.7375440262166549,
+        "hi": 0.9771084439507701,
+        "tasks": 2
+      },
+      "list_cost_usd": {
+        "ratio": 0.85494986414306,
+        "lo": 0.845712673061452,
+        "hi": 0.8642879472909643,
+        "tasks": 2
+      },
+      "turns": {
+        "ratio": 0.7965442603023951,
+        "lo": 0.7931034482758621,
+        "hi": 0.8,
+        "tasks": 2
+      },
+      "wall_s": {
+        "ratio": 0.818231680816296,
+        "lo": 0.75390625,
+        "hi": 0.8880455407969639,
+        "tasks": 2
+      },
+      "output_tokens": {
+        "ratio": 0.8442999245595371,
+        "lo": 0.8311124419823327,
+        "hi": 0.8576966564367631,
+        "tasks": 2
+      }
+    }
+  }
+}

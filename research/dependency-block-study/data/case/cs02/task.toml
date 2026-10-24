@@ -1,0 +1,39 @@
+schema = "since-cutoff-bench/task@1"
+id = "cs02-litellm-math-server-http"
+library = "mcp"
+pinned = "2.3.0"
+cutoff_version = "1.28.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # real repository (case study): fastmcp import gone AND MCPServer.settings has no host/port in mcp 2.x
+timeout_s = 900
+target_files = ["tests/integration/mcp/_math_server.py"]
+instruction = """
+Bug report: we also run the math test server tests/integration/mcp/_math_server.py over HTTP, as
+`python tests/integration/mcp/_math_server.py --transport http --host 127.0.0.1 --port <port>`. It must then serve
+MCP over streamable HTTP at http://<host>:<port>/mcp, and its `request_headers` tool must return the caller's
+`authorization` and `x-request-tag` HTTP headers. Since the dependency upgrade recorded in pyproject.toml / uv.lock
+this no longer works.
+
+Make HTTP mode work with the locked dependencies. Keep everything else as it is (the tools, prompt and resources,
+the module-level server object named `mcp`, the stdio default transport and the command-line options).
+
+This checkout is a subset of the LiteLLM repository (the MCP client, the proxy's MCP server and the integration
+test support code, with the real pyproject.toml and uv.lock). Only the locked `mcp` package and its dependencies
+are installed in this environment, so LiteLLM's own test suites cannot run here; check your fix by running the
+server directly. Change only tests/integration/mcp/_math_server.py. The lockfile is fixed: do not add, upgrade or
+install dependencies.
+"""
+evidence = ['litellm clone BerriAI/litellm @ b6f91a221b6b9df6f8a89ec6f8264ac87d63ff5d (2026-10-21), shallow clone from the real-world scan; pyproject.toml pins mcp>=2.3.0,<3, uv.lock locks mcp 2.3.0', '<study>/analysis/realworld_audit.csv: tests/integration/mcp/_math_server.py imports FastMCP from mcp.server.fastmcp (old form, TP)', "probe 2026-10-22 (mcp 2.3.0 venv): `import mcp.server.fastmcp` -> ModuleNotFoundError ('FastMCP was renamed to MCPServer'); MCPServer.settings has no host/port fields (assignment raises ValueError); MCPServer.run(transport='streamable-http', **kwargs) forwards host/port to run_streamable_http_async", 'mcp 1.28.1 (bench venv): the original file passes the hidden tests']
+stale_patterns = [
+  '^\s*from\s+mcp\.server\.fastmcp\b',
+  '\bFastMCP\s*\(',
+  '\.settings\.(host|port)\s*=',
+]
+note_keys = ['MCPServer|mcpserver|fastmcp|FastMCP', 'settings[^\n]{0,80}\b(host|port)\b|run[^\n]{0,80}\b(host|port)\b']
+doc_keys = ['MCPServer']
+answer_tokens = []
+leak_allow = ["MCPServer", "mcpserver", "httpx2", "ToolError", "extra_body", ".text()", "Httpx2"]
+
+[extra_solutions]
+importonly = "fail"   # only the import renamed: mcp.settings.host assignment still raises at 2.3.0
+

@@ -1,0 +1,888 @@
+{
+ "library": "huggingface-hub",
+ "from": "1.21.0",
+ "to": "2.0.0",
+ "built_by": "Claude (AI), single pass",
+ "built_utc": "2026-10-23T19:46:32Z",
+ "sources_read": [
+  "releases_huggingface-hub.md",
+  "mig_huggingface_huggingface_hub.md (v1.0 guide, context only, out of range)"
+ ],
+ "candidates": [
+  {
+   "id": "hf-001",
+   "description": "snapshot_download raises IncompleteSnapshotError instead of returning a partial cached folder when the Hub is unreachable and files are missing.",
+   "old_path": "huggingface_hub.snapshot_download",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub._snapshot_download.snapshot_download",
+    "huggingface_hub.errors.IncompleteSnapshotError"
+   ],
+   "documented_in": "1.22.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0",
+   "source_quote": "`snapshot_download` now raises `IncompleteSnapshotError` instead of silently returning a partial folder.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "hf-002",
+   "description": "filter_repo_objects allow/ignore pattern matching became case-sensitive on all platforms (changes Windows behaviour).",
+   "old_path": "huggingface_hub.utils.filter_repo_objects",
+   "params": [
+    "allow_patterns",
+    "ignore_patterns"
+   ],
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.utils._paths.filter_repo_objects"
+   ],
+   "documented_in": "1.22.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0",
+   "source_quote": "`allow_patterns`/`ignore_patterns` now match case-sensitively on every OS (aligned with case-sensitive Hub paths).",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "hf-003",
+   "description": "Six inference providers were dropped from the accepted provider values of InferenceClient.",
+   "old_path": "huggingface_hub.InferenceClient",
+   "params": [
+    "provider"
+   ],
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.AsyncInferenceClient",
+    "huggingface_hub.inference._providers.PROVIDER_T",
+    "huggingface_hub.inference._providers.PROVIDERS"
+   ],
+   "documented_in": "1.22.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0",
+   "source_quote": "removes six providers no longer routed by the Hub (`black-forest-labs`, `clarifai`, `hyperbolic`, `nebius`, `nvidia`, `sambanova`)",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "hf-004",
+   "description": "The constant INFERENCE_ENDPOINT_IMAGE_KEYS was deleted from huggingface_hub.constants.",
+   "old_path": "huggingface_hub.constants.INFERENCE_ENDPOINT_IMAGE_KEYS",
+   "params": null,
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "1.28.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.28.0",
+   "source_quote": "`huggingface_hub.constants.INFERENCE_ENDPOINT_IMAGE_KEYS` is removed.",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "hf-005",
+   "description": "load_state_dict_from_file now loads safely by default (safe=True) and its pickle path defaults to weights_only=True.",
+   "old_path": "huggingface_hub.load_state_dict_from_file",
+   "params": [
+    "weights_only",
+    "safe"
+   ],
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.serialization.load_state_dict_from_file",
+    "huggingface_hub.serialization._torch.load_state_dict_from_file"
+   ],
+   "documented_in": "1.32.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0",
+   "source_quote": "`load_state_dict_from_file` now defaults to `safe=True` (always using the safetensors loader), the pickle path defaults to `weights_only=True`",
+   "change_type_guess": "default_change"
+  },
+  {
+   "id": "hf-006",
+   "description": "create_inference_endpoint keeps the account_id keyword but ignores it (FutureWarning); PrivateLink settings moved to new parameters.",
+   "old_path": "huggingface_hub.HfApi.create_inference_endpoint",
+   "params": [
+    "account_id"
+   ],
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.create_inference_endpoint"
+   ],
+   "documented_in": "1.33.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.33.0",
+   "source_quote": "The legacy `account_id` keyword still exists but is ignored and emits a `FutureWarning`",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "hf-007",
+   "description": "The HTTP dependency moved from httpx/httpcore to httpx2/httpcore2: client factories, sessions and transport exceptions now use httpx2 types.",
+   "old_path": "huggingface_hub.set_client_factory",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.set_async_client_factory",
+    "huggingface_hub.get_session",
+    "huggingface_hub.get_async_session",
+    "huggingface_hub.utils.set_client_factory",
+    "huggingface_hub.utils.set_async_client_factory",
+    "huggingface_hub.utils.get_session",
+    "huggingface_hub.utils.get_async_session",
+    "huggingface_hub.utils.httpx",
+    "huggingface_hub.errors.HfHubHTTPError",
+    "httpx",
+    "httpx2"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "clients and transport exceptions now come from `httpx2`/`httpcore2` instead of `httpx`/`httpcore`.",
+   "change_type_guess": "dependency_switch"
+  },
+  {
+   "id": "hf-008",
+   "description": "upload_large_folder (function and HfApi method) was removed; use upload_folder.",
+   "old_path": "huggingface_hub.HfApi.upload_large_folder",
+   "params": null,
+   "new_path": "huggingface_hub.HfApi.upload_folder",
+   "api_names": [
+    "huggingface_hub.upload_large_folder",
+    "huggingface_hub.hf_api.upload_large_folder"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`upload_large_folder` / `HfApi.upload_large_folder` → use `upload_folder`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "hf-009",
+   "description": "duplicate_space was removed in favour of duplicate_repo.",
+   "old_path": "huggingface_hub.HfApi.duplicate_space",
+   "params": null,
+   "new_path": "huggingface_hub.HfApi.duplicate_repo",
+   "api_names": [
+    "huggingface_hub.duplicate_space"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`duplicate_space` → use `duplicate_repo`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "hf-010",
+   "description": "request_space_storage was removed; Space volumes APIs replace it.",
+   "old_path": "huggingface_hub.HfApi.request_space_storage",
+   "params": null,
+   "new_path": "huggingface_hub.HfApi.set_space_volumes",
+   "api_names": [
+    "huggingface_hub.request_space_storage"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`request_space_storage` / `delete_space_storage` → use the volume APIs",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "hf-011",
+   "description": "delete_space_storage was removed; Space volumes APIs replace it.",
+   "old_path": "huggingface_hub.HfApi.delete_space_storage",
+   "params": null,
+   "new_path": "huggingface_hub.HfApi.delete_space_volumes",
+   "api_names": [
+    "huggingface_hub.delete_space_storage"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`request_space_storage` / `delete_space_storage` → use the volume APIs",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "hf-012",
+   "description": "repo_type_and_id_from_hf_id was removed; parse_hf_uri replaces it.",
+   "old_path": "huggingface_hub.repo_type_and_id_from_hf_id",
+   "params": null,
+   "new_path": "huggingface_hub.parse_hf_uri",
+   "api_names": [
+    "huggingface_hub.hf_api.repo_type_and_id_from_hf_id"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`repo_type_and_id_from_hf_id` → use `parse_hf_uri`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "hf-013",
+   "description": "The PROTECTED member of InferenceEndpointType was removed; type='protected' now raises ValueError.",
+   "old_path": "huggingface_hub.InferenceEndpointType.PROTECTED",
+   "params": null,
+   "new_path": "huggingface_hub.InferenceEndpointType.AUTHENTICATED",
+   "api_names": [
+    "huggingface_hub._inference_endpoints.InferenceEndpointType.PROTECTED",
+    "huggingface_hub.HfApi.create_inference_endpoint"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`InferenceEndpointType.PROTECTED` → use `AUTHENTICATED`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "hf-014",
+   "description": "list_models lost its model_name parameter; use search.",
+   "old_path": "huggingface_hub.HfApi.list_models",
+   "params": [
+    "model_name"
+   ],
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.list_models"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`list_models(model_name=...)` → use `list_models(search=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "hf-015",
+   "description": "create_repo lost its space_storage parameter; use space_volumes.",
+   "old_path": "huggingface_hub.HfApi.create_repo",
+   "params": [
+    "space_storage"
+   ],
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.create_repo"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`create_repo` / `duplicate_repo(space_storage=...)` → use `space_volumes`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "hf-016",
+   "description": "duplicate_repo lost its space_storage parameter; use space_volumes.",
+   "old_path": "huggingface_hub.HfApi.duplicate_repo",
+   "params": [
+    "space_storage"
+   ],
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.duplicate_repo"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`create_repo` / `duplicate_repo(space_storage=...)` → use `space_volumes`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "hf-017",
+   "description": "text_generation lost its stop_sequences parameter; use stop.",
+   "old_path": "huggingface_hub.InferenceClient.text_generation",
+   "params": [
+    "stop_sequences"
+   ],
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.AsyncInferenceClient.text_generation"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "`text_generation(stop_sequences=...)` → use `stop`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "hf-018",
+   "description": "InferenceClient no longer accepts a boolean token (token=True was a deprecated way to use the saved token).",
+   "old_path": "huggingface_hub.InferenceClient",
+   "params": [
+    "token"
+   ],
+   "new_path": null,
+   "api_names": [
+    "huggingface_hub.AsyncInferenceClient"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0",
+   "source_quote": "Boolean `InferenceClient(token=...)` → pass a token string or `None`",
+   "change_type_guess": "signature"
+  }
+ ],
+ "excluded": [
+  {
+   "text": "Typer replaced by an in-house Click layer for the hf CLI (typer_factory kept)",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0"
+  },
+  {
+   "text": "upload_large_folder / hf upload-large-folder deprecated (removal counted under 2.0.0)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0"
+  },
+  {
+   "text": "hf discussions edit, hf cache incomplete-download pruning, jobs hint, out singleton",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0"
+  },
+  {
+   "text": "deepinfra ASR support",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0"
+  },
+  {
+   "text": "sync_job_volume helper, hf jobs scheduled trigger",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0"
+  },
+  {
+   "text": "http_backoff honours Retry-After header",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0"
+  },
+  {
+   "text": "get_dataset_leaderboard base_model filter",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0"
+  },
+  {
+   "text": "Sandbox API (Sandbox, SandboxPool) introduced",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0"
+  },
+  {
+   "text": "v1.22 bug fixes (.env parsing, HfUri.to_url encoding, parse_size units, leaderboard KeyError, templates packaging)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.22.0"
+  },
+  {
+   "text": "Space templates: list_space_templates, create_repo(space_template=...)",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.23.0"
+  },
+  {
+   "text": "hf extensions update; hf-cli skill generated locally",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.23.0"
+  },
+  {
+   "text": "dual Xet progress bars",
+   "reason": "internal",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.23.0"
+  },
+  {
+   "text": "hf models ls filters; --sdk instead of --space-sdk; timeout help",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.23.0"
+  },
+  {
+   "text": "IncompleteSnapshotError.snapshot_path; get_cached_repo_tree utility",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.23.0"
+  },
+  {
+   "text": "filter_repo_objects backslash fix; CLI enum default fix; install.ps1",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.23.0"
+  },
+  {
+   "text": "optional name parameter for run_job / run_uv_job / scheduled jobs",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.24.0"
+  },
+  {
+   "text": "Jobs auto-named on creation (no Python element named; new feature)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.25.0"
+  },
+  {
+   "text": "timeout parameter on safetensors metadata methods; cache inconsistency warning",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.25.0"
+  },
+  {
+   "text": "v1.25 bug fixes (ReDoS, deep local_dir, 402 on create space, CardData order, HfFileSystem FileNotFoundError, token forwarding)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.25.0"
+  },
+  {
+   "text": "HfApi.resolve_revision / ResolvedRevision",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.26.0"
+  },
+  {
+   "text": "local_dir/cache paths reject absolute/UNC/traversal filenames on all platforms (security fix)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.26.0"
+  },
+  {
+   "text": "Sandbox.create no longer forwards the HF token (Sandbox API introduced within the range, v1.22)",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.26.0"
+  },
+  {
+   "text": "resource_group_id for collections and jobs; update_collection_resource_group",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.26.0"
+  },
+  {
+   "text": "Job names in CLI output and --name filter",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.26.0"
+  },
+  {
+   "text": "Tamil docs URLs moved /tm/ -> /ta/; docs fixes",
+   "reason": "docs",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.26.0"
+  },
+  {
+   "text": "v1.26 bug fixes (redacted Xet hashes, safetensors header, token=False in create_inference_endpoint_from_catalog, CLI encoding, tilde expansion)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.26.0"
+  },
+  {
+   "text": "hf-cli skill installed by installers and refreshed by hf update",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.27.0"
+  },
+  {
+   "text": "container_command/container_args on update_inference_endpoint; CLI gate relaxed",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.27.0"
+  },
+  {
+   "text": "Baseten provider; region expand property",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.27.0"
+  },
+  {
+   "text": "minimum hf-xet raised to 1.5.2",
+   "reason": "internal",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.27.0"
+  },
+  {
+   "text": "model serialized first in conversational payloads (key order only)",
+   "reason": "internal",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.27.0"
+  },
+  {
+   "text": "v1.27 bug fixes (bucket prefix collisions, cache double delete, retained frames)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.27.0"
+  },
+  {
+   "text": "hf endpoints hardware / list_inference_endpoints_hardware",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.28.0"
+  },
+  {
+   "text": "custom_image accepts engine-keyed dicts; CLI --engine / parallelism flags",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.28.0"
+  },
+  {
+   "text": "deepinfra TTS and feature-extraction",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.28.0"
+  },
+  {
+   "text": "hf extensions off metered REST API",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.28.0"
+  },
+  {
+   "text": "v1.28 bug fixes (scheduled upload, tqdm_class, GPU rows, 429 handling, ResolvedRevision pickle, Content-Length, model.task)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.28.0"
+  },
+  {
+   "text": "v1.28 documentation fixes",
+   "reason": "docs",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.28.0"
+  },
+  {
+   "text": "Xet connection info cache (one token request per file avoided)",
+   "reason": "internal",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.29.0"
+  },
+  {
+   "text": "update_bucket_settings / hf buckets settings",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.29.0"
+  },
+  {
+   "text": "bucket sync path validation; load_state_dict_from_file '.safetensors' pickle fallback (security fixes)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.29.0"
+  },
+  {
+   "text": "fal-ai LoRA weights; stream=True hint on 504",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.29.0"
+  },
+  {
+   "text": "mcp<2.0 upper bound on the mcp extra",
+   "reason": "internal",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.29.0"
+  },
+  {
+   "text": "leftover deprecated labels/tags removed from docstrings and signature (callable not named)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.29.0"
+  },
+  {
+   "text": "hf jobs scheduled ls --status/--label/--name; -f/--filter deprecated and ignored",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.30.0"
+  },
+  {
+   "text": "list_scheduled_jobs labels argument",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.30.0"
+  },
+  {
+   "text": "ResolvedRevision pins the repo it was resolved for (API introduced within the range, v1.26)",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.30.0"
+  },
+  {
+   "text": "hf-inference chat-completion no longer requires the conversational tag (provider-side routing)",
+   "reason": "server_or_rest_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.30.0"
+  },
+  {
+   "text": "redirects between Hub hosts followed when resolving files",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.30.0"
+  },
+  {
+   "text": "Sandbox custom labels",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.31.0"
+  },
+  {
+   "text": "more resilient downloads (retry, missing Content-Length, atomic refs, dry-run copies)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.31.0"
+  },
+  {
+   "text": "huggingface_hub.utils.httpx re-export",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.31.0"
+  },
+  {
+   "text": "HfFileSystem.get rejects unsafe remote filenames (security fix)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.31.0"
+  },
+  {
+   "text": "v1.31 CLI fixes (buckets rm siblings, hf update on Windows, shell-script extensions, reference)",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.31.0"
+  },
+  {
+   "text": "v1.31 bug fixes (CommitInfo pickle, SliceFileObj iteration, dotenv parsing)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.31.0"
+  },
+  {
+   "text": "shared cross-repo Xet blob store in the cache (layout unchanged, opt-out env var)",
+   "reason": "internal",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "[tool.hf-jobs] launch config in UV scripts (CLI only)",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "Sandbox security hardening series (Sandbox API introduced within the range)",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "path_in_repo rejects embedded '..' segments (security fix)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "repo_id validation restricted to ASCII word characters as documented",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "hf cache rm file URIs; kernel repos in hf cache / scan_cache_dir",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "lazy imports of huggingface_hub.utils and optional dependencies",
+   "reason": "internal",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "--format human, hf --skills alias",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "container registry credentials; JobInfo network group; network group scoping",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "X-HF-Download-Counter header; mtime sent when copying bucket files",
+   "reason": "internal",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "v1.32 bug fixes (cleanup regex, sandbox results, get_session race, RepoCard/SpaceRuntime nulls, etc.)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.32.0"
+  },
+  {
+   "text": "Validating progress bar for Xet uploads",
+   "reason": "addition",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.33.0"
+  },
+  {
+   "text": "hf skills add installs for all agents; --claude deprecated",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.33.0"
+  },
+  {
+   "text": "--format/--json/-q consumed on jobs run commands; bucket watch type",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.33.0"
+  },
+  {
+   "text": "v1.33 bug fixes (symlink probe, eval results, scan_cache_dir refs, BucketBatchError, get_file lpath, MAX_PATH, repo_id length)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v1.33.0"
+  },
+  {
+   "text": "httpx2 uses OS trust store; loggers renamed httpx2/httpcore2 (part of the httpx2 switch)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0"
+  },
+  {
+   "text": "oauth extra requires authlib>=1.8.0",
+   "reason": "internal",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0"
+  },
+  {
+   "text": "huggingface-cli entry point removed",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0"
+  },
+  {
+   "text": "hf repo and hf repo-files delete removed",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0"
+  },
+  {
+   "text": "hf upload-large-folder removed",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0"
+  },
+  {
+   "text": "hf repos create/duplicate --storage removed",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0"
+  },
+  {
+   "text": "hf jobs ps and hf jobs scheduled ps -f/--filter removed",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0"
+  },
+  {
+   "text": "hf skills add/update --claude removed",
+   "reason": "cli_only",
+   "source_url": "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0"
+  }
+ ],
+ "excluded_counts": {
+  "cli_only": 19,
+  "deprecation_only": 1,
+  "addition": 27,
+  "bugfix": 16,
+  "internal": 9,
+  "unnamed": 2,
+  "docs": 2,
+  "server_or_rest_only": 1,
+  "duplicate": 1
+ },
+ "shuffle_order": [
+  "hf-012",
+  "hf-011",
+  "hf-005",
+  "hf-003",
+  "hf-008",
+  "hf-013",
+  "hf-015",
+  "hf-002",
+  "hf-016",
+  "hf-001",
+  "hf-014",
+  "hf-010",
+  "hf-004",
+  "hf-006",
+  "hf-017",
+  "hf-007",
+  "hf-018",
+  "hf-009"
+ ],
+ "verification": [
+  {
+   "id": "hf-012",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/hf_api.py:299 def repo_type_and_id_from_hf_id(...); __init__.py:324 lazy export",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/hf_api.py, __init__.py: no repo_type_and_id_from_hf_id (grep: 0 matches in package)",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "hf-011",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/hf_api.py:8914 def delete_space_storage; hf_api.py:14650 module alias; __init__.py:238",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/no delete_space_storage anywhere in package (grep 0)",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "hf-005",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/serialization/_torch.py:571 load_state_dict_from_file(..., weights_only: bool = False, ...) (no `safe` parameter)",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/serialization/_torch.py:633 load_state_dict_from_file(..., weights_only: bool = True, ..., safe: bool = True)",
+   "change_type": "default_change",
+   "notes": "weights_only default False->True is a true default change; `safe` is a new parameter defaulting to True (behaviour change)."
+  },
+  {
+   "id": "hf-003",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/inference/_providers/__init__.py:76-96 PROVIDER_T Literal includes black-forest-labs, clarifai, hyperbolic, nebius, nvidia, sambanova; inference/_client.py:171 provider: PROVIDER_OR_POLICY_T | None",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/inference/_providers/__init__.py:72 PROVIDER_T Literal without the six providers; inference/_client.py:170 same annotation name",
+   "change_type": "signature",
+   "notes": "Annotation name unchanged; the Literal behind PROVIDER_OR_POLICY_T was narrowed (accepted values removed)."
+  },
+  {
+   "id": "hf-008",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/hf_api.py:6100 def upload_large_folder; hf_api.py:14597 upload_large_folder = api.upload_large_folder; __init__.py:352",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/no upload_large_folder in hf_api.py/__init__.py (grep 0)",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "hf-013",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/_inference_endpoints.py:33 PROTECTED = \"protected\"; hf_api.py:9283 handled in create_inference_endpoint",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/_inference_endpoints.py:104-107 InferenceEndpointType has PUBlIC/AUTHENTICATED/PRIVATE only; hf_api.py:9125-9126 type == 'protected' raises ValueError",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "hf-015",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/hf_api.py:4465 def create_repo(..., space_storage(kw), ...)",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/hf_api.py:4498 def create_repo(...) without space_storage",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "hf-002",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/utils/_paths.py:131,135 fnmatch(path, r) (OS-dependent case folding on Windows)",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/utils/_paths.py:163,167 fnmatchcase(path, r); docstring :81 'case-sensitive on every platform'",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "hf-016",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/hf_api.py:8595 def duplicate_repo(..., space_storage(kw), ...)",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/hf_api.py:8595 def duplicate_repo(...) without space_storage",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "hf-001",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/_snapshot_download.py:294-299 offline path returns existing snapshot folder ('we can't check if all the files are actually there')",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/_snapshot_download.py:325-340 calls _raise_if_incomplete_snapshot before returning; :553-592 raises IncompleteSnapshotError; errors.py:486 class IncompleteSnapshotError(LocalEntryNotFoundError)",
+   "change_type": "behaviour_only",
+   "notes": "Raised only when the tree listing is cached and files are missing."
+  },
+  {
+   "id": "hf-014",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/hf_api.py:2401 def list_models(..., model_name(kw), ...)",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/hf_api.py:2269 def list_models(...) without model_name (no **kwargs)",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "hf-010",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/hf_api.py:8878 def request_space_storage; hf_api.py:14649 alias; __init__.py:326",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/no request_space_storage in package (grep 0)",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "hf-004",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/constants.py:105 INFERENCE_ENDPOINT_IMAGE_KEYS = [...]",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/constants.py: no INFERENCE_ENDPOINT_IMAGE_KEYS (grep 0 in package)",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "hf-006",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/hf_api.py:9094 create_inference_endpoint(..., account_id: str | None = None); hf_api.py:9300 payload 'accountId': account_id",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/hf_api.py:8929 account_id still accepted; hf_api.py:9127-9133 FutureWarning 'account_id has been ignored'; :9180 privateService payload from private_link_account_id",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "hf-017",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/inference/_client.py:2100 text_generation(..., stop_sequences(kw), ...); inference/_generated/_async_client.py:2145 same",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/inference/_client.py:2089 and _generated/_async_client.py:2134 text_generation without stop_sequences",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "hf-007",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/utils/_http.py:31 import httpx; :346 get_session() -> httpx.Client; dist-info METADATA:30 Requires-Dist httpx<1,>=0.23.0",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/utils/_http.py:33 import httpx2; :395 get_session() -> httpx2.Client; dist-info METADATA:30 Requires-Dist httpx2<3,>=2.0.0",
+   "change_type": "dependency_switch",
+   "notes": ""
+  },
+  {
+   "id": "hf-018",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/inference/_client.py:195-208 isinstance(token, bool): token=True -> DeprecationWarning + get_token() (token=False raises ValueError); _generated/_async_client.py:185 same",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/inference/_client.py:194-195 isinstance(token, bool) -> raise TypeError; _generated/_async_client.py:184-185 same",
+   "change_type": "behaviour_only",
+   "notes": "Annotation is `str | None` in both releases; only the runtime handling of bool changed, so classified behaviour_only (guess was signature)."
+  },
+  {
+   "id": "hf-009",
+   "status": "verified",
+   "old_evidence": "huggingface_hub-1.21.0/huggingface_hub/hf_api.py:8777 def duplicate_space; hf_api.py:14648 alias; __init__.py:247",
+   "new_evidence": "huggingface_hub-2.0.0/huggingface_hub/no duplicate_space in package (grep 0)",
+   "change_type": "removal",
+   "notes": ""
+  }
+ ],
+ "sample": [
+  "hf-012",
+  "hf-011",
+  "hf-005",
+  "hf-003",
+  "hf-008",
+  "hf-013",
+  "hf-015",
+  "hf-002",
+  "hf-016",
+  "hf-001",
+  "hf-014",
+  "hf-010",
+  "hf-004",
+  "hf-006",
+  "hf-017",
+  "hf-007",
+  "hf-018",
+  "hf-009"
+ ]
+}

@@ -1,0 +1,54 @@
+{
+ "schema": "since-cutoff-bench/openagent-run@1",
+ "study_id": "openagent-qwen3c-tasks2-2026-10-22",
+ "run_id": "pl90_C_r3_771d",
+ "attempt": 1,
+ "attempt_id": "pl90_C_r3_771d",
+ "task": "pl90",
+ "library": "polars",
+ "stratum": "pre-cutoff-control",
+ "kind": "pre-cutoff-control",
+ "condition": "C",
+ "rep": 3,
+ "block_id": "pl90#3",
+ "order_index": 27,
+ "pilot": false,
+ "condition_config": {
+  "notes_tokens": 400,
+  "notes_covered": false
+ },
+ "agent": {
+  "scaffold": "mini-swe-agent",
+  "step_limit": 40,
+  "textbased": false,
+  "wall_limit_s": 1800,
+  "temperature": 0.7,
+  "command_timeout_s": 180
+ },
+ "wall_s": 57.7,
+ "exit": {
+  "status": "RepeatedFormatError"
+ },
+ "process": {
+  "turns": 10,
+  "commands": 7,
+  "calls": 10,
+  "input_tokens": 27273,
+  "output_tokens": 1226,
+  "total_tokens": 28499,
+  "stale_in_first_edit": true,
+  "stale_in_final": true,
+  "first_edit": {
+   "command_index": 7,
+   "stale": true
+  }
+ },
+ "valid": true,
+ "invalid_reason": null,
+ "grade": {
+  "passed": false,
+  "hidden_passed": false,
+  "visible_passed": false,
+  "lock_modified": false
+ }
+}

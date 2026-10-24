@@ -1,0 +1,31 @@
+schema = "since-cutoff-bench/task@1"
+id = "hf01-tgi-stop"
+library = "huggingface-hub"
+pinned = "2.0.0"
+cutoff_version = "1.21.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # stop_sequences= deprecated through 1.x, removed in 2.0 -> TypeError
+timeout_s = 900
+target_files = ["app/tgi.py"]
+instruction = """
+Implement `complete_paragraph(endpoint_url, prompt)` in app/tgi.py.
+
+Call our self-hosted text-generation-inference (TGI) server at `endpoint_url` through
+huggingface_hub's InferenceClient text-generation API. Generate at most 200 new tokens, stop
+generation at the first blank line ("\\n\\n"), and return only the generated text (not the
+prompt) with trailing whitespace removed. Do not add dependencies. You can run the tests
+with `pytest`.
+"""
+evidence = [
+  "https://github.com/huggingface/huggingface_hub/releases/tag/v2.0.0 ('text_generation(stop_sequences=...) -> use stop')",
+  "huggingface_hub-1.21.0 wheel: inference/_client.py text_generation(stop_sequences=...) '# Deprecated, use `stop` instead' and maps it to stop",
+  "huggingface_hub-2.0.0 wheel: text_generation has `stop` and no `stop_sequences`",
+]
+stale_patterns = ['\bstop_sequences\s*=']
+note_keys = ['stop_sequences']
+doc_keys = ['\bstop\s*=']
+answer_tokens = ["stop="]
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_review = "pass"   # reviewer's alternative correct answer (REVIEW.md): the hidden tests must accept it

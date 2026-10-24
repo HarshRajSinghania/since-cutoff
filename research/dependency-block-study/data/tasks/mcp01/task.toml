@@ -1,0 +1,40 @@
+schema = "since-cutoff-bench/task@1"
+id = "mcp01-server-tools"
+library = "mcp"
+pinned = "2.2.0"
+cutoff_version = "1.28.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud+silent"  # FastMCP import fails loudly; exception text is withheld silently unless ToolError
+timeout_s = 900
+target_files = ["app/server.py"]
+instruction = """
+Implement `build_server()` in app/server.py with the official MCP Python SDK (`mcp`, pinned in
+pyproject.toml), using its high-level decorator API. The server is named "notes" and exposes two
+tools:
+
+  add_note(title: str, body: str) -> str   stores the note in NOTES and returns "saved <title>";
+  word_count(title: str) -> int            returns the number of whitespace-separated words in
+                                           the stored note.
+
+For an unknown title, word_count must fail as a tool error whose message contains
+"no such note", so the calling model can read why it failed. Keep `python -m app.server`
+serving over stdio. Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "https://github.com/modelcontextprotocol/python-sdk/releases/tag/v2.0.0 ('FastMCP is now MCPServer')",
+  "https://py.sdk.modelcontextprotocol.io/migration/ (FastMCP -> MCPServer; camelCase -> snake_case fields)",
+  "mcp-2.2.0 wheel: mcp/server/fastmcp.py raises ModuleNotFoundError pointing to mcp.server.mcpserver.MCPServer",
+  "mcp-2.2.0 wheel: mcp/server/mcpserver/tools/base.py - a non-ToolError exception reaches the client only as 'Error executing tool <name>'",
+  "mcp-1.28.1 wheel: mcp/server/fastmcp/tools/base.py - any exception reaches the client as 'Error executing tool <name>: <message>'",
+]
+# the 1.x name, or a plain exception carrying the message (withheld from the client in 2.x)
+stale_patterns = [
+  '\bFastMCP\b|mcp\.server\.fastmcp',
+  '''raise\s+(?!ToolError\b)\w+\(\s*f?["'][^"'\n]*no such note''',
+]
+note_keys = ['FastMCP|MCPServer', 'ToolError']
+doc_keys = ['MCPServer', 'ToolError']
+answer_tokens = ["MCPServer", "mcpserver", "ToolError"]
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+halfmigrated = "fail"   # renamed only, still `raise ValueError`

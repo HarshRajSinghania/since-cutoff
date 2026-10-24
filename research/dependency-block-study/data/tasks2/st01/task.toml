@@ -1,0 +1,27 @@
+schema = "since-cutoff-bench/task@1"
+id = "st01-cache-loader"
+library = "streamlit"
+pinned = "1.66.1"
+cutoff_version = "1.58.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # st.cache raises AttributeError on 1.66 (removed); deprecated-but-working at 1.58
+timeout_s = 900
+target_files = ["dashboard/data.py"]
+instruction = """
+The orders dashboard (dashboard/app.py) rereads the CSV on every rerun. Make `load_orders` in
+dashboard/data.py cached with Streamlit's caching so the file is read once per path, as its docstring
+says; keep the `READS` counter where it is. Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "streamlit-1.58.0: st.cache exists (prints 'st.cache is deprecated and will be removed soon. Please use ... st.cache_data or st.cache_resource')",
+  "streamlit-1.66.1: `st.cache` removed -> AttributeError 'st.cache has been removed. Use st.cache_data or st.cache_resource instead.'",
+  "since-cutoff griffe scan 2026-10-22 (<study>/expansion/probes/griffe_scan_candidates_2026-10-22.json): removed streamlit.cache, streamlit.runtime.caching.legacy_cache_api",
+  "run (2026-10-22, scratch venvs; <study>/expansion/probes/streamlit_probe_output.txt): AppTest script with @st.cache -> OK at 1.58.0, AttributeError at 1.66.1",
+]
+stale_patterns = [
+  '''@st\.cache\b(?!_)''',
+  '''\bst\.cache\((?!_)''',
+]
+note_keys = ['\bcache\b[^\n]{0,80}(removed|cache_data)']
+doc_keys = ['cache_data']
+answer_tokens = ["cache_data", "cache_resource"]

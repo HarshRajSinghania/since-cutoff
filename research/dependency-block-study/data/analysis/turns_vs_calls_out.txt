@@ -1,0 +1,18 @@
+turns_vs_calls.py: CLI num_turns vs model API calls (distinct assistant message ids) in benchmark sessions
+
+[main] main-2026-09-28: runs with stream 360, missing 0; stream num_turns != runs.jsonl 1; num_turns == tool-result messages + 1 in 309/360
+  post-cutoff C: 17 tasks; mean of task means: num_turns 16.65, API calls 11.31, ratio calls/num_turns 0.680
+  post-cutoff A: 17 tasks; mean of task means: num_turns 20.08, API calls 13.08, ratio calls/num_turns 0.651
+
+[replication] abl-opus55-2026-10-22: runs with stream 153, missing 0; stream num_turns != runs.jsonl 0; num_turns == tool-result messages + 1 in 132/153
+  post-cutoff C: 17 tasks; mean of task means: num_turns 17.65, API calls 12.00, ratio calls/num_turns 0.680
+  post-cutoff A: 17 tasks; mean of task means: num_turns 19.06, API calls 12.47, ratio calls/num_turns 0.654
+
+[new_tasks] tasks2-opus55-2026-10-22: runs with stream 99, missing 0; stream num_turns != runs.jsonl 0; num_turns == tool-result messages + 1 in 99/99
+  post-cutoff C: 8 tasks; mean of task means: num_turns 12.21, API calls 8.79, ratio calls/num_turns 0.720
+  post-cutoff A: 8 tasks; mean of task means: num_turns 16.17, API calls 10.67, ratio calls/num_turns 0.660
+
+Block cost at benchmark length (704 tokens, Opus 5.5 prices; s and K unchanged):
+  t = num_turns 16.65: c = $0.00798, f* (u = 0) = 0.0914, c/K = 0.0465
+  t = API calls 11.31: c = $0.00722, f* (u = 0) = 0.0828, c/K = 0.0421
+  (s also contains the benchmark block's own cost computed with num_turns; counting calls would lower it slightly, so f* at calls is approximate)

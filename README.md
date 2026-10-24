@@ -624,6 +624,26 @@ Results from your own projects are very welcome in
 How the measurement works and what these numbers do and do not show, in more detail:
 [the write-up](https://mohammadhijjawi97.github.io/since-cutoff/).
 
+## Research: does a dependency block pay for its tokens?
+
+A technical report (October 2026) tests the block that `sync` writes in 1,607 agent sessions and puts the result into
+a break-even model, with every length counted in model calls. The key findings:
+
+- **A small saving, on one model.** On Opus 5.5 the block cut cost to 0.80 of Claude Code alone in the main study
+  (95% CI 0.70-0.90) and tokens to 0.79 on eight new tasks (not detected after Holm correction, p = 0.094); a
+  replication did not meet its pre-committed rule, and
+  Sonnet 5.5, Haiku 5.5 and an open-weight agent showed no detectable saving. All tasks were written by Opus 5.5.
+- **The header alone did about as well.** No pre-committed test separated the full block from a header that only
+  names the changed packages, or from a generic "check the installed signatures" warning.
+- **Cheap, but not repaid by the affected sessions alone.** In the author's agent contexts a 704-token block costs
+  about 0.4% of a context; assuming a fixed saving per affected context, the contexts that need a changed API repay it only once they make up 14-49% of all
+  contexts, against an estimated 0.8-7%.
+- **The effect on all other sessions decides.** Control tasks put it at a 6.6% saving, but it cannot be told from
+  zero. Off by default is a loss-averse choice, not proof of a loss; a live A/B test of about 2,500-2,900 sessions per
+  arm would settle it.
+
+Read the [report, data and scripts](https://github.com/MohammadHijjawi97/since-cutoff/tree/main/research/dependency-block-study) or the [summary on the docs site](https://mohammadhijjawi97.github.io/since-cutoff/research.html).
+
 ## Use it from any agent (MCP)
 
 `since-cutoff mcp` is an MCP server that lets a coding agent ask "what changed in this library

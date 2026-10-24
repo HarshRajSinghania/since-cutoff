@@ -1,0 +1,44 @@
+schema = "since-cutoff-bench/task@1"
+id = "lc02-chat-summary"
+library = "langchain-core"
+pinned = "1.6.5"
+# since-cutoff's rule (highest final, non-yanked release on or before the end of the 2026-06 knowledge month):
+# 1.4.8 (2026-06-18). The removal happened in 1.0.0 (2025-10-17), before the cutoff, so for Opus 5.5 this task
+# is a control. It is a treatment for claude-haiku-4-5 (cutoff 2025-02).
+cutoff_version = "1.4.8"
+# the last 0.3.x release before the cutoff (2026-05-07): calling a chat model and .predict() still work there
+stale_version = "0.3.86"
+stratum = "pre-cutoff-control"
+kind = "pre-cutoff-loud"  # stale code raises TypeError: 'SpyChat' object is not callable
+timeout_s = 900
+target_files = ["app/summary.py"]
+# review 2026-09-27: the repo no longer contains a module that uses the old API (broken at the pinned version);
+# existing library use in repo/ is working code only (REVIEW.md, PROTOCOL.md section 12).
+# repo/app/translate.py is working existing use of the chat model (`chat.batch(...)`).
+# literal TOML string: the instruction shows the two characters \n\n, not two line breaks
+instruction = '''
+Implement `summarize_ticket(chat, ticket)` in app/summary.py. `chat` can be any LangChain chat
+model. Make exactly one request to it with two messages: a system message with SUMMARY_PROMPT and
+a user message with the ticket rendered by `ticket_text`. Generation must stop at the first blank
+line (stop sequence "\n\n"). Return the model's reply as a plain str with surrounding whitespace
+removed.
+
+Do not add dependencies. You can run the tests with `pytest`.
+'''
+evidence = [
+  "langchain-core-0.3.86 wheel: langchain_core/language_models/chat_models.py:1291-1292 `@deprecated(\"0.1.7\", alternative=\"invoke\", removal=\"1.0\") def __call__(self, messages, stop=None, callbacks=None, **kwargs) -> BaseMessage`; :1341-1342 `call_as_llm`, :1360-1362 `predict`, :1388-1390 `predict_messages`, :1400-1418 `apredict` / `apredict_messages` (alternative ainvoke), all with the same decorator; language_models/base.py:260-262 and :282-284 declare `predict` / `predict_messages` on BaseLanguageModel. Same in 0.3.75 (chat_models.py:1243-1244, :1309-1311, :1334-1336)",
+  "langchain-core-1.0.0 / 1.4.8 / 1.6.5 wheels: no `__call__`, `predict`, `predict_messages`, `call_as_llm` or `apredict*` on BaseChatModel, BaseLLM or BaseLanguageModel (a scan of every module finds only the callable Protocols in runnables/base.py); the entry point is `def invoke` (chat_models.py :366 / :463 / :475)",
+  "run: the stale solution raises TypeError (not callable) at 1.6.5 and passes with a LangChainDeprecationWarning at 0.3.86 (bench validate)",
+]
+# regexes (Python re, MULTILINE) that mark the old API in an edit or in the final diff (comments ignored)
+stale_patterns = [
+  '\.a?predict(?:_messages)?\s*\(',
+  '\.call_as_llm\s*\(',
+  '\b(?:chat|llm|model|chat_model)\s*\(\s*(?:\[|messages\b|msgs\b)',   # calling the model object itself
+]
+# regexes that must ALL match the frozen notes for the change to count as covered by them
+note_keys = ['\bpredict\b|__call__']
+# regexes that must ALL match the Context7 tool results for `doc_hit`
+doc_keys = ['\b(?:chat|llm|model|chat_model)\.invoke\(']
+# literal strings that must not appear in repo/ or the instruction (added to bench.toml's global list)
+answer_tokens = [".invoke(", ".ainvoke("]

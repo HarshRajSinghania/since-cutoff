@@ -1,0 +1,112 @@
+unit_switch_check.py: benchmark-length numbers with t = CLI num_turns (as in the paper) and t = model calls
+prices p_r = $0.20, p_w = $8.00 per MTok; K = $0.1717; K_post = $0.4193; block sizes {'G_median_nonempty': 704, 'G_mean_nonempty': 1014, 'AI_median_nonempty': 1024.5, 'AI_mean_nonempty': 1320}
+
+[1] Per-study terms (post-cutoff C sessions; task means)
+  main: tasks 17, missing streams 0; num_turns 16.65 (json 16.65), model calls 11.31; S_gross at turns $0.08724 (json $0.08724, MATCH), S_gross with O_bench at calls $0.08678
+  replication: tasks 17, missing streams 0; num_turns 17.65 (json 17.65), model calls 12.00; S_gross at turns $0.06915 (json $0.06915, MATCH), S_gross with O_bench at calls $0.06866
+  new_tasks: tasks 8, missing streams 0; num_turns 12.21 (json 12.21), model calls 8.79; S_gross at turns $0.04560 (json $0.04560, MATCH), S_gross with O_bench at calls $0.04532
+  pooled_main_new: tasks 25, missing streams 0; num_turns 15.23 (json 15.23), model calls 10.51; S_gross at turns $0.07392 (json $0.07392, MATCH), S_gross with O_bench at calls $0.07351
+
+[2] Worked example (704 tokens, main study): c, f* at u = 0, c/K; Table ctxcost benchmark row
+  turns: t = 16.65, c = $0.00798, s = $0.08724, f*(u=0) = 9.14%, c/K = 4.65%
+  V1   : t = 11.31, c = $0.00722, s = $0.08724, f*(u=0) = 8.28%, c/K = 4.21%
+  V2   : t = 11.31, c = $0.00722, s = $0.08678, f*(u=0) = 8.33%, c/K = 4.21%
+
+[3] u = 0 break-even over 4 block sizes x 4 savings (paper: 9.1--30.2%; 704/main .. 1,320/new tasks)
+  turns: 704/main 9.1%, 1,320/new 30.2%; min 9.1%, max 30.2%
+         App. D line 808 set: main 704 9.1%, 1,024.5 13.3%, 1,014 13.2%, 1,320 17.1%; new tasks 704 16.1%, 1,024.5 23.5%, 1,320 30.2%
+  V1   : 704/main 8.3%, 1,320/new 28.2%; min 8.3%, max 28.2%
+         App. D line 808 set: main 704 8.3%, 1,024.5 12.1%, 1,014 11.9%, 1,320 15.5%; new tasks 704 15.1%, 1,024.5 21.9%, 1,320 28.2%
+  V2   : 704/main 8.3%, 1,320/new 28.4%; min 8.3%, max 28.4%
+         App. D line 808 set: main 704 8.3%, 1,024.5 12.1%, 1,014 12.0%, 1,320 15.6%; new tasks 704 15.2%, 1,024.5 22.1%, 1,320 28.4%
+
+[4] f* at the u interval bounds and c/K over the 16 scenarios (App. D)
+  turns: 704/main f* at u = -0.037 15.3%, at u = -0.0532 17.8%; 16 scenarios: cost bound 15.3%--38.8%, token bound 17.8%--41.9%, pays at every f from u = 4.3%--8.9%
+         K = $0.4193: c/K 1.9%, f* at u = -0.037 23%; six non-empty controls (K = $0.1778, u = -0.0336): f* 15%, c/K6 4.5%; weight ratio K/s 1.97
+  V1   : 704/main f* at u = -0.037 14.5%, at u = -0.0532 17.0%; 16 scenarios: cost bound 14.5%--37.0%, token bound 17.0%--40.2%, pays at every f from u = 4.0%--8.0%
+         K = $0.4193: c/K 1.7%, f* at u = -0.037 22%; six non-empty controls (K = $0.1778, u = -0.0336): f* 14%, c/K6 4.1%; weight ratio K/s 1.97
+  V2   : 704/main f* at u = -0.037 14.6%, at u = -0.0532 17.1%; 16 scenarios: cost bound 14.6%--37.2%, token bound 17.1%--40.4%, pays at every f from u = 4.0%--8.0%
+         K = $0.4193: c/K 1.7%, f* at u = -0.037 22%; six non-empty controls (K = $0.1778, u = -0.0336): f* 14%, c/K6 4.1%; weight ratio K/s 1.98
+
+[5] Sessions per arm to tell u = 0 from u = c/K (round13 method: c/K rounded to 4 decimals, Z = 2.8016)
+  turns: c/K 0.0465: SD 0.243 -> 409, SD 0.448 -> 1390, SD 0.511 -> 1808
+  V1   : c/K 0.0421: SD 0.243 -> 502, SD 0.448 -> 1704, SD 0.511 -> 2216
+  V2   : c/K 0.0421: SD 0.243 -> 502, SD 0.448 -> 1704, SD 0.511 -> 2216
+  (round13_numbers.json at turns: 409, 1390, 1808)
+
+[6] Live A/B over all sessions (round9 method; SDs as rounded in round9_numbers.json)
+  turns: f = 0.1: net 0.18%, n 987,173--1,284,337; f = 0.2: net 2.26%, n 6,034--7,850
+  V1   : f = 0.1: net 0.36%, n 245,521--319,429; f = 0.2: net 2.44%, n 5,171--6,727
+  V2   : f = 0.1: net 0.35%, n 261,610--340,361; f = 0.2: net 2.42%, n 5,268--6,853
+  (round9_numbers.json at turns: f = 0.2 net 0.0226, n 6042--7843; f = 0.1 net 0.0018)
+
+[7] Size cap b_max = f s / (t p_r + p_w) at u = 0, tokens per unit f (main / replication / new tasks)
+  turns: 7,701 / 5,998 / 4,367; main at f = 0.1 770, at 0.2 1,540
+  V1   : 8,501 / 6,649 / 4,673; main at f = 0.1 850, at 0.2 1,700
+  V2   : 8,455 / 6,602 / 4,644; main at f = 0.1 846, at 0.2 1,691
+
+[8] Fleet of 1,000 sessions a day, f = 0.2, u = 0, main study; c at other sizes
+  turns: 764 tokens: pays $8.66 ($0.0087/session), saves $17.45, net $8.79; 704 tokens: pays $7.98 ($0.0080/session), saves $17.45, net $9.47
+         c at 423 / 764 / 1,329 tokens: $0.0048 / $0.0087 / $0.0151; 11,100 tokens: $0.126 vs s $0.087
+  V1   : 764 tokens: pays $7.84 ($0.0078/session), saves $17.45, net $9.61; 704 tokens: pays $7.22 ($0.0072/session), saves $17.45, net $10.22
+         c at 423 / 764 / 1,329 tokens: $0.0043 / $0.0078 / $0.0136; 11,100 tokens: $0.114 vs s $0.087
+  V2   : 764 tokens: pays $7.84 ($0.0078/session), saves $17.36, net $9.51; 704 tokens: pays $7.22 ($0.0072/session), saves $17.36, net $10.13
+         c at 423 / 764 / 1,329 tokens: $0.0043 / $0.0078 / $0.0136; 11,100 tokens: $0.114 vs s $0.087
+
+[9] Control sessions (main + new tasks, C): c of the 704-token block; benchmark block's own cost / K
+  sessions 30: num_turns 11.87 -> c $0.0073; model calls 8.37 -> c $0.0068
+  benchmark block's own cost / K: at turns 1.3% (breakeven2d.json 1.3%); at calls 1.2%
+
+[10] Per-context values (already model calls); V2 changes only s
+  turns all contexts: f*(u=0) 13.76%, f*(u=6.63%) 0.82%, f*(u=-3.7%) 19.6%, u needed at f_strict 6.6%, at f_upper 3.7%, cap 43 / 356 tokens, fleet saves $0.73 / $6.07
+  turns Python-editing: f*(u=0) 19.62%, f*(u=6.63%) 7.55%, f*(u=-3.7%) 25.1%, u needed at f_strict 9.1%, at f_upper 1.2%, cap 77 / 637 tokens, fleet saves $1.87 / $15.48
+  turns all-context u = 0 range 704/main .. 1,320/new: 13.8% .. 49.4%; $0.56 per session / s = 6.42
+  V2    all contexts: f*(u=0) 13.83%, f*(u=6.63%) 0.82%, f*(u=-3.7%) 19.7%, u needed at f_strict 6.6%, at f_upper 3.7%, cap 43 / 354 tokens, fleet saves $0.73 / $6.04
+  V2    Python-editing: f*(u=0) 19.72%, f*(u=6.63%) 7.60%, f*(u=-3.7%) 25.2%, u needed at f_strict 9.1%, at f_upper 1.2%, cap 76 / 633 tokens, fleet saves $1.86 / $15.39
+  V2    all-context u = 0 range 704/main .. 1,320/new: 13.8% .. 49.7%; $0.56 per session / s = 6.45
+
+[11b] Sessions per arm to tell u = 0 from u = c/K at the contexts' length (Table 3 Default/Size basis)
+  all contexts: c/K 0.0699: SD 0.243 -> 177, SD 0.448 -> 601, SD 0.511 -> 781
+  Python-editing: c/K 0.0997: SD 0.243 -> 85, SD 0.448 -> 286, SD 0.511 -> 372
+
+[11] Ratio of contexts' length to benchmark length: 45.26 / num_turns 2.72; 45.26 / calls 4.00
+
+[14] Figure breakeven2d scenarios (704/main, 1,025/main, 1,320/new tasks): f* at u = 0 and u where f* reaches 0
+  turns: 704/main: f*(0) 9.1%, zero at u = 4.65%; 1024.5/main: f*(0) 13.3%, zero at u = 6.76%; 1320/new_tasks: f*(0) 30.2%, zero at u = 8.03%
+  V1   : 704/main: f*(0) 8.3%, zero at u = 4.21%; 1024.5/main: f*(0) 12.1%, zero at u = 6.12%; 1320/new_tasks: f*(0) 28.2%, zero at u = 7.50%
+  V2   : 704/main: f*(0) 8.3%, zero at u = 4.21%; 1024.5/main: f*(0) 12.1%, zero at u = 6.12%; 1320/new_tasks: f*(0) 28.4%, zero at u = 7.50%
+  (V1 per-call breakdown for App. D: main 11.31 calls, replication 12.00, new tasks 8.79; s at calls / s at turns = 0.9946)
+
+[12] Header break-even (App. D), round13_numbers.header_breakeven re-run; turns rows checked against round13_numbers.json
+  turns registered: H s $0.021, f* 13.4% (never 17.6%); C s $0.062, f* at 704 12.8% (never 0.0%), at bench size 7.8%; H/C gross 33%; P(fH > fC704) 52% MATCH
+  turns post_hoc: H s $0.025, f* 11.2% (never 12.2%); C s $0.063, f* at 704 12.6% (never 0.0%), at bench size 7.7%; H/C gross 39%; P(fH > fC704) 43% MATCH
+  turns replication: H s $0.021, f* 13.8% (never 26.3%); C s $0.069, f* at 704 11.7% (never 0.0%), at bench size 7.3%; H/C gross 30%; P(fH > fC704) 55% MATCH
+  turns new_tasks: H s $0.020, f* 12.8% (never 3.5%); C s $0.046, f* at 704 16.1% (never 0.0%), at bench size 9.4%; H/C gross 44%; P(fH > fC704) 33% MATCH
+  turns concurrent: H s $0.045, f* 5.6% (never 0.0%); C s $0.054, f* at 704 14.0% (never 0.0%), at bench size 8.2%; H/C gross 84%; P(fH > fC704) 0% MATCH
+  V1    registered: H s $0.021, f* 12.2% (never 17.3%); C s $0.062, f* at 704 11.7% (never 0.0%), at bench size 7.1%; H/C gross 33%; P(fH > fC704) 52%
+  V1    post_hoc: H s $0.025, f* 10.2% (never 11.8%); C s $0.063, f* at 704 11.4% (never 0.0%), at bench size 7.0%; H/C gross 39%; P(fH > fC704) 43%
+  V1    replication: H s $0.021, f* 12.4% (never 25.9%); C s $0.069, f* at 704 10.6% (never 0.0%), at bench size 6.6%; H/C gross 30%; P(fH > fC704) 55%
+  V1    new_tasks: H s $0.020, f* 11.8% (never 3.3%); C s $0.046, f* at 704 15.1% (never 0.0%), at bench size 8.8%; H/C gross 44%; P(fH > fC704) 32%
+  V1    concurrent: H s $0.045, f* 5.3% (never 0.0%); C s $0.054, f* at 704 13.0% (never 0.0%), at bench size 7.6%; H/C gross 84%; P(fH > fC704) 0%
+  V2    registered: H s $0.020, f* 12.3% (never 17.6%); C s $0.061, f* at 704 11.7% (never 0.0%), at bench size 7.2%; H/C gross 33%; P(fH > fC704) 52%
+  V2    post_hoc: H s $0.024, f* 10.3% (never 12.2%); C s $0.062, f* at 704 11.5% (never 0.0%), at bench size 7.0%; H/C gross 39%; P(fH > fC704) 43%
+  V2    replication: H s $0.020, f* 12.6% (never 26.3%); C s $0.069, f* at 704 10.7% (never 0.0%), at bench size 6.7%; H/C gross 30%; P(fH > fC704) 55%
+  V2    new_tasks: H s $0.020, f* 11.9% (never 3.5%); C s $0.045, f* at 704 15.2% (never 0.0%), at bench size 8.8%; H/C gross 44%; P(fH > fC704) 33%
+  V2    concurrent: H s $0.045, f* 5.3% (never 0.0%); C s $0.053, f* at 704 13.1% (never 0.0%), at bench size 7.6%; H/C gross 84%; P(fH > fC704) 0%
+
+[13] Convenience-sample break-even (App. D), blocksize_breakeven.analyse re-run (turns rows = blocksize_breakeven.json)
+  turns main: t 16.65, S_gross $0.0872; real_median_nonempty (764) 9.9% [7.2%, 15.9%] c $0.0087; benchmark_mean_423 (423) 5.5% [4.0%, 8.8%] c $0.0048; real_p75_nonempty (1328.5) 17.3% [12.5%, 27.6%] c $0.0151
+  V1    main: t 11.31, S_gross $0.0872; real_median_nonempty (764) 9.0% [6.5%, 14.4%] c $0.0078; benchmark_mean_423 (423) 5.0% [3.6%, 8.0%] c $0.0043; real_p75_nonempty (1328.5) 15.6% [11.3%, 25.0%] c $0.0136
+  V2    main: t 11.31, S_gross $0.0868; real_median_nonempty (764) 9.0% [6.5%, 14.5%] c $0.0078; benchmark_mean_423 (423) 5.0% [3.6%, 8.0%] c $0.0043; real_p75_nonempty (1328.5) 15.7% [11.4%, 25.2%] c $0.0136
+  turns pooled_main_new: t 15.23, S_gross $0.0739; real_median_nonempty (764) 11.4% [8.6%, 16.7%] c $0.0084; benchmark_mean_423 (423) 6.3% [4.8%, 9.2%] c $0.0047; real_p75_nonempty (1328.5) 19.9% [15.0%, 29.0%] c $0.0147
+  V1    pooled_main_new: t 10.51, S_gross $0.0739; real_median_nonempty (764) 10.4% [7.9%, 15.2%] c $0.0077; benchmark_mean_423 (423) 5.8% [4.4%, 8.4%] c $0.0043; real_p75_nonempty (1328.5) 18.2% [13.7%, 26.5%] c $0.0134
+  V2    pooled_main_new: t 10.51, S_gross $0.0735; real_median_nonempty (764) 10.5% [7.9%, 15.4%] c $0.0077; benchmark_mean_423 (423) 5.8% [4.4%, 8.5%] c $0.0043; real_p75_nonempty (1328.5) 18.3% [13.8%, 26.7%] c $0.0134
+  turns new_tasks: t 12.21, S_gross $0.0456; real_median_nonempty (764) 17.5% [13.1%, 26.8%] c $0.0080; benchmark_mean_423 (423) 9.7% [7.2%, 14.9%] c $0.0044; real_p75_nonempty (1328.5) 30.4% [22.7%, 46.7%] c $0.0139
+  V1    new_tasks: t 8.79, S_gross $0.0456; real_median_nonempty (764) 16.4% [12.2%, 25.0%] c $0.0075; benchmark_mean_423 (423) 9.1% [6.8%, 13.8%] c $0.0041; real_p75_nonempty (1328.5) 28.4% [21.3%, 43.5%] c $0.0130
+  V2    new_tasks: t 8.79, S_gross $0.0453; real_median_nonempty (764) 16.5% [12.3%, 25.3%] c $0.0075; benchmark_mean_423 (423) 9.1% [6.8%, 14.0%] c $0.0041; real_p75_nonempty (1328.5) 28.6% [21.3%, 43.9%] c $0.0130
+  turns replication: t 17.65, S_gross $0.0692; real_median_nonempty (764) 12.7% [7.7%, 29.4%] c $0.0088; benchmark_mean_423 (423) 7.1% [4.2%, 16.3%] c $0.0049; real_p75_nonempty (1328.5) 22.1% [13.3%, 51.2%] c $0.0153
+  V1    replication: t 12.00, S_gross $0.0692; real_median_nonempty (764) 11.5% [7.0%, 26.4%] c $0.0079; benchmark_mean_423 (423) 6.4% [3.9%, 14.6%] c $0.0044; real_p75_nonempty (1328.5) 20.0% [12.1%, 46.0%] c $0.0138
+  V2    replication: t 12.00, S_gross $0.0687; real_median_nonempty (764) 11.6% [7.0%, 26.9%] c $0.0079; benchmark_mean_423 (423) 6.4% [3.9%, 14.9%] c $0.0044; real_p75_nonempty (1328.5) 20.1% [12.1%, 46.8%] c $0.0138
+  turns mean non-empty block 1305.77 tokens: c (main) $0.0148; f* main 17.0%, replication 21.8%, new_tasks 29.9%
+  V1    mean non-empty block 1305.77 tokens: c (main) $0.0134; f* main 15.4%, replication 19.6%, new_tasks 27.9%
+  V2    mean non-empty block 1305.77 tokens: c (main) $0.0134; f* main 15.4%, replication 19.8%, new_tasks 28.1%

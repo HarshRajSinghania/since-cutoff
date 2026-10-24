@@ -1,0 +1,54 @@
+{
+ "schema": "since-cutoff-bench/openagent-run@1",
+ "study_id": "openagent-qwen3c-h-2026-10-23",
+ "run_id": "mcp06_H_r1_6a5e",
+ "attempt": 1,
+ "attempt_id": "mcp06_H_r1_6a5e",
+ "task": "mcp06",
+ "library": "mcp",
+ "stratum": "post-cutoff",
+ "kind": "post-cutoff-loud",
+ "condition": "H",
+ "rep": 1,
+ "block_id": "mcp06#1",
+ "order_index": 50,
+ "pilot": false,
+ "condition_config": {
+  "notes_tokens": 261,
+  "notes_covered": false
+ },
+ "agent": {
+  "scaffold": "mini-swe-agent",
+  "step_limit": 40,
+  "textbased": false,
+  "wall_limit_s": 1800,
+  "temperature": 0.7,
+  "command_timeout_s": 180
+ },
+ "wall_s": 267.7,
+ "exit": {
+  "status": "Submitted"
+ },
+ "process": {
+  "turns": 19,
+  "commands": 18,
+  "calls": 19,
+  "input_tokens": 101550,
+  "output_tokens": 5600,
+  "total_tokens": 107150,
+  "stale_in_first_edit": false,
+  "stale_in_final": false,
+  "first_edit": {
+   "command_index": 11,
+   "stale": false
+  }
+ },
+ "valid": true,
+ "invalid_reason": null,
+ "grade": {
+  "passed": false,
+  "hidden_passed": false,
+  "visible_passed": true,
+  "lock_modified": false
+ }
+}

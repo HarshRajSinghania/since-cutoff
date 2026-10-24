@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "pl04",
+  "task_id": "pl04-streaming-engine",
+  "task_sha256": "cb60e0a32b3e3e757427ee74c1663449db3103bfca88387cad00e11908b14dd9",
+  "parts_sha256": {
+    "task.toml": "6ae72797e0575062d8c44427017e6d45f0a42f5d2a44a0a4060177de5ca19ffe",
+    "repo": "9a1c8f2d73a20ca3fb23a8a1cb5a5045c1cd26e7d46fbda55c6e58e1d51bc1a0",
+    "hidden": "11e1148822ed731b189f92900eaa2148f41ceef914383f0cb02d13ea470dafd3",
+    "reference": "31dbfb19fa2f8905cfd8bef56025299c7d3ba38e01ac02d837b55ff55a8b80b3",
+    "stale": "d49f5ce63269efbeeda898c1569738c4a8df0f4aa94bf82000101f7a285fd632"
+  },
+  "validated_at": "2026-10-22T17:27:57+00:00",
+  "library": "polars",
+  "pinned": "2.0.0",
+  "stale_version": "1.42.1",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 2,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.89,
+        "timed_out": false,
+        "first_error": "NotImplementedError"
+      },
+      "summary": "2 failed in 0.35s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "2.0.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 2,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.97,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "2 passed in 0.34s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 2,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.0,
+        "timed_out": false,
+        "first_error": "polars.exceptions.ArgumentRemovedError: the argument 'streaming' for 'LazyFrame.collect' was deprecated in version 1.25.0 and has been removed in version 2.0. Use `engine=\"streaming\"` instead."
+      },
+      "summary": "2 failed in 0.39s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.42.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 2,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.86,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "2 passed, 2 warnings in 0.26s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "polars-2.0.0 bd3c78b38a76",
+    "stale": "polars-1.42.1 225ce1b17d49"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 4.4
+}

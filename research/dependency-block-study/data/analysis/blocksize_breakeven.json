@@ -1,0 +1,944 @@
+{
+  "generated_by": "scripts/blocksize_breakeven.py",
+  "method": "Repositories: the 47 primary repositories of the exposure scan (scripts/realworld_analyze.py rule: first\n   50 in star order whose scans succeeded for both cutoffs). For each, `since-cutoff sync <clone> --dry-run --model\n   anthropic:claude-opus-5-5` (cutoff 2026-06-30), in two scopes:\n     imported  --scope imported --per-package 5  (the setting of every benchmark notes manifest; primary)\n     used      --scope used (the tool's default: notes only for changed APIs the code uses)\n   Static only (wheels downloaded and parsed; nothing from the repositories is executed; --dry-run writes nothing).\n   Per-repo timeout 1800 s (as the scan). The block is parsed from the dry-run diff (start to end marker); its token\n   estimate is the benchmark manifests' rule: round(len(block_text) / 4), block_text = markers included, stripped,\n   plus a newline (bench/conditions.py extract_block + note_entry). Packages = \"**pkg version**\" lines; change lines =\n   \"- \" bullet lines inside the block. Runtime = wall seconds per call, run sequentially (--workers 1: parallel calls race on\n   the shared tool cache on Windows, PermissionError in os.replace), tool cache as left by earlier calls in the run.\n   Also from the scan JSON (opus-5-5): direct dependencies locked to a release after the cutoff (M, as\n   realworld_analyze.py), to compare with the packages the block names (C2: \"the diff filters N of M\").\n2. Break-even. Block overhead per session for a block of T est. tokens on Opus 5.5 list prices:\n     O(T) = T x turns x $0.20/MTok (cache read every turn) + T x $8/MTok (one 1h cache write per session),\n   turns = mean turns of C sessions (post-cutoff tasks) in each study; sensitivity: C turns on control tasks, and 24\n   turns (LiteLLM case). Saving per affected session: the task-averaged mean (A - C) list-cost saving per session\n   (token_breakdown.py saving_shares) in each Opus study, which already includes the benchmark block's own overhead;\n   gross saving = net + benchmark-block overhead O_bench (same formula with each C session's notes_tokens and turns).\n   With a share p of sessions touching a listed package, and the saving per affected session unchanged by block size,\n   net = p x S_gross - O(T) (every session pays O(T)), so the break-even share is p* = O(T) / S_gross. Uncertainty:\n   joint task bootstrap (10,000, seed 20261001; same draw for S and O_bench) at fixed T; reported at the real-block\n   median, p75 and max and at the benchmark mean. Also the naive O(T)/S_net for comparison with the internal review's text.",
+  "tool": "since-cutoff 0.5.0 (scan venv; the version used for the exposure scan)",
+  "model": "anthropic:claude-opus-5-5",
+  "cutoff": "2026-06-30",
+  "repos": 47,
+  "block_sizes": {
+    "imported": {
+      "repos_ok": 47,
+      "repos_failed_or_timeout": 0,
+      "failed_detail": [],
+      "repos_with_nonempty_block": 31,
+      "share_nonempty": 0.6595744680851063,
+      "tokens_all": {
+        "n": 47,
+        "median": 568,
+        "p25": 0.0,
+        "p75": 909.0,
+        "mean": 861.2553191489362,
+        "min": 0,
+        "max": 11100
+      },
+      "tokens_nonempty": {
+        "n": 31,
+        "median": 764,
+        "p25": 574.0,
+        "p75": 1328.5,
+        "mean": 1305.774193548387,
+        "min": 260,
+        "max": 11100
+      },
+      "packages_all": {
+        "n": 47,
+        "median": 2,
+        "p25": 0.0,
+        "p75": 5.5,
+        "mean": 4.723404255319149,
+        "min": 0,
+        "max": 69
+      },
+      "packages_nonempty": {
+        "n": 31,
+        "median": 4,
+        "p25": 2.0,
+        "p75": 6.0,
+        "mean": 7.161290322580645,
+        "min": 1,
+        "max": 69
+      },
+      "change_lines_all": {
+        "n": 47,
+        "median": 8,
+        "p25": 0.0,
+        "p75": 17.0,
+        "mean": 17.0,
+        "min": 0,
+        "max": 246
+      },
+      "change_lines_nonempty": {
+        "n": 31,
+        "median": 14,
+        "p25": 8.0,
+        "p75": 26.0,
+        "mean": 25.774193548387096,
+        "min": 1,
+        "max": 246
+      },
+      "seconds": {
+        "n": 47,
+        "median": 9.4,
+        "p25": 3.45,
+        "p75": 15.2,
+        "mean": 13.065957446808511,
+        "min": 1.0,
+        "max": 54.0
+      },
+      "repos_block_over_423_tokens": 26,
+      "repos_block_over_1000_tokens": 11,
+      "repos_block_over_2000_tokens": 3,
+      "repos_block_over_5000_tokens": 1,
+      "unchecked_packages_total": 32
+    },
+    "used": {
+      "repos_ok": 47,
+      "repos_failed_or_timeout": 0,
+      "failed_detail": [],
+      "repos_with_nonempty_block": 10,
+      "share_nonempty": 0.2127659574468085,
+      "tokens_all": {
+        "n": 47,
+        "median": 0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "mean": 101.57446808510639,
+        "min": 0,
+        "max": 1268
+      },
+      "tokens_nonempty": {
+        "n": 10,
+        "median": 303.0,
+        "p25": 266.5,
+        "p75": 556.25,
+        "mean": 477.4,
+        "min": 262,
+        "max": 1268
+      },
+      "packages_all": {
+        "n": 47,
+        "median": 0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "mean": 0.2765957446808511,
+        "min": 0,
+        "max": 4
+      },
+      "packages_nonempty": {
+        "n": 10,
+        "median": 1.0,
+        "p25": 1.0,
+        "p75": 1.0,
+        "mean": 1.3,
+        "min": 1,
+        "max": 4
+      },
+      "change_lines_all": {
+        "n": 47,
+        "median": 0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "mean": 1.127659574468085,
+        "min": 0,
+        "max": 22
+      },
+      "change_lines_nonempty": {
+        "n": 10,
+        "median": 2.0,
+        "p25": 1.0,
+        "p75": 6.0,
+        "mean": 5.3,
+        "min": 1,
+        "max": 22
+      },
+      "seconds": {
+        "n": 47,
+        "median": 2.8,
+        "p25": 1.3,
+        "p75": 4.3,
+        "mean": 4.736170212765957,
+        "min": 0.5,
+        "max": 38.6
+      },
+      "repos_block_over_423_tokens": 3,
+      "repos_block_over_1000_tokens": 1,
+      "repos_block_over_2000_tokens": 0,
+      "repos_block_over_5000_tokens": 0,
+      "unchecked_packages_total": 32
+    }
+  },
+  "check_used_scope_vs_scan_preview": {
+    "repos": 47,
+    "identical_token_estimate": 47,
+    "both_empty": 37,
+    "abs_diff": {
+      "n": 47,
+      "median": 0,
+      "p25": 0.0,
+      "p75": 0.0,
+      "mean": 0.0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  "selection_vs_versions_only": {
+    "note": "M = direct dependencies locked to a release after 2026-06-30 (scan JSON, realworld_analyze rule); K = packages named in the imported-scope block (may include imported packages that are not direct dependencies); a versions-only header (every post-cutoff direct pin) would name M packages",
+    "repos": 47,
+    "repos_with_post_cutoff_direct_pin": 38,
+    "M_post_cutoff_direct_pins": {
+      "n": 38,
+      "median": 9.5,
+      "p25": 5.0,
+      "p75": 22.5,
+      "mean": 22.289473684210527,
+      "min": 1,
+      "max": 289
+    },
+    "K_block_packages": {
+      "n": 38,
+      "median": 3.0,
+      "p25": 1.0,
+      "p75": 6.0,
+      "mean": 5.842105263157895,
+      "min": 0,
+      "max": 69
+    },
+    "M_minus_K": {
+      "n": 38,
+      "median": 7.5,
+      "p25": 3.0,
+      "p75": 16.75,
+      "mean": 16.44736842105263,
+      "min": -2,
+      "max": 220
+    },
+    "share_named_K_over_M": {
+      "n": 38,
+      "median": 0.22687747035573122,
+      "p25": 0.14285714285714285,
+      "p75": 0.3892857142857143,
+      "mean": 0.27615749911266996,
+      "min": 0.0,
+      "max": 1.25
+    },
+    "sum_M": 847,
+    "sum_K": 222,
+    "repos_K_zero_but_M_positive": 7,
+    "used_scope_K": {
+      "n": 38,
+      "median": 0.0,
+      "p25": 0.0,
+      "p75": 0.75,
+      "mean": 0.34210526315789475,
+      "min": 0,
+      "max": 4
+    }
+  },
+  "break_even": {
+    "prices_usd_per_mtok": {
+      "cache_read": 0.2,
+      "cache_write_1h": 8.0
+    },
+    "block_sizes_tokens": {
+      "benchmark_mean_423": 423,
+      "real_median_all": 568,
+      "real_p75_all": 909.0,
+      "real_max_all": 11100,
+      "real_median_nonempty": 764,
+      "real_p25_nonempty": 574.0,
+      "real_p75_nonempty": 1328.5,
+      "real_median_nonempty_used_scope": 303.0
+    },
+    "studies": {
+      "main": {
+        "description": "Opus main (17 post-cutoff tasks)",
+        "tasks": 17,
+        "mean_C_turns": 16.647058823529413,
+        "mean_C_turns_controls": 11.523809523809524,
+        "S_net_saving_per_affected_session_usd": {
+          "value": 0.08226755294117646,
+          "ci95": [
+            0.0500382823529412,
+            0.11506109019607841
+          ]
+        },
+        "O_bench_block_overhead_usd": 0.004975564705882353,
+        "S_gross_usd": {
+          "value": 0.08724311764705882,
+          "ci95": [
+            0.05500144313725491,
+            0.11999422745098037
+          ]
+        },
+        "by_block_size": {
+          "benchmark_mean_423": {
+            "T_tokens": 423,
+            "overhead_per_session_usd": 0.0047923411764705885,
+            "overhead_controls_turns_usd": 0.004358914285714286,
+            "overhead_24_turns_usd": 0.005414400000000001,
+            "break_even_share": 0.05493087942888467,
+            "break_even_share_ci95": [
+              0.039765965011249335,
+              0.08792637270126562
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.05825311444351873,
+            "break_even_share_controls_turns": 0.04996284409904092
+          },
+          "real_median_all": {
+            "T_tokens": 568,
+            "overhead_per_session_usd": 0.006435105882352941,
+            "overhead_controls_turns_usd": 0.005853104761904762,
+            "overhead_24_turns_usd": 0.007270400000000001,
+            "break_even_share": 0.07376061351207208,
+            "break_even_share_ci95": [
+              0.05339732417586199,
+              0.11806661866269236
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.07822167613219536,
+            "break_even_share_controls_turns": 0.06708958734812115
+          },
+          "real_p75_all": {
+            "T_tokens": 909.0,
+            "overhead_per_session_usd": 0.010298435294117647,
+            "overhead_controls_turns_usd": 0.009367028571428572,
+            "overhead_24_turns_usd": 0.0116352,
+            "break_even_share": 0.11804295366632662,
+            "break_even_share_ci95": [
+              0.08545452055608899,
+              0.18894816261335803
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.12518222465522108,
+            "break_even_share_controls_turns": 0.10736696285113051
+          },
+          "real_max_all": {
+            "T_tokens": 11100,
+            "overhead_per_session_usd": 0.1257564705882353,
+            "overhead_controls_turns_usd": 0.11438285714285715,
+            "overhead_24_turns_usd": 0.14208,
+            "break_even_share": 1.4414486091267609,
+            "break_even_share_ci95": [
+              1.043504046394486,
+              2.30728779428853
+            ],
+            "share_draws_never_break_even": 0.989,
+            "naive_O_over_S_net": 1.5286278258228319,
+            "break_even_share_controls_turns": 1.311081724584762
+          },
+          "real_median_nonempty": {
+            "T_tokens": 764,
+            "overhead_per_session_usd": 0.008655670588235295,
+            "overhead_controls_turns_usd": 0.007872838095238095,
+            "overhead_24_turns_usd": 0.0097792,
+            "break_even_share": 0.09921321958313922,
+            "break_even_share_ci95": [
+              0.07182316139147635,
+              0.15880791665193128
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.10521366296654447,
+            "break_even_share_controls_turns": 0.09024021960205027
+          },
+          "real_p25_nonempty": {
+            "T_tokens": 574.0,
+            "overhead_per_session_usd": 0.006503082352941177,
+            "overhead_controls_turns_usd": 0.005914933333333333,
+            "overhead_24_turns_usd": 0.007347200000000001,
+            "break_even_share": 0.07453977492241087,
+            "break_even_share_ci95": [
+              0.053961380417156306,
+              0.11931380125419969
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.07904796144345094,
+            "break_even_share_controls_turns": 0.06779828017222102
+          },
+          "real_p75_nonempty": {
+            "T_tokens": 1328.5,
+            "overhead_per_session_usd": 0.015051123529411766,
+            "overhead_controls_turns_usd": 0.013689876190476192,
+            "overhead_24_turns_usd": 0.0170048,
+            "break_even_share": 0.17251932227251368,
+            "break_even_share_ci95": [
+              0.12489145275991664,
+              0.2761470121362444
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.18295333933384075,
+            "break_even_share_controls_turns": 0.15691640280277985
+          },
+          "real_median_nonempty_used_scope": {
+            "T_tokens": 303.0,
+            "overhead_per_session_usd": 0.0034328117647058824,
+            "overhead_controls_turns_usd": 0.0031223428571428573,
+            "overhead_24_turns_usd": 0.0038784,
+            "break_even_share": 0.03934765122210888,
+            "break_even_share_ci95": [
+              0.028484840185362997,
+              0.06298272087111934
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.04172740821840703,
+            "break_even_share_controls_turns": 0.0357889876170435
+          }
+        }
+      },
+      "replication": {
+        "description": "Opus replication (17)",
+        "tasks": 17,
+        "mean_C_turns": 17.647058823529413,
+        "mean_C_turns_controls": null,
+        "S_net_saving_per_affected_session_usd": {
+          "value": 0.0640922274509804,
+          "ci95": [
+            0.025157741176470568,
+            0.10782146274509805
+          ]
+        },
+        "O_bench_block_overhead_usd": 0.005061156862745098,
+        "S_gross_usd": {
+          "value": 0.06915338431372549,
+          "ci95": [
+            0.03024290588235292,
+            0.11288956078431372
+          ]
+        },
+        "by_block_size": {
+          "benchmark_mean_423": {
+            "T_tokens": 423,
+            "overhead_per_session_usd": 0.004876941176470588,
+            "overhead_controls_turns_usd": null,
+            "overhead_24_turns_usd": 0.005414400000000001,
+            "break_even_share": 0.07052353583080703,
+            "break_even_share_ci95": [
+              0.0424648695980919,
+              0.16305151210703195
+            ],
+            "share_draws_never_break_even": 0.0001,
+            "naive_O_over_S_net": 0.07609255241129848,
+            "break_even_share_controls_turns": null
+          },
+          "real_median_all": {
+            "T_tokens": 568,
+            "overhead_per_session_usd": 0.006548705882352942,
+            "overhead_controls_turns_usd": null,
+            "overhead_24_turns_usd": 0.007270400000000001,
+            "break_even_share": 0.0946982703354572,
+            "break_even_share_ci95": [
+              0.057021385181362176,
+              0.21894387441322494
+            ],
+            "share_draws_never_break_even": 0.0003,
+            "naive_O_over_S_net": 0.10217628787143626,
+            "break_even_share_controls_turns": null
+          },
+          "real_p75_all": {
+            "T_tokens": 909.0,
+            "overhead_per_session_usd": 0.010480235294117646,
+            "overhead_controls_turns_usd": null,
+            "overhead_24_turns_usd": 0.0116352,
+            "break_even_share": 0.15155057699811722,
+            "break_even_share_ci95": [
+              0.09125429424270812,
+              0.3503872919746857
+            ],
+            "share_draws_never_break_even": 0.0006,
+            "naive_O_over_S_net": 0.16351803816044988,
+            "break_even_share_controls_turns": null
+          },
+          "real_max_all": {
+            "T_tokens": 11100,
+            "overhead_per_session_usd": 0.12797647058823527,
+            "overhead_controls_turns_usd": null,
+            "overhead_24_turns_usd": 0.14208,
+            "break_even_share": 1.8506176069077018,
+            "break_even_share_ci95": [
+              1.1143263653400002,
+              4.278656700680981
+            ],
+            "share_draws_never_break_even": 0.9929,
+            "naive_O_over_S_net": 1.9967549214312361,
+            "break_even_share_controls_turns": null
+          },
+          "real_median_nonempty": {
+            "T_tokens": 764,
+            "overhead_per_session_usd": 0.008808470588235294,
+            "overhead_controls_turns_usd": null,
+            "overhead_24_turns_usd": 0.0097792,
+            "break_even_share": 0.12737584249346706,
+            "break_even_share_ci95": [
+              0.07669777865943785,
+              0.29449492966849267
+            ],
+            "share_draws_never_break_even": 0.0004,
+            "naive_O_over_S_net": 0.13743430270031215,
+            "break_even_share_controls_turns": null
+          },
+          "real_p25_nonempty": {
+            "T_tokens": 574.0,
+            "overhead_per_session_usd": 0.0066178823529411766,
+            "overhead_controls_turns_usd": null,
+            "overhead_24_turns_usd": 0.007347200000000001,
+            "break_even_share": 0.09569860417702893,
+            "break_even_share_ci95": [
+              0.057623723757221634,
+              0.22125666181899845
+            ],
+            "share_draws_never_break_even": 0.0003,
+            "naive_O_over_S_net": 0.10325561485599367,
+            "break_even_share_controls_turns": null
+          },
+          "real_p75_nonempty": {
+            "T_tokens": 1328.5,
+            "overhead_per_session_usd": 0.015316823529411765,
+            "overhead_controls_turns_usd": null,
+            "overhead_24_turns_usd": 0.0170048,
+            "break_even_share": 0.2214905847546741,
+            "break_even_share_ci95": [
+              0.1333677996715487,
+              0.5120896780950164
+            ],
+            "share_draws_never_break_even": 0.0024,
+            "naive_O_over_S_net": 0.2389809831640899,
+            "break_even_share_controls_turns": null
+          },
+          "real_median_nonempty_used_scope": {
+            "T_tokens": 303.0,
+            "overhead_per_session_usd": 0.0034934117647058825,
+            "overhead_controls_turns_usd": null,
+            "overhead_24_turns_usd": 0.0038784,
+            "break_even_share": 0.050516858999372416,
+            "break_even_share_ci95": [
+              0.030418098080902706,
+              0.1167957639915619
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.054506012720149974,
+            "break_even_share_controls_turns": null
+          }
+        }
+      },
+      "new_tasks": {
+        "description": "Opus new tasks (8)",
+        "tasks": 8,
+        "mean_C_turns": 12.208333333333332,
+        "mean_C_turns_controls": 12.666666666666666,
+        "S_net_saving_per_affected_session_usd": {
+          "value": 0.041312208333333336,
+          "ci95": [
+            0.025108225000000012,
+            0.057853724999999995
+          ]
+        },
+        "O_bench_block_overhead_usd": 0.004284833333333333,
+        "S_gross_usd": {
+          "value": 0.04559704166666667,
+          "ci95": [
+            0.02936418333333335,
+            0.06222795
+          ]
+        },
+        "by_block_size": {
+          "benchmark_mean_423": {
+            "T_tokens": 423,
+            "overhead_per_session_usd": 0.004416825,
+            "overhead_controls_turns_usd": 0.0044556000000000005,
+            "overhead_24_turns_usd": 0.005414400000000001,
+            "break_even_share": 0.09686648165222707,
+            "break_even_share_ci95": [
+              0.07233560009415961,
+              0.14856304299832465
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.10691331154128168,
+            "break_even_share_controls_turns": 0.09771686576888669
+          },
+          "real_median_all": {
+            "T_tokens": 568,
+            "overhead_per_session_usd": 0.005930866666666667,
+            "overhead_controls_turns_usd": 0.005982933333333333,
+            "overhead_24_turns_usd": 0.007270400000000001,
+            "break_even_share": 0.13007130396800232,
+            "break_even_share_ci95": [
+              0.09713149137939162,
+              0.1994889088015329
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.1435620826369929,
+            "break_even_share_controls_turns": 0.1312131909142497
+          },
+          "real_p75_all": {
+            "T_tokens": 909.0,
+            "overhead_per_session_usd": 0.009491475000000001,
+            "overhead_controls_turns_usd": 0.0095748,
+            "overhead_24_turns_usd": 0.0116352,
+            "break_even_share": 0.20815988610372202,
+            "break_even_share_ci95": [
+              0.15544458743638553,
+              0.3192524966559743
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.22974988224828619,
+            "break_even_share_controls_turns": 0.20998730729058626
+          },
+          "real_max_all": {
+            "T_tokens": 11100,
+            "overhead_per_session_usd": 0.1159025,
+            "overhead_controls_turns_usd": 0.11692,
+            "overhead_24_turns_usd": 0.14208,
+            "break_even_share": 2.541886397966242,
+            "break_even_share_ci95": [
+              1.8981682294212094,
+              3.8984628304524915
+            ],
+            "share_draws_never_break_even": 1.0,
+            "naive_O_over_S_net": 2.8055266149130653,
+            "break_even_share_controls_turns": 2.5642014421622745
+          },
+          "real_median_nonempty": {
+            "T_tokens": 764,
+            "overhead_per_session_usd": 0.007977433333333334,
+            "overhead_controls_turns_usd": 0.008047466666666666,
+            "overhead_24_turns_usd": 0.0097792,
+            "break_even_share": 0.17495506378794676,
+            "break_even_share_ci95": [
+              0.13064869615115351,
+              0.2683266308527661
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.19310111115257494,
+            "break_even_share_controls_turns": 0.1764909821452232
+          },
+          "real_p25_nonempty": {
+            "T_tokens": 574.0,
+            "overhead_per_session_usd": 0.005993516666666666,
+            "overhead_controls_turns_usd": 0.006046133333333334,
+            "overhead_24_turns_usd": 0.007347200000000001,
+            "break_even_share": 0.1314452966155516,
+            "break_even_share_ci95": [
+              0.09815752826015986,
+              0.20159618600718288
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.14507858350991887,
+            "break_even_share_controls_turns": 0.13259924574785095
+          },
+          "real_p75_nonempty": {
+            "T_tokens": 1328.5,
+            "overhead_per_session_usd": 0.013871754166666665,
+            "overhead_controls_turns_usd": 0.013993533333333332,
+            "overhead_24_turns_usd": 0.0170048,
+            "break_even_share": 0.3042248720448786,
+            "break_even_share_ci95": [
+              0.2271816660167637,
+              0.46658629461766976
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.33577856828036096,
+            "break_even_share_controls_turns": 0.30689564107320555
+          },
+          "real_median_nonempty_used_scope": {
+            "T_tokens": 303.0,
+            "overhead_per_session_usd": 0.003163825,
+            "overhead_controls_turns_usd": 0.0031915999999999997,
+            "overhead_24_turns_usd": 0.0038784,
+            "break_even_share": 0.06938662870124065,
+            "break_even_share_ci95": [
+              0.05181486247879518,
+              0.10641749888532477
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.07658329408276204,
+            "break_even_share_controls_turns": 0.06999576909686209
+          }
+        }
+      },
+      "pooled_main_new": {
+        "description": "pooled main + new (25)",
+        "tasks": 25,
+        "mean_C_turns": 15.226666666666667,
+        "mean_C_turns_controls": 11.866666666666667,
+        "S_net_saving_per_affected_session_usd": {
+          "value": 0.06916184266666667,
+          "ci95": [
+            0.045768504000000015,
+            0.09343232533333332
+          ]
+        },
+        "O_bench_block_overhead_usd": 0.004754530666666666,
+        "S_gross_usd": {
+          "value": 0.07391637333333334,
+          "ci95": [
+            0.050497869333333355,
+            0.09822155466666664
+          ]
+        },
+        "by_block_size": {
+          "benchmark_mean_423": {
+            "T_tokens": 423,
+            "overhead_per_session_usd": 0.004672176,
+            "overhead_controls_turns_usd": 0.00438792,
+            "overhead_24_turns_usd": 0.005414400000000001,
+            "break_even_share": 0.06320894531622041,
+            "break_even_share_ci95": [
+              0.04773254247618376,
+              0.09238778134890147
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.06755424407238658,
+            "break_even_share_controls_turns": 0.059363302095629504
+          },
+          "real_median_all": {
+            "T_tokens": 568,
+            "overhead_per_session_usd": 0.0062737493333333335,
+            "overhead_controls_turns_usd": 0.0058920533333333336,
+            "overhead_24_turns_usd": 0.007270400000000001,
+            "break_even_share": 0.08487631427804539,
+            "break_even_share_ci95": [
+              0.06409476152830348,
+              0.12405735178765018
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.09071113624850019,
+            "break_even_share_controls_turns": 0.07971242456339848
+          },
+          "real_p75_all": {
+            "T_tokens": 909.0,
+            "overhead_per_session_usd": 0.010040208,
+            "overhead_controls_turns_usd": 0.009429360000000001,
+            "overhead_24_turns_usd": 0.0116352,
+            "break_even_share": 0.13583198887102685,
+            "break_even_share_ci95": [
+              0.1025741870232885,
+              0.1985354450263627
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.14516975853853287,
+            "break_even_share_controls_turns": 0.12756794705656554
+          },
+          "real_max_all": {
+            "T_tokens": 11100,
+            "overhead_per_session_usd": 0.1226032,
+            "overhead_controls_turns_usd": 0.115144,
+            "overhead_24_turns_usd": 0.14208,
+            "break_even_share": 1.6586744515603937,
+            "break_even_share_ci95": [
+              1.2525560791622687,
+              2.4243602197938676
+            ],
+            "share_draws_never_break_even": 1.0,
+            "naive_O_over_S_net": 1.772700021757662,
+            "break_even_share_controls_turns": 1.5577604096016253
+          },
+          "real_median_nonempty": {
+            "T_tokens": 764,
+            "overhead_per_session_usd": 0.008438634666666667,
+            "overhead_controls_turns_usd": 0.007925226666666667,
+            "overhead_24_turns_usd": 0.0097792,
+            "break_even_share": 0.11416461990920189,
+            "break_even_share_ci95": [
+              0.08621196797116877,
+              0.16686587458761395
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.12201286636241926,
+            "break_even_share_controls_turns": 0.10721882458879656
+          },
+          "real_p25_nonempty": {
+            "T_tokens": 574.0,
+            "overhead_per_session_usd": 0.0063400213333333335,
+            "overhead_controls_turns_usd": 0.005954293333333333,
+            "overhead_24_turns_usd": 0.007347200000000001,
+            "break_even_share": 0.08577289506267262,
+            "break_even_share_ci95": [
+              0.06477181886839119,
+              0.12536781677132253
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.0916693524764773,
+            "break_even_share_controls_turns": 0.0805544572172372
+          },
+          "real_p75_nonempty": {
+            "T_tokens": 1328.5,
+            "overhead_per_session_usd": 0.014673725333333333,
+            "overhead_controls_turns_usd": 0.013780973333333333,
+            "overhead_24_turns_usd": 0.0170048,
+            "break_even_share": 0.19851792872954804,
+            "break_even_share_ci95": [
+              0.1499117793844211,
+              0.29015878846812193
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.21216504314459947,
+            "break_even_share_controls_turns": 0.18644006343745578
+          },
+          "real_median_nonempty_used_scope": {
+            "T_tokens": 303.0,
+            "overhead_per_session_usd": 0.003346736,
+            "overhead_controls_turns_usd": 0.0031431199999999997,
+            "overhead_24_turns_usd": 0.0038784,
+            "break_even_share": 0.045277329623675616,
+            "break_even_share_ci95": [
+              0.034191395674429505,
+              0.06617848167545423
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.048389919512844284,
+            "break_even_share_controls_turns": 0.04252264901885517
+          }
+        }
+      },
+      "pooled_repl_new": {
+        "description": "pooled repl. + new (25)",
+        "tasks": 25,
+        "mean_C_turns": 15.906666666666668,
+        "mean_C_turns_controls": 12.666666666666666,
+        "S_net_saving_per_affected_session_usd": {
+          "value": 0.05680262133333333,
+          "ci95": [
+            0.02914262133333332,
+            0.08845584000000001
+          ]
+        },
+        "O_bench_block_overhead_usd": 0.004812733333333334,
+        "S_gross_usd": {
+          "value": 0.061615354666666663,
+          "ci95": [
+            0.03392150933333332,
+            0.09333225066666667
+          ]
+        },
+        "by_block_size": {
+          "benchmark_mean_423": {
+            "T_tokens": 423,
+            "overhead_per_session_usd": 0.004729704,
+            "overhead_controls_turns_usd": 0.0044556000000000005,
+            "overhead_24_turns_usd": 0.005414400000000001,
+            "break_even_share": 0.07676177513847415,
+            "break_even_share_ci95": [
+              0.0504421343947317,
+              0.14023151806718562
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.08326559389301424,
+            "break_even_share_controls_turns": 0.07231314376269328
+          },
+          "real_median_all": {
+            "T_tokens": 568,
+            "overhead_per_session_usd": 0.006350997333333334,
+            "overhead_controls_turns_usd": 0.005982933333333333,
+            "overhead_24_turns_usd": 0.007270400000000001,
+            "break_even_share": 0.10307491318830571,
+            "break_even_share_ci95": [
+              0.06773317337164918,
+              0.18830142378761572
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.11180817335988674,
+            "break_even_share_controls_turns": 0.09710133725108694
+          },
+          "real_p75_all": {
+            "T_tokens": 909.0,
+            "overhead_per_session_usd": 0.010163832000000001,
+            "overhead_controls_turns_usd": 0.0095748,
+            "overhead_24_turns_usd": 0.0116352,
+            "break_even_share": 0.16495615508480616,
+            "break_even_share_ci95": [
+              0.10839692710357238,
+              0.30134858137842024
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.1789324464509455,
+            "break_even_share_controls_turns": 0.15539633021344723
+          },
+          "real_max_all": {
+            "T_tokens": 11100,
+            "overhead_per_session_usd": 0.12411280000000002,
+            "overhead_controls_turns_usd": 0.11692,
+            "overhead_24_turns_usd": 0.14208,
+            "break_even_share": 2.014316085194003,
+            "break_even_share_ci95": [
+              1.3236588458192005,
+              3.6798341620467157
+            ],
+            "share_draws_never_break_even": 0.9999,
+            "naive_O_over_S_net": 2.1849836695329983,
+            "break_even_share_controls_turns": 1.8975789498011708
+          },
+          "real_median_nonempty": {
+            "T_tokens": 764,
+            "overhead_per_session_usd": 0.008542538666666667,
+            "overhead_controls_turns_usd": 0.008047466666666666,
+            "overhead_24_turns_usd": 0.0097792,
+            "break_even_share": 0.13864301703497459,
+            "break_even_share_ci95": [
+              0.09110588812665486,
+              0.2532786756579901
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.150389866984073,
+            "break_even_share_controls_turns": 0.13060813672505356
+          },
+          "real_p25_nonempty": {
+            "T_tokens": 574.0,
+            "overhead_per_session_usd": 0.0064180853333333345,
+            "overhead_controls_turns_usd": 0.006046133333333334,
+            "overhead_24_turns_usd": 0.007347200000000001,
+            "break_even_share": 0.104163732693816,
+            "break_even_share_ci95": [
+              0.06844866463965955,
+              0.19029052333466798
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.11298924561368837,
+            "break_even_share_controls_turns": 0.09812705560233081
+          },
+          "real_p75_nonempty": {
+            "T_tokens": 1328.5,
+            "overhead_per_session_usd": 0.014854401333333335,
+            "overhead_controls_turns_usd": 0.013993533333333332,
+            "overhead_24_turns_usd": 0.0170048,
+            "break_even_share": 0.24108278551173265,
+            "break_even_share_ci95": [
+              0.15842169159196468,
+              0.440419791376492
+            ],
+            "share_draws_never_break_even": 0.0001,
+            "naive_O_over_S_net": 0.2615090815292421,
+            "break_even_share_controls_turns": 0.22711113827124824
+          },
+          "real_median_nonempty_used_scope": {
+            "T_tokens": 303.0,
+            "overhead_per_session_usd": 0.0033879440000000004,
+            "overhead_controls_turns_usd": 0.0031915999999999997,
+            "overhead_24_turns_usd": 0.0038784,
+            "break_even_share": 0.05498538502826872,
+            "break_even_share_ci95": [
+              0.03613230903452412,
+              0.10044952712614007
+            ],
+            "share_draws_never_break_even": 0.0,
+            "naive_O_over_S_net": 0.05964414881698184,
+            "break_even_share_controls_turns": 0.051798776737815744
+          }
+        }
+      }
+    },
+    "per_repo_nonempty_imported": {
+      "repos": 31,
+      "break_even_share_main_saving": {
+        "n": 31,
+        "median": 0.09921321958313922,
+        "p25": 0.07453977492241087,
+        "p75": 0.17251932227251368,
+        "mean": 0.1695681437048595,
+        "min": 0.03376366111468089,
+        "max": 1.4414486091267609
+      },
+      "break_even_share_new_tasks_saving": {
+        "n": 31,
+        "median": 0.17495506378794676,
+        "p25": 0.13144529661555163,
+        "p75": 0.3042248720448786,
+        "mean": 0.2990206902158544,
+        "min": 0.05953968139380387,
+        "max": 2.541886397966242
+      },
+      "repos_break_even_above_50pct_main": 1,
+      "repos_break_even_above_100pct_main": 1,
+      "repos_break_even_above_100pct_new": 1
+    }
+  }
+}

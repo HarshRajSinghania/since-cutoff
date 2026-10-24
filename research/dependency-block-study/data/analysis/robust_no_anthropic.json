@@ -1,0 +1,6415 @@
+{
+  "generated_by": "scripts/robust_no_anthropic.py",
+  "method": "tasks are found from task.toml (`library = \"anthropic\"`) and checked against each task repo's\npyproject.toml (dependency `anthropic`). Task sets: all; without the anthropic tasks; without the anthropic tasks and\nthe pilot-exposed tasks (ant01, mcp01; ant01 is both); without the pilot tasks only (reference, as in the paper);\nand the anthropic tasks alone (descriptive; 5 tasks, smallest possible two-sided sign-flip p = 0.0625).\nStudies (Opus 5.5, post-cutoff stratum): main (C/A), replication (C/A, H/A, C/H), new tasks (no anthropic task; shown\nfor completeness), pooled main + new (C/A), pooled replication + new (C/A, H/A, C/H).\nPer pair, the paper's estimators via token_breakdown.analyse_pair (so the all-task numbers reproduce section 0.12\nexactly): geometric mean over tasks of per-task median ratios (total tokens, list cost, turns) with the 95% task\nbootstrap (10,000, seed 20261001); cost per solved task (total list cost / passed sessions) with a task bootstrap;\nmean list-cost saving per session (task-averaged session means). Exact two-sided sign-flip p over the per-task log\nmedian ratios (round3_stats.signflip, full enumeration). Unadjusted p-values.",
+  "anthropic_tasks": {
+    "from_task_toml_library": [
+      "ant01",
+      "ant02",
+      "ant03",
+      "ant04",
+      "ant05"
+    ],
+    "from_repo_pyproject": [
+      "ant01",
+      "ant02",
+      "ant03",
+      "ant04",
+      "ant05"
+    ],
+    "libraries_by_task": {
+      "ant01": "anthropic",
+      "ant02": "anthropic",
+      "ant03": "anthropic",
+      "ant04": "anthropic",
+      "ant05": "anthropic",
+      "hf01": "huggingface-hub",
+      "hf02": "huggingface-hub",
+      "hf03": "huggingface-hub",
+      "hf04": "huggingface-hub",
+      "lc01": "langchain-core",
+      "lc02": "langchain-core",
+      "mcp01": "mcp",
+      "mcp02": "mcp",
+      "mcp04": "mcp",
+      "mcp05": "mcp",
+      "mcp06": "mcp",
+      "oai01": "openai",
+      "oai02": "openai",
+      "oai03": "openai",
+      "oai04": "openai",
+      "oai05": "openai",
+      "pd01": "pandas",
+      "pd02": "pandas",
+      "pd03": "pandas",
+      "mi01": "mistralai",
+      "mi02": "mistralai",
+      "pl01": "polars",
+      "pl02": "polars",
+      "pl03": "polars",
+      "pl04": "polars",
+      "pl90": "polars",
+      "pl91": "polars",
+      "st01": "streamlit",
+      "st02": "streamlit",
+      "st90": "streamlit"
+    }
+  },
+  "excluded_sets": {
+    "all": [],
+    "no_anthropic": [
+      "ant01",
+      "ant02",
+      "ant03",
+      "ant04",
+      "ant05"
+    ],
+    "no_anthropic_no_pilot": [
+      "ant01",
+      "ant02",
+      "ant03",
+      "ant04",
+      "ant05",
+      "mcp01"
+    ],
+    "no_pilot": [
+      "ant01",
+      "mcp01"
+    ]
+  },
+  "studies": {
+    "main": {
+      "description": "Opus main study, 17 post-cutoff tasks (registered primary: cost)",
+      "source_studies": [
+        "main-2026-09-28"
+      ],
+      "pairs": {
+        "C/A": {
+          "all": {
+            "tasks": 17,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 51,
+              "A": 51
+            },
+            "pass": {
+              "A": "48/51",
+              "C": "51/51"
+            },
+            "tokens": {
+              "ratio": 0.7258132372063715,
+              "lo": 0.5931980698244592,
+              "hi": 0.8708147637363564,
+              "tasks": 17
+            },
+            "list_cost": {
+              "ratio": 0.8048035487636709,
+              "lo": 0.7048039106855135,
+              "hi": 0.896932083036314,
+              "tasks": 17
+            },
+            "turns": {
+              "ratio": 0.8262758448238043,
+              "lo": 0.7363243224804747,
+              "hi": 0.9131621225713037,
+              "tasks": 17
+            },
+            "signflip_tokens": {
+              "p": 0.0033111572265625,
+              "tasks": 17,
+              "below_1": 13
+            },
+            "signflip_cost": {
+              "p": 0.000274658203125,
+              "tasks": 17,
+              "below_1": 15
+            },
+            "cost_per_solved": {
+              "A": 0.44547312916666665,
+              "C": 0.33700127450980394,
+              "ratio": 0.756501913235984,
+              "ci95": [
+                0.6326189250004955,
+                0.8627666577803099
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.08226755294117649,
+              "ci95": [
+                0.05003828235294119,
+                0.11506109019607845
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.4192688274509804,
+              "C": 0.3370012745098039
+            }
+          },
+          "no_anthropic": {
+            "tasks": 12,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 36,
+              "A": 36
+            },
+            "pass": {
+              "A": "36/36",
+              "C": "36/36"
+            },
+            "tokens": {
+              "ratio": 0.6955502390907435,
+              "lo": 0.5433326933549151,
+              "hi": 0.8665239458155144,
+              "tasks": 12
+            },
+            "list_cost": {
+              "ratio": 0.7482629221096925,
+              "lo": 0.6355130457332714,
+              "hi": 0.8541993004311927,
+              "tasks": 12
+            },
+            "turns": {
+              "ratio": 0.7802955947434033,
+              "lo": 0.6747495960546661,
+              "hi": 0.8780210041164882,
+              "tasks": 12
+            },
+            "signflip_tokens": {
+              "p": 0.0078125,
+              "tasks": 12,
+              "below_1": 10
+            },
+            "signflip_cost": {
+              "p": 0.00048828125,
+              "tasks": 12,
+              "below_1": 12
+            },
+            "cost_per_solved": {
+              "A": 0.35329520555555555,
+              "C": 0.2756780277777778,
+              "ratio": 0.7803050351172329,
+              "ci95": [
+                0.70001817449238,
+                0.8686052294391841
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.07761717777777778,
+              "ci95": [
+                0.04147197777777777,
+                0.11880925000000002
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.35329520555555555,
+              "C": 0.2756780277777778
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 11,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 33,
+              "A": 33
+            },
+            "pass": {
+              "A": "33/33",
+              "C": "33/33"
+            },
+            "tokens": {
+              "ratio": 0.676573395104434,
+              "lo": 0.5215519883660756,
+              "hi": 0.8591114646972199,
+              "tasks": 11
+            },
+            "list_cost": {
+              "ratio": 0.7369047828018099,
+              "lo": 0.6187986289465549,
+              "hi": 0.8523988095781438,
+              "tasks": 11
+            },
+            "turns": {
+              "ratio": 0.7702368715921072,
+              "lo": 0.6591080057742088,
+              "hi": 0.8758449979762007,
+              "tasks": 11
+            },
+            "signflip_tokens": {
+              "p": 0.009765625,
+              "tasks": 11,
+              "below_1": 9
+            },
+            "signflip_cost": {
+              "p": 0.0009765625,
+              "tasks": 11,
+              "below_1": 11
+            },
+            "cost_per_solved": {
+              "A": 0.3610179151515151,
+              "C": 0.2786454666666667,
+              "ratio": 0.7718327954714446,
+              "ci95": [
+                0.6868448597685732,
+                0.8653666331703619
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.0823724484848485,
+              "ci95": [
+                0.04358024848484848,
+                0.12507368484848488
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.36101791515151516,
+              "C": 0.2786454666666667
+            }
+          },
+          "no_pilot": {
+            "tasks": 15,
+            "task_ids": [
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 45,
+              "A": 45
+            },
+            "pass": {
+              "A": "45/45",
+              "C": "45/45"
+            },
+            "tokens": {
+              "ratio": 0.6902282328111986,
+              "lo": 0.5589523267825677,
+              "hi": 0.8418133274394949,
+              "tasks": 15
+            },
+            "list_cost": {
+              "ratio": 0.7840744955082127,
+              "lo": 0.6793885034092308,
+              "hi": 0.8808592546006676,
+              "tasks": 15
+            },
+            "turns": {
+              "ratio": 0.8022114431336954,
+              "lo": 0.7110105384107474,
+              "hi": 0.8868281726559869,
+              "tasks": 15
+            },
+            "signflip_tokens": {
+              "p": 0.0018310546875,
+              "tasks": 15,
+              "below_1": 12
+            },
+            "signflip_cost": {
+              "p": 0.000244140625,
+              "tasks": 15,
+              "below_1": 14
+            },
+            "cost_per_solved": {
+              "A": 0.4224881555555555,
+              "C": 0.3387461511111111,
+              "ratio": 0.801788515622818,
+              "ci95": [
+                0.7279309361058405,
+                0.8793171581581725
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.08374200444444446,
+              "ci95": [
+                0.049456271111111116,
+                0.11938494222222225
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.4224881555555556,
+              "C": 0.33874615111111106
+            }
+          },
+          "anthropic_only": {
+            "tasks": 5,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05"
+            ],
+            "sessions": {
+              "C": 15,
+              "A": 15
+            },
+            "pass": {
+              "A": "12/15",
+              "C": "15/15"
+            },
+            "tokens": {
+              "ratio": 0.8039262269101931,
+              "lo": 0.5584607639257164,
+              "hi": 1.0701260756566047,
+              "tasks": 5
+            },
+            "list_cost": {
+              "ratio": 0.958551519115789,
+              "lo": 0.8860095571937037,
+              "hi": 1.0373322771168998,
+              "tasks": 5
+            },
+            "turns": {
+              "ratio": 0.9479888323198659,
+              "lo": 0.8466596161046819,
+              "hi": 1.079588194139172,
+              "tasks": 5
+            },
+            "signflip_tokens": {
+              "p": 0.375,
+              "tasks": 5,
+              "below_1": 3
+            },
+            "signflip_cost": {
+              "p": 0.4375,
+              "tasks": 5,
+              "below_1": 3
+            },
+            "cost_per_solved": {
+              "A": 0.7220068999999999,
+              "C": 0.48417706666666666,
+              "ratio": 0.6705989467229008,
+              "ci95": [
+                0.3154369015292268,
+                0.9231062904360218
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.09342845333333337,
+              "ci95": [
+                0.03163865333333338,
+                0.14919921333333336
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.57760552,
+              "C": 0.4841770666666667
+            }
+          }
+        }
+      }
+    },
+    "replication": {
+      "description": "Opus replication/placebo ablation, same 17 tasks 24 days later (registered primary: tokens)",
+      "source_studies": [
+        "abl-opus55-2026-10-22"
+      ],
+      "pairs": {
+        "C/A": {
+          "all": {
+            "tasks": 17,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 51,
+              "A": 51
+            },
+            "pass": {
+              "A": "47/51",
+              "C": "51/51"
+            },
+            "tokens": {
+              "ratio": 0.8262575314294058,
+              "lo": 0.6772313177779886,
+              "hi": 0.9928636014449355,
+              "tasks": 17
+            },
+            "list_cost": {
+              "ratio": 0.8500780515689105,
+              "lo": 0.6929931395685959,
+              "hi": 1.0080182458648852,
+              "tasks": 17
+            },
+            "turns": {
+              "ratio": 0.9444748686646699,
+              "lo": 0.8791369856970813,
+              "hi": 1.011721873677508,
+              "tasks": 17
+            },
+            "signflip_tokens": {
+              "p": 0.0742950439453125,
+              "tasks": 17,
+              "below_1": 11
+            },
+            "signflip_cost": {
+              "p": 0.125335693359375,
+              "tasks": 17,
+              "below_1": 10
+            },
+            "cost_per_solved": {
+              "A": 0.38850287659574473,
+              "C": 0.29393983529411766,
+              "ratio": 0.7565962905339713,
+              "ci95": [
+                0.5967164090714704,
+                0.8934016094944705
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.06409222745098038,
+              "ci95": [
+                0.025157741176470592,
+                0.10782146274509803
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.3580320627450981,
+              "C": 0.29393983529411766
+            }
+          },
+          "no_anthropic": {
+            "tasks": 12,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 36,
+              "A": 36
+            },
+            "pass": {
+              "A": "36/36",
+              "C": "36/36"
+            },
+            "tokens": {
+              "ratio": 0.8912232092936304,
+              "lo": 0.7674031622812122,
+              "hi": 1.0454393646039493,
+              "tasks": 12
+            },
+            "list_cost": {
+              "ratio": 0.9379375436922219,
+              "lo": 0.853721233507549,
+              "hi": 1.0402748472207077,
+              "tasks": 12
+            },
+            "turns": {
+              "ratio": 0.9145689549164933,
+              "lo": 0.8377354328184259,
+              "hi": 1.0007675278327297,
+              "tasks": 12
+            },
+            "signflip_tokens": {
+              "p": 0.18505859375,
+              "tasks": 12,
+              "below_1": 8
+            },
+            "signflip_cost": {
+              "p": 0.25732421875,
+              "tasks": 12,
+              "below_1": 7
+            },
+            "cost_per_solved": {
+              "A": 0.3243024333333333,
+              "C": 0.28452961111111114,
+              "ratio": 0.8773588535447657,
+              "ci95": [
+                0.8056044198006937,
+                0.954027304409406
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.03977282222222222,
+              "ci95": [
+                0.013690600000000008,
+                0.06666216666666665
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.32430243333333336,
+              "C": 0.28452961111111114
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 11,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 33,
+              "A": 33
+            },
+            "pass": {
+              "A": "33/33",
+              "C": "33/33"
+            },
+            "tokens": {
+              "ratio": 0.8923097684379319,
+              "lo": 0.7576960041455522,
+              "hi": 1.063240182254679,
+              "tasks": 11
+            },
+            "list_cost": {
+              "ratio": 0.943087916759604,
+              "lo": 0.85051886004817,
+              "hi": 1.0572311172819673,
+              "tasks": 11
+            },
+            "turns": {
+              "ratio": 0.9214580166463304,
+              "lo": 0.8360035271874423,
+              "hi": 1.0143725157292096,
+              "tasks": 11
+            },
+            "signflip_tokens": {
+              "p": 0.2265625,
+              "tasks": 11,
+              "below_1": 7
+            },
+            "signflip_cost": {
+              "p": 0.3427734375,
+              "tasks": 11,
+              "below_1": 6
+            },
+            "cost_per_solved": {
+              "A": 0.32877308484848483,
+              "C": 0.28805760606060604,
+              "ratio": 0.8761593309663942,
+              "ci95": [
+                0.7981121189689098,
+                0.9612004427362496
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.04071547878787878,
+              "ci95": [
+                0.01168769696969696,
+                0.07012896969696968
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.32877308484848483,
+              "C": 0.28805760606060604
+            }
+          },
+          "no_pilot": {
+            "tasks": 15,
+            "task_ids": [
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 45,
+              "A": 45
+            },
+            "pass": {
+              "A": "44/45",
+              "C": "45/45"
+            },
+            "tokens": {
+              "ratio": 0.8740789293484235,
+              "lo": 0.7248701928904993,
+              "hi": 1.0346817005097708,
+              "tasks": 15
+            },
+            "list_cost": {
+              "ratio": 0.9150817087786718,
+              "lo": 0.7779198545499256,
+              "hi": 1.0438734348648193,
+              "tasks": 15
+            },
+            "turns": {
+              "ratio": 0.9414722761460158,
+              "lo": 0.8704957186193746,
+              "hi": 1.013346043152384,
+              "tasks": 15
+            },
+            "signflip_tokens": {
+              "p": 0.1771240234375,
+              "tasks": 15,
+              "below_1": 9
+            },
+            "signflip_cost": {
+              "p": 0.30743408203125,
+              "tasks": 15,
+              "below_1": 8
+            },
+            "cost_per_solved": {
+              "A": 0.36280145,
+              "C": 0.2980475733333333,
+              "ratio": 0.8215170400596065,
+              "ci95": [
+                0.7326365947640557,
+                0.913100221023263
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.05669162222222221,
+              "ci95": [
+                0.01844832,
+                0.10345719555555556
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.35473919555555555,
+              "C": 0.2980475733333333
+            }
+          },
+          "anthropic_only": {
+            "tasks": 5,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05"
+            ],
+            "sessions": {
+              "C": 15,
+              "A": 15
+            },
+            "pass": {
+              "A": "11/15",
+              "C": "15/15"
+            },
+            "tokens": {
+              "ratio": 0.6890090002472097,
+              "lo": 0.42790158478168683,
+              "hi": 1.1094453007549996,
+              "tasks": 5
+            },
+            "list_cost": {
+              "ratio": 0.6713399971579657,
+              "lo": 0.3874886686714424,
+              "hi": 1.1265960487016253,
+              "tasks": 5
+            },
+            "turns": {
+              "ratio": 1.0203000061386778,
+              "lo": 0.9468822173615905,
+              "hi": 1.0832870825543628,
+              "tasks": 5
+            },
+            "signflip_tokens": {
+              "p": 0.4375,
+              "tasks": 5,
+              "below_1": 3
+            },
+            "signflip_cost": {
+              "p": 0.4375,
+              "tasks": 5,
+              "below_1": 3
+            },
+            "cost_per_solved": {
+              "A": 0.5986134181818182,
+              "C": 0.31652437333333333,
+              "ratio": 0.5287625765134364,
+              "ci95": [
+                0.23175374073589863,
+                0.8283311321545108
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.12245879999999996,
+              "ci95": [
+                0.013771519999999987,
+                0.23114607999999995
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.43898317333333337,
+              "C": 0.3165243733333333
+            }
+          }
+        },
+        "H/A": {
+          "all": {
+            "tasks": 17,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "H": 51,
+              "A": 51
+            },
+            "pass": {
+              "A": "47/51",
+              "H": "51/51"
+            },
+            "tokens": {
+              "ratio": 0.9465685842105014,
+              "lo": 0.7930083712893805,
+              "hi": 1.141631938846215,
+              "tasks": 17
+            },
+            "list_cost": {
+              "ratio": 0.9854440392185284,
+              "lo": 0.8394846790090661,
+              "hi": 1.1603750906800443,
+              "tasks": 17
+            },
+            "turns": {
+              "ratio": 0.9618544989307826,
+              "lo": 0.8769641421423284,
+              "hi": 1.0740995797538733,
+              "tasks": 17
+            },
+            "signflip_tokens": {
+              "p": 0.580535888671875,
+              "tasks": 17,
+              "below_1": 10
+            },
+            "signflip_cost": {
+              "p": 0.8647918701171875,
+              "tasks": 17,
+              "below_1": 11
+            },
+            "cost_per_solved": {
+              "A": 0.38850287659574473,
+              "H": 0.34015621960784315,
+              "ratio": 0.8755565018937852,
+              "ci95": [
+                0.7648800592875625,
+                1.0122113540380842
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.017875843137254894,
+              "ci95": [
+                -0.03556947058823533,
+                0.06991755294117646
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.3580320627450981,
+              "H": 0.34015621960784315
+            }
+          },
+          "no_anthropic": {
+            "tasks": 12,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "H": 36,
+              "A": 36
+            },
+            "pass": {
+              "A": "36/36",
+              "H": "36/36"
+            },
+            "tokens": {
+              "ratio": 0.8795069258949322,
+              "lo": 0.7883374354480344,
+              "hi": 0.9887730129099391,
+              "tasks": 12
+            },
+            "list_cost": {
+              "ratio": 0.9461204974053907,
+              "lo": 0.855410117974646,
+              "hi": 1.0537806948133064,
+              "tasks": 12
+            },
+            "turns": {
+              "ratio": 0.924693432742108,
+              "lo": 0.8403163821501183,
+              "hi": 1.01203625512971,
+              "tasks": 12
+            },
+            "signflip_tokens": {
+              "p": 0.06201171875,
+              "tasks": 12,
+              "below_1": 9
+            },
+            "signflip_cost": {
+              "p": 0.33837890625,
+              "tasks": 12,
+              "below_1": 9
+            },
+            "cost_per_solved": {
+              "A": 0.3243024333333333,
+              "H": 0.29443867777777777,
+              "ratio": 0.9079138714791567,
+              "ci95": [
+                0.8484423469978477,
+                0.9899560383440702
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.029863755555555555,
+              "ci95": [
+                0.0028796833333333363,
+                0.055985694444444456
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.32430243333333336,
+              "H": 0.29443867777777777
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 11,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "H": 33,
+              "A": 33
+            },
+            "pass": {
+              "A": "33/33",
+              "H": "33/33"
+            },
+            "tokens": {
+              "ratio": 0.8827880943975708,
+              "lo": 0.7837777684298564,
+              "hi": 1.0024649825926442,
+              "tasks": 11
+            },
+            "list_cost": {
+              "ratio": 0.9466763720733089,
+              "lo": 0.848045652033749,
+              "hi": 1.06324754095477,
+              "tasks": 11
+            },
+            "turns": {
+              "ratio": 0.9098194879731,
+              "lo": 0.8262087343163139,
+              "hi": 1.0011133997801358,
+              "tasks": 11
+            },
+            "signflip_tokens": {
+              "p": 0.08984375,
+              "tasks": 11,
+              "below_1": 8
+            },
+            "signflip_cost": {
+              "p": 0.384765625,
+              "tasks": 11,
+              "below_1": 8
+            },
+            "cost_per_solved": {
+              "A": 0.32877308484848483,
+              "H": 0.297629606060606,
+              "ratio": 0.905273636367675,
+              "ci95": [
+                0.8430333935449208,
+                0.9945181127327962
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.031143478787878785,
+              "ci95": [
+                0.001599460606060607,
+                0.05850052727272727
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.32877308484848483,
+              "H": 0.29762960606060607
+            }
+          },
+          "no_pilot": {
+            "tasks": 15,
+            "task_ids": [
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "H": 45,
+              "A": 45
+            },
+            "pass": {
+              "A": "44/45",
+              "H": "45/45"
+            },
+            "tokens": {
+              "ratio": 0.8992157192437594,
+              "lo": 0.7551220678925827,
+              "hi": 1.0573146087092136,
+              "tasks": 15
+            },
+            "list_cost": {
+              "ratio": 0.9699922806275085,
+              "lo": 0.8074350589327062,
+              "hi": 1.160391011405565,
+              "tasks": 15
+            },
+            "turns": {
+              "ratio": 0.9147471961260125,
+              "lo": 0.8489476014024645,
+              "hi": 0.9831635693674801,
+              "tasks": 15
+            },
+            "signflip_tokens": {
+              "p": 0.2657470703125,
+              "tasks": 15,
+              "below_1": 9
+            },
+            "signflip_cost": {
+              "p": 0.75018310546875,
+              "tasks": 15,
+              "below_1": 10
+            },
+            "cost_per_solved": {
+              "A": 0.36280145,
+              "H": 0.32308545333333333,
+              "ratio": 0.890529663906617,
+              "ci95": [
+                0.7736937502104119,
+                1.0377625100681909
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.03165374222222221,
+              "ci95": [
+                -0.020410022222222237,
+                0.08604820888888888
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.35473919555555555,
+              "H": 0.32308545333333333
+            }
+          },
+          "anthropic_only": {
+            "tasks": 5,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05"
+            ],
+            "sessions": {
+              "H": 15,
+              "A": 15
+            },
+            "pass": {
+              "A": "11/15",
+              "H": "15/15"
+            },
+            "tokens": {
+              "ratio": 1.129127178383583,
+              "lo": 0.6544940006677312,
+              "hi": 1.8217448023580813,
+              "tasks": 5
+            },
+            "list_cost": {
+              "ratio": 1.0866187731125891,
+              "lo": 0.6483211450167825,
+              "hi": 1.6720189008802,
+              "tasks": 5
+            },
+            "turns": {
+              "ratio": 1.0572488916157528,
+              "lo": 0.8797277602307113,
+              "hi": 1.3773837388185761,
+              "tasks": 5
+            },
+            "signflip_tokens": {
+              "p": 0.6875,
+              "tasks": 5,
+              "below_1": 1
+            },
+            "signflip_cost": {
+              "p": 0.75,
+              "tasks": 5,
+              "below_1": 2
+            },
+            "cost_per_solved": {
+              "A": 0.5986134181818182,
+              "H": 0.44987832,
+              "ratio": 0.7515339722360808,
+              "ci95": [
+                0.4242004525425605,
+                1.1235499406219631
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": -0.010895146666666706,
+              "ci95": [
+                -0.16794321333333337,
+                0.16318039999999998
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.43898317333333337,
+              "H": 0.44987832
+            }
+          }
+        },
+        "C/H": {
+          "all": {
+            "tasks": 17,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 51,
+              "H": 51
+            },
+            "pass": {
+              "H": "51/51",
+              "C": "51/51"
+            },
+            "tokens": {
+              "ratio": 0.8728976908932145,
+              "lo": 0.6599705331274773,
+              "hi": 1.0641343983135414,
+              "tasks": 17
+            },
+            "list_cost": {
+              "ratio": 0.8626345258966048,
+              "lo": 0.6826412721163487,
+              "hi": 1.02765025465726,
+              "tasks": 17
+            },
+            "turns": {
+              "ratio": 0.9819311233815173,
+              "lo": 0.8971708640761052,
+              "hi": 1.0685129481347264,
+              "tasks": 17
+            },
+            "signflip_tokens": {
+              "p": 0.350372314453125,
+              "tasks": 17,
+              "below_1": 12
+            },
+            "signflip_cost": {
+              "p": 0.1814727783203125,
+              "tasks": 17,
+              "below_1": 12
+            },
+            "cost_per_solved": {
+              "H": 0.34015621960784315,
+              "C": 0.29393983529411766,
+              "ratio": 0.8641318851467508,
+              "ci95": [
+                0.7301839508359987,
+                0.9902883789736514
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.046216384313725496,
+              "ci95": [
+                0.0031435137254902006,
+                0.1042845019607843
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.34015621960784315,
+              "C": 0.29393983529411766
+            }
+          },
+          "no_anthropic": {
+            "tasks": 12,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 36,
+              "H": 36
+            },
+            "pass": {
+              "H": "36/36",
+              "C": "36/36"
+            },
+            "tokens": {
+              "ratio": 1.0133214225536387,
+              "lo": 0.8908611717900042,
+              "hi": 1.1675201130124062,
+              "tasks": 12
+            },
+            "list_cost": {
+              "ratio": 0.9913510448874013,
+              "lo": 0.8782330311393091,
+              "hi": 1.1260485584516344,
+              "tasks": 12
+            },
+            "turns": {
+              "ratio": 0.9890509898014618,
+              "lo": 0.91235890139148,
+              "hi": 1.08775212556132,
+              "tasks": 12
+            },
+            "signflip_tokens": {
+              "p": 0.8486328125,
+              "tasks": 12,
+              "below_1": 7
+            },
+            "signflip_cost": {
+              "p": 0.89697265625,
+              "tasks": 12,
+              "below_1": 7
+            },
+            "cost_per_solved": {
+              "H": 0.29443867777777777,
+              "C": 0.28452961111111114,
+              "ratio": 0.966345906925498,
+              "ci95": [
+                0.8833854251992559,
+                1.0553779739810656
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.00990906666666666,
+              "ci95": [
+                -0.016364044444444458,
+                0.03260012777777778
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.29443867777777777,
+              "C": 0.28452961111111114
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 11,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 33,
+              "H": 33
+            },
+            "pass": {
+              "H": "33/33",
+              "C": "33/33"
+            },
+            "tokens": {
+              "ratio": 1.010785911251849,
+              "lo": 0.879811359308247,
+              "hi": 1.1756638464069875,
+              "tasks": 11
+            },
+            "list_cost": {
+              "ratio": 0.9962094170515253,
+              "lo": 0.8735841035561944,
+              "hi": 1.1390562056708653,
+              "tasks": 11
+            },
+            "turns": {
+              "ratio": 1.0127921294576343,
+              "lo": 0.9401623609225279,
+              "hi": 1.1070268591435406,
+              "tasks": 11
+            },
+            "signflip_tokens": {
+              "p": 0.8740234375,
+              "tasks": 11,
+              "below_1": 7
+            },
+            "signflip_cost": {
+              "p": 0.9599609375,
+              "tasks": 11,
+              "below_1": 6
+            },
+            "cost_per_solved": {
+              "H": 0.297629606060606,
+              "C": 0.28805760606060604,
+              "ratio": 0.9678392209474926,
+              "ci95": [
+                0.8783802926297917,
+                1.060743471417099
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.009571999999999994,
+              "ci95": [
+                -0.017929696969696984,
+                0.034332866666666656
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.29762960606060607,
+              "C": 0.28805760606060604
+            }
+          },
+          "no_pilot": {
+            "tasks": 15,
+            "task_ids": [
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "oai01",
+              "oai02",
+              "oai03"
+            ],
+            "sessions": {
+              "C": 45,
+              "H": 45
+            },
+            "pass": {
+              "H": "45/45",
+              "C": "45/45"
+            },
+            "tokens": {
+              "ratio": 0.9720458735791719,
+              "lo": 0.8651834787559606,
+              "hi": 1.101364185134392,
+              "tasks": 15
+            },
+            "list_cost": {
+              "ratio": 0.9433907125391616,
+              "lo": 0.8330203179134757,
+              "hi": 1.06624832523671,
+              "tasks": 15
+            },
+            "turns": {
+              "ratio": 1.0292158097157171,
+              "lo": 0.9682514102220311,
+              "hi": 1.1056701301843184,
+              "tasks": 15
+            },
+            "signflip_tokens": {
+              "p": 0.66717529296875,
+              "tasks": 15,
+              "below_1": 11
+            },
+            "signflip_cost": {
+              "p": 0.3966064453125,
+              "tasks": 15,
+              "below_1": 10
+            },
+            "cost_per_solved": {
+              "H": 0.32308545333333333,
+              "C": 0.2980475733333333,
+              "ratio": 0.9225038461444813,
+              "ci95": [
+                0.8256996616914244,
+                1.0151332240656576
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.025037880000000002,
+              "ci95": [
+                -0.004628982222222214,
+                0.059554244444444446
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.32308545333333333,
+              "C": 0.2980475733333333
+            }
+          },
+          "anthropic_only": {
+            "tasks": 5,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05"
+            ],
+            "sessions": {
+              "C": 15,
+              "H": 15
+            },
+            "pass": {
+              "H": "15/15",
+              "C": "15/15"
+            },
+            "tokens": {
+              "ratio": 0.6102138124365846,
+              "lo": 0.28932761674071467,
+              "hi": 0.9659360544159901,
+              "tasks": 5
+            },
+            "list_cost": {
+              "ratio": 0.6178247732964626,
+              "lo": 0.34289974795812683,
+              "hi": 0.9392780421309991,
+              "tasks": 5
+            },
+            "turns": {
+              "ratio": 0.9650518569751279,
+              "lo": 0.7647520592459182,
+              "hi": 1.143262629818316,
+              "tasks": 5
+            },
+            "signflip_tokens": {
+              "p": 0.0625,
+              "tasks": 5,
+              "below_1": 5
+            },
+            "signflip_cost": {
+              "p": 0.0625,
+              "tasks": 5,
+              "below_1": 5
+            },
+            "cost_per_solved": {
+              "H": 0.44987832,
+              "C": 0.31652437333333333,
+              "ratio": 0.7035777437181977,
+              "ci95": [
+                0.5147402545390454,
+                0.9559827238691844
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.1333539466666667,
+              "ci95": [
+                0.014149560000000004,
+                0.28474881333333335
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.44987832,
+              "C": 0.3165243733333333
+            }
+          }
+        }
+      }
+    },
+    "new_tasks": {
+      "description": "Opus new tasks (8; polars, streamlit, mistralai; no anthropic task)",
+      "source_studies": [
+        "tasks2-opus55-2026-10-22"
+      ],
+      "pairs": {
+        "C/A": {
+          "all": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 24,
+              "A": 24
+            },
+            "pass": {
+              "A": "24/24",
+              "C": "23/24"
+            },
+            "tokens": {
+              "ratio": 0.7939553875322879,
+              "lo": 0.6845471051038723,
+              "hi": 0.9153681813251882,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.8349278205150393,
+              "lo": 0.7674618418628055,
+              "hi": 0.9065850210694681,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.766740723173093,
+              "lo": 0.7035291988511528,
+              "hi": 0.8446358758573606,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.03125,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "signflip_cost": {
+              "p": 0.0078125,
+              "tasks": 8,
+              "below_1": 8
+            },
+            "cost_per_solved": {
+              "A": 0.1937253,
+              "C": 0.15903974782608696,
+              "ratio": 0.8209549698778991,
+              "ci95": [
+                0.7503665101522489,
+                0.9083015031287528
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.04131220833333333,
+              "ci95": [
+                0.02510822500000001,
+                0.05785372499999999
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.1937253,
+              "C": 0.15241309166666667
+            }
+          },
+          "no_anthropic": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 24,
+              "A": 24
+            },
+            "pass": {
+              "A": "24/24",
+              "C": "23/24"
+            },
+            "tokens": {
+              "ratio": 0.7939553875322879,
+              "lo": 0.6845471051038723,
+              "hi": 0.9153681813251882,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.8349278205150393,
+              "lo": 0.7674618418628055,
+              "hi": 0.9065850210694681,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.766740723173093,
+              "lo": 0.7035291988511528,
+              "hi": 0.8446358758573606,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.03125,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "signflip_cost": {
+              "p": 0.0078125,
+              "tasks": 8,
+              "below_1": 8
+            },
+            "cost_per_solved": {
+              "A": 0.1937253,
+              "C": 0.15903974782608696,
+              "ratio": 0.8209549698778991,
+              "ci95": [
+                0.7503665101522489,
+                0.9083015031287528
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.04131220833333333,
+              "ci95": [
+                0.02510822500000001,
+                0.05785372499999999
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.1937253,
+              "C": 0.15241309166666667
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 24,
+              "A": 24
+            },
+            "pass": {
+              "A": "24/24",
+              "C": "23/24"
+            },
+            "tokens": {
+              "ratio": 0.7939553875322879,
+              "lo": 0.6845471051038723,
+              "hi": 0.9153681813251882,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.8349278205150393,
+              "lo": 0.7674618418628055,
+              "hi": 0.9065850210694681,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.766740723173093,
+              "lo": 0.7035291988511528,
+              "hi": 0.8446358758573606,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.03125,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "signflip_cost": {
+              "p": 0.0078125,
+              "tasks": 8,
+              "below_1": 8
+            },
+            "cost_per_solved": {
+              "A": 0.1937253,
+              "C": 0.15903974782608696,
+              "ratio": 0.8209549698778991,
+              "ci95": [
+                0.7503665101522489,
+                0.9083015031287528
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.04131220833333333,
+              "ci95": [
+                0.02510822500000001,
+                0.05785372499999999
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.1937253,
+              "C": 0.15241309166666667
+            }
+          },
+          "no_pilot": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 24,
+              "A": 24
+            },
+            "pass": {
+              "A": "24/24",
+              "C": "23/24"
+            },
+            "tokens": {
+              "ratio": 0.7939553875322879,
+              "lo": 0.6845471051038723,
+              "hi": 0.9153681813251882,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.8349278205150393,
+              "lo": 0.7674618418628055,
+              "hi": 0.9065850210694681,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.766740723173093,
+              "lo": 0.7035291988511528,
+              "hi": 0.8446358758573606,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.03125,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "signflip_cost": {
+              "p": 0.0078125,
+              "tasks": 8,
+              "below_1": 8
+            },
+            "cost_per_solved": {
+              "A": 0.1937253,
+              "C": 0.15903974782608696,
+              "ratio": 0.8209549698778991,
+              "ci95": [
+                0.7503665101522489,
+                0.9083015031287528
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.04131220833333333,
+              "ci95": [
+                0.02510822500000001,
+                0.05785372499999999
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.1937253,
+              "C": 0.15241309166666667
+            }
+          }
+        },
+        "H/A": {
+          "all": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "H": 24,
+              "A": 24
+            },
+            "pass": {
+              "A": "24/24",
+              "H": "24/24"
+            },
+            "tokens": {
+              "ratio": 0.8599817278703156,
+              "lo": 0.738136162470537,
+              "hi": 1.0092783093496045,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.9411102811203381,
+              "lo": 0.8029644781018456,
+              "hi": 1.1076074608635846,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.8543785606120013,
+              "lo": 0.7846484042115599,
+              "hi": 0.9253992146043358,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.1171875,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "signflip_cost": {
+              "p": 0.484375,
+              "tasks": 8,
+              "below_1": 5
+            },
+            "cost_per_solved": {
+              "A": 0.1937253,
+              "H": 0.17609322500000002,
+              "ratio": 0.9089841388811891,
+              "ci95": [
+                0.810489235918458,
+                1.0073843013439558
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.017632075,
+              "ci95": [
+                -0.0013715416666666717,
+                0.03689273333333334
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.1937253,
+              "H": 0.176093225
+            }
+          },
+          "no_anthropic": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "H": 24,
+              "A": 24
+            },
+            "pass": {
+              "A": "24/24",
+              "H": "24/24"
+            },
+            "tokens": {
+              "ratio": 0.8599817278703156,
+              "lo": 0.738136162470537,
+              "hi": 1.0092783093496045,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.9411102811203381,
+              "lo": 0.8029644781018456,
+              "hi": 1.1076074608635846,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.8543785606120013,
+              "lo": 0.7846484042115599,
+              "hi": 0.9253992146043358,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.1171875,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "signflip_cost": {
+              "p": 0.484375,
+              "tasks": 8,
+              "below_1": 5
+            },
+            "cost_per_solved": {
+              "A": 0.1937253,
+              "H": 0.17609322500000002,
+              "ratio": 0.9089841388811891,
+              "ci95": [
+                0.810489235918458,
+                1.0073843013439558
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.017632075,
+              "ci95": [
+                -0.0013715416666666717,
+                0.03689273333333334
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.1937253,
+              "H": 0.176093225
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "H": 24,
+              "A": 24
+            },
+            "pass": {
+              "A": "24/24",
+              "H": "24/24"
+            },
+            "tokens": {
+              "ratio": 0.8599817278703156,
+              "lo": 0.738136162470537,
+              "hi": 1.0092783093496045,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.9411102811203381,
+              "lo": 0.8029644781018456,
+              "hi": 1.1076074608635846,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.8543785606120013,
+              "lo": 0.7846484042115599,
+              "hi": 0.9253992146043358,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.1171875,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "signflip_cost": {
+              "p": 0.484375,
+              "tasks": 8,
+              "below_1": 5
+            },
+            "cost_per_solved": {
+              "A": 0.1937253,
+              "H": 0.17609322500000002,
+              "ratio": 0.9089841388811891,
+              "ci95": [
+                0.810489235918458,
+                1.0073843013439558
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.017632075,
+              "ci95": [
+                -0.0013715416666666717,
+                0.03689273333333334
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.1937253,
+              "H": 0.176093225
+            }
+          },
+          "no_pilot": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "H": 24,
+              "A": 24
+            },
+            "pass": {
+              "A": "24/24",
+              "H": "24/24"
+            },
+            "tokens": {
+              "ratio": 0.8599817278703156,
+              "lo": 0.738136162470537,
+              "hi": 1.0092783093496045,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.9411102811203381,
+              "lo": 0.8029644781018456,
+              "hi": 1.1076074608635846,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.8543785606120013,
+              "lo": 0.7846484042115599,
+              "hi": 0.9253992146043358,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.1171875,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "signflip_cost": {
+              "p": 0.484375,
+              "tasks": 8,
+              "below_1": 5
+            },
+            "cost_per_solved": {
+              "A": 0.1937253,
+              "H": 0.17609322500000002,
+              "ratio": 0.9089841388811891,
+              "ci95": [
+                0.810489235918458,
+                1.0073843013439558
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.017632075,
+              "ci95": [
+                -0.0013715416666666717,
+                0.03689273333333334
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.1937253,
+              "H": 0.176093225
+            }
+          }
+        },
+        "C/H": {
+          "all": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 24,
+              "H": 24
+            },
+            "pass": {
+              "H": "24/24",
+              "C": "23/24"
+            },
+            "tokens": {
+              "ratio": 0.9232235544102346,
+              "lo": 0.7837332776644846,
+              "hi": 1.067098425287643,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.8871732009144618,
+              "lo": 0.7780557843809456,
+              "hi": 0.9961621766013482,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.8974250508157271,
+              "lo": 0.8336733320798473,
+              "hi": 0.9687408120388026,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.3984375,
+              "tasks": 8,
+              "below_1": 3
+            },
+            "signflip_cost": {
+              "p": 0.1484375,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "cost_per_solved": {
+              "H": 0.17609322500000002,
+              "C": 0.15903974782608696,
+              "ratio": 0.9031565401002051,
+              "ci95": [
+                0.8019735225420915,
+                1.0042556958702469
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.02368013333333333,
+              "ci95": [
+                0.001444149999999999,
+                0.048166108333333325
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.176093225,
+              "C": 0.15241309166666667
+            }
+          },
+          "no_anthropic": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 24,
+              "H": 24
+            },
+            "pass": {
+              "H": "24/24",
+              "C": "23/24"
+            },
+            "tokens": {
+              "ratio": 0.9232235544102346,
+              "lo": 0.7837332776644846,
+              "hi": 1.067098425287643,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.8871732009144618,
+              "lo": 0.7780557843809456,
+              "hi": 0.9961621766013482,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.8974250508157271,
+              "lo": 0.8336733320798473,
+              "hi": 0.9687408120388026,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.3984375,
+              "tasks": 8,
+              "below_1": 3
+            },
+            "signflip_cost": {
+              "p": 0.1484375,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "cost_per_solved": {
+              "H": 0.17609322500000002,
+              "C": 0.15903974782608696,
+              "ratio": 0.9031565401002051,
+              "ci95": [
+                0.8019735225420915,
+                1.0042556958702469
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.02368013333333333,
+              "ci95": [
+                0.001444149999999999,
+                0.048166108333333325
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.176093225,
+              "C": 0.15241309166666667
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 24,
+              "H": 24
+            },
+            "pass": {
+              "H": "24/24",
+              "C": "23/24"
+            },
+            "tokens": {
+              "ratio": 0.9232235544102346,
+              "lo": 0.7837332776644846,
+              "hi": 1.067098425287643,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.8871732009144618,
+              "lo": 0.7780557843809456,
+              "hi": 0.9961621766013482,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.8974250508157271,
+              "lo": 0.8336733320798473,
+              "hi": 0.9687408120388026,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.3984375,
+              "tasks": 8,
+              "below_1": 3
+            },
+            "signflip_cost": {
+              "p": 0.1484375,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "cost_per_solved": {
+              "H": 0.17609322500000002,
+              "C": 0.15903974782608696,
+              "ratio": 0.9031565401002051,
+              "ci95": [
+                0.8019735225420915,
+                1.0042556958702469
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.02368013333333333,
+              "ci95": [
+                0.001444149999999999,
+                0.048166108333333325
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.176093225,
+              "C": 0.15241309166666667
+            }
+          },
+          "no_pilot": {
+            "tasks": 8,
+            "task_ids": [
+              "mi01",
+              "mi02",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 24,
+              "H": 24
+            },
+            "pass": {
+              "H": "24/24",
+              "C": "23/24"
+            },
+            "tokens": {
+              "ratio": 0.9232235544102346,
+              "lo": 0.7837332776644846,
+              "hi": 1.067098425287643,
+              "tasks": 8
+            },
+            "list_cost": {
+              "ratio": 0.8871732009144618,
+              "lo": 0.7780557843809456,
+              "hi": 0.9961621766013482,
+              "tasks": 8
+            },
+            "turns": {
+              "ratio": 0.8974250508157271,
+              "lo": 0.8336733320798473,
+              "hi": 0.9687408120388026,
+              "tasks": 8
+            },
+            "signflip_tokens": {
+              "p": 0.3984375,
+              "tasks": 8,
+              "below_1": 3
+            },
+            "signflip_cost": {
+              "p": 0.1484375,
+              "tasks": 8,
+              "below_1": 6
+            },
+            "cost_per_solved": {
+              "H": 0.17609322500000002,
+              "C": 0.15903974782608696,
+              "ratio": 0.9031565401002051,
+              "ci95": [
+                0.8019735225420915,
+                1.0042556958702469
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.02368013333333333,
+              "ci95": [
+                0.001444149999999999,
+                0.048166108333333325
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.176093225,
+              "C": 0.15241309166666667
+            }
+          }
+        }
+      }
+    },
+    "pooled_main_new": {
+      "description": "pooled main + new (25)",
+      "source_studies": [
+        "main-2026-09-28",
+        "tasks2-opus55-2026-10-22"
+      ],
+      "pairs": {
+        "C/A": {
+          "all": {
+            "tasks": 25,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 75,
+              "A": 75
+            },
+            "pass": {
+              "A": "72/75",
+              "C": "74/75"
+            },
+            "tokens": {
+              "ratio": 0.7469571237022324,
+              "lo": 0.6468346713988601,
+              "hi": 0.8543562464020616,
+              "tasks": 25
+            },
+            "list_cost": {
+              "ratio": 0.8143231449263677,
+              "lo": 0.7432444461389465,
+              "hi": 0.8821386610157647,
+              "tasks": 25
+            },
+            "turns": {
+              "ratio": 0.8067381006781337,
+              "lo": 0.7422914670435504,
+              "hi": 0.8717279927078153,
+              "tasks": 25
+            },
+            "signflip_tokens": {
+              "p": 0.00014841556549072266,
+              "tasks": 25,
+              "below_1": 19
+            },
+            "signflip_cost": {
+              "p": 2.682209014892578e-06,
+              "tasks": 25,
+              "below_1": 23
+            },
+            "cost_per_solved": {
+              "A": 0.3615571861111111,
+              "C": 0.2816889081081081,
+              "ratio": 0.7790991824500524,
+              "ci95": [
+                0.684146689590131,
+                0.8641485421761143
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.06916184266666668,
+              "ci95": [
+                0.04576850400000001,
+                0.09343232533333334
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.34709489866666665,
+              "C": 0.277933056
+            }
+          },
+          "no_anthropic": {
+            "tasks": 20,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 60,
+              "A": 60
+            },
+            "pass": {
+              "A": "60/60",
+              "C": "59/60"
+            },
+            "tokens": {
+              "ratio": 0.7333571702394397,
+              "lo": 0.6214258355297482,
+              "hi": 0.8476633994447225,
+              "tasks": 20
+            },
+            "list_cost": {
+              "ratio": 0.7817935954454317,
+              "lo": 0.701161382620512,
+              "hi": 0.8544848795509407,
+              "tasks": 20
+            },
+            "turns": {
+              "ratio": 0.7748451251903212,
+              "lo": 0.7049880645675088,
+              "hi": 0.8401372864594584,
+              "tasks": 20
+            },
+            "signflip_tokens": {
+              "p": 0.0003147125244140625,
+              "tasks": 20,
+              "below_1": 16
+            },
+            "signflip_cost": {
+              "p": 1.9073486328125e-06,
+              "tasks": 20,
+              "below_1": 20
+            },
+            "cost_per_solved": {
+              "A": 0.28946724333333335,
+              "C": 0.23020886779661015,
+              "ratio": 0.7952846931682533,
+              "ci95": [
+                0.7292449424647837,
+                0.8657113373661067
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.06309519000000001,
+              "ci95": [
+                0.03961745,
+                0.09019777666666667
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.2894672433333333,
+              "C": 0.22637205333333332
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 19,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 57,
+              "A": 57
+            },
+            "pass": {
+              "A": "57/57",
+              "C": "56/57"
+            },
+            "tokens": {
+              "ratio": 0.7237192949067348,
+              "lo": 0.6089899058209124,
+              "hi": 0.8434296687865175,
+              "tasks": 19
+            },
+            "list_cost": {
+              "ratio": 0.7766909439725311,
+              "lo": 0.692081826211183,
+              "hi": 0.8524899507875663,
+              "tasks": 19
+            },
+            "turns": {
+              "ratio": 0.7687628702677384,
+              "lo": 0.6969094583688504,
+              "hi": 0.8363552537083953,
+              "tasks": 19
+            },
+            "signflip_tokens": {
+              "p": 0.000396728515625,
+              "tasks": 19,
+              "below_1": 15
+            },
+            "signflip_cost": {
+              "p": 3.814697265625e-06,
+              "tasks": 19,
+              "below_1": 19
+            },
+            "cost_per_solved": {
+              "A": 0.29057891929824564,
+              "C": 0.2295216892857143,
+              "ratio": 0.7898772899287193,
+              "ci95": [
+                0.7209107200978802,
+                0.86343249610607
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.06508392631578948,
+              "ci95": [
+                0.0406988350877193,
+                0.09326357543859651
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.29057891929824564,
+              "C": 0.22549499298245615
+            }
+          },
+          "no_pilot": {
+            "tasks": 23,
+            "task_ids": [
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 69,
+              "A": 69
+            },
+            "pass": {
+              "A": "69/69",
+              "C": "68/69"
+            },
+            "tokens": {
+              "ratio": 0.7246724007081851,
+              "lo": 0.6207387917643991,
+              "hi": 0.831054355833801,
+              "tasks": 23
+            },
+            "list_cost": {
+              "ratio": 0.8014013311805542,
+              "lo": 0.7243292144013806,
+              "hi": 0.8698490417147255,
+              "tasks": 23
+            },
+            "turns": {
+              "ratio": 0.7896914503931638,
+              "lo": 0.7250312323405796,
+              "hi": 0.8521556168141485,
+              "tasks": 23
+            },
+            "signflip_tokens": {
+              "p": 7.295608520507812e-05,
+              "tasks": 23,
+              "below_1": 18
+            },
+            "signflip_cost": {
+              "p": 1.6689300537109375e-06,
+              "tasks": 23,
+              "below_1": 22
+            },
+            "cost_per_solved": {
+              "A": 0.3429184666666667,
+              "C": 0.2779631029411765,
+              "ratio": 0.8105807355407606,
+              "ci95": [
+                0.7455359003810411,
+                0.8807251095914188
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.06898381449275363,
+              "ci95": [
+                0.04440066666666668,
+                0.0955080086956522
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.3429184666666667,
+              "C": 0.27393465217391305
+            }
+          },
+          "anthropic_only": {
+            "tasks": 5,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05"
+            ],
+            "sessions": {
+              "C": 15,
+              "A": 15
+            },
+            "pass": {
+              "A": "12/15",
+              "C": "15/15"
+            },
+            "tokens": {
+              "ratio": 0.8039262269101931,
+              "lo": 0.5584607639257164,
+              "hi": 1.0701260756566047,
+              "tasks": 5
+            },
+            "list_cost": {
+              "ratio": 0.958551519115789,
+              "lo": 0.8860095571937037,
+              "hi": 1.0373322771168998,
+              "tasks": 5
+            },
+            "turns": {
+              "ratio": 0.9479888323198659,
+              "lo": 0.8466596161046819,
+              "hi": 1.079588194139172,
+              "tasks": 5
+            },
+            "signflip_tokens": {
+              "p": 0.375,
+              "tasks": 5,
+              "below_1": 3
+            },
+            "signflip_cost": {
+              "p": 0.4375,
+              "tasks": 5,
+              "below_1": 3
+            },
+            "cost_per_solved": {
+              "A": 0.7220068999999999,
+              "C": 0.48417706666666666,
+              "ratio": 0.6705989467229008,
+              "ci95": [
+                0.3154369015292268,
+                0.9231062904360218
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.09342845333333337,
+              "ci95": [
+                0.03163865333333338,
+                0.14919921333333336
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.57760552,
+              "C": 0.4841770666666667
+            }
+          }
+        }
+      }
+    },
+    "pooled_repl_new": {
+      "description": "pooled replication + new (25)",
+      "source_studies": [
+        "abl-opus55-2026-10-22",
+        "tasks2-opus55-2026-10-22"
+      ],
+      "pairs": {
+        "C/A": {
+          "all": {
+            "tasks": 25,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 75,
+              "A": 75
+            },
+            "pass": {
+              "A": "71/75",
+              "C": "74/75"
+            },
+            "tokens": {
+              "ratio": 0.8157803595833663,
+              "lo": 0.704154082730706,
+              "hi": 0.9345107413816792,
+              "tasks": 25
+            },
+            "list_cost": {
+              "ratio": 0.8452003038101797,
+              "lo": 0.7294192862200816,
+              "hi": 0.9533665737201638,
+              "tasks": 25
+            },
+            "turns": {
+              "ratio": 0.8835212633720922,
+              "lo": 0.8245689913361833,
+              "hi": 0.9453498664218424,
+              "tasks": 25
+            },
+            "signflip_tokens": {
+              "p": 0.007184505462646484,
+              "tasks": 25,
+              "below_1": 17
+            },
+            "signflip_cost": {
+              "p": 0.008694767951965332,
+              "tasks": 25,
+              "below_1": 18
+            },
+            "cost_per_solved": {
+              "A": 0.3226625690140845,
+              "C": 0.25201142972972973,
+              "ratio": 0.7810370769059649,
+              "ci95": [
+                0.6596306564804608,
+                0.8867623493896657
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.056802621333333324,
+              "ci95": [
+                0.029142621333333327,
+                0.08845583999999998
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.30545389866666667,
+              "C": 0.24865127733333334
+            }
+          },
+          "no_anthropic": {
+            "tasks": 20,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 60,
+              "A": 60
+            },
+            "pass": {
+              "A": "60/60",
+              "C": "59/60"
+            },
+            "tokens": {
+              "ratio": 0.8509623248906335,
+              "lo": 0.7592846044089976,
+              "hi": 0.9542410771346032,
+              "tasks": 20
+            },
+            "list_cost": {
+              "ratio": 0.895290394512664,
+              "lo": 0.8338356445747491,
+              "hi": 0.9647094806015828,
+              "tasks": 20
+            },
+            "turns": {
+              "ratio": 0.8522937135744978,
+              "lo": 0.7915839101628442,
+              "hi": 0.9199911966800798,
+              "tasks": 20
+            },
+            "signflip_tokens": {
+              "p": 0.015140533447265625,
+              "tasks": 20,
+              "below_1": 14
+            },
+            "signflip_cost": {
+              "p": 0.010522842407226562,
+              "tasks": 20,
+              "below_1": 15
+            },
+            "cost_per_solved": {
+              "A": 0.27207158000000004,
+              "C": 0.23560983389830512,
+              "ratio": 0.8659847305562202,
+              "ci95": [
+                0.8061198159127837,
+                0.9273810823881449
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.04038857666666666,
+              "ci95": [
+                0.02332873333333333,
+                0.05784835666666666
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.27207158,
+              "C": 0.23168300333333333
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 19,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 57,
+              "A": 57
+            },
+            "pass": {
+              "A": "57/57",
+              "C": "56/57"
+            },
+            "tokens": {
+              "ratio": 0.8494934772032935,
+              "lo": 0.7561927890267718,
+              "hi": 0.9601514215870778,
+              "tasks": 19
+            },
+            "list_cost": {
+              "ratio": 0.8959362911818035,
+              "lo": 0.8329537879564813,
+              "hi": 0.9711649521935083,
+              "tasks": 19
+            },
+            "turns": {
+              "ratio": 0.8528333494595401,
+              "lo": 0.7879451342101916,
+              "hi": 0.9245435464615681,
+              "tasks": 19
+            },
+            "signflip_tokens": {
+              "p": 0.0196380615234375,
+              "tasks": 19,
+              "below_1": 13
+            },
+            "signflip_cost": {
+              "p": 0.01538848876953125,
+              "tasks": 19,
+              "below_1": 14
+            },
+            "cost_per_solved": {
+              "A": 0.2719108596491228,
+              "C": 0.2350681285714286,
+              "ratio": 0.8645043779228364,
+              "ci95": [
+                0.8013639028275165,
+                0.9300535651621402
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.04096673333333333,
+              "ci95": [
+                0.02288931228070176,
+                0.05888391578947368
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.2719108596491228,
+              "C": 0.2309441263157895
+            }
+          },
+          "no_pilot": {
+            "tasks": 23,
+            "task_ids": [
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 69,
+              "A": 69
+            },
+            "pass": {
+              "A": "68/69",
+              "C": "68/69"
+            },
+            "tokens": {
+              "ratio": 0.8453320381131139,
+              "lo": 0.7393310761326215,
+              "hi": 0.9564085462361785,
+              "tasks": 23
+            },
+            "list_cost": {
+              "ratio": 0.886364982827825,
+              "lo": 0.7922690147082251,
+              "hi": 0.9747949591533681,
+              "tasks": 23
+            },
+            "turns": {
+              "ratio": 0.8765883766063199,
+              "lo": 0.8167007733639499,
+              "hi": 0.940803855652045,
+              "tasks": 23
+            },
+            "signflip_tokens": {
+              "p": 0.01809859275817871,
+              "tasks": 23,
+              "below_1": 15
+            },
+            "signflip_cost": {
+              "p": 0.0236513614654541,
+              "tasks": 23,
+              "below_1": 16
+            },
+            "cost_per_solved": {
+              "A": 0.30312751470588234,
+              "C": 0.2510302205882353,
+              "ratio": 0.8281340637513693,
+              "ci95": [
+                0.7519201406611132,
+                0.9006621476970881
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.05134226086956521,
+              "ci95": [
+                0.025667666666666658,
+                0.08348231304347825
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.2987343623188406,
+              "C": 0.24739210144927537
+            }
+          },
+          "anthropic_only": {
+            "tasks": 5,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05"
+            ],
+            "sessions": {
+              "C": 15,
+              "A": 15
+            },
+            "pass": {
+              "A": "11/15",
+              "C": "15/15"
+            },
+            "tokens": {
+              "ratio": 0.6890090002472097,
+              "lo": 0.42790158478168683,
+              "hi": 1.1094453007549996,
+              "tasks": 5
+            },
+            "list_cost": {
+              "ratio": 0.6713399971579657,
+              "lo": 0.3874886686714424,
+              "hi": 1.1265960487016253,
+              "tasks": 5
+            },
+            "turns": {
+              "ratio": 1.0203000061386778,
+              "lo": 0.9468822173615905,
+              "hi": 1.0832870825543628,
+              "tasks": 5
+            },
+            "signflip_tokens": {
+              "p": 0.4375,
+              "tasks": 5,
+              "below_1": 3
+            },
+            "signflip_cost": {
+              "p": 0.4375,
+              "tasks": 5,
+              "below_1": 3
+            },
+            "cost_per_solved": {
+              "A": 0.5986134181818182,
+              "C": 0.31652437333333333,
+              "ratio": 0.5287625765134364,
+              "ci95": [
+                0.23175374073589863,
+                0.8283311321545108
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.12245879999999996,
+              "ci95": [
+                0.013771519999999987,
+                0.23114607999999995
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.43898317333333337,
+              "C": 0.3165243733333333
+            }
+          }
+        },
+        "H/A": {
+          "all": {
+            "tasks": 25,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "H": 75,
+              "A": 75
+            },
+            "pass": {
+              "A": "71/75",
+              "H": "75/75"
+            },
+            "tokens": {
+              "ratio": 0.9179519958960294,
+              "lo": 0.8074909389313291,
+              "hi": 1.0547745537280258,
+              "tasks": 25
+            },
+            "list_cost": {
+              "ratio": 0.9710345959430584,
+              "lo": 0.863441394141677,
+              "hi": 1.098690391581681,
+              "tasks": 25
+            },
+            "turns": {
+              "ratio": 0.9260671698747803,
+              "lo": 0.8634657623360643,
+              "hi": 1.004419173117832,
+              "tasks": 25
+            },
+            "signflip_tokens": {
+              "p": 0.24037140607833862,
+              "tasks": 25,
+              "below_1": 16
+            },
+            "signflip_cost": {
+              "p": 0.6556522846221924,
+              "tasks": 25,
+              "below_1": 16
+            },
+            "cost_per_solved": {
+              "A": 0.3226625690140845,
+              "H": 0.2876560613333334,
+              "ratio": 0.8915073794034564,
+              "ci95": [
+                0.8012080457335401,
+                0.9964401134748212
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.01779783733333333,
+              "ci95": [
+                -0.01901962400000001,
+                0.05371596799999998
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.30545389866666667,
+              "H": 0.2876560613333333
+            }
+          },
+          "no_anthropic": {
+            "tasks": 20,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "H": 60,
+              "A": 60
+            },
+            "pass": {
+              "A": "60/60",
+              "H": "60/60"
+            },
+            "tokens": {
+              "ratio": 0.8716442062734423,
+              "lo": 0.7956083320888355,
+              "hi": 0.956579181970677,
+              "tasks": 20
+            },
+            "list_cost": {
+              "ratio": 0.9441132180538926,
+              "lo": 0.8641641060443884,
+              "hi": 1.0366532947961256,
+              "tasks": 20
+            },
+            "turns": {
+              "ratio": 0.8958984818954111,
+              "lo": 0.8382277466658744,
+              "hi": 0.9572671476746336,
+              "tasks": 20
+            },
+            "signflip_tokens": {
+              "p": 0.011974334716796875,
+              "tasks": 20,
+              "below_1": 15
+            },
+            "signflip_cost": {
+              "p": 0.2395610809326172,
+              "tasks": 20,
+              "below_1": 14
+            },
+            "cost_per_solved": {
+              "A": 0.27207158000000004,
+              "H": 0.24710049666666667,
+              "ratio": 0.9082186998975293,
+              "ci95": [
+                0.8571591128050278,
+                0.971524198099869
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.024971083333333335,
+              "ci95": [
+                0.007139193333333328,
+                0.042935076666666676
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.27207158,
+              "H": 0.24710049666666664
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 19,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "H": 57,
+              "A": 57
+            },
+            "pass": {
+              "A": "57/57",
+              "H": "57/57"
+            },
+            "tokens": {
+              "ratio": 0.8731126080479716,
+              "lo": 0.7926087099242394,
+              "hi": 0.9638111250474819,
+              "tasks": 19
+            },
+            "list_cost": {
+              "ratio": 0.9443287536185477,
+              "lo": 0.8596882707608601,
+              "hi": 1.0399933983457015,
+              "tasks": 19
+            },
+            "turns": {
+              "ratio": 0.886050424299208,
+              "lo": 0.8289633141865442,
+              "hi": 0.9468818942812168,
+              "tasks": 19
+            },
+            "signflip_tokens": {
+              "p": 0.017650604248046875,
+              "tasks": 19,
+              "below_1": 14
+            },
+            "signflip_cost": {
+              "p": 0.2656288146972656,
+              "tasks": 19,
+              "below_1": 13
+            },
+            "cost_per_solved": {
+              "A": 0.2719108596491228,
+              "H": 0.24645639298245614,
+              "ratio": 0.9063867228417672,
+              "ci95": [
+                0.8520421090696005,
+                0.9753029812698847
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.02545446666666667,
+              "ci95": [
+                0.006120624561403509,
+                0.043907512280701756
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.2719108596491228,
+              "H": 0.2464563929824561
+            }
+          },
+          "no_pilot": {
+            "tasks": 23,
+            "task_ids": [
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "H": 69,
+              "A": 69
+            },
+            "pass": {
+              "A": "68/69",
+              "H": "69/69"
+            },
+            "tokens": {
+              "ratio": 0.8853701501006629,
+              "lo": 0.7769345136517283,
+              "hi": 1.0013630453246338,
+              "tasks": 23
+            },
+            "list_cost": {
+              "ratio": 0.9598471962187684,
+              "lo": 0.8379141887088574,
+              "hi": 1.0960770825640036,
+              "tasks": 23
+            },
+            "turns": {
+              "ratio": 0.8932803574898742,
+              "lo": 0.8434872364522586,
+              "hi": 0.9464954196331188,
+              "tasks": 23
+            },
+            "signflip_tokens": {
+              "p": 0.07079458236694336,
+              "tasks": 23,
+              "below_1": 15
+            },
+            "signflip_cost": {
+              "p": 0.5615220069885254,
+              "tasks": 23,
+              "below_1": 15
+            },
+            "cost_per_solved": {
+              "A": 0.30312751470588234,
+              "H": 0.2719577217391304,
+              "ratio": 0.8971726700659448,
+              "ci95": [
+                0.7977893703984845,
+                1.0135706680391874
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.02677664057971014,
+              "ci95": [
+                -0.008414791304347836,
+                0.06506886666666667
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.2987343623188406,
+              "H": 0.2719577217391304
+            }
+          },
+          "anthropic_only": {
+            "tasks": 5,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05"
+            ],
+            "sessions": {
+              "H": 15,
+              "A": 15
+            },
+            "pass": {
+              "A": "11/15",
+              "H": "15/15"
+            },
+            "tokens": {
+              "ratio": 1.129127178383583,
+              "lo": 0.6544940006677312,
+              "hi": 1.8217448023580813,
+              "tasks": 5
+            },
+            "list_cost": {
+              "ratio": 1.0866187731125891,
+              "lo": 0.6483211450167825,
+              "hi": 1.6720189008802,
+              "tasks": 5
+            },
+            "turns": {
+              "ratio": 1.0572488916157528,
+              "lo": 0.8797277602307113,
+              "hi": 1.3773837388185761,
+              "tasks": 5
+            },
+            "signflip_tokens": {
+              "p": 0.6875,
+              "tasks": 5,
+              "below_1": 1
+            },
+            "signflip_cost": {
+              "p": 0.75,
+              "tasks": 5,
+              "below_1": 2
+            },
+            "cost_per_solved": {
+              "A": 0.5986134181818182,
+              "H": 0.44987832,
+              "ratio": 0.7515339722360808,
+              "ci95": [
+                0.4242004525425605,
+                1.1235499406219631
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": -0.010895146666666706,
+              "ci95": [
+                -0.16794321333333337,
+                0.16318039999999998
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "A": 0.43898317333333337,
+              "H": 0.44987832
+            }
+          }
+        },
+        "C/H": {
+          "all": {
+            "tasks": 25,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 75,
+              "H": 75
+            },
+            "pass": {
+              "H": "75/75",
+              "C": "74/75"
+            },
+            "tokens": {
+              "ratio": 0.8886961009187289,
+              "lo": 0.7313410705869924,
+              "hi": 1.0267916609232899,
+              "tasks": 25
+            },
+            "list_cost": {
+              "ratio": 0.8704121432350516,
+              "lo": 0.7415565645475163,
+              "hi": 0.9856583320321052,
+              "tasks": 25
+            },
+            "turns": {
+              "ratio": 0.9540574292160244,
+              "lo": 0.8908519591745662,
+              "hi": 1.0177605040146838,
+              "tasks": 25
+            },
+            "signflip_tokens": {
+              "p": 0.1941426396369934,
+              "tasks": 25,
+              "below_1": 15
+            },
+            "signflip_cost": {
+              "p": 0.05140119791030884,
+              "tasks": 25,
+              "below_1": 18
+            },
+            "cost_per_solved": {
+              "H": 0.2876560613333334,
+              "C": 0.25201142972972973,
+              "ratio": 0.8760859359667761,
+              "ci95": [
+                0.7644043798296548,
+                0.9796657784969337
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.039004784,
+              "ci95": [
+                0.008770295999999997,
+                0.07906694133333333
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.2876560613333333,
+              "C": 0.24865127733333334
+            }
+          },
+          "no_anthropic": {
+            "tasks": 20,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp01",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 60,
+              "H": 60
+            },
+            "pass": {
+              "H": "60/60",
+              "C": "59/60"
+            },
+            "tokens": {
+              "ratio": 0.9762725648447427,
+              "lo": 0.8802996253690435,
+              "hi": 1.08219051282993,
+              "tasks": 20
+            },
+            "list_cost": {
+              "ratio": 0.9482871094190721,
+              "lo": 0.865057719249935,
+              "hi": 1.0403506644365592,
+              "tasks": 20
+            },
+            "turns": {
+              "ratio": 0.9513284493699993,
+              "lo": 0.8941827526826323,
+              "hi": 1.0178433829080757,
+              "tasks": 20
+            },
+            "signflip_tokens": {
+              "p": 0.6673049926757812,
+              "tasks": 20,
+              "below_1": 10
+            },
+            "signflip_cost": {
+              "p": 0.28656768798828125,
+              "tasks": 20,
+              "below_1": 13
+            },
+            "cost_per_solved": {
+              "H": 0.24710049666666667,
+              "C": 0.23560983389830512,
+              "ratio": 0.9534980183230379,
+              "ci95": [
+                0.8827307278741556,
+                1.024948217352342
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.015417493333333327,
+              "ci95": [
+                -0.002864050000000011,
+                0.03226797666666666
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.24710049666666664,
+              "C": 0.23168300333333333
+            }
+          },
+          "no_anthropic_no_pilot": {
+            "tasks": 19,
+            "task_ids": [
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 57,
+              "H": 57
+            },
+            "pass": {
+              "H": "57/57",
+              "C": "56/57"
+            },
+            "tokens": {
+              "ratio": 0.9729483566873651,
+              "lo": 0.874421233326895,
+              "hi": 1.0865486058722666,
+              "tasks": 19
+            },
+            "list_cost": {
+              "ratio": 0.9487546447661258,
+              "lo": 0.8615773728118667,
+              "hi": 1.0440340699770723,
+              "tasks": 19
+            },
+            "turns": {
+              "ratio": 0.9625110784570304,
+              "lo": 0.906608425670112,
+              "hi": 1.0298923992624645,
+              "tasks": 19
+            },
+            "signflip_tokens": {
+              "p": 0.6408119201660156,
+              "tasks": 19,
+              "below_1": 10
+            },
+            "signflip_cost": {
+              "p": 0.315673828125,
+              "tasks": 19,
+              "below_1": 12
+            },
+            "cost_per_solved": {
+              "H": 0.24645639298245614,
+              "C": 0.2350681285714286,
+              "ratio": 0.953791969957792,
+              "ci95": [
+                0.8801482440101103,
+                1.0275244027882169
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.01551226666666666,
+              "ci95": [
+                -0.0037056000000000016,
+                0.033458814035087714
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.2464563929824561,
+              "C": 0.2309441263157895
+            }
+          },
+          "no_pilot": {
+            "tasks": 23,
+            "task_ids": [
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05",
+              "hf01",
+              "hf02",
+              "hf03",
+              "hf04",
+              "mcp02",
+              "mcp04",
+              "mcp05",
+              "mcp06",
+              "mi01",
+              "mi02",
+              "oai01",
+              "oai02",
+              "oai03",
+              "pl01",
+              "pl02",
+              "pl03",
+              "pl04",
+              "st01",
+              "st02"
+            ],
+            "sessions": {
+              "C": 69,
+              "H": 69
+            },
+            "pass": {
+              "H": "69/69",
+              "C": "68/69"
+            },
+            "tokens": {
+              "ratio": 0.9547781094912712,
+              "lo": 0.867215414248626,
+              "hi": 1.0514445347582946,
+              "tasks": 23
+            },
+            "list_cost": {
+              "ratio": 0.9234438422277839,
+              "lo": 0.8390911468703942,
+              "hi": 1.010944673758232,
+              "tasks": 23
+            },
+            "turns": {
+              "ratio": 0.9813138386581577,
+              "lo": 0.928315876755493,
+              "hi": 1.0420960423272834,
+              "tasks": 23
+            },
+            "signflip_tokens": {
+              "p": 0.36897706985473633,
+              "tasks": 23,
+              "below_1": 14
+            },
+            "signflip_cost": {
+              "p": 0.11512565612792969,
+              "tasks": 23,
+              "below_1": 16
+            },
+            "cost_per_solved": {
+              "H": 0.2719577217391304,
+              "C": 0.2510302205882353,
+              "ratio": 0.9230486966243623,
+              "ci95": [
+                0.8419171888518792,
+                1.0000684071197266
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.02456562028985507,
+              "ci95": [
+                0.0033554318840579617,
+                0.04923926666666667
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.2719577217391304,
+              "C": 0.24739210144927537
+            }
+          },
+          "anthropic_only": {
+            "tasks": 5,
+            "task_ids": [
+              "ant01",
+              "ant02",
+              "ant03",
+              "ant04",
+              "ant05"
+            ],
+            "sessions": {
+              "C": 15,
+              "H": 15
+            },
+            "pass": {
+              "H": "15/15",
+              "C": "15/15"
+            },
+            "tokens": {
+              "ratio": 0.6102138124365846,
+              "lo": 0.28932761674071467,
+              "hi": 0.9659360544159901,
+              "tasks": 5
+            },
+            "list_cost": {
+              "ratio": 0.6178247732964626,
+              "lo": 0.34289974795812683,
+              "hi": 0.9392780421309991,
+              "tasks": 5
+            },
+            "turns": {
+              "ratio": 0.9650518569751279,
+              "lo": 0.7647520592459182,
+              "hi": 1.143262629818316,
+              "tasks": 5
+            },
+            "signflip_tokens": {
+              "p": 0.0625,
+              "tasks": 5,
+              "below_1": 5
+            },
+            "signflip_cost": {
+              "p": 0.0625,
+              "tasks": 5,
+              "below_1": 5
+            },
+            "cost_per_solved": {
+              "H": 0.44987832,
+              "C": 0.31652437333333333,
+              "ratio": 0.7035777437181977,
+              "ci95": [
+                0.5147402545390454,
+                0.9559827238691844
+              ]
+            },
+            "mean_cost_saving_per_session_usd": {
+              "value": 0.1333539466666667,
+              "ci95": [
+                0.014149560000000004,
+                0.28474881333333335
+              ]
+            },
+            "mean_cost_per_session_usd": {
+              "H": 0.44987832,
+              "C": 0.3165243733333333
+            }
+          }
+        }
+      }
+    }
+  },
+  "compact": {
+    "main C/A [all]": {
+      "tasks": 17,
+      "pass": {
+        "A": "48/51",
+        "C": "51/51"
+      },
+      "tokens": {
+        "ratio": 0.726,
+        "ci": [
+          0.593,
+          0.871
+        ]
+      },
+      "p_tokens": 0.00331,
+      "cost": {
+        "ratio": 0.805,
+        "ci": [
+          0.705,
+          0.897
+        ]
+      },
+      "p_cost": 0.000275,
+      "turns": {
+        "ratio": 0.826,
+        "ci": [
+          0.736,
+          0.913
+        ]
+      },
+      "cost_per_solved": [
+        0.445,
+        0.337,
+        0.757,
+        [
+          0.633,
+          0.863
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0823,
+        [
+          0.05,
+          0.1151
+        ]
+      ]
+    },
+    "main C/A [no_anthropic]": {
+      "tasks": 12,
+      "pass": {
+        "A": "36/36",
+        "C": "36/36"
+      },
+      "tokens": {
+        "ratio": 0.696,
+        "ci": [
+          0.543,
+          0.867
+        ]
+      },
+      "p_tokens": 0.00781,
+      "cost": {
+        "ratio": 0.748,
+        "ci": [
+          0.636,
+          0.854
+        ]
+      },
+      "p_cost": 0.000488,
+      "turns": {
+        "ratio": 0.78,
+        "ci": [
+          0.675,
+          0.878
+        ]
+      },
+      "cost_per_solved": [
+        0.353,
+        0.276,
+        0.78,
+        [
+          0.7,
+          0.869
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0776,
+        [
+          0.0415,
+          0.1188
+        ]
+      ]
+    },
+    "main C/A [no_anthropic_no_pilot]": {
+      "tasks": 11,
+      "pass": {
+        "A": "33/33",
+        "C": "33/33"
+      },
+      "tokens": {
+        "ratio": 0.677,
+        "ci": [
+          0.522,
+          0.859
+        ]
+      },
+      "p_tokens": 0.00977,
+      "cost": {
+        "ratio": 0.737,
+        "ci": [
+          0.619,
+          0.852
+        ]
+      },
+      "p_cost": 0.000977,
+      "turns": {
+        "ratio": 0.77,
+        "ci": [
+          0.659,
+          0.876
+        ]
+      },
+      "cost_per_solved": [
+        0.361,
+        0.279,
+        0.772,
+        [
+          0.687,
+          0.865
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0824,
+        [
+          0.0436,
+          0.1251
+        ]
+      ]
+    },
+    "main C/A [no_pilot]": {
+      "tasks": 15,
+      "pass": {
+        "A": "45/45",
+        "C": "45/45"
+      },
+      "tokens": {
+        "ratio": 0.69,
+        "ci": [
+          0.559,
+          0.842
+        ]
+      },
+      "p_tokens": 0.00183,
+      "cost": {
+        "ratio": 0.784,
+        "ci": [
+          0.679,
+          0.881
+        ]
+      },
+      "p_cost": 0.000244,
+      "turns": {
+        "ratio": 0.802,
+        "ci": [
+          0.711,
+          0.887
+        ]
+      },
+      "cost_per_solved": [
+        0.422,
+        0.339,
+        0.802,
+        [
+          0.728,
+          0.879
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0837,
+        [
+          0.0495,
+          0.1194
+        ]
+      ]
+    },
+    "main C/A [anthropic_only]": {
+      "tasks": 5,
+      "pass": {
+        "A": "12/15",
+        "C": "15/15"
+      },
+      "tokens": {
+        "ratio": 0.804,
+        "ci": [
+          0.558,
+          1.07
+        ]
+      },
+      "p_tokens": 0.375,
+      "cost": {
+        "ratio": 0.959,
+        "ci": [
+          0.886,
+          1.037
+        ]
+      },
+      "p_cost": 0.438,
+      "turns": {
+        "ratio": 0.948,
+        "ci": [
+          0.847,
+          1.08
+        ]
+      },
+      "cost_per_solved": [
+        0.722,
+        0.484,
+        0.671,
+        [
+          0.315,
+          0.923
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0934,
+        [
+          0.0316,
+          0.1492
+        ]
+      ]
+    },
+    "replication C/A [all]": {
+      "tasks": 17,
+      "pass": {
+        "A": "47/51",
+        "C": "51/51"
+      },
+      "tokens": {
+        "ratio": 0.826,
+        "ci": [
+          0.677,
+          0.993
+        ]
+      },
+      "p_tokens": 0.0743,
+      "cost": {
+        "ratio": 0.85,
+        "ci": [
+          0.693,
+          1.008
+        ]
+      },
+      "p_cost": 0.125,
+      "turns": {
+        "ratio": 0.944,
+        "ci": [
+          0.879,
+          1.012
+        ]
+      },
+      "cost_per_solved": [
+        0.389,
+        0.294,
+        0.757,
+        [
+          0.597,
+          0.893
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0641,
+        [
+          0.0252,
+          0.1078
+        ]
+      ]
+    },
+    "replication C/A [no_anthropic]": {
+      "tasks": 12,
+      "pass": {
+        "A": "36/36",
+        "C": "36/36"
+      },
+      "tokens": {
+        "ratio": 0.891,
+        "ci": [
+          0.767,
+          1.045
+        ]
+      },
+      "p_tokens": 0.185,
+      "cost": {
+        "ratio": 0.938,
+        "ci": [
+          0.854,
+          1.04
+        ]
+      },
+      "p_cost": 0.257,
+      "turns": {
+        "ratio": 0.915,
+        "ci": [
+          0.838,
+          1.001
+        ]
+      },
+      "cost_per_solved": [
+        0.324,
+        0.285,
+        0.877,
+        [
+          0.806,
+          0.954
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0398,
+        [
+          0.0137,
+          0.0667
+        ]
+      ]
+    },
+    "replication C/A [no_anthropic_no_pilot]": {
+      "tasks": 11,
+      "pass": {
+        "A": "33/33",
+        "C": "33/33"
+      },
+      "tokens": {
+        "ratio": 0.892,
+        "ci": [
+          0.758,
+          1.063
+        ]
+      },
+      "p_tokens": 0.227,
+      "cost": {
+        "ratio": 0.943,
+        "ci": [
+          0.851,
+          1.057
+        ]
+      },
+      "p_cost": 0.343,
+      "turns": {
+        "ratio": 0.921,
+        "ci": [
+          0.836,
+          1.014
+        ]
+      },
+      "cost_per_solved": [
+        0.329,
+        0.288,
+        0.876,
+        [
+          0.798,
+          0.961
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0407,
+        [
+          0.0117,
+          0.0701
+        ]
+      ]
+    },
+    "replication C/A [no_pilot]": {
+      "tasks": 15,
+      "pass": {
+        "A": "44/45",
+        "C": "45/45"
+      },
+      "tokens": {
+        "ratio": 0.874,
+        "ci": [
+          0.725,
+          1.035
+        ]
+      },
+      "p_tokens": 0.177,
+      "cost": {
+        "ratio": 0.915,
+        "ci": [
+          0.778,
+          1.044
+        ]
+      },
+      "p_cost": 0.307,
+      "turns": {
+        "ratio": 0.941,
+        "ci": [
+          0.87,
+          1.013
+        ]
+      },
+      "cost_per_solved": [
+        0.363,
+        0.298,
+        0.822,
+        [
+          0.733,
+          0.913
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0567,
+        [
+          0.0184,
+          0.1035
+        ]
+      ]
+    },
+    "replication C/A [anthropic_only]": {
+      "tasks": 5,
+      "pass": {
+        "A": "11/15",
+        "C": "15/15"
+      },
+      "tokens": {
+        "ratio": 0.689,
+        "ci": [
+          0.428,
+          1.109
+        ]
+      },
+      "p_tokens": 0.438,
+      "cost": {
+        "ratio": 0.671,
+        "ci": [
+          0.387,
+          1.127
+        ]
+      },
+      "p_cost": 0.438,
+      "turns": {
+        "ratio": 1.02,
+        "ci": [
+          0.947,
+          1.083
+        ]
+      },
+      "cost_per_solved": [
+        0.599,
+        0.317,
+        0.529,
+        [
+          0.232,
+          0.828
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.1225,
+        [
+          0.0138,
+          0.2311
+        ]
+      ]
+    },
+    "replication H/A [all]": {
+      "tasks": 17,
+      "pass": {
+        "A": "47/51",
+        "H": "51/51"
+      },
+      "tokens": {
+        "ratio": 0.947,
+        "ci": [
+          0.793,
+          1.142
+        ]
+      },
+      "p_tokens": 0.581,
+      "cost": {
+        "ratio": 0.985,
+        "ci": [
+          0.839,
+          1.16
+        ]
+      },
+      "p_cost": 0.865,
+      "turns": {
+        "ratio": 0.962,
+        "ci": [
+          0.877,
+          1.074
+        ]
+      },
+      "cost_per_solved": [
+        0.389,
+        0.34,
+        0.876,
+        [
+          0.765,
+          1.012
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0179,
+        [
+          -0.0356,
+          0.0699
+        ]
+      ]
+    },
+    "replication H/A [no_anthropic]": {
+      "tasks": 12,
+      "pass": {
+        "A": "36/36",
+        "H": "36/36"
+      },
+      "tokens": {
+        "ratio": 0.88,
+        "ci": [
+          0.788,
+          0.989
+        ]
+      },
+      "p_tokens": 0.062,
+      "cost": {
+        "ratio": 0.946,
+        "ci": [
+          0.855,
+          1.054
+        ]
+      },
+      "p_cost": 0.338,
+      "turns": {
+        "ratio": 0.925,
+        "ci": [
+          0.84,
+          1.012
+        ]
+      },
+      "cost_per_solved": [
+        0.324,
+        0.294,
+        0.908,
+        [
+          0.848,
+          0.99
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0299,
+        [
+          0.0029,
+          0.056
+        ]
+      ]
+    },
+    "replication H/A [no_anthropic_no_pilot]": {
+      "tasks": 11,
+      "pass": {
+        "A": "33/33",
+        "H": "33/33"
+      },
+      "tokens": {
+        "ratio": 0.883,
+        "ci": [
+          0.784,
+          1.002
+        ]
+      },
+      "p_tokens": 0.0898,
+      "cost": {
+        "ratio": 0.947,
+        "ci": [
+          0.848,
+          1.063
+        ]
+      },
+      "p_cost": 0.385,
+      "turns": {
+        "ratio": 0.91,
+        "ci": [
+          0.826,
+          1.001
+        ]
+      },
+      "cost_per_solved": [
+        0.329,
+        0.298,
+        0.905,
+        [
+          0.843,
+          0.995
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0311,
+        [
+          0.0016,
+          0.0585
+        ]
+      ]
+    },
+    "replication H/A [no_pilot]": {
+      "tasks": 15,
+      "pass": {
+        "A": "44/45",
+        "H": "45/45"
+      },
+      "tokens": {
+        "ratio": 0.899,
+        "ci": [
+          0.755,
+          1.057
+        ]
+      },
+      "p_tokens": 0.266,
+      "cost": {
+        "ratio": 0.97,
+        "ci": [
+          0.807,
+          1.16
+        ]
+      },
+      "p_cost": 0.75,
+      "turns": {
+        "ratio": 0.915,
+        "ci": [
+          0.849,
+          0.983
+        ]
+      },
+      "cost_per_solved": [
+        0.363,
+        0.323,
+        0.891,
+        [
+          0.774,
+          1.038
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0317,
+        [
+          -0.0204,
+          0.086
+        ]
+      ]
+    },
+    "replication H/A [anthropic_only]": {
+      "tasks": 5,
+      "pass": {
+        "A": "11/15",
+        "H": "15/15"
+      },
+      "tokens": {
+        "ratio": 1.129,
+        "ci": [
+          0.654,
+          1.822
+        ]
+      },
+      "p_tokens": 0.688,
+      "cost": {
+        "ratio": 1.087,
+        "ci": [
+          0.648,
+          1.672
+        ]
+      },
+      "p_cost": 0.75,
+      "turns": {
+        "ratio": 1.057,
+        "ci": [
+          0.88,
+          1.377
+        ]
+      },
+      "cost_per_solved": [
+        0.599,
+        0.45,
+        0.752,
+        [
+          0.424,
+          1.124
+        ]
+      ],
+      "saving_per_session_usd": [
+        -0.0109,
+        [
+          -0.1679,
+          0.1632
+        ]
+      ]
+    },
+    "replication C/H [all]": {
+      "tasks": 17,
+      "pass": {
+        "H": "51/51",
+        "C": "51/51"
+      },
+      "tokens": {
+        "ratio": 0.873,
+        "ci": [
+          0.66,
+          1.064
+        ]
+      },
+      "p_tokens": 0.35,
+      "cost": {
+        "ratio": 0.863,
+        "ci": [
+          0.683,
+          1.028
+        ]
+      },
+      "p_cost": 0.181,
+      "turns": {
+        "ratio": 0.982,
+        "ci": [
+          0.897,
+          1.069
+        ]
+      },
+      "cost_per_solved": [
+        0.34,
+        0.294,
+        0.864,
+        [
+          0.73,
+          0.99
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0462,
+        [
+          0.0031,
+          0.1043
+        ]
+      ]
+    },
+    "replication C/H [no_anthropic]": {
+      "tasks": 12,
+      "pass": {
+        "H": "36/36",
+        "C": "36/36"
+      },
+      "tokens": {
+        "ratio": 1.013,
+        "ci": [
+          0.891,
+          1.168
+        ]
+      },
+      "p_tokens": 0.849,
+      "cost": {
+        "ratio": 0.991,
+        "ci": [
+          0.878,
+          1.126
+        ]
+      },
+      "p_cost": 0.897,
+      "turns": {
+        "ratio": 0.989,
+        "ci": [
+          0.912,
+          1.088
+        ]
+      },
+      "cost_per_solved": [
+        0.294,
+        0.285,
+        0.966,
+        [
+          0.883,
+          1.055
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0099,
+        [
+          -0.0164,
+          0.0326
+        ]
+      ]
+    },
+    "replication C/H [no_anthropic_no_pilot]": {
+      "tasks": 11,
+      "pass": {
+        "H": "33/33",
+        "C": "33/33"
+      },
+      "tokens": {
+        "ratio": 1.011,
+        "ci": [
+          0.88,
+          1.176
+        ]
+      },
+      "p_tokens": 0.874,
+      "cost": {
+        "ratio": 0.996,
+        "ci": [
+          0.874,
+          1.139
+        ]
+      },
+      "p_cost": 0.96,
+      "turns": {
+        "ratio": 1.013,
+        "ci": [
+          0.94,
+          1.107
+        ]
+      },
+      "cost_per_solved": [
+        0.298,
+        0.288,
+        0.968,
+        [
+          0.878,
+          1.061
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0096,
+        [
+          -0.0179,
+          0.0343
+        ]
+      ]
+    },
+    "replication C/H [no_pilot]": {
+      "tasks": 15,
+      "pass": {
+        "H": "45/45",
+        "C": "45/45"
+      },
+      "tokens": {
+        "ratio": 0.972,
+        "ci": [
+          0.865,
+          1.101
+        ]
+      },
+      "p_tokens": 0.667,
+      "cost": {
+        "ratio": 0.943,
+        "ci": [
+          0.833,
+          1.066
+        ]
+      },
+      "p_cost": 0.397,
+      "turns": {
+        "ratio": 1.029,
+        "ci": [
+          0.968,
+          1.106
+        ]
+      },
+      "cost_per_solved": [
+        0.323,
+        0.298,
+        0.923,
+        [
+          0.826,
+          1.015
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.025,
+        [
+          -0.0046,
+          0.0596
+        ]
+      ]
+    },
+    "replication C/H [anthropic_only]": {
+      "tasks": 5,
+      "pass": {
+        "H": "15/15",
+        "C": "15/15"
+      },
+      "tokens": {
+        "ratio": 0.61,
+        "ci": [
+          0.289,
+          0.966
+        ]
+      },
+      "p_tokens": 0.0625,
+      "cost": {
+        "ratio": 0.618,
+        "ci": [
+          0.343,
+          0.939
+        ]
+      },
+      "p_cost": 0.0625,
+      "turns": {
+        "ratio": 0.965,
+        "ci": [
+          0.765,
+          1.143
+        ]
+      },
+      "cost_per_solved": [
+        0.45,
+        0.317,
+        0.704,
+        [
+          0.515,
+          0.956
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.1334,
+        [
+          0.0141,
+          0.2847
+        ]
+      ]
+    },
+    "new_tasks C/A [all]": {
+      "tasks": 8,
+      "pass": {
+        "A": "24/24",
+        "C": "23/24"
+      },
+      "tokens": {
+        "ratio": 0.794,
+        "ci": [
+          0.685,
+          0.915
+        ]
+      },
+      "p_tokens": 0.0312,
+      "cost": {
+        "ratio": 0.835,
+        "ci": [
+          0.767,
+          0.907
+        ]
+      },
+      "p_cost": 0.00781,
+      "turns": {
+        "ratio": 0.767,
+        "ci": [
+          0.704,
+          0.845
+        ]
+      },
+      "cost_per_solved": [
+        0.194,
+        0.159,
+        0.821,
+        [
+          0.75,
+          0.908
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0413,
+        [
+          0.0251,
+          0.0579
+        ]
+      ]
+    },
+    "new_tasks C/A [no_anthropic]": {
+      "tasks": 8,
+      "pass": {
+        "A": "24/24",
+        "C": "23/24"
+      },
+      "tokens": {
+        "ratio": 0.794,
+        "ci": [
+          0.685,
+          0.915
+        ]
+      },
+      "p_tokens": 0.0312,
+      "cost": {
+        "ratio": 0.835,
+        "ci": [
+          0.767,
+          0.907
+        ]
+      },
+      "p_cost": 0.00781,
+      "turns": {
+        "ratio": 0.767,
+        "ci": [
+          0.704,
+          0.845
+        ]
+      },
+      "cost_per_solved": [
+        0.194,
+        0.159,
+        0.821,
+        [
+          0.75,
+          0.908
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0413,
+        [
+          0.0251,
+          0.0579
+        ]
+      ]
+    },
+    "new_tasks C/A [no_anthropic_no_pilot]": {
+      "tasks": 8,
+      "pass": {
+        "A": "24/24",
+        "C": "23/24"
+      },
+      "tokens": {
+        "ratio": 0.794,
+        "ci": [
+          0.685,
+          0.915
+        ]
+      },
+      "p_tokens": 0.0312,
+      "cost": {
+        "ratio": 0.835,
+        "ci": [
+          0.767,
+          0.907
+        ]
+      },
+      "p_cost": 0.00781,
+      "turns": {
+        "ratio": 0.767,
+        "ci": [
+          0.704,
+          0.845
+        ]
+      },
+      "cost_per_solved": [
+        0.194,
+        0.159,
+        0.821,
+        [
+          0.75,
+          0.908
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0413,
+        [
+          0.0251,
+          0.0579
+        ]
+      ]
+    },
+    "new_tasks C/A [no_pilot]": {
+      "tasks": 8,
+      "pass": {
+        "A": "24/24",
+        "C": "23/24"
+      },
+      "tokens": {
+        "ratio": 0.794,
+        "ci": [
+          0.685,
+          0.915
+        ]
+      },
+      "p_tokens": 0.0312,
+      "cost": {
+        "ratio": 0.835,
+        "ci": [
+          0.767,
+          0.907
+        ]
+      },
+      "p_cost": 0.00781,
+      "turns": {
+        "ratio": 0.767,
+        "ci": [
+          0.704,
+          0.845
+        ]
+      },
+      "cost_per_solved": [
+        0.194,
+        0.159,
+        0.821,
+        [
+          0.75,
+          0.908
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0413,
+        [
+          0.0251,
+          0.0579
+        ]
+      ]
+    },
+    "new_tasks H/A [all]": {
+      "tasks": 8,
+      "pass": {
+        "A": "24/24",
+        "H": "24/24"
+      },
+      "tokens": {
+        "ratio": 0.86,
+        "ci": [
+          0.738,
+          1.009
+        ]
+      },
+      "p_tokens": 0.117,
+      "cost": {
+        "ratio": 0.941,
+        "ci": [
+          0.803,
+          1.108
+        ]
+      },
+      "p_cost": 0.484,
+      "turns": {
+        "ratio": 0.854,
+        "ci": [
+          0.785,
+          0.925
+        ]
+      },
+      "cost_per_solved": [
+        0.194,
+        0.176,
+        0.909,
+        [
+          0.81,
+          1.007
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0176,
+        [
+          -0.0014,
+          0.0369
+        ]
+      ]
+    },
+    "new_tasks H/A [no_anthropic]": {
+      "tasks": 8,
+      "pass": {
+        "A": "24/24",
+        "H": "24/24"
+      },
+      "tokens": {
+        "ratio": 0.86,
+        "ci": [
+          0.738,
+          1.009
+        ]
+      },
+      "p_tokens": 0.117,
+      "cost": {
+        "ratio": 0.941,
+        "ci": [
+          0.803,
+          1.108
+        ]
+      },
+      "p_cost": 0.484,
+      "turns": {
+        "ratio": 0.854,
+        "ci": [
+          0.785,
+          0.925
+        ]
+      },
+      "cost_per_solved": [
+        0.194,
+        0.176,
+        0.909,
+        [
+          0.81,
+          1.007
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0176,
+        [
+          -0.0014,
+          0.0369
+        ]
+      ]
+    },
+    "new_tasks H/A [no_anthropic_no_pilot]": {
+      "tasks": 8,
+      "pass": {
+        "A": "24/24",
+        "H": "24/24"
+      },
+      "tokens": {
+        "ratio": 0.86,
+        "ci": [
+          0.738,
+          1.009
+        ]
+      },
+      "p_tokens": 0.117,
+      "cost": {
+        "ratio": 0.941,
+        "ci": [
+          0.803,
+          1.108
+        ]
+      },
+      "p_cost": 0.484,
+      "turns": {
+        "ratio": 0.854,
+        "ci": [
+          0.785,
+          0.925
+        ]
+      },
+      "cost_per_solved": [
+        0.194,
+        0.176,
+        0.909,
+        [
+          0.81,
+          1.007
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0176,
+        [
+          -0.0014,
+          0.0369
+        ]
+      ]
+    },
+    "new_tasks H/A [no_pilot]": {
+      "tasks": 8,
+      "pass": {
+        "A": "24/24",
+        "H": "24/24"
+      },
+      "tokens": {
+        "ratio": 0.86,
+        "ci": [
+          0.738,
+          1.009
+        ]
+      },
+      "p_tokens": 0.117,
+      "cost": {
+        "ratio": 0.941,
+        "ci": [
+          0.803,
+          1.108
+        ]
+      },
+      "p_cost": 0.484,
+      "turns": {
+        "ratio": 0.854,
+        "ci": [
+          0.785,
+          0.925
+        ]
+      },
+      "cost_per_solved": [
+        0.194,
+        0.176,
+        0.909,
+        [
+          0.81,
+          1.007
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0176,
+        [
+          -0.0014,
+          0.0369
+        ]
+      ]
+    },
+    "new_tasks C/H [all]": {
+      "tasks": 8,
+      "pass": {
+        "H": "24/24",
+        "C": "23/24"
+      },
+      "tokens": {
+        "ratio": 0.923,
+        "ci": [
+          0.784,
+          1.067
+        ]
+      },
+      "p_tokens": 0.398,
+      "cost": {
+        "ratio": 0.887,
+        "ci": [
+          0.778,
+          0.996
+        ]
+      },
+      "p_cost": 0.148,
+      "turns": {
+        "ratio": 0.897,
+        "ci": [
+          0.834,
+          0.969
+        ]
+      },
+      "cost_per_solved": [
+        0.176,
+        0.159,
+        0.903,
+        [
+          0.802,
+          1.004
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0237,
+        [
+          0.0014,
+          0.0482
+        ]
+      ]
+    },
+    "new_tasks C/H [no_anthropic]": {
+      "tasks": 8,
+      "pass": {
+        "H": "24/24",
+        "C": "23/24"
+      },
+      "tokens": {
+        "ratio": 0.923,
+        "ci": [
+          0.784,
+          1.067
+        ]
+      },
+      "p_tokens": 0.398,
+      "cost": {
+        "ratio": 0.887,
+        "ci": [
+          0.778,
+          0.996
+        ]
+      },
+      "p_cost": 0.148,
+      "turns": {
+        "ratio": 0.897,
+        "ci": [
+          0.834,
+          0.969
+        ]
+      },
+      "cost_per_solved": [
+        0.176,
+        0.159,
+        0.903,
+        [
+          0.802,
+          1.004
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0237,
+        [
+          0.0014,
+          0.0482
+        ]
+      ]
+    },
+    "new_tasks C/H [no_anthropic_no_pilot]": {
+      "tasks": 8,
+      "pass": {
+        "H": "24/24",
+        "C": "23/24"
+      },
+      "tokens": {
+        "ratio": 0.923,
+        "ci": [
+          0.784,
+          1.067
+        ]
+      },
+      "p_tokens": 0.398,
+      "cost": {
+        "ratio": 0.887,
+        "ci": [
+          0.778,
+          0.996
+        ]
+      },
+      "p_cost": 0.148,
+      "turns": {
+        "ratio": 0.897,
+        "ci": [
+          0.834,
+          0.969
+        ]
+      },
+      "cost_per_solved": [
+        0.176,
+        0.159,
+        0.903,
+        [
+          0.802,
+          1.004
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0237,
+        [
+          0.0014,
+          0.0482
+        ]
+      ]
+    },
+    "new_tasks C/H [no_pilot]": {
+      "tasks": 8,
+      "pass": {
+        "H": "24/24",
+        "C": "23/24"
+      },
+      "tokens": {
+        "ratio": 0.923,
+        "ci": [
+          0.784,
+          1.067
+        ]
+      },
+      "p_tokens": 0.398,
+      "cost": {
+        "ratio": 0.887,
+        "ci": [
+          0.778,
+          0.996
+        ]
+      },
+      "p_cost": 0.148,
+      "turns": {
+        "ratio": 0.897,
+        "ci": [
+          0.834,
+          0.969
+        ]
+      },
+      "cost_per_solved": [
+        0.176,
+        0.159,
+        0.903,
+        [
+          0.802,
+          1.004
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0237,
+        [
+          0.0014,
+          0.0482
+        ]
+      ]
+    },
+    "pooled_main_new C/A [all]": {
+      "tasks": 25,
+      "pass": {
+        "A": "72/75",
+        "C": "74/75"
+      },
+      "tokens": {
+        "ratio": 0.747,
+        "ci": [
+          0.647,
+          0.854
+        ]
+      },
+      "p_tokens": 0.000148,
+      "cost": {
+        "ratio": 0.814,
+        "ci": [
+          0.743,
+          0.882
+        ]
+      },
+      "p_cost": 2.68e-06,
+      "turns": {
+        "ratio": 0.807,
+        "ci": [
+          0.742,
+          0.872
+        ]
+      },
+      "cost_per_solved": [
+        0.362,
+        0.282,
+        0.779,
+        [
+          0.684,
+          0.864
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0692,
+        [
+          0.0458,
+          0.0934
+        ]
+      ]
+    },
+    "pooled_main_new C/A [no_anthropic]": {
+      "tasks": 20,
+      "pass": {
+        "A": "60/60",
+        "C": "59/60"
+      },
+      "tokens": {
+        "ratio": 0.733,
+        "ci": [
+          0.621,
+          0.848
+        ]
+      },
+      "p_tokens": 0.000315,
+      "cost": {
+        "ratio": 0.782,
+        "ci": [
+          0.701,
+          0.854
+        ]
+      },
+      "p_cost": 1.91e-06,
+      "turns": {
+        "ratio": 0.775,
+        "ci": [
+          0.705,
+          0.84
+        ]
+      },
+      "cost_per_solved": [
+        0.289,
+        0.23,
+        0.795,
+        [
+          0.729,
+          0.866
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0631,
+        [
+          0.0396,
+          0.0902
+        ]
+      ]
+    },
+    "pooled_main_new C/A [no_anthropic_no_pilot]": {
+      "tasks": 19,
+      "pass": {
+        "A": "57/57",
+        "C": "56/57"
+      },
+      "tokens": {
+        "ratio": 0.724,
+        "ci": [
+          0.609,
+          0.843
+        ]
+      },
+      "p_tokens": 0.000397,
+      "cost": {
+        "ratio": 0.777,
+        "ci": [
+          0.692,
+          0.852
+        ]
+      },
+      "p_cost": 3.81e-06,
+      "turns": {
+        "ratio": 0.769,
+        "ci": [
+          0.697,
+          0.836
+        ]
+      },
+      "cost_per_solved": [
+        0.291,
+        0.23,
+        0.79,
+        [
+          0.721,
+          0.863
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0651,
+        [
+          0.0407,
+          0.0933
+        ]
+      ]
+    },
+    "pooled_main_new C/A [no_pilot]": {
+      "tasks": 23,
+      "pass": {
+        "A": "69/69",
+        "C": "68/69"
+      },
+      "tokens": {
+        "ratio": 0.725,
+        "ci": [
+          0.621,
+          0.831
+        ]
+      },
+      "p_tokens": 7.3e-05,
+      "cost": {
+        "ratio": 0.801,
+        "ci": [
+          0.724,
+          0.87
+        ]
+      },
+      "p_cost": 1.67e-06,
+      "turns": {
+        "ratio": 0.79,
+        "ci": [
+          0.725,
+          0.852
+        ]
+      },
+      "cost_per_solved": [
+        0.343,
+        0.278,
+        0.811,
+        [
+          0.746,
+          0.881
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.069,
+        [
+          0.0444,
+          0.0955
+        ]
+      ]
+    },
+    "pooled_main_new C/A [anthropic_only]": {
+      "tasks": 5,
+      "pass": {
+        "A": "12/15",
+        "C": "15/15"
+      },
+      "tokens": {
+        "ratio": 0.804,
+        "ci": [
+          0.558,
+          1.07
+        ]
+      },
+      "p_tokens": 0.375,
+      "cost": {
+        "ratio": 0.959,
+        "ci": [
+          0.886,
+          1.037
+        ]
+      },
+      "p_cost": 0.438,
+      "turns": {
+        "ratio": 0.948,
+        "ci": [
+          0.847,
+          1.08
+        ]
+      },
+      "cost_per_solved": [
+        0.722,
+        0.484,
+        0.671,
+        [
+          0.315,
+          0.923
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0934,
+        [
+          0.0316,
+          0.1492
+        ]
+      ]
+    },
+    "pooled_repl_new C/A [all]": {
+      "tasks": 25,
+      "pass": {
+        "A": "71/75",
+        "C": "74/75"
+      },
+      "tokens": {
+        "ratio": 0.816,
+        "ci": [
+          0.704,
+          0.935
+        ]
+      },
+      "p_tokens": 0.00718,
+      "cost": {
+        "ratio": 0.845,
+        "ci": [
+          0.729,
+          0.953
+        ]
+      },
+      "p_cost": 0.00869,
+      "turns": {
+        "ratio": 0.884,
+        "ci": [
+          0.825,
+          0.945
+        ]
+      },
+      "cost_per_solved": [
+        0.323,
+        0.252,
+        0.781,
+        [
+          0.66,
+          0.887
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0568,
+        [
+          0.0291,
+          0.0885
+        ]
+      ]
+    },
+    "pooled_repl_new C/A [no_anthropic]": {
+      "tasks": 20,
+      "pass": {
+        "A": "60/60",
+        "C": "59/60"
+      },
+      "tokens": {
+        "ratio": 0.851,
+        "ci": [
+          0.759,
+          0.954
+        ]
+      },
+      "p_tokens": 0.0151,
+      "cost": {
+        "ratio": 0.895,
+        "ci": [
+          0.834,
+          0.965
+        ]
+      },
+      "p_cost": 0.0105,
+      "turns": {
+        "ratio": 0.852,
+        "ci": [
+          0.792,
+          0.92
+        ]
+      },
+      "cost_per_solved": [
+        0.272,
+        0.236,
+        0.866,
+        [
+          0.806,
+          0.927
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0404,
+        [
+          0.0233,
+          0.0578
+        ]
+      ]
+    },
+    "pooled_repl_new C/A [no_anthropic_no_pilot]": {
+      "tasks": 19,
+      "pass": {
+        "A": "57/57",
+        "C": "56/57"
+      },
+      "tokens": {
+        "ratio": 0.849,
+        "ci": [
+          0.756,
+          0.96
+        ]
+      },
+      "p_tokens": 0.0196,
+      "cost": {
+        "ratio": 0.896,
+        "ci": [
+          0.833,
+          0.971
+        ]
+      },
+      "p_cost": 0.0154,
+      "turns": {
+        "ratio": 0.853,
+        "ci": [
+          0.788,
+          0.925
+        ]
+      },
+      "cost_per_solved": [
+        0.272,
+        0.235,
+        0.865,
+        [
+          0.801,
+          0.93
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.041,
+        [
+          0.0229,
+          0.0589
+        ]
+      ]
+    },
+    "pooled_repl_new C/A [no_pilot]": {
+      "tasks": 23,
+      "pass": {
+        "A": "68/69",
+        "C": "68/69"
+      },
+      "tokens": {
+        "ratio": 0.845,
+        "ci": [
+          0.739,
+          0.956
+        ]
+      },
+      "p_tokens": 0.0181,
+      "cost": {
+        "ratio": 0.886,
+        "ci": [
+          0.792,
+          0.975
+        ]
+      },
+      "p_cost": 0.0237,
+      "turns": {
+        "ratio": 0.877,
+        "ci": [
+          0.817,
+          0.941
+        ]
+      },
+      "cost_per_solved": [
+        0.303,
+        0.251,
+        0.828,
+        [
+          0.752,
+          0.901
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0513,
+        [
+          0.0257,
+          0.0835
+        ]
+      ]
+    },
+    "pooled_repl_new C/A [anthropic_only]": {
+      "tasks": 5,
+      "pass": {
+        "A": "11/15",
+        "C": "15/15"
+      },
+      "tokens": {
+        "ratio": 0.689,
+        "ci": [
+          0.428,
+          1.109
+        ]
+      },
+      "p_tokens": 0.438,
+      "cost": {
+        "ratio": 0.671,
+        "ci": [
+          0.387,
+          1.127
+        ]
+      },
+      "p_cost": 0.438,
+      "turns": {
+        "ratio": 1.02,
+        "ci": [
+          0.947,
+          1.083
+        ]
+      },
+      "cost_per_solved": [
+        0.599,
+        0.317,
+        0.529,
+        [
+          0.232,
+          0.828
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.1225,
+        [
+          0.0138,
+          0.2311
+        ]
+      ]
+    },
+    "pooled_repl_new H/A [all]": {
+      "tasks": 25,
+      "pass": {
+        "A": "71/75",
+        "H": "75/75"
+      },
+      "tokens": {
+        "ratio": 0.918,
+        "ci": [
+          0.807,
+          1.055
+        ]
+      },
+      "p_tokens": 0.24,
+      "cost": {
+        "ratio": 0.971,
+        "ci": [
+          0.863,
+          1.099
+        ]
+      },
+      "p_cost": 0.656,
+      "turns": {
+        "ratio": 0.926,
+        "ci": [
+          0.863,
+          1.004
+        ]
+      },
+      "cost_per_solved": [
+        0.323,
+        0.288,
+        0.892,
+        [
+          0.801,
+          0.996
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0178,
+        [
+          -0.019,
+          0.0537
+        ]
+      ]
+    },
+    "pooled_repl_new H/A [no_anthropic]": {
+      "tasks": 20,
+      "pass": {
+        "A": "60/60",
+        "H": "60/60"
+      },
+      "tokens": {
+        "ratio": 0.872,
+        "ci": [
+          0.796,
+          0.957
+        ]
+      },
+      "p_tokens": 0.012,
+      "cost": {
+        "ratio": 0.944,
+        "ci": [
+          0.864,
+          1.037
+        ]
+      },
+      "p_cost": 0.24,
+      "turns": {
+        "ratio": 0.896,
+        "ci": [
+          0.838,
+          0.957
+        ]
+      },
+      "cost_per_solved": [
+        0.272,
+        0.247,
+        0.908,
+        [
+          0.857,
+          0.972
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.025,
+        [
+          0.0071,
+          0.0429
+        ]
+      ]
+    },
+    "pooled_repl_new H/A [no_anthropic_no_pilot]": {
+      "tasks": 19,
+      "pass": {
+        "A": "57/57",
+        "H": "57/57"
+      },
+      "tokens": {
+        "ratio": 0.873,
+        "ci": [
+          0.793,
+          0.964
+        ]
+      },
+      "p_tokens": 0.0177,
+      "cost": {
+        "ratio": 0.944,
+        "ci": [
+          0.86,
+          1.04
+        ]
+      },
+      "p_cost": 0.266,
+      "turns": {
+        "ratio": 0.886,
+        "ci": [
+          0.829,
+          0.947
+        ]
+      },
+      "cost_per_solved": [
+        0.272,
+        0.246,
+        0.906,
+        [
+          0.852,
+          0.975
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0255,
+        [
+          0.0061,
+          0.0439
+        ]
+      ]
+    },
+    "pooled_repl_new H/A [no_pilot]": {
+      "tasks": 23,
+      "pass": {
+        "A": "68/69",
+        "H": "69/69"
+      },
+      "tokens": {
+        "ratio": 0.885,
+        "ci": [
+          0.777,
+          1.001
+        ]
+      },
+      "p_tokens": 0.0708,
+      "cost": {
+        "ratio": 0.96,
+        "ci": [
+          0.838,
+          1.096
+        ]
+      },
+      "p_cost": 0.562,
+      "turns": {
+        "ratio": 0.893,
+        "ci": [
+          0.843,
+          0.946
+        ]
+      },
+      "cost_per_solved": [
+        0.303,
+        0.272,
+        0.897,
+        [
+          0.798,
+          1.014
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0268,
+        [
+          -0.0084,
+          0.0651
+        ]
+      ]
+    },
+    "pooled_repl_new H/A [anthropic_only]": {
+      "tasks": 5,
+      "pass": {
+        "A": "11/15",
+        "H": "15/15"
+      },
+      "tokens": {
+        "ratio": 1.129,
+        "ci": [
+          0.654,
+          1.822
+        ]
+      },
+      "p_tokens": 0.688,
+      "cost": {
+        "ratio": 1.087,
+        "ci": [
+          0.648,
+          1.672
+        ]
+      },
+      "p_cost": 0.75,
+      "turns": {
+        "ratio": 1.057,
+        "ci": [
+          0.88,
+          1.377
+        ]
+      },
+      "cost_per_solved": [
+        0.599,
+        0.45,
+        0.752,
+        [
+          0.424,
+          1.124
+        ]
+      ],
+      "saving_per_session_usd": [
+        -0.0109,
+        [
+          -0.1679,
+          0.1632
+        ]
+      ]
+    },
+    "pooled_repl_new C/H [all]": {
+      "tasks": 25,
+      "pass": {
+        "H": "75/75",
+        "C": "74/75"
+      },
+      "tokens": {
+        "ratio": 0.889,
+        "ci": [
+          0.731,
+          1.027
+        ]
+      },
+      "p_tokens": 0.194,
+      "cost": {
+        "ratio": 0.87,
+        "ci": [
+          0.742,
+          0.986
+        ]
+      },
+      "p_cost": 0.0514,
+      "turns": {
+        "ratio": 0.954,
+        "ci": [
+          0.891,
+          1.018
+        ]
+      },
+      "cost_per_solved": [
+        0.288,
+        0.252,
+        0.876,
+        [
+          0.764,
+          0.98
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.039,
+        [
+          0.0088,
+          0.0791
+        ]
+      ]
+    },
+    "pooled_repl_new C/H [no_anthropic]": {
+      "tasks": 20,
+      "pass": {
+        "H": "60/60",
+        "C": "59/60"
+      },
+      "tokens": {
+        "ratio": 0.976,
+        "ci": [
+          0.88,
+          1.082
+        ]
+      },
+      "p_tokens": 0.667,
+      "cost": {
+        "ratio": 0.948,
+        "ci": [
+          0.865,
+          1.04
+        ]
+      },
+      "p_cost": 0.287,
+      "turns": {
+        "ratio": 0.951,
+        "ci": [
+          0.894,
+          1.018
+        ]
+      },
+      "cost_per_solved": [
+        0.247,
+        0.236,
+        0.953,
+        [
+          0.883,
+          1.025
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0154,
+        [
+          -0.0029,
+          0.0323
+        ]
+      ]
+    },
+    "pooled_repl_new C/H [no_anthropic_no_pilot]": {
+      "tasks": 19,
+      "pass": {
+        "H": "57/57",
+        "C": "56/57"
+      },
+      "tokens": {
+        "ratio": 0.973,
+        "ci": [
+          0.874,
+          1.087
+        ]
+      },
+      "p_tokens": 0.641,
+      "cost": {
+        "ratio": 0.949,
+        "ci": [
+          0.862,
+          1.044
+        ]
+      },
+      "p_cost": 0.316,
+      "turns": {
+        "ratio": 0.963,
+        "ci": [
+          0.907,
+          1.03
+        ]
+      },
+      "cost_per_solved": [
+        0.246,
+        0.235,
+        0.954,
+        [
+          0.88,
+          1.028
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0155,
+        [
+          -0.0037,
+          0.0335
+        ]
+      ]
+    },
+    "pooled_repl_new C/H [no_pilot]": {
+      "tasks": 23,
+      "pass": {
+        "H": "69/69",
+        "C": "68/69"
+      },
+      "tokens": {
+        "ratio": 0.955,
+        "ci": [
+          0.867,
+          1.051
+        ]
+      },
+      "p_tokens": 0.369,
+      "cost": {
+        "ratio": 0.923,
+        "ci": [
+          0.839,
+          1.011
+        ]
+      },
+      "p_cost": 0.115,
+      "turns": {
+        "ratio": 0.981,
+        "ci": [
+          0.928,
+          1.042
+        ]
+      },
+      "cost_per_solved": [
+        0.272,
+        0.251,
+        0.923,
+        [
+          0.842,
+          1.0
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.0246,
+        [
+          0.0034,
+          0.0492
+        ]
+      ]
+    },
+    "pooled_repl_new C/H [anthropic_only]": {
+      "tasks": 5,
+      "pass": {
+        "H": "15/15",
+        "C": "15/15"
+      },
+      "tokens": {
+        "ratio": 0.61,
+        "ci": [
+          0.289,
+          0.966
+        ]
+      },
+      "p_tokens": 0.0625,
+      "cost": {
+        "ratio": 0.618,
+        "ci": [
+          0.343,
+          0.939
+        ]
+      },
+      "p_cost": 0.0625,
+      "turns": {
+        "ratio": 0.965,
+        "ci": [
+          0.765,
+          1.143
+        ]
+      },
+      "cost_per_solved": [
+        0.45,
+        0.317,
+        0.704,
+        [
+          0.515,
+          0.956
+        ]
+      ],
+      "saving_per_session_usd": [
+        0.1334,
+        [
+          0.0141,
+          0.2847
+        ]
+      ]
+    }
+  }
+}

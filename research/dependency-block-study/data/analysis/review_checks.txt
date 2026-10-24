@@ -1,0 +1,38 @@
+== total_tokens
+main: ratio 0.726 boot [0.593,0.871] t [0.585,0.901] se 0.102 signflip p 0.0033 n 17
+repl: ratio 0.826 boot [0.677,0.993] t [0.668,1.022] se 0.100 signflip p 0.0743 n 17
+sonnet: ratio 0.932 boot [0.752,1.139] t [0.739,1.176] se 0.110 signflip p 0.5451 n 17
+haiku: ratio 0.922 boot [0.820,1.047] t [0.804,1.058] se 0.065 signflip p 0.2313 n 17
+new: ratio 0.794 boot [0.685,0.915] t [0.656,0.961] se 0.081 signflip p 0.0312 n 8
+interaction main/sonnet: ratio 0.779 boot [0.578,1.036] t [0.562,1.078] se 0.154 signflip p 0.1257 n 17
+interaction main/haiku: ratio 0.787 boot [0.623,0.989] t [0.607,1.021] se 0.123 signflip p 0.0698 n 17
+main/repl: ratio 0.878 boot [0.652,1.199] t [0.626,1.232] se 0.160 signflip p 0.4264 n 17
+combined opus (post hoc): ratio 0.781 boot [0.710,0.856] t [0.706,0.863] se 0.049 signflip p 0.0000 n 25
+pool main+new: ratio 0.747 boot [0.646,0.854] t [0.642,0.869] se 0.073 signflip p 0.0001 n 25
+pool repl+new: ratio 0.816 boot [0.705,0.932] t [0.703,0.947] se 0.072 signflip p 0.0072 n 25
+== list_cost_usd
+main: ratio 0.805 boot [0.705,0.897] t [0.703,0.922] se 0.064 signflip p 0.0003 n 17
+repl: ratio 0.850 boot [0.693,1.008] t [0.689,1.049] se 0.099 signflip p 0.1253 n 17
+sonnet: ratio 0.940 boot [0.757,1.124] t [0.751,1.176] se 0.106 signflip p 0.6454 n 17
+haiku: ratio 0.992 boot [0.860,1.189] t [0.823,1.196] se 0.088 signflip p 0.9487 n 17
+new: ratio 0.835 boot [0.767,0.907] t [0.748,0.932] se 0.046 signflip p 0.0078 n 8
+interaction main/sonnet: ratio 0.856 boot [0.689,1.099] t [0.658,1.114] se 0.124 signflip p 0.2365 n 17
+interaction main/haiku: ratio 0.811 boot [0.650,0.992] t [0.641,1.027] se 0.111 signflip p 0.0771 n 17
+main/repl: ratio 0.947 boot [0.759,1.234] t [0.722,1.242] se 0.128 signflip p 0.6837 n 17
+combined opus (post hoc): ratio 0.830 boot [0.767,0.893] t [0.766,0.899] se 0.039 signflip p 0.0000 n 25
+pool main+new: ratio 0.814 boot [0.741,0.882] t [0.741,0.894] se 0.045 signflip p 0.0000 n 25
+pool repl+new: ratio 0.845 boot [0.729,0.953] t [0.734,0.973] se 0.068 signflip p 0.0087 n 25
+sonnet MDE tokens ratio 0.736 se 0.11
+haiku MDE tokens ratio 0.834 se 0.065
+new covered {'pl02': 0.625, 'st01': 0.55}
+H share total_tokens all 0.42
+H share total_tokens excl 0.72
+main {'A': (24.92, 72, 0.346), 'B': (24.58, 72, 0.341), 'C': (20.59, 72, 0.286), 'D': (20.31, 72, 0.282), 'E': (22.57, 72, 0.313)}
+repl {'A': (18.26, 51, 0.358), 'C': (14.99, 51, 0.294), 'H': (17.35, 51, 0.34)}
+new {'A': (6.27, 33, 0.19), 'C': (4.97, 33, 0.151), 'H': (5.83, 33, 0.177)}
+sonnet cost/solved {'A': 0.151, 'C': 0.103, 'H': 0.128}
+exact lower bound n 21 0.867
+exact lower bound n 9 0.717
+exact lower bound n 30 0.905
+audit precision 0.8679245283018868 cluster boot 0.5333333333333333 1.0 repos 10
+main cost 98.75% CI 0.679 0.916

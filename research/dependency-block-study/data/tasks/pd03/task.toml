@@ -1,0 +1,46 @@
+schema = "since-cutoff-bench/task@1"
+id = "pd03-fill-gaps"
+library = "pandas"
+pinned = "3.0.6"
+# since-cutoff's rule (highest final, non-yanked release on or before the end of the 2026-06 knowledge month):
+# 3.0.4 (2026-06-28) is yanked, so 3.0.3 (2026-05-11). The removal happened in 3.0.0 (2026-01-21), before the
+# cutoff, so for Opus 5.5 this task is a control. It is a treatment for claude-haiku-4-5 (cutoff 2025-02).
+cutoff_version = "3.0.3"
+# the last pandas 2 environment (shared with pd01): fillna(method=) still works there, deprecated
+stale_version = "2.3.2"
+stratum = "pre-cutoff-control"
+kind = "pre-cutoff-loud"  # stale code raises TypeError: fillna() got an unexpected keyword argument 'method'
+timeout_s = 900
+target_files = ["app/gaps.py"]
+# review 2026-09-27: the repo no longer contains a module that uses the old API (broken at the pinned version);
+# existing library use in repo/ is working code only (REVIEW.md, PROTOCOL.md section 12).
+instruction = """
+Implement `fill_gaps(readings)` in app/gaps.py. `readings` has one row per station report, in
+time order, with the columns `station`, `ts`, `temp_c` and `battery`; reports from different
+stations are interleaved, and some `temp_c` values are missing.
+
+Return a new frame with the same rows in the same order, where each missing `temp_c` is replaced
+by the most recent earlier temperature from the same station or, if that station has no earlier
+temperature, by its first later one. Never use another station's values: a station with no
+temperatures at all keeps its missing values. Leave the other columns unchanged and do not modify
+the input frame.
+
+Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "pandas-2.3.2 wheel: pandas/core/generic.py:7166 `def fillna(self, value=None, *, method=None, axis=None, inplace=False, limit=None, downcast=...)`; :7315 FutureWarning \"{cls}.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.\"; `def pad` :7629 and `def backfill` :7833; groupby/generic.py:878 SeriesGroupBy.fillna and :2378 DataFrameGroupBy.fillna",
+  "pandas-3.0.0 / 3.0.3 / 3.0.6 wheels: pandas/core/generic.py `def fillna(self, value, *, axis=None, inplace=False, limit=None)` (:6934 / :6934 / :6922), no `method` or `downcast`, `value` required; no `def pad` / `def backfill`; groupby/generic.py has no `fillna`; `def ffill` / `def bfill` remain (3.0.6 generic.py :7161 / :7263, groupby/groupby.py :4462 / :4554)",
+  "run: the stale solution raises TypeError at 3.0.6 and passes with FutureWarnings at 2.3.2 (bench validate)",
+  "https://pandas.pydata.org/docs/whatsnew/v3.0.0.html (removal of prior version deprecations)",
+]
+# regexes (Python re, MULTILINE) that mark the old API in an edit or in the final diff (comments ignored)
+stale_patterns = [
+  'fillna\s*\([^)]*\bmethod\s*=',
+  '\.(?:pad|backfill)\s*\(',
+]
+# regexes that must ALL match the frozen notes for the change to count as covered by them
+note_keys = ['\bfillna\b', '\bmethod\b']
+# regexes that must ALL match the Context7 tool results for `doc_hit`
+doc_keys = ['\.ffill\(', '\.bfill\(']
+# literal strings that must not appear in repo/ or the instruction (added to bench.toml's global list)
+answer_tokens = [".ffill(", ".bfill("]

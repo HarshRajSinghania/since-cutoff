@@ -1,0 +1,48 @@
+schema = "since-cutoff-bench/task@1"
+id = "hf02-large-folder-upload"
+library = "huggingface-hub"
+pinned = "2.0.0"
+cutoff_version = "1.21.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # HfApi.upload_large_folder removed in 2.0 (no deprecation in 1.21.0) -> AttributeError
+timeout_s = 900
+target_files = ["app/publish.py"]
+# review 2026-09-27: the repo no longer contains a module that uses the old API (broken at the pinned version);
+# existing library use in repo/ is working code only (REVIEW.md, PROTOCOL.md section 12).
+instruction = """
+Implement `publish_run(run_dir, repo_id)` in app/publish.py.
+
+At the end of every training job we push the job's whole output folder `run_dir` (checkpoints,
+data shards, metrics) to its own dataset repo `repo_id` on the Hugging Face Hub, with the folder
+layout mirrored at the root of the repo:
+
+- create the dataset repo as private if it does not exist yet; if it already exists, upload into it;
+- skip temporary files (`*.tmp`) and everything under `wandb/`;
+- these folders are big (tens of thousands of files, hundreds of GB), so use huggingface_hub's
+  way of uploading very large folders: the upload must not fail because of the number of files,
+  and if a job dies halfway, calling `publish_run` again must pick up where it stopped instead of
+  uploading again what is already on the Hub.
+
+Use huggingface_hub like `publish_summary` does. Do not add dependencies. You can run the tests
+with `pytest`.
+"""
+evidence = [
+  "huggingface_hub-1.21.0 wheel: hf_api.py:6100 `def upload_large_folder(self, repo_id, folder_path, *, repo_type, revision=None, private=None, allow_patterns=None, ignore_patterns=None, num_workers=None, print_report=True, print_report_every=60)` with no deprecation decorator; implemented in _upload_large_folder.py:152 upload_large_folder_internal (creates the repo at :196, several commits, resumable through .cache/huggingface metadata); exported at hf_api.py:14597 and __init__.py:352; CLI cli/upload_large_folder.py",
+  "huggingface_hub-2.0.0 wheel: `upload_large_folder` does not occur anywhere in the package (HfApi, top-level exports, CLI) -> AttributeError: 'HfApi' object has no attribute 'upload_large_folder'",
+  "huggingface_hub-2.0.0 wheel: hf_api.py:5720 upload_folder, docstring 5759-5764: with hf_xet installed (the default; hf-xet 1.6.0 is in the pinned environment) large folders are 'automatically committed in several batches to stay below server limits' and 're-running the same call resumes it: already-committed files are skipped'; hf_api.py:5916-5917 dispatches to _upload_pipeline.pipelined_upload (adaptive commit size, _upload_pipeline.py:69 COMMIT_SIZE_SCALE 20..1000 files)",
+  "huggingface_hub-2.0.0 wheel: hf_api.py:5830 '`upload_folder` assumes that the repo already exists on the Hub', so the repo has to be created first (create_repo(..., exist_ok=True)); upload_large_folder used to do that itself",
+  "run (bench validate, offline fake Hub): the stale solution raises AttributeError: 'HfApi' object has no attribute 'upload_large_folder' at 2.0.0 and passes at 1.21.0 (upload_large_folder creates the repo, commits the 687 files in 6 commits of 50/75/100/125/200/137 and skips files whose remote oid matches); the reference (create_repo + upload_folder) passes at 2.0.0 in 3 commits of 250/250/187",
+]
+stale_patterns = ['\bupload_large_folder\b']
+note_keys = ['\bupload_large_folder\b']
+# Context7 counts as covering the change only if its results show upload_folder AND say that it now handles large
+# folders (2.0 wording) or that upload_large_folder is gone; 1.x docs that merely list both functions are not a hit
+doc_keys = [
+  '\bupload_folder\b',
+  '(?i)several batches|re-?running the same call resumes|upload_large_folder[^\n]{0,80}\b(?:removed|no longer)\b|\b(?:removed|no longer)\b[^\n]{0,80}upload_large_folder',
+]
+answer_tokens = ["upload_folder"]
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_review = "pass"   # reviewer's alternative correct answer (REVIEW.md): the hidden tests must accept it

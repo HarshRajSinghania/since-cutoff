@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "st90",
+  "task_id": "st90-shareable-filter",
+  "task_sha256": "4aa2b201b04b968222ad0f2a7295908101d77758a5389c8e835848c36731ee0f",
+  "parts_sha256": {
+    "task.toml": "ed34f9fd2c365fe1642c2b16b2fad7608e8aff104eeb3a4c70f6a5e11465ab98",
+    "repo": "297df0370dcdbf720cc392ad0b6f5be7c705fe4038e56f0276dccb27e715a27f",
+    "hidden": "f156e86ef1886d20c7ad7af50e158bcb921651c5bbefe7c52cf7924f06c0ebd1",
+    "reference": "7c76a52c3f37e81a3772ea1ca77e89b884f8d69265dd2a7690d1400e71b030e8",
+    "stale": "540f2c8529c9ed9484c9482a64bb718c137e339dd37ed75a006914511017af6f"
+  },
+  "validated_at": "2026-10-22T17:28:31+00:00",
+  "library": "streamlit",
+  "pinned": "1.66.1",
+  "stale_version": "1.53.1",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "1.66.1",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 3,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.61,
+        "timed_out": false,
+        "first_error": "AssertionError: ['']"
+      },
+      "summary": "3 failed in 0.87s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "1.66.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.77,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed in 0.97s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.66.1",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 3,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 2.15,
+        "timed_out": false,
+        "first_error": "AssertionError: [\"module 'streamlit' has no attribute 'experimental_get_query_params'. st.experimental_get_query_params has been removed. Use st.query_params instead.\"]"
+      },
+      "summary": "3 failed in 1.19s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.53.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.77,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed in 1.01s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "streamlit-1.66.1 c9e7bccd410d",
+    "stale": "streamlit-1.53.1 40c63d3f727f"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 7.8
+}

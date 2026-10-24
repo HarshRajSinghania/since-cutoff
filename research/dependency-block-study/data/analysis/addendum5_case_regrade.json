@@ -1,0 +1,55 @@
+{
+  "label": "exploratory, post hoc (not pre-registered): cs01 regraded with a corrected stdio test",
+  "defect": "the pre-registered cs01 stdio test writes all JSON-RPC messages and closes stdin at once; the server can exit on EOF before answering tools/call, so the reference solution fails ~1 in 4 runs (8 repeated runs: 6 pass, 2 fail). Found after the study; the task was not changed.",
+  "fixed_test": "since_cutoff_case/_posthoc/test_hidden_cs01_fixed.py (keeps stdin open until the reply is read; other two tests unchanged)",
+  "fixed_test_gates": "reference @2.3.0 pass 6/6, @1.28.1 fail 6/6; original @2.3.0 fail 6/6, @1.28.1 pass 6/6",
+  "method": "each run's final tests/integration/mcp/_math_server.py (agent project C:/b/runs/case-opus55-2026-10-22/<run>) copied into a clean repo copy, fixed hidden test run 3 times in the mcp-2.3.0 env",
+  "runs": {
+    "cs01_A_r1_85b5": {
+      "preregistered_grade": false,
+      "fixed_grade_3_of_3": true
+    },
+    "cs01_A_r2_955a": {
+      "preregistered_grade": true,
+      "fixed_grade_3_of_3": true
+    },
+    "cs01_A_r3_8641": {
+      "preregistered_grade": false,
+      "fixed_grade_3_of_3": true
+    },
+    "cs01_A_r4_f5bd": {
+      "preregistered_grade": false,
+      "fixed_grade_3_of_3": true
+    },
+    "cs01_A_r5_b732": {
+      "preregistered_grade": false,
+      "fixed_grade_3_of_3": true
+    },
+    "cs01_C_r1_9397": {
+      "preregistered_grade": false,
+      "fixed_grade_3_of_3": true
+    },
+    "cs01_C_r2_a8e1": {
+      "preregistered_grade": false,
+      "fixed_grade_3_of_3": true
+    },
+    "cs01_C_r3_cf76": {
+      "preregistered_grade": true,
+      "fixed_grade_3_of_3": true
+    },
+    "cs01_C_r4_f98b": {
+      "preregistered_grade": true,
+      "fixed_grade_3_of_3": true
+    },
+    "cs01_C_r5_ab21": {
+      "preregistered_grade": true,
+      "fixed_grade_3_of_3": true
+    }
+  },
+  "summary": {
+    "A_preregistered": "1/5",
+    "C_preregistered": "3/5",
+    "A_fixed": "5/5",
+    "C_fixed": "5/5"
+  }
+}

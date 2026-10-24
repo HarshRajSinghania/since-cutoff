@@ -1,0 +1,195 @@
+{
+ "generated_by": "scripts/round22_holm.py",
+ "note": "usage: python -I round22_holm.py <study dir>   ->   <study>/analysis/round22_holm_out.txt and <study>/analysis/round22_holm.json (in the published data folder: RUNS_TABLES=runs python scripts/round22_holm.py data)",
+ "studies": {
+  "main": {
+   "family": "C/A cost, turns, wall time, failing test runs (pre-committed disjunction)",
+   "cost": {
+    "ratio": 0.8048,
+    "signflip_p": 0.000274658203125,
+    "tasks": 17,
+    "sd_log_ratio": 0.2636,
+    "holm_p": 0.0010986328125
+   },
+   "turns": {
+    "ratio": 0.8263,
+    "signflip_p": 0.000885009765625,
+    "tasks": 17,
+    "sd_log_ratio": 0.2353,
+    "holm_p": 0.002655029296875
+   },
+   "wall": {
+    "ratio": 0.8724,
+    "signflip_p": 0.0070343017578125,
+    "tasks": 17,
+    "sd_log_ratio": 0.2023,
+    "holm_p": 0.014068603515625
+   },
+   "fail_runs": {
+    "mean_diff": 0.0,
+    "signflip_p": 1.0,
+    "tasks": 17,
+    "tasks_nonzero": 3,
+    "holm_p": 1.0
+   }
+  },
+  "replication": {
+   "family": "C/A, H/A, C/H on the pre-committed metric",
+   "tokens": {
+    "C/A": {
+     "ratio": 0.8263,
+     "raw_p": 0.0742950439453125,
+     "holm_p": 0.2228851318359375,
+     "tasks": 17
+    },
+    "H/A": {
+     "ratio": 0.9466,
+     "raw_p": 0.580535888671875,
+     "holm_p": 0.70074462890625,
+     "tasks": 17
+    },
+    "C/H": {
+     "ratio": 0.8729,
+     "raw_p": 0.350372314453125,
+     "holm_p": 0.70074462890625,
+     "tasks": 17
+    }
+   },
+   "cost": {
+    "C/A": {
+     "ratio": 0.8501,
+     "raw_p": 0.125335693359375,
+     "holm_p": 0.376007080078125,
+     "tasks": 17
+    },
+    "H/A": {
+     "ratio": 0.9854,
+     "raw_p": 0.8647918701171875,
+     "holm_p": 0.8647918701171875,
+     "tasks": 17
+    },
+    "C/H": {
+     "ratio": 0.8626,
+     "raw_p": 0.1814727783203125,
+     "holm_p": 0.376007080078125,
+     "tasks": 17
+    }
+   }
+  },
+  "new_tasks": {
+   "family": "C/A, H/A, C/H on the pre-committed metric",
+   "tokens": {
+    "C/A": {
+     "ratio": 0.794,
+     "raw_p": 0.03125,
+     "holm_p": 0.09375,
+     "tasks": 8
+    },
+    "H/A": {
+     "ratio": 0.86,
+     "raw_p": 0.1171875,
+     "holm_p": 0.234375,
+     "tasks": 8
+    },
+    "C/H": {
+     "ratio": 0.9232,
+     "raw_p": 0.3984375,
+     "holm_p": 0.3984375,
+     "tasks": 8
+    }
+   },
+   "cost": {
+    "C/A": {
+     "ratio": 0.8349,
+     "raw_p": 0.0078125,
+     "holm_p": 0.0234375,
+     "tasks": 8
+    },
+    "H/A": {
+     "ratio": 0.9411,
+     "raw_p": 0.484375,
+     "holm_p": 0.484375,
+     "tasks": 8
+    },
+    "C/H": {
+     "ratio": 0.8872,
+     "raw_p": 0.1484375,
+     "holm_p": 0.296875,
+     "tasks": 8
+    }
+   }
+  },
+  "sonnet55": {
+   "family": "C/A, H/A, C/H on the pre-committed metric",
+   "tokens": {
+    "C/A": {
+     "ratio": 0.9321,
+     "raw_p": 0.54510498046875,
+     "holm_p": 0.54510498046875,
+     "tasks": 17
+    },
+    "H/A": {
+     "ratio": 1.1291,
+     "raw_p": 0.2014923095703125,
+     "holm_p": 0.402984619140625,
+     "tasks": 17
+    },
+    "C/H": {
+     "ratio": 0.8255,
+     "raw_p": 0.0887908935546875,
+     "holm_p": 0.2663726806640625,
+     "tasks": 17
+    }
+   }
+  },
+  "concurrent": {
+   "family": "pre-committed C/G, C/R, G/H tokens",
+   "tokens": {
+    "C/G": {
+     "ratio": 0.8041,
+     "raw_p": 0.125,
+     "holm_p": 0.25,
+     "tasks": 8
+    },
+    "C/R": {
+     "ratio": 0.9317,
+     "raw_p": 0.453125,
+     "holm_p": 0.453125,
+     "tasks": 8
+    },
+    "G/H": {
+     "ratio": 1.2921,
+     "raw_p": 0.0546875,
+     "holm_p": 0.1640625,
+     "tasks": 8
+    }
+   }
+  },
+  "haiku55": {
+   "family": "C/A only",
+   "tokens": {
+    "C/A": {
+     "ratio": 0.922,
+     "raw_p": 0.2313385009765625,
+     "holm_p": 0.2313385009765625,
+     "tasks": 17
+    }
+   }
+  },
+  "qwen3c_AC": {
+   "family": "C/A only (31 tasks)",
+   "tokens": {
+    "C/A": {
+     "ratio": 1.0752,
+     "raw_p": 0.5035475641489029,
+     "holm_p": 0.5035475641489029,
+     "tasks": 31
+    }
+   }
+  }
+ },
+ "min_two_sided_p": {
+  "8 tasks": 0.0078125,
+  "17 tasks": 1.52587890625e-05
+ }
+}

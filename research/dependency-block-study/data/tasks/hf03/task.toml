@@ -1,0 +1,37 @@
+schema = "since-cutoff-bench/task@1"
+id = "hf03-list-models-name"
+library = "huggingface-hub"
+pinned = "2.0.0"
+cutoff_version = "1.21.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # list_models(model_name=) deprecated through 1.x, removed in 2.0 -> TypeError
+timeout_s = 900
+target_files = ["app/catalog.py"]
+# review 2026-09-27: the repo no longer contains a module that uses the old API (broken at the pinned version);
+# existing library use in repo/ is working code only (REVIEW.md, PROTOCOL.md section 12).
+# repo/app/catalog.py's org_models() is working existing use of list_models.
+instruction = """
+Implement `find_candidates(name_fragment, task, limit=5)` in app/catalog.py.
+
+We need a shortlist of public models to evaluate: models on the Hugging Face Hub whose name
+contains `name_fragment` (for example "whisper") and whose pipeline task is `task` (for example
+"automatic-speech-recognition"). Return the ids of the `limit` most downloaded ones, most
+downloaded first.
+
+There are millions of models on the Hub, so the filtering, sorting and limiting must happen on
+the Hub side, in one listing request; do not fetch everything and filter locally. Use
+huggingface_hub like the rest of the module. Do not add dependencies. You can run the tests
+with `pytest`.
+"""
+evidence = [
+  "huggingface_hub-1.21.0 wheel: hf_api.py:2399 `@_deprecate_arguments(version=\"2.0\", deprecated_args=[\"model_name\"], custom_message=\"Use `search` instead.\")` on HfApi.list_models; hf_api.py:2411 `model_name: str | None = None`; hf_api.py:2561-2562 model_name is appended to the `search` query",
+  "huggingface_hub-2.0.0 wheel: hf_api.py:2269 HfApi.list_models(*, ..., search=..., ...) has no `model_name` and no **kwargs; utils/_validators.py smoothly_deprecate_legacy_arguments pops only proxies/resume_download/force_filename/local_dir_use_symlinks -> TypeError",
+  "huggingface_hub-0.36.0 wheel: hf_api.py:1887 list_models(model_name=...) documented and not deprecated (so pre-2.0 code used it)",
+  "list_datasets(dataset_name=) is NOT removed in 2.0.0 (hf_api.py:2631-2637), only list_models(model_name=)",
+  "run (bench validate, offline fake Hub): the stale solution raises TypeError: HfApi.list_models() got an unexpected keyword argument 'model_name' at 2.0.0 and passes at 1.21.0 with a FutureWarning; the reference (search=) passes at 2.0.0",
+]
+# keyword argument model_name= inside a list_models(...) call (not `model_name = ...` assignments)
+stale_patterns = ['\blist_models\s*\([^)]*\bmodel_name\s*=(?!=)']
+note_keys = ['\blist_models\b', '\bmodel_name\b']
+doc_keys = ['list_models\s*\([^)]*\bsearch\s*=']
+answer_tokens = ["search="]

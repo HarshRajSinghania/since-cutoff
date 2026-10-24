@@ -1,0 +1,52 @@
+schema = "since-cutoff-bench/task@1"
+id = "oai03-stream-transport-errors"
+library = "openai"
+pinned = "3.19.2"            # lockfile version the agent must target
+cutoff_version = "2.44.0"    # latest release before claude-opus-5-5's 2026-06 cutoff
+stratum = "post-cutoff"
+kind = "post-cutoff-loud+silent"  # 2.x code imports httpx (not installed); a plain httpx->httpx2 rename logs "Connection error." silently
+timeout_s = 900
+target_files = ["app/chat.py"]
+instruction = """
+Implement `answer(client, question, history=())` in app/chat.py for the e-mail channel. It
+streams the reply to `question` (like `iter_answer`) and returns the whole text. Our link to
+the model provider is flaky, so:
+
+1. If the connection fails, or drops while the answer is streaming, retry the whole request
+   from the start, up to ATTEMPTS (3) attempts in total. Return only the text of the attempt
+   that completed, never fragments of a dropped attempt.
+2. For each failed attempt, log a WARNING on the "app.chat" logger that includes the
+   underlying network error's own message (for example "peer closed connection without
+   sending complete message body"), so ops can tell connection resets from truncated
+   responses.
+3. If every attempt fails, raise `UpstreamUnavailable` (app/errors.py).
+4. If the provider stops sending data and the request times out, do not retry: raise
+   `UpstreamTimeout` straight away.
+
+Use the client you are given as it is (its own retry settings are the caller's business).
+Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "openai-3.19.2 wheel METADATA: Requires-Dist httpx2<3,>=2.12.0 (no httpx); openai-2.44.0 METADATA: Requires-Dist httpx<1,>=0.23.0",
+  "openai-2.44.0 wheel: openai/_streaming.py:52-53 `_iter_events` = `yield from self._decoder.iter_bytes(self.response.iter_bytes())` with no except, so errors while a stream is read escape as raw httpx exceptions (same in openai-3.0.0)",
+  "openai-3.19.2 wheel: openai/_streaming.py:54-60 (sync) and :166-175 (async) wrap them: `except timeout_exceptions() as err: raise APITimeoutError(...) from err` / `except request_exceptions() as err: raise APIConnectionError(...) from err`",
+  "openai-3.19.2 wheel METADATA (README 'Handling errors', lines 716-722): 'When consuming a Stream or AsyncStream, read timeouts raise APITimeoutError and other HTTPX request failures raise APIConnectionError. Catch these SDK exceptions instead of raw HTTPX exceptions; the original exception is available as __cause__.' (absent from the 2.44.0 README)",
+  "openai-3.19.2 wheel: openai/_httpx2.py timeout_exceptions()/request_exceptions() = httpx2 classes (plus legacy httpx only when `httpx` is already in sys.modules)",
+  "request-time failures are wrapped in both versions: openai-2.44.0 _base_client.py:1042-1072 (except httpx.TimeoutException -> APITimeoutError; except Exception -> APIConnectionError); openai-3.19.2 _base_client.py:1152-1182 (timeout_exceptions()/request_exceptions())",
+]
+# legacy httpx (not installed with openai 3.x), or catching raw HTTP-client exceptions around the SDK call: in 3.19.2
+# they arrive as APIConnectionError/APITimeoutError ("Catch these SDK exceptions instead of raw HTTPX exceptions")
+stale_patterns = [
+  '^\s*import\s+httpx\b(?!2)',
+  '^\s*from\s+httpx\b(?!2)[\w.]*\s+import\b',
+  '\bexcept\b[^:\n]*\bhttpx2?\.[A-Z]\w*',
+]
+# covered only if the notes mention httpx2 and that stream errors now arrive as the SDK's connection/timeout errors
+note_keys = ['httpx2', '(?i)stream[^\n]{0,160}(APIConnectionError|APITimeoutError)|(APIConnectionError|APITimeoutError)[^\n]{0,160}stream']
+doc_keys = ['(?i)consuming a `?(Async)?Stream|instead of raw HTTPX2? exceptions', '__cause__']
+answer_tokens = ["httpx2", "Httpx2", "__cause__", "APITimeoutError", "APIConnectionError", "RemoteProtocolError"]
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+halfmigrated = "fail"   # the 2.x answer with httpx renamed to httpx2: runs, but logs "Connection error." instead of the network reason
+alt_review = "pass"   # reviewer's alternative correct answer (REVIEW.md): the hidden tests must accept it

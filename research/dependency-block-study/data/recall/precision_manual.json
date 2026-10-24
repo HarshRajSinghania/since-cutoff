@@ -1,0 +1,847 @@
+{
+ "041-openai-0004": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "041-openai-0014": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "041-openai-0012": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "041-openai-0003": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "041-openai-0008": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "041-openai-0005": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "041-openai-0011": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "041-openai-0009": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "041-mistralai-0586": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "c2m0-openai-0008": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "c2m0-openai-0004": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "c2m0-openai-0012": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "c2m0-openai-0015": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "c2m0-openai-0005": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "c2m0-openai-0013": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "c2m0-openai-0010": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "c2m0-mcp-0199": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "c2m0-mistralai-0586": {
+  "accurate": true,
+  "breaking": false,
+  "why": "new release adds a deprecation decorator (typing_extensions.deprecated / deprecated) to this callable; still works"
+ },
+ "041-huggingface-hub-0043": {
+  "accurate": true,
+  "breaking": true,
+  "why": "HFCacheInfo is a dataclass; 2.0.0 adds a required field incomplete_files, so constructing it the old way fails"
+ },
+ "041-mcp-0032": {
+  "accurate": true,
+  "breaking": true,
+  "why": "mcp.server.fastmcp removed (fastmcp.py raises ModuleNotFoundError); Audio lives in mcp.server.mcpserver"
+ },
+ "041-mcp-0033": {
+  "accurate": true,
+  "breaking": true,
+  "why": "as above for Context"
+ },
+ "041-mcp-0099": {
+  "accurate": true,
+  "breaking": true,
+  "why": "old StreamableHTTPTransport.__init__ took headers/timeout/sse_read_timeout/auth (overloads); 2.2.0 takes url only"
+ },
+ "041-mcp-0025": {
+  "accurate": true,
+  "breaking": true,
+  "why": "instance attribute self.stdin_raw set in 1.28.1 FallbackProcess.__init__; absent in 2.2.0 (grep)"
+ },
+ "041-mcp-0068": {
+  "accurate": true,
+  "breaking": true,
+  "why": "1.28.1 ServerSession inherited __aexit__ from BaseSession; 2.2.0 ServerSession is a plain class without __aexit__ (grep)"
+ },
+ "041-streamlit-0073": {
+  "accurate": true,
+  "breaking": true,
+  "why": "proto stub field debug_last_backmsg_id dropped from ForwardMsg (pyi grep); public module streamlit.proto, internal protocol"
+ },
+ "c2m0-streamlit-0068": {
+  "accurate": true,
+  "breaking": true,
+  "why": "same field dropped from BackMsg stub (internal protocol)"
+ },
+ "041-mistralai-0259": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "041-mistralai-0270": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "041-mistralai-0206": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "041-mistralai-0361": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "041-mistralai-0246": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "c2m0-mistralai-0259": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "c2m0-mistralai-0270": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "c2m0-mistralai-0206": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "c2m0-mistralai-0361": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "c2m0-mistralai-0246": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from 3.3.0 models/__init__ lazy table and from every module (grep)"
+ },
+ "c2m0-anthropic-0068": {
+  "accurate": true,
+  "breaking": true,
+  "why": "BetaAsyncStreamingToolRunner.__init__(compaction_control=) in 0.115.0 lib/tools/_beta_runner.py; gone in 1.8.0 (grep)"
+ },
+ "c2m0-openai-0003": {
+  "accurate": true,
+  "breaking": true,
+  "why": "ResponsesClientEventParam: TypedDict class -> TypeAlias Union; instantiation breaks"
+ },
+ "c2m0-mcp-0061": {
+  "accurate": true,
+  "breaking": true,
+  "why": "self.request_handlers attribute renamed to _request_handlers in 2.2.0 (grep)"
+ },
+ "c2m0-polars-0199": {
+  "accurate": true,
+  "breaking": true,
+  "why": "old signature allowed positional inference_length (with deprecate_nonkeyword_arguments warning); 2.0.0 keyword-only"
+ },
+ "griffe-anthropic-00136": {
+  "accurate": true,
+  "breaking": true,
+  "why": "TypedDict class -> TypeAlias Union; instantiation breaks"
+ },
+ "griffe-openai-00008": {
+  "accurate": true,
+  "breaking": true,
+  "why": "class -> TypeAlias (verified in both wheels); instantiation/isinstance breaks"
+ },
+ "griffe-openai-00012": {
+  "accurate": true,
+  "breaking": true,
+  "why": "class -> TypeAlias (verified in both wheels); instantiation/isinstance breaks"
+ },
+ "griffe-openai-00015": {
+  "accurate": true,
+  "breaking": true,
+  "why": "class -> TypeAlias (verified in both wheels); instantiation/isinstance breaks"
+ },
+ "griffe-openai-00013": {
+  "accurate": true,
+  "breaking": true,
+  "why": "class -> TypeAlias (verified in both wheels); instantiation/isinstance breaks"
+ },
+ "griffe-openai-00009": {
+  "accurate": true,
+  "breaking": true,
+  "why": "class -> TypeAlias (verified in both wheels); instantiation/isinstance breaks"
+ },
+ "griffe-huggingface-hub-00064": {
+  "accurate": true,
+  "breaking": true,
+  "why": "hf CLI command function: a new parameter `name` was inserted before it, shifting positions (public module path, CLI implementation)"
+ },
+ "griffe-huggingface-hub-00067": {
+  "accurate": true,
+  "breaking": true,
+  "why": "hf CLI command function: a new parameter `name` was inserted before it, shifting positions (public module path, CLI implementation)"
+ },
+ "griffe-huggingface-hub-00051": {
+  "accurate": true,
+  "breaking": true,
+  "why": "hf CLI command function: a new parameter `name` was inserted before it, shifting positions (public module path, CLI implementation)"
+ },
+ "griffe-huggingface-hub-00090": {
+  "accurate": true,
+  "breaking": true,
+  "why": "hf CLI command function: a new parameter `name` was inserted before it, shifting positions (public module path, CLI implementation)"
+ },
+ "griffe-huggingface-hub-00061": {
+  "accurate": true,
+  "breaking": true,
+  "why": "hf CLI command function: a new parameter `name` was inserted before it, shifting positions (public module path, CLI implementation)"
+ },
+ "griffe-huggingface-hub-00093": {
+  "accurate": true,
+  "breaking": true,
+  "why": "hf CLI command function: a new parameter `name` was inserted before it, shifting positions (public module path, CLI implementation)"
+ },
+ "griffe-mcp-00273": {
+  "accurate": true,
+  "breaking": true,
+  "why": "Server.__init__(version) became keyword-only"
+ },
+ "griffe-polars-00146": {
+  "accurate": true,
+  "breaking": true,
+  "why": "Selector inherits from Expr; Expr.flatten exists in 1.42.1 and not in 2.0.0"
+ },
+ "griffe-streamlit-00064": {
+  "accurate": true,
+  "breaking": true,
+  "why": "marshall_video: a parameter inserted before width (internal helper on a non-underscore path)"
+ },
+ "griffe-streamlit-00093": {
+  "accurate": true,
+  "breaking": false,
+  "why": "PopoverContainer.__exit__ parameters renamed exc_type->typ etc.; the interpreter calls __exit__ positionally, so nothing breaks"
+ },
+ "griffe-mistralai-00259": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name/module absent from 3.3.0 (lazy table and files checked by grep)"
+ },
+ "griffe-mistralai-00270": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name/module absent from 3.3.0 (lazy table and files checked by grep)"
+ },
+ "griffe-mistralai-00206": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name/module absent from 3.3.0 (lazy table and files checked by grep)"
+ },
+ "griffe-mistralai-00546": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name/module absent from 3.3.0 (lazy table and files checked by grep)"
+ },
+ "griffe-mistralai-00361": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name/module absent from 3.3.0 (lazy table and files checked by grep)"
+ },
+ "griffe-mistralai-00246": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name/module absent from 3.3.0 (lazy table and files checked by grep)"
+ },
+ "griffe-mistralai-00586": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name/module absent from 3.3.0 (lazy table and files checked by grep)"
+ },
+ "griffe-mistralai-00375": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name/module absent from 3.3.0 (lazy table and files checked by grep)"
+ },
+ "041cap5-anthropic-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-anthropic-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-anthropic-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-anthropic-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-anthropic-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-openai-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-openai-01": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "041cap5-openai-02": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "041cap5-openai-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-openai-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-huggingface-hub-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-huggingface-hub-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-huggingface-hub-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-huggingface-hub-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-huggingface-hub-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-mcp-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-mcp-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-mcp-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-mcp-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-mcp-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-polars-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata); NOTE: suggested replacement polars.functions.arctan2 returns radians (old deprecation text says arctan2 then .degrees())"
+ },
+ "041cap5-polars-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-polars-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-polars-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-polars-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-streamlit-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-streamlit-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-streamlit-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-streamlit-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-streamlit-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "041cap5-mistralai-00": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "041cap5-mistralai-01": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "041cap5-mistralai-02": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "041cap5-mistralai-03": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "041cap5-mistralai-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata); NOTE: the 'is now RegisterDeploymentRequestVespaField' replacement is a structural match of two one-field models, not documented; the removal itself is real"
+ },
+ "c2m0cap5-anthropic-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-anthropic-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-anthropic-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-anthropic-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-openai-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-openai-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-openai-02": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "c2m0cap5-openai-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-huggingface-hub-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-huggingface-hub-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-huggingface-hub-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-huggingface-hub-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-huggingface-hub-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-huggingface-hub-05": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-mcp-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-mcp-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-mcp-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-mcp-03": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-mcp-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-polars-00": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "c2m0cap5-polars-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-polars-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-polars-03": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "c2m0cap5-polars-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-streamlit-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-streamlit-01": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-streamlit-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-mistralai-00": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-mistralai-01": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "c2m0cap5-mistralai-02": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata)"
+ },
+ "c2m0cap5-mistralai-03": {
+  "accurate": true,
+  "breaking": false,
+  "why": "deprecation verified (decorator in the pinned release); still works"
+ },
+ "c2m0cap5-mistralai-04": {
+  "accurate": true,
+  "breaking": true,
+  "why": "stated change verified in both wheels (removal/move/default/dependency metadata); NOTE: the 'is now RegisterDeploymentRequestVespaField' replacement is a structural match of two one-field models, not documented; the removal itself is real"
+ },
+ "aexpy-anthropic-02208": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an optional keyword parameter was added (verified in the new signature); old calls still work"
+ },
+ "aexpy-anthropic-02289": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an optional keyword parameter was added (verified in the new signature); old calls still work"
+ },
+ "aexpy-anthropic-01865": {
+  "accurate": true,
+  "breaking": true,
+  "why": "annotation moved from httpx to httpx2 (the documented dependency switch); httpx objects are no longer the accepted type"
+ },
+ "aexpy-openai-01457": {
+  "accurate": true,
+  "breaking": false,
+  "why": "private method; annotation httpx -> httpx2"
+ },
+ "aexpy-openai-01468": {
+  "accurate": true,
+  "breaking": false,
+  "why": "private method; annotation httpx -> httpx2"
+ },
+ "aexpy-openai-02011": {
+  "accurate": true,
+  "breaking": true,
+  "why": "annotation moved from httpx to httpx2 (the documented dependency switch); httpx objects are no longer the accepted type"
+ },
+ "aexpy-openai-01392": {
+  "accurate": true,
+  "breaking": true,
+  "why": "annotation moved from httpx to httpx2 (the documented dependency switch); httpx objects are no longer the accepted type"
+ },
+ "aexpy-openai-01748": {
+  "accurate": true,
+  "breaking": true,
+  "why": "annotation moved from httpx to httpx2 (the documented dependency switch); httpx objects are no longer the accepted type"
+ },
+ "aexpy-openai-01561": {
+  "accurate": true,
+  "breaking": true,
+  "why": "annotation moved from httpx to httpx2 (the documented dependency switch); httpx objects are no longer the accepted type"
+ },
+ "aexpy-openai-01442": {
+  "accurate": true,
+  "breaking": false,
+  "why": "private method; annotation httpx -> httpx2"
+ },
+ "aexpy-openai-01788": {
+  "accurate": true,
+  "breaking": true,
+  "why": "annotation moved from httpx to httpx2 (the documented dependency switch); httpx objects are no longer the accepted type"
+ },
+ "aexpy-huggingface-hub-00375": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an incidental import of a third-party/stdlib name was dropped from the module; not API"
+ },
+ "aexpy-huggingface-hub-00463": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an optional keyword parameter was added (verified in the new signature); old calls still work"
+ },
+ "aexpy-polars-00276": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an incidental import of a third-party/stdlib name was dropped from the module; not API"
+ },
+ "aexpy-streamlit-00631": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an incidental import of a third-party/stdlib name was dropped from the module; not API"
+ },
+ "aexpy-streamlit-01164": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an optional keyword parameter was added (verified in the new signature); old calls still work"
+ },
+ "aexpy-streamlit-00463": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an incidental import of a third-party/stdlib name was dropped from the module; not API"
+ },
+ "aexpy-streamlit-01020": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an optional keyword parameter was added (verified in the new signature); old calls still work"
+ },
+ "aexpy-streamlit-01042": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an optional keyword parameter was added (verified in the new signature); old calls still work"
+ },
+ "aexpy-mistralai-02207": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an optional keyword parameter was added (verified in the new signature); old calls still work"
+ },
+ "aexpy-mistralai-01868": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an incidental import of a third-party/stdlib name was dropped from the module; not API"
+ },
+ "aexpy-mistralai-01960": {
+  "accurate": true,
+  "breaking": false,
+  "why": "an incidental import of a third-party/stdlib name was dropped from the module; not API"
+ },
+ "aexpy-anthropic-01544": {
+  "accurate": true,
+  "breaking": false,
+  "why": "AsyncStream's private metaclass _AsyncStreamMeta (isinstance shim) was removed; no public name breaks"
+ },
+ "aexpy-huggingface-hub-00763": {
+  "accurate": true,
+  "breaking": false,
+  "why": "annotation of a module-level CLI app object changed type; nothing a caller does breaks"
+ },
+ "aexpy-huggingface-hub-00600": {
+  "accurate": true,
+  "breaking": true,
+  "why": "hf CLI command function: a parameter inserted earlier shifts positions (as griffe)"
+ },
+ "aexpy-huggingface-hub-00628": {
+  "accurate": true,
+  "breaking": true,
+  "why": "as above"
+ },
+ "aexpy-mcp-02597": {
+  "accurate": false,
+  "breaking": false,
+  "why": "a parametrised pydantic generic (Request[..., Literal['roots/list']]) is an AexPy-internal entity, not an importable name"
+ },
+ "aexpy-mcp-02584": {
+  "accurate": false,
+  "breaking": false,
+  "why": "same generic-specialisation artefact"
+ },
+ "aexpy-mcp-02849": {
+  "accurate": true,
+  "breaking": false,
+  "why": "base class Notification[...] of TaskStatusNotification is now mcp_types' generic; class and fields unchanged"
+ },
+ "aexpy-mcp-02032": {
+  "accurate": true,
+  "breaking": false,
+  "why": "same for GetTaskRequest"
+ },
+ "aexpy-mcp-03218": {
+  "accurate": false,
+  "breaking": false,
+  "why": "return types named mcp.types.ElicitResult and mcp_types._types.ElicitResult are the same object (mcp.types mirrors mcp_types)"
+ },
+ "aexpy-mcp-03530": {
+  "accurate": false,
+  "breaking": false,
+  "why": "mcp.shared.session is gone in 2.2.0 (the whole module); a 'parameter type changed' report misstates it"
+ },
+ "aexpy-mcp-03232": {
+  "accurate": true,
+  "breaking": false,
+  "why": "private function; annotation changed"
+ },
+ "aexpy-streamlit-00668": {
+  "accurate": true,
+  "breaking": true,
+  "why": "DeltaGenerator lost the BokehMixin base: st.bokeh_chart is gone"
+ },
+ "aexpy-mistralai-01261": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from the 3.3.0 models lazy table and from every module (grep)"
+ },
+ "aexpy-mistralai-01272": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from the 3.3.0 models lazy table and from every module (grep)"
+ },
+ "aexpy-mistralai-01208": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from the 3.3.0 models lazy table and from every module (grep)"
+ },
+ "aexpy-mistralai-01248": {
+  "accurate": true,
+  "breaking": true,
+  "why": "name absent from the 3.3.0 models lazy table and from every module (grep)"
+ }
+}

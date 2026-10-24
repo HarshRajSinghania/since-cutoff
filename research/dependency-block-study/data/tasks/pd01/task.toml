@@ -1,0 +1,39 @@
+schema = "since-cutoff-bench/task@1"
+id = "pd01-text-columns"
+library = "pandas"
+pinned = "3.0.6"
+# latest release before claude-opus-5-5's 2026-06 cutoff (since-cutoff 0.3.1 picks 3.0.3): the change predates
+# the cutoff, so for Opus 5.5 this task is a control. It is a treatment for claude-sonnet-4-6 (cutoff 2025-08).
+cutoff_version = "3.0.3"
+# version at which the stale (pandas 2) solution must pass: gate 4 runs here instead of cutoff_version
+stale_version = "2.3.2"
+stratum = "pre-cutoff-control"
+kind = "behavioural-silent"  # no exception: string columns are no longer object dtype; inplace on a column is a no-op under Copy-on-Write
+timeout_s = 900
+target_files = ["app/clean.py"]
+instruction = """
+Implement `clean_orders(df)` in app/clean.py. Return a cleaned copy of the orders frame:
+
+- in every text column, strip leading/trailing whitespace and turn empty strings into missing values;
+- fill missing values in the numeric `qty` column with 0;
+- leave all other values as they are, and do not modify the input frame.
+
+Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "https://pandas.pydata.org/docs/whatsnew/v3.0.0.html (dedicated string dtype by default; Copy-on-Write)",
+  "run in pandas 3.0.6: DataFrame({'a': ['x']})['a'].dtype == object -> False (dtype 'str'); 2.3.2 -> True",
+  "run in pandas 3.0.6: df['qty'].fillna(0, inplace=True) leaves df unchanged and emits ChainedAssignmentError; 2.3.2 modifies df with a FutureWarning",
+]
+stale_patterns = [
+  '''\.dtype\s*==\s*(?:object\b|["']object["']|np\.object_)''',
+  '\bis_object_dtype\s*\(',
+  '\]\s*\.\s*(?:fillna|replace|ffill|bfill)\([^)]*inplace\s*=\s*True',
+]
+note_keys = ['\bstr\b[^\n]{0,60}dtype|string dtype|StringDtype', 'Copy-on-Write|inplace']
+doc_keys = ['\bstr\b[^\n]{0,60}dtype|string dtype|StringDtype', 'Copy-on-Write|inplace']
+answer_tokens = ["select_dtypes", "Copy-on-Write"]
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_review = "pass"   # reviewer's alternative correct answer (REVIEW.md): the hidden tests must accept it

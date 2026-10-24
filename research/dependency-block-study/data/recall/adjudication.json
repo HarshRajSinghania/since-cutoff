@@ -1,0 +1,142 @@
+{
+ "_note": "AI adjudication (Claude Opus 5.5) of the rule-based proposals in out/auto/*.json: every proposal was reviewed in the compact matrix (matrix.py) and every N with a loosely related report was reviewed in probe_misses.py output. Entries here override the proposal for one (item, tool). 'inaccurate': the matched report is factually wrong about that element (counted as detected under the protocol rule, excluded in the 'accurate-match' sensitivity).",
+ "overrides": [
+  {
+   "item": "ant-039",
+   "tool": "griffe",
+   "detected": true,
+   "level": "C",
+   "why": "griffe reports the defining module anthropic.types.beta.skill_create_response removed (<module>), which contains the class"
+  },
+  {
+   "item": "ant-040",
+   "tool": "griffe",
+   "detected": true,
+   "level": "C",
+   "why": "defining module skill_retrieve_response reported removed"
+  },
+  {
+   "item": "ant-041",
+   "tool": "griffe",
+   "detected": true,
+   "level": "C",
+   "why": "defining module skill_list_response reported removed"
+  },
+  {
+   "item": "ant-042",
+   "tool": "griffe",
+   "detected": true,
+   "level": "C",
+   "why": "defining module skills.version_create_response reported removed"
+  },
+  {
+   "item": "ant-043",
+   "tool": "griffe",
+   "detected": true,
+   "level": "C",
+   "why": "defining module skills.version_retrieve_response reported removed"
+  },
+  {
+   "item": "ant-044",
+   "tool": "griffe",
+   "detected": true,
+   "level": "C",
+   "why": "defining module skills.version_list_response reported removed"
+  },
+  {
+   "item": "ant-038",
+   "tool": "aexpy",
+   "detected": false,
+   "why": "matched report is the removal of an incidental import alias of BetaSkill in anthropic.types.beta.beta_container, not the element"
+  },
+  {
+   "item": "mcp-051",
+   "tool": "griffe",
+   "inaccurate": true,
+   "why": "griffe says class CreateMessageResultWithTools was removed; mcp.types still exports it via `from mcp_types import *` (griffe does not follow the wildcard mirror); only its camelCase fields changed"
+  },
+  {
+   "item": "mcp-055",
+   "tool": "griffe",
+   "inaccurate": true,
+   "why": "same wildcard-mirror false removal (ElicitRequestFormParams still exported)"
+  },
+  {
+   "item": "mcp-056",
+   "tool": "griffe",
+   "inaccurate": true,
+   "why": "same (ElicitRequestURLParams)"
+  },
+  {
+   "item": "mcp-032",
+   "tool": "griffe",
+   "inaccurate": true,
+   "why": "same (GetTaskPayloadRequestParams)"
+  },
+  {
+   "item": "mcp-026",
+   "tool": "griffe",
+   "inaccurate": true,
+   "why": "same (PromptsCapability)"
+  },
+  {
+   "item": "mcp-042",
+   "tool": "griffe",
+   "inaccurate": true,
+   "why": "same (AudioContent)"
+  },
+  {
+   "item": "mcp-069",
+   "tool": "griffe",
+   "inaccurate": true,
+   "why": "same (ClientNotification is still exported, as a union alias)"
+  },
+  {
+   "item": "mcp02",
+   "tool": "griffe",
+   "inaccurate": true,
+   "why": "same (CallToolResult still exported; fields renamed)"
+  },
+  {
+   "item": "st02",
+   "tool": "scc2m0",
+   "detected": true,
+   "level": "P",
+   "why": "same report as st-004: ImageMixin.image use_column_width became keyword-only (the task item lists only streamlit.image)"
+  },
+  {
+   "item": "st02",
+   "tool": "scc2",
+   "detected": true,
+   "level": "P",
+   "why": "as above"
+  },
+  {
+   "item": "st-004",
+   "tool": "aexpy",
+   "detected": true,
+   "level": "P",
+   "why": "AexPy: 'Remove PositionalOrKeyword parameter (streamlit.delta_generator.ImageMixin.image): use_column_width' (path via the DeltaGenerator mixin, which the matcher's module rule rejected)"
+  },
+  {
+   "item": "st02",
+   "tool": "aexpy",
+   "detected": true,
+   "level": "P",
+   "why": "same report as st-004"
+  },
+  {
+   "item": "st-008",
+   "tool": "aexpy",
+   "detected": true,
+   "level": "P",
+   "why": "AexPy: RemoveParameterDefault on streamlit.delta_generator.PyplotMixin.pyplot(fig): fig became required"
+  },
+  {
+   "item": "mi-064",
+   "tool": "aexpy",
+   "detected": false,
+   "why": "matched report is the removal of an incidental import alias of AuthenticationConfiguration in the removed module mistralai.client.models.connector, not the documented field-type change"
+  }
+ ]
+}

@@ -1,0 +1,47 @@
+schema = "since-cutoff-bench/task@1"
+id = "lc01-retriever-context"
+library = "langchain-core"
+pinned = "1.6.5"
+# since-cutoff's rule (highest final, non-yanked release on or before the end of the 2026-06 knowledge month):
+# 1.4.8 (2026-06-18). The removal happened in 1.0.0 (2025-10-17), before the cutoff, so for Opus 5.5 this task
+# is a control. It is a treatment for claude-haiku-4-5 (cutoff 2025-02).
+cutoff_version = "1.4.8"
+# the last 0.3.x release before the cutoff (2026-05-07): get_relevant_documents still exists there, deprecated
+stale_version = "0.3.86"
+stratum = "pre-cutoff-control"
+kind = "pre-cutoff-loud"  # stale code raises AttributeError: '<Retriever>' object has no attribute 'get_relevant_documents'
+timeout_s = 900
+target_files = ["app/context.py"]
+# review 2026-09-27: the repo no longer contains a module that uses the old API (broken at the pinned version);
+# existing library use in repo/ is working code only (REVIEW.md, PROTOCOL.md section 12).
+# repo/app/kb.py implements `_get_relevant_documents`, which is still the extension point in 1.x (not stale).
+instruction = """
+Implement `build_context(retriever, question)` in app/context.py. It is called with any LangChain
+retriever (our KeywordRetriever in development, a vector-store retriever in production). Use the
+retriever to look up the documents for `question` and return the context block for the answer
+prompt:
+
+- one entry per source: skip a document whose metadata "source" has already been used;
+- at most MAX_SOURCES entries, in the order the retriever returned them;
+- entry n is "[n] <source>" on one line followed by the document text with surrounding whitespace
+  removed; entries are separated by one blank line;
+- return an empty string when nothing is found.
+
+The lookup must carry the tag TRACE_TAG so it can be found in our traces. Do not add dependencies.
+You can run the tests with `pytest`.
+"""
+evidence = [
+  "langchain-core-0.3.86 wheel: langchain_core/retrievers.py:373-374 `@deprecated(since=\"0.1.46\", alternative=\"invoke\", removal=\"1.0\") def get_relevant_documents(self, query, *, callbacks=None, tags=None, metadata=None, run_name=None, **kwargs)`, which builds a RunnableConfig and returns `self.invoke(query, config, **kwargs)`; :417-418 the same for `aget_relevant_documents` (alternative ainvoke). Also present in 0.3.75 (:372-373)",
+  "langchain-core-1.0.0 / 1.4.8 / 1.6.5 wheels: langchain_core/retrievers.py has no `get_relevant_documents` / `aget_relevant_documents` (a scan of every module finds no definition); `def invoke(self, input, config=None, **kwargs)` at :169 / :179 / :179 passes config tags to CallbackManager.configure(inheritable_tags=...); `_get_relevant_documents` remains the extension point (:288 / :298 / :298)",
+  "run: the stale solution raises AttributeError at 1.6.5 and passes with a LangChainDeprecationWarning at 0.3.86 (bench validate)",
+]
+# regexes (Python re, MULTILINE) that mark the old API in an edit or in the final diff (comments ignored)
+stale_patterns = [
+  '\.a?get_relevant_documents\s*\(',
+]
+# regexes that must ALL match the frozen notes for the change to count as covered by them
+note_keys = ['get_relevant_documents']
+# regexes that must ALL match the Context7 tool results for `doc_hit`
+doc_keys = ['retriever\.a?invoke\(']
+# literal strings that must not appear in repo/ or the instruction (added to bench.toml's global list)
+answer_tokens = [".invoke(", ".ainvoke("]

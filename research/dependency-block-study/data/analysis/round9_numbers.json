@@ -1,0 +1,130 @@
+{
+ "generated_by": "scripts/round9_numbers.py",
+ "inputs": [
+  "analysis/exposure2_breakeven.json",
+  "runs_tables/*/runs.jsonl"
+ ],
+ "block_size_cap": {
+  "main": {
+   "S_gross_usd": 0.0872,
+   "mean_C_turns": 16.65,
+   "overhead_usd_per_block_token": 1.1329411764705884e-05,
+   "tokens_per_unit_f": 7701,
+   "b_max_tokens_at_f_0.05": 385,
+   "b_max_tokens_at_f_0.1": 770,
+   "b_max_tokens_at_f_0.2": 1540,
+   "b_max_tokens_at_f_0.3": 2310
+  },
+  "replication": {
+   "S_gross_usd": 0.0692,
+   "mean_C_turns": 17.65,
+   "overhead_usd_per_block_token": 1.1529411764705882e-05,
+   "tokens_per_unit_f": 5998,
+   "b_max_tokens_at_f_0.05": 300,
+   "b_max_tokens_at_f_0.1": 600,
+   "b_max_tokens_at_f_0.2": 1200,
+   "b_max_tokens_at_f_0.3": 1799
+  },
+  "new_tasks": {
+   "S_gross_usd": 0.0456,
+   "mean_C_turns": 12.21,
+   "overhead_usd_per_block_token": 1.0441666666666667e-05,
+   "tokens_per_unit_f": 4367,
+   "b_max_tokens_at_f_0.05": 218,
+   "b_max_tokens_at_f_0.1": 437,
+   "b_max_tokens_at_f_0.2": 873,
+   "b_max_tokens_at_f_0.3": 1310
+  }
+ },
+ "fleet_example": {
+  "sessions_per_day": 1000,
+  "f": 0.2,
+  "block_tokens": 764,
+  "block_cost_per_day_usd": 8.66,
+  "gross_saving_per_day_usd": 17.45,
+  "net_saving_per_day_usd": 8.79
+ },
+ "fleet_example_704": {
+  "sessions_per_day": 1000,
+  "f": 0.2,
+  "block_tokens": 704,
+  "block_cost_per_day_usd": 7.98,
+  "gross_saving_per_day_usd": 17.45,
+  "net_saving_per_day_usd": 9.47
+ },
+ "random_effects_CA_cost_opus": {
+  "per_study": {
+   "main": {
+    "tasks": 17,
+    "ratio": 0.8048,
+    "se_log": 0.0639,
+    "normal_ci95": [
+     0.71,
+     0.912
+    ]
+   },
+   "replication": {
+    "tasks": 17,
+    "ratio": 0.8501,
+    "se_log": 0.0993,
+    "normal_ci95": [
+     0.7,
+     1.033
+    ]
+   },
+   "new_tasks": {
+    "tasks": 8,
+    "ratio": 0.8349,
+    "se_log": 0.0463,
+    "normal_ci95": [
+     0.763,
+     0.914
+    ]
+   },
+   "concurrent": {
+    "tasks": 8,
+    "ratio": 0.7915,
+    "se_log": 0.0674,
+    "normal_ci95": [
+     0.694,
+     0.903
+    ]
+   }
+  },
+  "Q": 0.645,
+  "df": 3,
+  "tau2": 0.0,
+  "I2": 0.0,
+  "fixed_ratio": 0.8198,
+  "re_ratio": 0.8198,
+  "re_ci95": [
+   0.7713,
+   0.8713
+  ],
+  "note": "DerSimonian-Laird; studies share tasks, so approximate"
+ },
+ "live_ab_sizing": {
+  "sd_log_cost_none_sessions_main": 0.448,
+  "sd_log_cost_none_sessions_4_opus_studies": 0.511,
+  "none_sessions_main": 51,
+  "none_sessions_4_opus_studies": 150,
+  "mean_none_cost_main_usd": 0.4193,
+  "diluted_net_saving_share_f_0.1": 0.0018,
+  "sessions_per_arm_all_sessions_f_0.1_main_sd": 988450,
+  "sessions_per_arm_all_sessions_f_0.1_all_sd": 1283233,
+  "diluted_net_saving_share_f_0.2": 0.0226,
+  "sessions_per_arm_all_sessions_f_0.2_main_sd": 6042,
+  "sessions_per_arm_all_sessions_f_0.2_all_sd": 7843,
+  "sessions_per_arm_affected_only_15pct_main_sd": 119,
+  "sessions_per_arm_affected_only_15pct_all_sd": 155,
+  "sessions_per_arm_affected_only_20pct_main_sd": 63,
+  "sessions_per_arm_affected_only_20pct_all_sd": 82,
+  "assumptions": "unpaired two-sided 5% test, 80% power, independent sessions, session-level SD of log cost as in our None sessions on post-cutoff tasks; 704-token block (median non-empty block of the random sample); main-study gross saving and turns; mean None cost of the main study as the per-session cost"
+ },
+ "runtime_bounds": {
+  "executed_true_uses": 14,
+  "static_true_uses": 34,
+  "wilson95_upper_0_of_executed": 0.2153,
+  "wilson95_upper_0_of_60": 0.0602
+ }
+}

@@ -1,0 +1,58 @@
+{
+  "claude-haiku-4-5": {
+    "cutoff": "2025-02-28",
+    "packages_probed": 29,
+    "probes": {
+      "total": 40,
+      "valid": 35,
+      "pass": 21,
+      "stale": 7,
+      "wrong": 7,
+      "deprecated": 0,
+      "excluded": {
+        "untouched": 3,
+        "off-task": 2,
+        "invalid": 0,
+        "error": 0
+      },
+      "changes_without_tasks": 2,
+      "cached_answers": 0
+    },
+    "spearman_rho_logbreaking_vs_stale_rate": 0.25799770130737026,
+    "perm_p": 0.17864106794660267,
+    "stale_rate_high_static_half": 0.2631578947368421,
+    "stale_rate_low_static_half": 0.125,
+    "probes_per_package_mean": 1.206896551724138
+  },
+  "claude-opus-4-6": {
+    "cutoff": "2025-05-31",
+    "packages_probed": 31,
+    "probes": {
+      "total": 40,
+      "valid": 38,
+      "pass": 26,
+      "stale": 11,
+      "wrong": 1,
+      "deprecated": 0,
+      "excluded": {
+        "untouched": 0,
+        "off-task": 2,
+        "invalid": 0,
+        "error": 0
+      },
+      "changes_without_tasks": 3,
+      "cached_answers": 0
+    },
+    "spearman_rho_logbreaking_vs_stale_rate": 0.43038587446036886,
+    "perm_p": 0.014999250037498125,
+    "stale_rate_high_static_half": 0.42857142857142855,
+    "stale_rate_low_static_half": 0.11764705882352941,
+    "probes_per_package_mean": 1.2258064516129032
+  },
+  "pooled_package_model_pairs": {
+    "n": 60,
+    "spearman_rho": 0.3603452423098427,
+    "perm_p": 0.00439978001099945,
+    "note": "pairs are not independent across models"
+  }
+}

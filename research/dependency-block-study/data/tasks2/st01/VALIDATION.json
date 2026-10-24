@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "st01",
+  "task_id": "st01-cache-loader",
+  "task_sha256": "fd5ad96cf14ddf5ac77ea9dbe505115ccbf8bba067158dc3f8027f428e8b5642",
+  "parts_sha256": {
+    "task.toml": "ebd0959afa8d05325267d80ada8c753d34058bdd3fecaeed6ad78fc82b9e426b",
+    "repo": "e593676b5c6f944e13b133138e3ce55ec7d5dfee0a9bd5a3c8b807e27f0ca87f",
+    "hidden": "9881660cdcca727df63b1b611c0657cc5d006a0400689b37bdd7057d85f7cbf5",
+    "reference": "d9e31cdd700b2204af30d79591dc5dd3f09b2060ac0b48088a3963201da5ae33",
+    "stale": "047115cff5264f70d55bb8a897ee85f019da0e6df11ee93331e66af26583d9cd"
+  },
+  "validated_at": "2026-10-22T17:28:10+00:00",
+  "library": "streamlit",
+  "pinned": "1.66.1",
+  "stale_version": "1.58.0",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "1.66.1",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 2,
+        "failed": 2,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 2.97,
+        "timed_out": false,
+        "first_error": "assert 3 == 1"
+      },
+      "summary": "2 failed, 2 passed in 2.04s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "1.66.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 4,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 3.03,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "4 passed in 2.10s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.66.1",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 2,
+        "passed": 0,
+        "failed": 0,
+        "errors": 1,
+        "skipped": 0,
+        "duration_s": 3.1,
+        "timed_out": false,
+        "first_error": "AttributeError: module 'streamlit' has no attribute 'cache'. st.cache has been removed. Use st.cache_data or st.cache_resource instead."
+      },
+      "summary": "1 error in 2.07s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.58.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 4,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 3.25,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "4 passed in 2.15s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "streamlit-1.66.1 c9e7bccd410d",
+    "stale": "streamlit-1.58.0 a1397a7a9c62"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 13.4
+}

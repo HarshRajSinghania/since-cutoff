@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "pl91",
+  "task_id": "pl91-category-summary",
+  "task_sha256": "f3ba62716b663e7c901f91b0f00f605bf7f27985d8d3fa69393760b9c280e1ac",
+  "parts_sha256": {
+    "task.toml": "ed3322971ca3fc02f77a0873c7d609ecbf846a75c5f5aef2403a8e4f8a0bc592",
+    "repo": "63406900e0614553863e25aeb3540385f027400dba104e00201203eafed4d1ca",
+    "hidden": "aa30e256704e268aff9c7e8a07803d7991de43eeaea85ecc32c3f813c7e12ede",
+    "reference": "bf43d9994f6b4e377f7ca5876b7929736a79df59060cdae28af6509993525781",
+    "stale": "9a3cf1b9bfba6959f16c3c3a30ffe2a5cee83241b86522782c6dbb821a8b9ff4"
+  },
+  "validated_at": "2026-10-22T17:28:06+00:00",
+  "library": "polars",
+  "pinned": "2.0.0",
+  "stale_version": "0.20.31",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 2,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.93,
+        "timed_out": false,
+        "first_error": "NotImplementedError"
+      },
+      "summary": "2 failed in 0.35s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "2.0.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 2,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.89,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "2 passed in 0.31s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 2,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.09,
+        "timed_out": false,
+        "first_error": "AttributeError: 'DataFrame' object has no attribute 'groupby'. Did you mean: 'group_by'?"
+      },
+      "summary": "2 failed in 0.44s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "0.20.31",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 2,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.71,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "2 passed, 2 warnings in 0.16s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "polars-2.0.0 bd3c78b38a76",
+    "stale": "polars-0.20.31 84cf401fc98b"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 4.3
+}

@@ -1,0 +1,1691 @@
+{
+  "generated_by": "scripts/per_task_ratios.py",
+  "method": "every post-cutoff task x Opus 5.5 study with both A and C sessions (first valid attempt per planned run):\n  main-2026-09-28 (17 original tasks), abl-opus55-2026-10-22 (replication, same 17), tasks2-opus55-2026-10-22 (8 new\n  tasks); case-opus55-2026-10-22 (cs01, cs02, real repository, 5 reps) is reported as a separate set and not plotted.\n  The pilot (ant01, mcp01) is excluded by protocol; the iter study's single-rep A/C comparators are not used.\nPer cell (C/A of total tokens = input + cache read + cache write + output):\n  median_ratio  ratio of per-arm medians (the paper's per-task statistic);\n  gm_ratio      ratio of geometric means; its 95% CI is a Welch t interval on log tokens (plotted; honest with 3 reps)\n                and, as a secondary check, a percentile bootstrap of reps within arm (10,000, seed 20261001).\nPer task (combined over the studies that ran it): log ratio = mean over studies of the per-study log gm ratio\n  (stratified by study, so the month between main and replication does not enter the contrast); Welch-Satterthwaite\n  variance/df over the 2S arm components; for new tasks this is the single tasks2 cell.\nSummaries: geometric mean over tasks of the combined per-task ratio, task bootstrap (10,000, seed 20261001), for all\n  25, covered (notes name the task's change), uncovered, original, new, and without the pilot-exposed tasks.\nFlags: covered (condition_config.notes_covered of the C runs), pilot_exposed (ant01, mcp01), task_set.",
+  "metric": "C/A total tokens (input + cache_read + cache_write + output), Claude Opus 5.5, post-cutoff tasks",
+  "studies": {
+    "main": "main-2026-09-28",
+    "replication": "abl-opus55-2026-10-22",
+    "tasks2": "tasks2-opus55-2026-10-22",
+    "case": "case-opus55-2026-10-22"
+  },
+  "counts": {
+    "benchmark_tasks": 25,
+    "covered": 7,
+    "uncovered": 18,
+    "point_estimate_below_1": 23,
+    "ci_entirely_below_1": [
+      "hf01",
+      "hf04",
+      "st01"
+    ],
+    "ci_entirely_above_1": []
+  },
+  "summaries": {
+    "all": {
+      "tasks": [
+        "ant01",
+        "ant02",
+        "ant03",
+        "ant04",
+        "ant05",
+        "hf01",
+        "hf02",
+        "hf03",
+        "hf04",
+        "mcp01",
+        "mcp02",
+        "mcp04",
+        "mcp05",
+        "mcp06",
+        "mi01",
+        "mi02",
+        "oai01",
+        "oai02",
+        "oai03",
+        "pl01",
+        "pl02",
+        "pl03",
+        "pl04",
+        "st01",
+        "st02"
+      ],
+      "gm_of_combined_gm_ratio": {
+        "ratio": 0.7713594467200605,
+        "lo": 0.7076736157957366,
+        "hi": 0.8399981150639501,
+        "tasks": 25
+      },
+      "gm_of_median_ratio": {
+        "ratio": 0.7806106269883624,
+        "lo": 0.7098767264051282,
+        "hi": 0.8558321481845654,
+        "tasks": 25
+      }
+    },
+    "covered": {
+      "tasks": [
+        "ant01",
+        "ant03",
+        "hf01",
+        "hf02",
+        "hf03",
+        "pl02",
+        "st01"
+      ],
+      "gm_of_combined_gm_ratio": {
+        "ratio": 0.6412148664069651,
+        "lo": 0.549215333079525,
+        "hi": 0.747582898554942,
+        "tasks": 7
+      },
+      "gm_of_median_ratio": {
+        "ratio": 0.6542574177201715,
+        "lo": 0.5471442957375647,
+        "hi": 0.7824239186711605,
+        "tasks": 7
+      }
+    },
+    "uncovered": {
+      "tasks": [
+        "ant02",
+        "ant04",
+        "ant05",
+        "hf04",
+        "mcp01",
+        "mcp02",
+        "mcp04",
+        "mcp05",
+        "mcp06",
+        "mi01",
+        "mi02",
+        "oai01",
+        "oai02",
+        "oai03",
+        "pl01",
+        "pl03",
+        "pl04",
+        "st02"
+      ],
+      "gm_of_combined_gm_ratio": {
+        "ratio": 0.8288317669972031,
+        "lo": 0.7616655001915349,
+        "hi": 0.8967599472667909,
+        "tasks": 18
+      },
+      "gm_of_median_ratio": {
+        "ratio": 0.8360970988630667,
+        "lo": 0.7616682327635516,
+        "hi": 0.9131287566055252,
+        "tasks": 18
+      }
+    },
+    "original": {
+      "tasks": [
+        "ant01",
+        "ant02",
+        "ant03",
+        "ant04",
+        "ant05",
+        "hf01",
+        "hf02",
+        "hf03",
+        "hf04",
+        "mcp01",
+        "mcp02",
+        "mcp04",
+        "mcp05",
+        "mcp06",
+        "oai01",
+        "oai02",
+        "oai03"
+      ],
+      "gm_of_combined_gm_ratio": {
+        "ratio": 0.7774632546103352,
+        "lo": 0.6902413980305557,
+        "hi": 0.8702537283330909,
+        "tasks": 17
+      },
+      "gm_of_median_ratio": {
+        "ratio": 0.7744085831477607,
+        "lo": 0.6871952452691023,
+        "hi": 0.8690488608610338,
+        "tasks": 17
+      }
+    },
+    "new": {
+      "tasks": [
+        "mi01",
+        "mi02",
+        "pl01",
+        "pl02",
+        "pl03",
+        "pl04",
+        "st01",
+        "st02"
+      ],
+      "gm_of_combined_gm_ratio": {
+        "ratio": 0.7585474978475406,
+        "lo": 0.6898726498773246,
+        "hi": 0.8423909958725919,
+        "tasks": 8
+      },
+      "gm_of_median_ratio": {
+        "ratio": 0.7939553875322879,
+        "lo": 0.6845471051038723,
+        "hi": 0.9153681813251882,
+        "tasks": 8
+      }
+    },
+    "all_without_pilot": {
+      "tasks": [
+        "ant02",
+        "ant03",
+        "ant04",
+        "ant05",
+        "hf01",
+        "hf02",
+        "hf03",
+        "hf04",
+        "mcp02",
+        "mcp04",
+        "mcp05",
+        "mcp06",
+        "mi01",
+        "mi02",
+        "oai01",
+        "oai02",
+        "oai03",
+        "pl01",
+        "pl02",
+        "pl03",
+        "pl04",
+        "st01",
+        "st02"
+      ],
+      "gm_of_combined_gm_ratio": {
+        "ratio": 0.7722634329764607,
+        "lo": 0.7032588697936251,
+        "hi": 0.8430387032082981,
+        "tasks": 23
+      },
+      "gm_of_median_ratio": {
+        "ratio": 0.7826805206819532,
+        "lo": 0.7046560831588489,
+        "hi": 0.8600225760506669,
+        "tasks": 23
+      }
+    },
+    "uncovered_without_pilot": {
+      "tasks": [
+        "ant02",
+        "ant04",
+        "ant05",
+        "hf04",
+        "mcp02",
+        "mcp04",
+        "mcp05",
+        "mcp06",
+        "mi01",
+        "mi02",
+        "oai01",
+        "oai02",
+        "oai03",
+        "pl01",
+        "pl03",
+        "pl04",
+        "st02"
+      ],
+      "gm_of_combined_gm_ratio": {
+        "ratio": 0.8249942212356867,
+        "lo": 0.7553002486422603,
+        "hi": 0.8963926642428878,
+        "tasks": 17
+      },
+      "gm_of_median_ratio": {
+        "ratio": 0.8319101331455592,
+        "lo": 0.7519098060068026,
+        "hi": 0.9117671076918848,
+        "tasks": 17
+      }
+    }
+  },
+  "tasks": {
+    "ant01": {
+      "task_set": "original",
+      "covered": true,
+      "pilot_exposed": true,
+      "library": "anthropic",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.6457800890510138,
+        "ci95_welch_t": [
+          0.19767701412378647,
+          2.1096632062318967
+        ],
+        "welch_df": 4.205967108577626,
+        "median_ratio_geomean_over_studies": 0.6296446948419774
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 360830,
+          "median_tokens_C": 428506,
+          "median_ratio": 1.1875564670343375,
+          "gm_ratio": 0.6299259662078267,
+          "ci95_welch_t": [
+            0.039569774901275494,
+            10.028025782124764
+          ],
+          "welch_df": 2.070213638409791,
+          "ci95_bootstrap_reps": [
+            0.1752837964774455,
+            1.3451334361200546
+          ],
+          "pass_A": "0/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 292791,
+          "median_tokens_C": 97745,
+          "median_ratio": 0.3338388133515033,
+          "gm_ratio": 0.6620332321356428,
+          "ci95_welch_t": [
+            0.08233067308583401,
+            5.3235080441408265
+          ],
+          "welch_df": 2.370603175529543,
+          "ci95_bootstrap_reps": [
+            0.3271088001311451,
+            1.6597299780389416
+          ],
+          "pass_A": "0/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "ant02": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "anthropic",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.5495023298046545,
+        "ci95_welch_t": [
+          0.2898955335048281,
+          1.0415917996739832
+        ],
+        "welch_df": 3.794301953491403,
+        "median_ratio_geomean_over_studies": 0.5451877053206133
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 573116,
+          "median_tokens_C": 474260,
+          "median_ratio": 0.827511358957,
+          "gm_ratio": 0.6826173407048531,
+          "ci95_welch_t": [
+            0.28152040295239256,
+            1.6551782000317905
+          ],
+          "welch_df": 2.321479858855265,
+          "ci95_bootstrap_reps": [
+            0.4577547315006853,
+            0.919688648162255
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 625196,
+          "median_tokens_C": 224561,
+          "median_ratio": 0.35918495959667046,
+          "gm_ratio": 0.4423456488066281,
+          "ci95_welch_t": [
+            0.10179966774339866,
+            1.9221052224980886
+          ],
+          "welch_df": 2.2945710285654326,
+          "ci95_bootstrap_reps": [
+            0.25541129147185704,
+            0.8698757379824638
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "ant03": {
+      "task_set": "original",
+      "covered": true,
+      "pilot_exposed": false,
+      "library": "anthropic",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.6264570455233911,
+        "ci95_welch_t": [
+          0.176065904261515,
+          2.2289859671125356
+        ],
+        "welch_df": 2.6300608793265505,
+        "median_ratio_geomean_over_studies": 0.9189344167380348
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 429632,
+          "median_tokens_C": 363627,
+          "median_ratio": 0.8463685200357516,
+          "gm_ratio": 0.6423459430384482,
+          "ci95_welch_t": [
+            0.2927436490076868,
+            1.4094526454683876
+          ],
+          "welch_df": 2.597685491267731,
+          "ci95_bootstrap_reps": [
+            0.44144706151548,
+            0.8649977340062112
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 363910,
+          "median_tokens_C": 363081,
+          "median_ratio": 0.997721964221923,
+          "gm_ratio": 0.6109611715293511,
+          "ci95_welch_t": [
+            0.03757830848527968,
+            9.933218608355865
+          ],
+          "welch_df": 2.177262889773299,
+          "ci95_bootstrap_reps": [
+            0.16355057124440864,
+            1.526959272098035
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "ant04": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "anthropic",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.9623100872565155,
+        "ci95_welch_t": [
+          0.6679896328173046,
+          1.3863099942584214
+        ],
+        "welch_df": 5.7017328207174875,
+        "median_ratio_geomean_over_studies": 1.0534223890313268
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 704360,
+          "median_tokens_C": 713235,
+          "median_ratio": 1.0126000908626271,
+          "gm_ratio": 0.9626256339830611,
+          "ci95_welch_t": [
+            0.66689789239321,
+            1.3894902379672371
+          ],
+          "welch_df": 3.979841559801135,
+          "ci95_bootstrap_reps": [
+            0.778464209295641,
+            1.1903541616122941
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 228125,
+          "median_tokens_C": 250000,
+          "median_ratio": 1.095890410958904,
+          "gm_ratio": 0.9619946439655456,
+          "ci95_welch_t": [
+            0.4583400289820149,
+            2.0190985654772704
+          ],
+          "welch_df": 3.867039027353688,
+          "ci95_bootstrap_reps": [
+            0.6366841127648968,
+            1.4535209477735533
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "ant05": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "anthropic",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.9749822746671308,
+        "ci95_welch_t": [
+          0.331427435551826,
+          2.8681706278551182
+        ],
+        "welch_df": 3.04315122498546,
+        "median_ratio_geomean_over_studies": 0.6871856256000684
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 472250,
+          "median_tokens_C": 188290,
+          "median_ratio": 0.3987083112758073,
+          "gm_ratio": 0.6757985190187072,
+          "ci95_welch_t": [
+            0.06997124405749848,
+            6.527018984149892
+          ],
+          "welch_df": 2.6413627002488766,
+          "ci95_bootstrap_reps": [
+            0.2658855633204479,
+            2.0268166832116985
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 144014,
+          "median_tokens_C": 170568,
+          "median_ratio": 1.1843848514727735,
+          "gm_ratio": 1.4066181105211606,
+          "ci95_welch_t": [
+            0.7988681713876217,
+            2.4767221673250126
+          ],
+          "welch_df": 3.119661785048014,
+          "ci95_bootstrap_reps": [
+            1.0773943558328465,
+            1.9191033272561877
+          ],
+          "pass_A": "2/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "hf01": {
+      "task_set": "original",
+      "covered": true,
+      "pilot_exposed": false,
+      "library": "huggingface-hub",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.44389060948188325,
+        "ci95_welch_t": [
+          0.2827196209009789,
+          0.6969409217452568
+        ],
+        "welch_df": 4.443978863329859,
+        "median_ratio_geomean_over_studies": 0.4456165555189301
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 213844,
+          "median_tokens_C": 68853,
+          "median_ratio": 0.32197770337255194,
+          "gm_ratio": 0.35945106149751865,
+          "ci95_welch_t": [
+            0.1475396936944436,
+            0.8757308787645859
+          ],
+          "welch_df": 2.263793663919672,
+          "ci95_bootstrap_reps": [
+            0.26705630983270345,
+            0.5596365231526502
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 112655,
+          "median_tokens_C": 69478,
+          "median_ratio": 0.61673250188629,
+          "gm_ratio": 0.5481660628996584,
+          "ci95_welch_t": [
+            0.20756733756287069,
+            1.4476556670381588
+          ],
+          "welch_df": 2.2074567269919627,
+          "ci95_bootstrap_reps": [
+            0.34517026411258667,
+            0.7559589635117462
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "hf02": {
+      "task_set": "original",
+      "covered": true,
+      "pilot_exposed": false,
+      "library": "huggingface-hub",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.6345264169223249,
+        "ci95_welch_t": [
+          0.32067980237509724,
+          1.2555320627937068
+        ],
+        "welch_df": 2.57478153859264,
+        "median_ratio_geomean_over_studies": 0.6213681764587107
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 324538,
+          "median_tokens_C": 189299,
+          "median_ratio": 0.5832876273348575,
+          "gm_ratio": 0.6262681650816875,
+          "ci95_welch_t": [
+            0.410226813085646,
+            0.9560852730338203
+          ],
+          "welch_df": 3.119715488478424,
+          "ci95_bootstrap_reps": [
+            0.5136430100427044,
+            0.7901848708385855
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 321864,
+          "median_tokens_C": 213053,
+          "median_ratio": 0.6619348544726965,
+          "gm_ratio": 0.64289356576151,
+          "ci95_welch_t": [
+            0.13466509143395244,
+            3.0691854325162007
+          ],
+          "welch_df": 2.0118695493674204,
+          "ci95_bootstrap_reps": [
+            0.34025248667215063,
+            1.1776163114351643
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "hf03": {
+      "task_set": "original",
+      "covered": true,
+      "pilot_exposed": false,
+      "library": "huggingface-hub",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.9281678259006761,
+        "ci95_welch_t": [
+          0.7973432703494496,
+          1.0804574956274762
+        ],
+        "welch_df": 5.773790932130416,
+        "median_ratio_geomean_over_studies": 0.931875396054897
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 112215,
+          "median_tokens_C": 136318,
+          "median_ratio": 1.2147930312346835,
+          "gm_ratio": 1.1913625245330501,
+          "ci95_welch_t": [
+            0.8874024359310697,
+            1.5994374225179746
+          ],
+          "welch_df": 3.6995177291092403,
+          "ci95_bootstrap_reps": [
+            1.0101713087993212,
+            1.4050534325200523
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 131470,
+          "median_tokens_C": 93981,
+          "median_ratio": 0.7148474937248042,
+          "gm_ratio": 0.7231178548064937,
+          "ci95_welch_t": [
+            0.5532219642515316,
+            0.9451892110744188
+          ],
+          "welch_df": 2.1940575589297953,
+          "ci95_bootstrap_reps": [
+            0.654533635224767,
+            0.8104770456616515
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "hf04": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "huggingface-hub",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.7068735633774949,
+        "ci95_welch_t": [
+          0.5727365882943722,
+          0.8724259019142308
+        ],
+        "welch_df": 5.432906141570612,
+        "median_ratio_geomean_over_studies": 0.7099163412240651
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 398451,
+          "median_tokens_C": 306904,
+          "median_ratio": 0.7702427651078803,
+          "gm_ratio": 0.7753502073941031,
+          "ci95_welch_t": [
+            0.5971984082930718,
+            1.0066469296600316
+          ],
+          "welch_df": 3.981409627451831,
+          "ci95_bootstrap_reps": [
+            0.6697723196833061,
+            0.897570601888016
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 517572,
+          "median_tokens_C": 338655,
+          "median_ratio": 0.654314762004127,
+          "gm_ratio": 0.6444445746411203,
+          "ci95_welch_t": [
+            0.41267702524965744,
+            1.006377346868595
+          ],
+          "welch_df": 2.9576892154757655,
+          "ci95_bootstrap_reps": [
+            0.51439063703552,
+            0.7927550842542652
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "mcp01": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": true,
+      "library": "mcp",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.8968701618437585,
+        "ci95_welch_t": [
+          0.7948242128435941,
+          1.0120175935857343
+        ],
+        "welch_df": 4.0069551459936665,
+        "median_ratio_geomean_over_studies": 0.9105878559545227
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 244090,
+          "median_tokens_C": 230159,
+          "median_ratio": 0.9429267892990291,
+          "gm_ratio": 0.945425559694224,
+          "ci95_welch_t": [
+            0.8800733483221117,
+            1.0156306751332165
+          ],
+          "welch_df": 3.6575486018460177,
+          "ci95_bootstrap_reps": [
+            0.9094802290501549,
+            0.9827915554103194
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 245868,
+          "median_tokens_C": 216206,
+          "median_ratio": 0.8793580295117706,
+          "gm_ratio": 0.8508084840289343,
+          "ci95_welch_t": [
+            0.6635719164898091,
+            1.0908766005722461
+          ],
+          "welch_df": 3.4053511215513748,
+          "ci95_bootstrap_reps": [
+            0.7464099951635079,
+            0.969808926978588
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "mcp02": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "mcp",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.6751346129189781,
+        "ci95_welch_t": [
+          0.3306066390488389,
+          1.3786981013830284
+        ],
+        "welch_df": 5.104019344541452,
+        "median_ratio_geomean_over_studies": 0.6017198195277693
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 789748,
+          "median_tokens_C": 254316,
+          "median_ratio": 0.3220217081904608,
+          "gm_ratio": 0.427864208552112,
+          "ci95_welch_t": [
+            0.09134271147564754,
+            2.004185971737133
+          ],
+          "welch_df": 2.77099271779695,
+          "ci95_bootstrap_reps": [
+            0.2176616648112014,
+            0.9262596599265659
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 296739,
+          "median_tokens_C": 333640,
+          "median_ratio": 1.1243550729765888,
+          "gm_ratio": 1.0653070213648008,
+          "ci95_welch_t": [
+            0.4365957055626698,
+            2.599382072039739
+          ],
+          "welch_df": 3.763280536139782,
+          "ci95_bootstrap_reps": [
+            0.6508578025715345,
+            1.7436666585008944
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "mcp04": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "mcp",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 1.0874123908411197,
+        "ci95_welch_t": [
+          0.7040672014981534,
+          1.6794784719962583
+        ],
+        "welch_df": 3.4750357178768185,
+        "median_ratio_geomean_over_studies": 1.0399741359495043
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 245104,
+          "median_tokens_C": 175248,
+          "median_ratio": 0.7149944513349435,
+          "gm_ratio": 0.8595463852045776,
+          "ci95_welch_t": [
+            0.2937389573938823,
+            2.515226427142086
+          ],
+          "welch_df": 2.018176740446187,
+          "ci95_bootstrap_reps": [
+            0.6234955420613534,
+            1.4059387518621416
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 162116,
+          "median_tokens_C": 245227,
+          "median_ratio": 1.5126637716203213,
+          "gm_ratio": 1.3756857432113636,
+          "ci95_welch_t": [
+            0.8475066454022863,
+            2.2330341293981038
+          ],
+          "welch_df": 3.037590605306813,
+          "ci95_bootstrap_reps": [
+            1.0534846423659987,
+            1.7310788280835625
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "mcp05": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "mcp",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.8888641533533422,
+        "ci95_welch_t": [
+          0.6123080821465178,
+          1.2903299926188099
+        ],
+        "welch_df": 4.5010416283116905,
+        "median_ratio_geomean_over_studies": 0.969019096067779
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 370832,
+          "median_tokens_C": 295450,
+          "median_ratio": 0.7967219657418994,
+          "gm_ratio": 0.7754135533339902,
+          "ci95_welch_t": [
+            0.47459622894203496,
+            1.2669004556449621
+          ],
+          "welch_df": 3.3604799756980976,
+          "ci95_bootstrap_reps": [
+            0.6020977716237905,
+            1.0012820778828861
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 313697,
+          "median_tokens_C": 369716,
+          "median_ratio": 1.1785767795037887,
+          "gm_ratio": 1.0189136876954312,
+          "ci95_welch_t": [
+            0.4302708775516885,
+            2.4128639820583384
+          ],
+          "welch_df": 2.314499942290981,
+          "ci95_bootstrap_reps": [
+            0.6983786213915724,
+            1.393195826044295
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "mcp06": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "mcp",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 1.049700902213238,
+        "ci95_welch_t": [
+          0.637615180614864,
+          1.7281144138455586
+        ],
+        "welch_df": 5.630018265883489,
+        "median_ratio_geomean_over_studies": 0.9721726377885354
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 245371,
+          "median_tokens_C": 275600,
+          "median_ratio": 1.123197117833811,
+          "gm_ratio": 1.1520524094043947,
+          "ci95_welch_t": [
+            0.3908168769730142,
+            3.3960272245512964
+          ],
+          "welch_df": 2.5188144151203735,
+          "ci95_bootstrap_reps": [
+            0.7429793752804894,
+            1.9241464109424489
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 301094,
+          "median_tokens_C": 253357,
+          "median_ratio": 0.84145482806034,
+          "gm_ratio": 0.9564425846537207,
+          "ci95_welch_t": [
+            0.4591904597662728,
+            1.992163378578711
+          ],
+          "welch_df": 3.894170522218681,
+          "ci95_bootstrap_reps": [
+            0.6538857479752795,
+            1.433651665881719
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "oai01": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "openai",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.9586922464294599,
+        "ci95_welch_t": [
+          0.7654178787270285,
+          1.2007699962437646
+        ],
+        "welch_df": 7.474969747402443,
+        "median_ratio_geomean_over_studies": 1.0064317334336883
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 284580,
+          "median_tokens_C": 239879,
+          "median_ratio": 0.8429229039285965,
+          "gm_ratio": 0.8341419185834628,
+          "ci95_welch_t": [
+            0.5711801229103667,
+            1.2181669361895644
+          ],
+          "welch_df": 3.548486109425536,
+          "ci95_bootstrap_reps": [
+            0.6808818930396546,
+            1.021899315359789
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 223557,
+          "median_tokens_C": 268639,
+          "median_ratio": 1.2016577427680637,
+          "gm_ratio": 1.1018398702762253,
+          "ci95_welch_t": [
+            0.7393790350238989,
+            1.6419874546362914
+          ],
+          "welch_df": 3.9412074560383146,
+          "ci95_bootstrap_reps": [
+            0.8827266679221981,
+            1.3753420439738355
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "oai02": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "openai",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.7639780648050386,
+        "ci95_welch_t": [
+          0.5646347430704827,
+          1.0336992023007585
+        ],
+        "welch_df": 5.989910695025192,
+        "median_ratio_geomean_over_studies": 0.7150039809762541
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 551819,
+          "median_tokens_C": 284711,
+          "median_ratio": 0.5159499763509412,
+          "gm_ratio": 0.5770091589692955,
+          "ci95_welch_t": [
+            0.33604309419696093,
+            0.9907645039695765
+          ],
+          "welch_df": 3.701363641380795,
+          "ci95_bootstrap_reps": [
+            0.42996790701424475,
+            0.7743358611260777
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 453602,
+          "median_tokens_C": 449453,
+          "median_ratio": 0.9908532149329148,
+          "gm_ratio": 1.0115307087080576,
+          "ci95_welch_t": [
+            0.5527007146422718,
+            1.8512629847451427
+          ],
+          "welch_df": 2.31535879704775,
+          "ci95_bootstrap_reps": [
+            0.776037721323792,
+            1.3028117098472698
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "oai03": {
+      "task_set": "original",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "openai",
+      "studies": [
+        "main",
+        "replication"
+      ],
+      "combined": {
+        "gm_ratio": 0.7987877039976023,
+        "ci95_welch_t": [
+          0.6147508225409287,
+          1.0379193856471505
+        ],
+        "welch_df": 5.931214257872472,
+        "median_ratio_geomean_over_studies": 0.8018763224730239
+      },
+      "per_study": {
+        "main": {
+          "study": "main-2026-09-28",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 238514,
+          "median_tokens_C": 205965,
+          "median_ratio": 0.8635342160208626,
+          "gm_ratio": 0.8127612984905908,
+          "ci95_welch_t": [
+            0.4676135401851894,
+            1.4126642442015276
+          ],
+          "welch_df": 2.593419618873222,
+          "ci95_bootstrap_reps": [
+            0.6225652973683452,
+            1.0374014461604941
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        },
+        "replication": {
+          "study": "abl-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 287177,
+          "median_tokens_C": 213838,
+          "median_ratio": 0.7446209132346949,
+          "gm_ratio": 0.7850543538954543,
+          "ci95_welch_t": [
+            0.5267499436644777,
+            1.1700244983087809
+          ],
+          "welch_df": 3.93495048846841,
+          "ci95_bootstrap_reps": [
+            0.6309841259490461,
+            0.9767446013689051
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "mi01": {
+      "task_set": "new",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "mistralai",
+      "studies": [
+        "tasks2"
+      ],
+      "combined": {
+        "gm_ratio": 0.678804275542943,
+        "ci95_welch_t": [
+          0.3014672547195631,
+          1.5284421020253471
+        ],
+        "welch_df": 2.658604092730711,
+        "median_ratio_geomean_over_studies": 0.7283831359095242
+      },
+      "per_study": {
+        "tasks2": {
+          "study": "tasks2-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 311597,
+          "median_tokens_C": 226962,
+          "median_ratio": 0.7283831359095242,
+          "gm_ratio": 0.678804275542943,
+          "ci95_welch_t": [
+            0.3014672547195631,
+            1.5284421020253471
+          ],
+          "welch_df": 2.658604092730711,
+          "ci95_bootstrap_reps": [
+            0.46088643053609946,
+            0.9627196695770728
+          ],
+          "pass_A": "3/3",
+          "pass_C": "2/3"
+        }
+      }
+    },
+    "mi02": {
+      "task_set": "new",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "mistralai",
+      "studies": [
+        "tasks2"
+      ],
+      "combined": {
+        "gm_ratio": 0.7754690970083916,
+        "ci95_welch_t": [
+          0.19691571737950783,
+          3.0538563829115173
+        ],
+        "welch_df": 2.537947655400187,
+        "median_ratio_geomean_over_studies": 1.048289228021755
+      },
+      "per_study": {
+        "tasks2": {
+          "study": "tasks2-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 98552,
+          "median_tokens_C": 103311,
+          "median_ratio": 1.048289228021755,
+          "gm_ratio": 0.7754690970083916,
+          "ci95_welch_t": [
+            0.19691571737950783,
+            3.0538563829115173
+          ],
+          "welch_df": 2.537947655400187,
+          "ci95_bootstrap_reps": [
+            0.395156339333554,
+            1.3056226541397309
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "pl01": {
+      "task_set": "new",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "polars",
+      "studies": [
+        "tasks2"
+      ],
+      "combined": {
+        "gm_ratio": 0.8492153483141844,
+        "ci95_welch_t": [
+          0.5703921711233901,
+          1.2643348634888172
+        ],
+        "welch_df": 3.9962099002286893,
+        "median_ratio_geomean_over_studies": 0.8992432449405743
+      },
+      "per_study": {
+        "tasks2": {
+          "study": "tasks2-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 127386,
+          "median_tokens_C": 114551,
+          "median_ratio": 0.8992432449405743,
+          "gm_ratio": 0.8492153483141844,
+          "ci95_welch_t": [
+            0.5703921711233901,
+            1.2643348634888172
+          ],
+          "welch_df": 3.9962099002286893,
+          "ci95_bootstrap_reps": [
+            0.6817851948497483,
+            1.0577623469387794
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "pl02": {
+      "task_set": "new",
+      "covered": true,
+      "pilot_exposed": false,
+      "library": "polars",
+      "studies": [
+        "tasks2"
+      ],
+      "combined": {
+        "gm_ratio": 0.6713438968886203,
+        "ci95_welch_t": [
+          0.340883983398763,
+          1.3221584170540817
+        ],
+        "welch_df": 2.0707042588295552,
+        "median_ratio_geomean_over_studies": 0.6252284921733732
+      },
+      "per_study": {
+        "tasks2": {
+          "study": "tasks2-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 202961,
+          "median_tokens_C": 126897,
+          "median_ratio": 0.6252284921733732,
+          "gm_ratio": 0.6713438968886203,
+          "ci95_welch_t": [
+            0.340883983398763,
+            1.3221584170540817
+          ],
+          "welch_df": 2.0707042588295552,
+          "ci95_bootstrap_reps": [
+            0.5367208230925558,
+            0.905223472014947
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "pl03": {
+      "task_set": "new",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "polars",
+      "studies": [
+        "tasks2"
+      ],
+      "combined": {
+        "gm_ratio": 0.837397274391459,
+        "ci95_welch_t": [
+          0.2961696411618879,
+          2.367677498636486
+        ],
+        "welch_df": 2.3831813421843226,
+        "median_ratio_geomean_over_studies": 0.895176215159551
+      },
+      "per_study": {
+        "tasks2": {
+          "study": "tasks2-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 124819,
+          "median_tokens_C": 111735,
+          "median_ratio": 0.895176215159551,
+          "gm_ratio": 0.837397274391459,
+          "ci95_welch_t": [
+            0.2961696411618879,
+            2.367677498636486
+          ],
+          "welch_df": 2.3831813421843226,
+          "ci95_bootstrap_reps": [
+            0.5063982771042855,
+            1.2356379910732924
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "pl04": {
+      "task_set": "new",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "polars",
+      "studies": [
+        "tasks2"
+      ],
+      "combined": {
+        "gm_ratio": 0.7000735882130775,
+        "ci95_welch_t": [
+          0.466850090130592,
+          1.0498081488566
+        ],
+        "welch_df": 3.8525774701345035,
+        "median_ratio_geomean_over_studies": 0.7464743671777021
+      },
+      "per_study": {
+        "tasks2": {
+          "study": "tasks2-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 156284,
+          "median_tokens_C": 116662,
+          "median_ratio": 0.7464743671777021,
+          "gm_ratio": 0.7000735882130775,
+          "ci95_welch_t": [
+            0.466850090130592,
+            1.0498081488566
+          ],
+          "welch_df": 3.8525774701345035,
+          "ci95_bootstrap_reps": [
+            0.5615317043443385,
+            0.872796718550011
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "st01": {
+      "task_set": "new",
+      "covered": true,
+      "pilot_exposed": false,
+      "library": "streamlit",
+      "studies": [
+        "tasks2"
+      ],
+      "combined": {
+        "gm_ratio": 0.6276996852990633,
+        "ci95_welch_t": [
+          0.4091153938295495,
+          0.9630703240873378
+        ],
+        "welch_df": 2.8140014364567314,
+        "median_ratio_geomean_over_studies": 0.5497352554096655
+      },
+      "per_study": {
+        "tasks2": {
+          "study": "tasks2-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 130692,
+          "median_tokens_C": 71846,
+          "median_ratio": 0.5497352554096655,
+          "gm_ratio": 0.6276996852990633,
+          "ci95_welch_t": [
+            0.4091153938295495,
+            0.9630703240873378
+          ],
+          "welch_df": 2.8140014364567314,
+          "ci95_bootstrap_reps": [
+            0.5226862946710652,
+            0.7925157965126579
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "st02": {
+      "task_set": "new",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "streamlit",
+      "studies": [
+        "tasks2"
+      ],
+      "combined": {
+        "gm_ratio": 0.9925745812409688,
+        "ci95_welch_t": [
+          0.7746920265735966,
+          1.2717367231507049
+        ],
+        "welch_df": 3.7871644359148937,
+        "median_ratio_geomean_over_studies": 1.0012322419675137
+      },
+      "per_study": {
+        "tasks2": {
+          "study": "tasks2-opus55-2026-10-22",
+          "n_A": 3,
+          "n_C": 3,
+          "median_tokens_A": 98195,
+          "median_tokens_C": 98316,
+          "median_ratio": 1.0012322419675137,
+          "gm_ratio": 0.9925745812409688,
+          "ci95_welch_t": [
+            0.7746920265735966,
+            1.2717367231507049
+          ],
+          "welch_df": 3.7871644359148937,
+          "ci95_bootstrap_reps": [
+            0.8673196478181364,
+            1.1262400598390445
+          ],
+          "pass_A": "3/3",
+          "pass_C": "3/3"
+        }
+      }
+    },
+    "cs01": {
+      "task_set": "case",
+      "covered": true,
+      "pilot_exposed": false,
+      "library": "mcp",
+      "studies": [
+        "case"
+      ],
+      "combined": {
+        "gm_ratio": 0.8053193396896609,
+        "ci95_welch_t": [
+          0.5571271723476243,
+          1.164077559070355
+        ],
+        "welch_df": 4.994026922456962,
+        "median_ratio_geomean_over_studies": 0.7375440262166549
+      },
+      "per_study": {
+        "case": {
+          "study": "case-opus55-2026-10-22",
+          "n_A": 5,
+          "n_C": 5,
+          "median_tokens_A": 653020,
+          "median_tokens_C": 481631,
+          "median_ratio": 0.7375440262166549,
+          "gm_ratio": 0.8053193396896609,
+          "ci95_welch_t": [
+            0.5571271723476243,
+            1.164077559070355
+          ],
+          "welch_df": 4.994026922456962,
+          "ci95_bootstrap_reps": [
+            0.6321079462825786,
+            1.0443646467484555
+          ],
+          "pass_A": "1/5",
+          "pass_C": "3/5"
+        }
+      }
+    },
+    "cs02": {
+      "task_set": "case",
+      "covered": false,
+      "pilot_exposed": false,
+      "library": "mcp",
+      "studies": [
+        "case"
+      ],
+      "combined": {
+        "gm_ratio": 0.8501467731586156,
+        "ci95_welch_t": [
+          0.6196615061295261,
+          1.1663618423328888
+        ],
+        "welch_df": 6.948525475344792,
+        "median_ratio_geomean_over_studies": 0.9771084439507701
+      },
+      "per_study": {
+        "case": {
+          "study": "case-opus55-2026-10-22",
+          "n_A": 5,
+          "n_C": 5,
+          "median_tokens_A": 471746,
+          "median_tokens_C": 460947,
+          "median_ratio": 0.9771084439507701,
+          "gm_ratio": 0.8501467731586156,
+          "ci95_welch_t": [
+            0.6196615061295261,
+            1.1663618423328888
+          ],
+          "welch_df": 6.948525475344792,
+          "ci95_bootstrap_reps": [
+            0.6636324934978046,
+            1.0714909415863174
+          ],
+          "pass_A": "5/5",
+          "pass_C": "5/5"
+        }
+      }
+    }
+  }
+}

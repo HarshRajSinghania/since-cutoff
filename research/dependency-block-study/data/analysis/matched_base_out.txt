@@ -1,0 +1,20 @@
+matched_base.py: b = 704 tokens, K = $0.1717, u point estimate (control cost) = 0.0663, s = {'main': 0.08724311764705882, 'replication': 0.06915338431372549, 'new_tasks': 0.04559704166666667}
+
+[all contexts] t = 45.26: c = $0.01200; c/K = 0.0699
+  f* (main s): u = 0 0.1376; u = point 0.0082; u = -0.037 0.1961
+  b_max at u = 0 (tokens per unit f): main 5116, replication 4055, new tasks 2674
+  f_strict = 0.0084: u needed (main s) 0.0662; b_max at u = 0 43 tokens; fleet of 1,000 contexts/day at u = 0: pays $12.00, saves $0.73, net $-11.27
+  f_upper = 0.0696: u needed (main s) 0.0371; b_max at u = 0 356 tokens; fleet of 1,000 contexts/day at u = 0: pays $12.00, saves $6.07, net $-5.93
+  u = 0 range over sizes and savings (704/main .. 1320/new tasks): 0.1376 .. 0.4936
+
+[Python-editing contexts] t = 81.55: c = $0.01711; c/K = 0.0997
+  f* (main s): u = 0 0.1962; u = point 0.0755; u = -0.037 0.2507
+  b_max at u = 0 (tokens per unit f): main 3589, replication 2845, new tasks 1876
+  f_strict = 0.0214: u needed (main s) 0.0907; b_max at u = 0 77 tokens; fleet of 1,000 contexts/day at u = 0: pays $17.11, saves $1.87, net $-15.25
+  f_upper = 0.1774: u needed (main s) 0.0116; b_max at u = 0 637 tokens; fleet of 1,000 contexts/day at u = 0: pays $17.11, saves $15.48, net $-1.64
+
+[benchmark (16.6 CLI turns)] t = 16.65: c = $0.00798; c/K = 0.0465
+  f* (main s): u = 0 0.0914; u = point 0.0000; u = -0.037 0.1531
+  b_max at u = 0 (tokens per unit f): main 7701, replication 6104, new tasks 4025
+
+second audit snippets: 17 run; on true uses 14 (14 ran cleanly); on false positives 3 (2 ran cleanly)

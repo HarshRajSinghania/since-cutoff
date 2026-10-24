@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "pl02",
+  "task_id": "pl02-batched-csv",
+  "task_sha256": "1c5fa8ad56ab8d59ec73ea8e70045ac0f2eace112e6c49ae038b99cdee71ac14",
+  "parts_sha256": {
+    "task.toml": "f63fefbbfe4446fa134205b47747c4ae37f2c2ac228efb7c35115f3ca9185967",
+    "repo": "3c2055e4c8f612269dc7e7eaf05f86c38bcb49f2c82769ebced92bbb1889ced4",
+    "hidden": "de724b360ee44f47d4af2a4a0547823f172cd1afe00c7bf456cc5b7fc1881acd",
+    "reference": "aa23d945cf82d1b3a26dc40433505911a3a419a39aef022836f74a6eb1b08155",
+    "stale": "e15c53483e125df8bb0c9d51f1ca4e074a0bf0548f1085ee57096e897bee033a"
+  },
+  "validated_at": "2026-10-22T17:27:49+00:00",
+  "library": "polars",
+  "pinned": "2.0.0",
+  "stale_version": "1.42.1",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 4,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.88,
+        "timed_out": false,
+        "first_error": "NotImplementedError"
+      },
+      "summary": "4 failed in 0.37s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "2.0.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 4,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.88,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "4 passed in 0.36s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 4,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.94,
+        "timed_out": false,
+        "first_error": "polars.exceptions.AttributeRemovedError: `read_csv_batched` was removed in version 2.0; use `scan_csv` instead, in conjunction with `LazyFrame.collect(engine='streaming')`."
+      },
+      "summary": "4 failed in 0.36s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.42.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 4,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.9,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "4 passed, 4 warnings in 0.36s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "polars-2.0.0 bd3c78b38a76",
+    "stale": "polars-1.42.1 225ce1b17d49"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 4.4
+}

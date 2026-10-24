@@ -1,0 +1,649 @@
+{
+ "library": "streamlit",
+ "from": "1.58.0",
+ "to": "1.66.1",
+ "built_by": "Claude (AI), single pass",
+ "built_utc": "2026-10-23T19:33:32Z",
+ "sources_read": [
+  "range_streamlit_docs.md",
+  "releases_streamlit.md"
+ ],
+ "candidates": [
+  {
+   "id": "st-001",
+   "description": "The deprecated Snowpark connection class and the 'snowpark' connection type were removed.",
+   "old_path": "streamlit.connections.SnowparkConnection",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "streamlit.connections.SnowparkConnection",
+    "streamlit.connections.snowpark_connection.SnowparkConnection",
+    "streamlit.connection"
+   ],
+   "documented_in": "1.59.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-59-0",
+   "source_quote": "The deprecated Snowpark connection type has been removed. Migrate to a supported connection type",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "st-002",
+   "description": "The deprecated st.bokeh_chart command was removed.",
+   "old_path": "streamlit.bokeh_chart",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "streamlit.bokeh_chart",
+    "streamlit.delta_generator.DeltaGenerator.bokeh_chart",
+    "streamlit.elements.bokeh_chart.BokehMixin.bokeh_chart"
+   ],
+   "documented_in": "1.59.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-59-0",
+   "source_quote": "The deprecated st.bokeh_chart command has been removed.",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "st-003",
+   "description": "A keyed st.data_editor with num_rows='fixed' now derives its widget identity from the key and data schema instead of the full data.",
+   "old_path": "streamlit.data_editor",
+   "params": [
+    "key",
+    "num_rows"
+   ],
+   "new_path": null,
+   "api_names": [
+    "streamlit.data_editor",
+    "streamlit.delta_generator.DeltaGenerator.data_editor"
+   ],
+   "documented_in": "1.60.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0",
+   "source_quote": "st.data_editor now uses key as the primary row identity when num_rows=\"fixed\"",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "st-004",
+   "description": "The deprecated use_column_width parameter of st.image was removed in favour of width.",
+   "old_path": "streamlit.image",
+   "params": [
+    "use_column_width"
+   ],
+   "new_path": null,
+   "api_names": [
+    "streamlit.image",
+    "streamlit.delta_generator.DeltaGenerator.image"
+   ],
+   "documented_in": "1.61.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-61-0",
+   "source_quote": "Breaking change: The deprecated use_column_width parameter has been removed from st.image.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "st-005",
+   "description": "st.html no longer loads a local file when given a string path; only pathlib.Path loads files.",
+   "old_path": "streamlit.html",
+   "params": [
+    "body"
+   ],
+   "new_path": null,
+   "api_names": [
+    "streamlit.html",
+    "streamlit.delta_generator.DeltaGenerator.html"
+   ],
+   "documented_in": "1.61.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-61-0",
+   "source_quote": "Breaking change: Passing local file paths as strings to st.html and st.iframe is deprecated.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "st-006",
+   "description": "st.iframe no longer loads a local file when given a string path; only pathlib.Path loads files.",
+   "old_path": "streamlit.iframe",
+   "params": [
+    "src"
+   ],
+   "new_path": null,
+   "api_names": [
+    "streamlit.iframe",
+    "streamlit.delta_generator.DeltaGenerator.iframe"
+   ],
+   "documented_in": "1.61.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-61-0",
+   "source_quote": "Use a pathlib.Path object to load local files instead",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "st-007",
+   "description": "The long-deprecated st.cache decorator was removed.",
+   "old_path": "streamlit.cache",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "streamlit.cache",
+    "streamlit.runtime.caching.cache",
+    "streamlit.runtime.caching.legacy_cache_api.cache"
+   ],
+   "documented_in": "1.62.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-62-0",
+   "source_quote": "The long-deprecated st.cache command has been removed; use st.cache_data or st.cache_resource instead",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "st-008",
+   "description": "st.pyplot can no longer be called without a figure (no global-figure fallback); fig is required.",
+   "old_path": "streamlit.pyplot",
+   "params": [
+    "fig"
+   ],
+   "new_path": null,
+   "api_names": [
+    "streamlit.pyplot",
+    "streamlit.delta_generator.DeltaGenerator.pyplot"
+   ],
+   "documented_in": "1.62.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-62-0",
+   "source_quote": "Calling st.pyplot without an explicit figure is no longer supported",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "st-009",
+   "description": "st.rerun called inside a widget callback now triggers a rerun instead of being a warned no-op.",
+   "old_path": "streamlit.rerun",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "streamlit.rerun",
+    "streamlit.commands.execution_control.rerun"
+   ],
+   "documented_in": "1.63.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0",
+   "source_quote": "st.rerun() and st.switch_page() now take effect inside widget callbacks instead of being discarded",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "st-010",
+   "description": "st.switch_page called inside a widget callback now navigates instead of being a warned no-op.",
+   "old_path": "streamlit.switch_page",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "streamlit.switch_page",
+    "streamlit.commands.execution_control.switch_page"
+   ],
+   "documented_in": "1.63.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0",
+   "source_quote": "apps that relied on the previous no-op will now rerun",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "st-011",
+   "description": "AppTest widget interactions (set_value and the helpers built on it) now raise on disabled widgets.",
+   "old_path": "streamlit.testing.v1.element_tree.Widget.set_value",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "streamlit.testing.v1.element_tree.Widget.set_value",
+    "streamlit.testing.v1.AppTest"
+   ],
+   "documented_in": "1.63.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0",
+   "source_quote": "interacting with a disabled widget raises",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "st-012",
+   "description": "AppTest.query_params now holds single values as strings rather than one-item lists.",
+   "old_path": "streamlit.testing.v1.AppTest.query_params",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "streamlit.testing.v1.AppTest.query_params",
+    "streamlit.testing.v1.app_test.AppTest.query_params"
+   ],
+   "documented_in": "1.65.0",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-65-0",
+   "source_quote": "AppTest.query_params returns single values as strings instead of one-item lists",
+   "change_type_guess": "behaviour_only"
+  }
+ ],
+ "excluded": [
+  {
+   "text": "/_stcore/metrics memory stats cheap by default (labelled breaking on GitHub)",
+   "reason": "server_or_rest_only",
+   "source_url": "https://github.com/streamlit/streamlit/releases/tag/1.59.0"
+  },
+  {
+   "text": "Polling file watcher is the default under WSL",
+   "reason": "server_or_rest_only",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-59-0"
+  },
+  {
+   "text": "Server binds IPv6 dual-stack wildcard by default",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-59-0"
+  },
+  {
+   "text": "StreamlitPage validates that its source matches the registered page",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-59-0"
+  },
+  {
+   "text": "New persist_state widget parameter",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-59-0"
+  },
+  {
+   "text": "Security hardening: host messages from child frames/injected scripts rejected (frontend only)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "Security hardening: client query strings capped at 512 KiB / 1,000 fields (server request handling)",
+   "reason": "server_or_rest_only",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "Security hardening: new server.maxWidgetStateSize config option limits widget payload",
+   "reason": "server_or_rest_only",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "st.dataframe keeps row selections when the user sorts (frontend)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "st.columns gap accepts integer pixels",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "st.metric zero delta shown in neutral grey (frontend rendering)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "Vega-Lite action menu overlay replaced by native toolbar (frontend)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "Non-finite floats in URL query params rejected",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "Missing Submit Button warning removed",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "cachetools dependency replaced by internal TTLCache",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-60-0"
+  },
+  {
+   "text": "st.download_button infers missing file_name/mime from a file object's name",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-61-0"
+  },
+  {
+   "text": "st.Page is a proper class; StreamlitPage stays as a compatible alias",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-61-0"
+  },
+  {
+   "text": "disabled widget parameter enforced server-side (security; no change for browser users)",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-61-0"
+  },
+  {
+   "text": "server.allowedHosts config option",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-61-0"
+  },
+  {
+   "text": "st.Page rejects network paths and null bytes",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-61-0"
+  },
+  {
+   "text": "GitPython dependency dropped in favour of git CLI",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-61-0"
+  },
+  {
+   "text": "streamlit.typing public namespace",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-62-0"
+  },
+  {
+   "text": "st.date_input / st.datetime_input segmented-field UI (frontend)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-62-0"
+  },
+  {
+   "text": "Matplotlib savefig kwargs to st.pyplot deprecated (still applied with a warning at 1.66.1)",
+   "reason": "deprecation_only",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-62-0"
+  },
+  {
+   "text": "st.table uses a 14 px font (frontend)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-62-0"
+  },
+  {
+   "text": "Invalid enum-like values consistently raise StreamlitValueError, compatible with old classes",
+   "reason": "unnamed",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-62-0"
+  },
+  {
+   "text": "tenacity dependency dropped",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-62-0"
+  },
+  {
+   "text": "Controls placed directly in st.columns default to no label wrapping (frontend layout; wrap is new in range)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0"
+  },
+  {
+   "text": "st.multiselect: Enter selects first row; new select_all parameter",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0"
+  },
+  {
+   "text": "st.rerun accepts fragment keys for event-scoped reruns",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0"
+  },
+  {
+   "text": "Invalid API usage raises specific StreamlitAPIException subclasses instead of generic TypeError/ValueError (no element named)",
+   "reason": "unnamed",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0"
+  },
+  {
+   "text": "st.spinner animation under prefers-reduced-motion (frontend)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0"
+  },
+  {
+   "text": "st.user.is_logged_in typed as bool; st.context key notation",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0"
+  },
+  {
+   "text": "Library warnings also logged to server console",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-63-0"
+  },
+  {
+   "text": "async/await support in app code and async cached functions",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-64-0"
+  },
+  {
+   "text": "mapbox.token config option removed (config only)",
+   "reason": "server_or_rest_only",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-64-0"
+  },
+  {
+   "text": "Widgets after st.rerun keep user-selected values",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-64-0"
+  },
+  {
+   "text": "st.slider swaps reversed min/max instead of erroring",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-64-0"
+  },
+  {
+   "text": "st.number_input raises clear error when min_value > max_value",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-64-0"
+  },
+  {
+   "text": "st.cache_resource rejects async validate/on_release callbacks",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-64-0"
+  },
+  {
+   "text": "AppTest raises AppTestError for set_value()/click() on untyped elements",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-64-0"
+  },
+  {
+   "text": "Button help tooltips delayed 500 ms (frontend)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-64-0"
+  },
+  {
+   "text": "on_change='ignore' mode added to many widgets (1.63-1.66)",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-65-0"
+  },
+  {
+   "text": "required parameter on st.text_input and st.number_input",
+   "reason": "addition",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-65-0"
+  },
+  {
+   "text": "Mistyped/removed st.* names raise AttributeError with suggestions (message only)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-65-0"
+  },
+  {
+   "text": "st.image accepts the removed use_column_width with a warning (partial revert of st-004)",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-65-0"
+  },
+  {
+   "text": "AppTest form widgets commit values only on form submit",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-65-0"
+  },
+  {
+   "text": "AppTest lists iconed expanders under at.expander instead of at.status",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-65-0"
+  },
+  {
+   "text": "Sync cached functions returning awaitables raise a clear error",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-65-0"
+  },
+  {
+   "text": "Installable alongside websockets 17",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-65-0"
+  },
+  {
+   "text": "Python 3.10 dropped; NumPy/pandas/Pillow/PyArrow minimums raised",
+   "reason": "python_version",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  },
+  {
+   "text": "Skip link and main/nav landmarks; custom CSS selectors should drop the tag (frontend)",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  },
+  {
+   "text": "httptools made an optional dependency",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  },
+  {
+   "text": "toml dependency no longer required; tomli-w replaced by in-house writer",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  },
+  {
+   "text": "Startup warning for websockets 17 with old uvicorn",
+   "reason": "internal",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  },
+  {
+   "text": "st.switch_page / st.page_link reject Windows network and device paths",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  },
+  {
+   "text": "Disabled st.download_button with callable data no longer registers a download",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  },
+  {
+   "text": "Type hints for st.connection, st.query_params, st.secrets, st.session_state tightened",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  },
+  {
+   "text": "hasattr/getattr on missing st.* attributes no longer imports modules",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  },
+  {
+   "text": "Sidebar toggle reports aria-expanded; custom CSS should use data-collapsed (frontend)",
+   "reason": "bugfix",
+   "source_url": "https://docs.streamlit.io/develop/quick-reference/release-notes/2026#version-1-66-0"
+  }
+ ],
+ "excluded_counts": {
+  "addition": 11,
+  "bugfix": 20,
+  "deprecation_only": 1,
+  "internal": 20,
+  "python_version": 1,
+  "server_or_rest_only": 5,
+  "unnamed": 2
+ },
+ "shuffle_order": [
+  "st-008",
+  "st-010",
+  "st-007",
+  "st-001",
+  "st-003",
+  "st-011",
+  "st-002",
+  "st-006",
+  "st-009",
+  "st-004",
+  "st-012",
+  "st-005"
+ ],
+ "verification": [
+  {
+   "id": "st-008",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/elements/pyplot.py:42 `fig: Figure | None = None`; :152-156 falls back to the global figure",
+   "new_evidence": "streamlit-1.66.1/streamlit/elements/pyplot.py:85 `fig: Figure,` (no default); :191-192 `if fig is None: raise StreamlitMissingRequiredParameterError`",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "st-010",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/commands/execution_control.py:338 switch_page requests a rerun, which inside a callback surfaces as RerunException caught at runtime/state/session_state.py:668-673 (no-op warning)",
+   "new_evidence": "streamlit-1.66.1/streamlit/runtime/state/session_state.py:613 'Only st.switch_page() builds such a request from a callback'; :1019-1030 navigating request queued after callbacks",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "st-007",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/__init__.py:287 `cache = _cache`; runtime/caching/__init__.py:36,103; runtime/caching/legacy_cache_api.py",
+   "new_evidence": "streamlit-1.66.1/streamlit/__init__.py:294-295 only cache_data/cache_resource; legacy_cache_api.py absent; command_suggestions.py:34 maps 'cache' to replacements",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "st-001",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/connections/__init__.py:20 `from streamlit.connections.snowpark_connection import SnowparkConnection`; :31 in __all__; runtime/connection_factory.py:45 `\"snowpark\": SnowparkConnection`",
+   "new_evidence": "streamlit-1.66.1/streamlit/connections/__init__.py:15-31 no SnowparkConnection (snowpark_connection.py absent); runtime/connection_factory.py:137-141 type 'snowpark' raises StreamlitAPIException 'snowpark-connection-removed'",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "st-003",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/elements/widgets/data_editor.py:1109-1112 compute_and_register_element_id(..., key_as_main_identity=False, data=arrow_bytes)",
+   "new_evidence": "streamlit-1.66.1/streamlit/elements/widgets/data_editor.py:1417-1421 `use_signature_identity = key is not None and num_rows == \"fixed\"` -> key_as_main_identity={'data_signature','num_rows'}; :1443-1446",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "st-011",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/testing/v1/element_tree.py:200-203 Widget.set_value assigns without any disabled check",
+   "new_evidence": "streamlit-1.66.1/streamlit/testing/v1/element_tree.py:521-533 _assert_can_interact raises AppTestError for disabled widgets; called from set_value",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "st-002",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/__init__.py:189 `bokeh_chart = _main.bokeh_chart`; elements/bokeh_chart.py:32 `def bokeh_chart(`; delta_generator.py:51 BokehMixin",
+   "new_evidence": "streamlit-1.66.1/streamlit/__init__.py has no bokeh_chart (module __getattr__ at :365 raises AttributeError); elements/bokeh_chart.py absent; command_suggestions.py:119 removal hint",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "st-006",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/elements/iframe.py:356-358 `elif _is_file(src_str):` -> self._process_local_file(...)",
+   "new_evidence": "streamlit-1.66.1/streamlit/elements/iframe.py:406-410 `elif _is_file(src_str):` -> deprecation warning, `iframe_proto.srcdoc = src_str` (file not read)",
+   "change_type": "behaviour_only",
+   "notes": "Same as st-005."
+  },
+  {
+   "id": "st-009",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/runtime/state/session_state.py:668-673 and :719-736 RerunException in a callback -> warning 'Calling st.rerun() within a callback is a no-op.'",
+   "new_evidence": "streamlit-1.66.1/streamlit/runtime/state/session_state.py:1112-1135 _run_callback_and_record_rerun records the RerunException as a pending rerun; :1008-1030 queues it after callbacks",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "st-004",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/elements/image.py:57 positional `use_column_width: UseColumnWith = None`; :177-191 maps it to width",
+   "new_evidence": "streamlit-1.66.1/streamlit/elements/image.py:65-69 now keyword-only `use_column_width: Any = None` (compatibility no-op); :48 'was removed and has no effect'; :199-202 only warns",
+   "change_type": "signature",
+   "notes": "Partially reverted in 1.65.0: the keyword is accepted again but ignored; the positional slot is gone (clamp moved to 4th) and the parameter has no effect, so old callers break or behave differently."
+  },
+  {
+   "id": "st-012",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/testing/v1/app_test.py:378 `self.query_params = parse.parse_qs(query_string)` (lists)",
+   "new_evidence": "streamlit-1.66.1/streamlit/testing/v1/app_test.py:131-142 single values unwrapped to str; :565 `self.query_params = _query_params_from_query_string(query_string)`",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "st-005",
+   "status": "verified",
+   "old_evidence": "streamlit-1.58.0/streamlit/elements/html.py:118-120 `elif isinstance(body, Path) or _is_file(body):` opens and reads the file",
+   "new_evidence": "streamlit-1.66.1/streamlit/elements/html.py:142-144 string path that is a file -> deprecation warning and `html_content = clean_text(body)` (path text rendered, file not read)",
+   "change_type": "behaviour_only",
+   "notes": "Documented as a deprecation, but the code no longer reads string paths (comment: 'never read from a string path')."
+  }
+ ],
+ "sample": [
+  "st-008",
+  "st-010",
+  "st-007",
+  "st-001",
+  "st-003",
+  "st-011",
+  "st-002",
+  "st-006",
+  "st-009",
+  "st-004",
+  "st-012",
+  "st-005"
+ ],
+ "notes": [
+  "Candidate ids follow chronological release order (1.59.0 -> 1.66.0), the order of releases_streamlit.md; the docs page lists newest first.",
+  "Excluded list covers every non-trivial change considered; routine additions and frontend-only bug fixes are summarised, not exhaustively listed.",
+  "Releases 1.59.1, 1.59.2, 1.61.1 and 1.66.1 have empty GitHub bodies."
+ ]
+}

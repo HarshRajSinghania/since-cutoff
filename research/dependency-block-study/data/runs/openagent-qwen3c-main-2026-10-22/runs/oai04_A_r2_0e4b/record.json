@@ -1,0 +1,54 @@
+{
+ "schema": "since-cutoff-bench/openagent-run@1",
+ "study_id": "openagent-qwen3c-main-2026-10-22",
+ "run_id": "oai04_A_r2_0e4b",
+ "attempt": 1,
+ "attempt_id": "oai04_A_r2_0e4b",
+ "task": "oai04",
+ "library": "openai",
+ "stratum": "no-change-control",
+ "kind": "no-change-control",
+ "condition": "A",
+ "rep": 2,
+ "block_id": "oai04#2",
+ "order_index": 83,
+ "pilot": false,
+ "condition_config": {
+  "notes_tokens": 0,
+  "notes_covered": null
+ },
+ "agent": {
+  "scaffold": "mini-swe-agent",
+  "step_limit": 40,
+  "textbased": false,
+  "wall_limit_s": 1800,
+  "temperature": 0.7,
+  "command_timeout_s": 180
+ },
+ "wall_s": 96.8,
+ "exit": {
+  "status": "Submitted"
+ },
+ "process": {
+  "turns": 16,
+  "commands": 16,
+  "calls": 16,
+  "input_tokens": 52677,
+  "output_tokens": 2019,
+  "total_tokens": 54696,
+  "stale_in_first_edit": false,
+  "stale_in_final": false,
+  "first_edit": {
+   "command_index": 8,
+   "stale": false
+  }
+ },
+ "valid": true,
+ "invalid_reason": null,
+ "grade": {
+  "passed": false,
+  "hidden_passed": false,
+  "visible_passed": true,
+  "lock_modified": false
+ }
+}

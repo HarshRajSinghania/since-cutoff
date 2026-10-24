@@ -1,0 +1,3416 @@
+{
+ "library": "polars",
+ "from": "1.42.1",
+ "to": "2.0.0",
+ "built_by": "Claude (AI), single pass",
+ "built_utc": "2026-10-23T19:42:07Z",
+ "sources_read": [
+  "releases_polars.md",
+  "mig_pola-rs_polars.md"
+ ],
+ "notes": [
+  "Candidate order: release bodies py-1.43.0 .. py-2.0.0 (only the py-2.0.0 'Breaking changes' list yields candidates), then the 2.0 upgrade guide in heading order, then the removal table row by row.",
+  "Unit decisions: DataFrame/LazyFrame/Expr/Series methods of the same name, read_X/scan_X twins and sync/async twins form one item (as in the brief's explode example); differently named callables in one line are separate items; one guide heading or table row per item, several parameters of the same callable in that row/heading form one item.",
+  "Wildcard rows (read/scan_*(rechunk), sink_*(retries), write_*(retries), rolling_*(min_periods)) are one item each, with family members in api_names.",
+  "Migration-guide anchors cite the GitHub blob URL of docs/source/releases/upgrade/2.md (SOURCES.tsv lists the raw URL).",
+  "Rust-only behaviour changes with no Python-side trace were marked failed/cannot_locate per the brief."
+ ],
+ "candidates": [
+  {
+   "id": "pl-001",
+   "description": "SQL window functions in grouped queries now run over the aggregated rows and QUALIFY is evaluated before the projection.",
+   "old_path": "polars.sql",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.SQLContext.execute",
+    "polars.DataFrame.sql",
+    "polars.LazyFrame.sql"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0",
+   "source_quote": "Run SQL window functions over grouped rows on the aggregated rows, and evaluate QUALIFY before the projection",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-002",
+   "description": "SQL exact numeric literals become Decimal instead of Float64, and SQL %, MOD, DIV now truncate toward zero.",
+   "old_path": "polars.sql",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.SQLContext.execute",
+    "polars.DataFrame.sql",
+    "polars.LazyFrame.sql"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0",
+   "source_quote": "Type exact SQL numeric literals as Decimal and truncate SQL `%`/DIV",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-003",
+   "description": "Expression plugins are now treated as deterministic by default and may be deduplicated by common-subexpression elimination.",
+   "old_path": "polars.plugins.register_plugin_function",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0",
+   "source_quote": "Allow deterministic expression plugins to opt into CSE/CSPE",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-004",
+   "description": "Parquet columns with the ENUM logical type are read as String instead of Binary.",
+   "old_path": "polars.read_parquet",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_parquet"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0",
+   "source_quote": "Read Parquet ENUM type as pl.String",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-005",
+   "description": "engine='auto' in LazyFrame.collect now selects the streaming engine instead of the in-memory engine.",
+   "old_path": "polars.LazyFrame.collect",
+   "params": [
+    "engine"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.collect_async"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#the-lazy-api-defaults-to-the-streaming-engine",
+   "source_quote": "`\"auto\"` now resolves to the streaming engine for lazy queries (it used to resolve to the in-memory engine)",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-006",
+   "description": "pl.sql(eager=True) now collects through the default (streaming) engine instead of the in-memory engine.",
+   "old_path": "polars.sql",
+   "params": [
+    "eager"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#the-lazy-api-defaults-to-the-streaming-engine",
+   "source_quote": "`SQLContext.execute(eager=True)` and `pl.sql(..., eager=True)` used to collect through the in-memory engine",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-007",
+   "description": "SQLContext.execute(eager=True) now collects through the default (streaming) engine.",
+   "old_path": "polars.SQLContext.execute",
+   "params": [
+    "eager"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#the-lazy-api-defaults-to-the-streaming-engine",
+   "source_quote": "`SQLContext.execute(eager=True)` and `pl.sql(..., eager=True)` used to collect through the in-memory engine",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-008",
+   "description": "read_csv drops the n_threads, batch_size, sample_size and rechunk parameters.",
+   "old_path": "polars.read_csv",
+   "params": [
+    "n_threads",
+    "batch_size",
+    "sample_size",
+    "rechunk"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#plread_csv-is-now-dispatched-to-plscan_csvcollect",
+   "source_quote": "It loses `n_threads`, `batch_size`, `sample_size`, and `rechunk`, which have no equivalent in the lazy reader",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-009",
+   "description": "read_csv now behaves like scan_csv: list schema_overrides must cover all columns and columns=[...] keeps requested order.",
+   "old_path": "polars.read_csv",
+   "params": [
+    "schema_overrides",
+    "columns"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#plread_csv-is-now-dispatched-to-plscan_csvcollect",
+   "source_quote": "a `schema_overrides` list must cover every column in the file, and `columns=[...]` returns columns in the requested order",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-010",
+   "description": "read_ipc drops the memory_map and rechunk parameters.",
+   "old_path": "polars.read_ipc",
+   "params": [
+    "memory_map",
+    "rechunk"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#plread_ipc-is-now-dispatched-to-plscan_ipccollect-for-all-non-use_pyarrow-inputs",
+   "source_quote": "The `memory_map` and `rechunk` parameters are removed.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-011",
+   "description": "show_graph plan_stage default changes from 'ir' to 'physical'.",
+   "old_path": "polars.LazyFrame.show_graph",
+   "params": [
+    "plan_stage"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#change-default-show_graph-plan_stage-to-physical",
+   "source_quote": "`LazyFrame.show_graph()`'s `plan_stage` parameter now defaults to `\"physical\"` instead of `\"ir\"`.",
+   "change_type_guess": "default_change"
+  },
+  {
+   "id": "pl-012",
+   "description": "LazyFrame.profile is removed.",
+   "old_path": "polars.LazyFrame.profile",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-lazyframeprofile",
+   "source_quote": "`LazyFrame.profile()` has been removed.",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-013",
+   "description": "pl.concat(how='horizontal') now raises on unequal heights instead of null-padding; strict=False is rejected.",
+   "old_path": "polars.concat",
+   "params": [
+    "how",
+    "strict"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#update-the-strict-behavior-of-plconcatplunion",
+   "source_quote": "`how=\"horizontal\"` now always requires equal heights, matching what `strict=True` used to mean.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-014",
+   "description": "pl.union(how='horizontal') now requires equal heights instead of null-padding.",
+   "old_path": "polars.union",
+   "params": [
+    "how",
+    "strict"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#update-the-strict-behavior-of-plconcatplunion",
+   "source_quote": "`how=\"horizontal\"` now always requires equal heights, matching what `strict=True` used to mean.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-015",
+   "description": "explode() empty_as_null now defaults to False, so empty lists produce no rows.",
+   "old_path": "polars.DataFrame.explode",
+   "params": [
+    "empty_as_null"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.explode",
+    "polars.Expr.explode",
+    "polars.Series.explode"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#set-explode-empty_as_nullfalse-by-default",
+   "source_quote": "An empty list now explodes into zero rows, rather than one `null` row.",
+   "change_type_guess": "default_change"
+  },
+  {
+   "id": "pl-016",
+   "description": "is_in only coerces operands losslessly and raises otherwise.",
+   "old_path": "polars.Expr.is_in",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.is_in"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#make-coercion-casts-for-is_in-strict-instead-of-lossy",
+   "source_quote": "`is_in()` no longer lossily coerces operands to a shared supertype",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-017",
+   "description": "Selector &, |, ^ with pl.col(...) is now an element-wise operator rather than a column set operation.",
+   "old_path": "polars.selectors.Selector.__and__",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.selectors.Selector.__or__",
+    "polars.selectors.Selector.__xor__",
+    "polars.selectors.Selector.__rand__",
+    "polars.selectors.Selector.__ror__",
+    "polars.selectors.Selector.__rxor__"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#stop-coercing-plcol-to-a-selector-in-selector---",
+   "source_quote": "Combining a selector with `pl.col(...)` via `&`, `|`, or `^` used to be special-cased",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-018",
+   "description": "pl.datetime output column is named after its leftmost argument instead of 'datetime'.",
+   "old_path": "polars.datetime",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#set-the-output-name-of-pldatetime-and-plrepeat-to-their-leftmost-argument-name",
+   "source_quote": "`pl.datetime(...)` and `pl.repeat(...)` used to always name their output column",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-019",
+   "description": "pl.repeat output is named after its leftmost argument (or 'literal') instead of 'repeat'.",
+   "old_path": "polars.repeat",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#set-the-output-name-of-pldatetime-and-plrepeat-to-their-leftmost-argument-name",
+   "source_quote": "`pl.datetime(...)` and `pl.repeat(...)` used to always name their output column",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-020",
+   "description": "list/arr.to_struct turns a null row into a null struct rather than a struct of nulls.",
+   "old_path": "polars.Expr.list.to_struct",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.list.to_struct",
+    "polars.Expr.arr.to_struct",
+    "polars.Series.arr.to_struct"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#preserve-outer-nulls-in-listarray-to_struct",
+   "source_quote": "A `null` list or array row now converts to a `null` struct",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-021",
+   "description": "Readers no longer seek file-like sources back to position 0 before reading.",
+   "old_path": "polars.read_parquet",
+   "params": [
+    "source"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_parquet",
+    "polars.read_csv",
+    "polars.read_ipc"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#do-not-reset-seek-position-when-scanning-from-file-like-objects",
+   "source_quote": "Reading from a file-like object (e.g. `io.BytesIO`) no longer implicitly rewinds it to the start.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-022",
+   "description": "Zero-width frames keep their height; pl.DataFrame() has fixed height 0.",
+   "old_path": "polars.DataFrame",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame",
+    "polars.DataFrame.drop",
+    "polars.DataFrame.with_columns"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#preserve-height-in-zero-width-dataframelazyframe-operations",
+   "source_quote": "`DataFrame`/`LazyFrame` with zero columns now carry a height rather than collapsing to `(0, 0)`.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-023",
+   "description": "from_arrow on an object exposing only __arrow_c_stream__ returns a Series (of Struct) instead of a DataFrame.",
+   "old_path": "polars.from_arrow",
+   "params": [
+    "schema",
+    "schema_overrides"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#always-return-series-from-from_arrowarrowstreamexportable",
+   "source_quote": "now always returns a `Series`, rather than a `DataFrame`",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-024",
+   "description": "DataFrame.__dataframe__ (interchange protocol entry point) is removed.",
+   "old_path": "polars.DataFrame.__dataframe__",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-the-dataframe-interchange-protocol",
+   "source_quote": "`DataFrame.__dataframe__()` has been removed",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-025",
+   "description": "The polars.interchange submodules and protocol symbols are removed; only CompatLevel remains.",
+   "old_path": "polars.interchange.dataframe",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.interchange.buffer",
+    "polars.interchange.column",
+    "polars.interchange.from_dataframe",
+    "polars.interchange.utils",
+    "polars.interchange.protocol.DtypeKind",
+    "polars.interchange.protocol.Buffer",
+    "polars.interchange.protocol.Column",
+    "polars.interchange.protocol.SupportsInterchange",
+    "polars.interchange.protocol.CopyNotAllowedError"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-the-dataframe-interchange-protocol",
+   "source_quote": "along with the `polars.interchange.buffer`, `column`, `dataframe`, `from_dataframe`, and `utils` submodules",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-026",
+   "description": "from_dataframe no longer falls back to the interchange protocol; non-PyCapsule objects raise.",
+   "old_path": "polars.from_dataframe",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-the-dataframe-interchange-protocol",
+   "source_quote": "`pl.from_dataframe()` is kept, but only accepts objects supporting the Arrow PyCapsule interface",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-027",
+   "description": "from_dataframe drops the allow_copy parameter.",
+   "old_path": "polars.from_dataframe",
+   "params": [
+    "allow_copy"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-the-dataframe-interchange-protocol",
+   "source_quote": "Its `allow_copy` parameter has been removed.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-028",
+   "description": "Transposing an empty DataFrame no longer raises.",
+   "old_path": "polars.DataFrame.transpose",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#allow-transposing-an-empty-dataframe",
+   "source_quote": "`DataFrame.transpose()` on a zero-height or zero-width `DataFrame` no longer raises",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-029",
+   "description": "shift(n=None) now raises instead of warning and returning nulls.",
+   "old_path": "polars.DataFrame.shift",
+   "params": [
+    "n"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.shift",
+    "polars.Expr.shift",
+    "polars.Series.shift"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#shiftnnone-now-raises",
+   "source_quote": "A `null` shift amount used to emit a `DeprecationWarning` and return a column of `null`s.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-030",
+   "description": "Unregistered Arrow extension types load as pl.Extension instead of their storage type.",
+   "old_path": "polars.from_arrow",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#unknown-arrow-extension-types-load-as-extension-dtypes",
+   "source_quote": "It now loads it as a generic `pl.Extension(name, storage)` dtype, and the warning is gone.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-031",
+   "description": "Arrow/Parquet/Iceberg map columns load as the new Map dtype instead of List(Struct).",
+   "old_path": "polars.from_arrow",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.read_parquet",
+    "polars.scan_parquet",
+    "polars.Series"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#load-arrow-parquet-and-iceberg-map-columns-as-the-new-map-dtype",
+   "source_quote": "They now load as `Map`, and their Python values are `dict`s rather than lists of key/value structs.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-032",
+   "description": "round() on Decimal(p, s) now returns Decimal(p+1, s) where it can round up.",
+   "old_path": "polars.Expr.round",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.round"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#widen-the-decimal-precision-of-rounding-sign-and-sums",
+   "source_quote": "These operations now return `Decimal(p + 1, s)`, capped at precision 38",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-033",
+   "description": "round_sig_figs() on Decimal(p, s) now returns Decimal(p+1, s) where it can round up.",
+   "old_path": "polars.Expr.round_sig_figs",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.round_sig_figs"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#widen-the-decimal-precision-of-rounding-sign-and-sums",
+   "source_quote": "These operations now return `Decimal(p + 1, s)`, capped at precision 38",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-034",
+   "description": "ceil() on Decimal(p, s) now returns Decimal(p+1, s) where it can round up.",
+   "old_path": "polars.Expr.ceil",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.ceil"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#widen-the-decimal-precision-of-rounding-sign-and-sums",
+   "source_quote": "These operations now return `Decimal(p + 1, s)`, capped at precision 38",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-035",
+   "description": "floor() on Decimal(p, s) now returns Decimal(p+1, s) where it can round up.",
+   "old_path": "polars.Expr.floor",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.floor"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#widen-the-decimal-precision-of-rounding-sign-and-sums",
+   "source_quote": "These operations now return `Decimal(p + 1, s)`, capped at precision 38",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-036",
+   "description": "sign() on Decimal(p, s) now returns Decimal(p+1, s) where it can round up.",
+   "old_path": "polars.Expr.sign",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.sign"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#widen-the-decimal-precision-of-rounding-sign-and-sums",
+   "source_quote": "These operations now return `Decimal(p + 1, s)`, capped at precision 38",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-037",
+   "description": "list.sum() on Decimal now returns Decimal(38, s).",
+   "old_path": "polars.Expr.list.sum",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.list.sum"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#widen-the-decimal-precision-of-rounding-sign-and-sums",
+   "source_quote": "`list.sum()` and `cum_sum()` in `group_by().agg()` and `over()` also kept the input precision.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-038",
+   "description": "cum_sum() on Decimal in group_by/over now returns Decimal(38, s).",
+   "old_path": "polars.Expr.cum_sum",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#widen-the-decimal-precision-of-rounding-sign-and-sums",
+   "source_quote": "`list.sum()` and `cum_sum()` in `group_by().agg()` and `over()` also kept the input precision.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-039",
+   "description": "pl.sql defers query parsing/resolution errors to collect().",
+   "old_path": "polars.sql",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#defer-sql-query-resolution-to-collect",
+   "source_quote": "`pl.sql()`, `SQLContext.execute()` and `LazyFrame.sql()` no longer parse and resolve the query when called.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-040",
+   "description": "SQLContext.execute defers query resolution to collect().",
+   "old_path": "polars.SQLContext.execute",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#defer-sql-query-resolution-to-collect",
+   "source_quote": "`pl.sql()`, `SQLContext.execute()` and `LazyFrame.sql()` no longer parse and resolve the query when called.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-041",
+   "description": "LazyFrame.sql defers query resolution to collect().",
+   "old_path": "polars.LazyFrame.sql",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#defer-sql-query-resolution-to-collect",
+   "source_quote": "`pl.sql()`, `SQLContext.execute()` and `LazyFrame.sql()` no longer parse and resolve the query when called.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-042",
+   "description": "SQL decimal multiplication/division now use SQL-standard result scales.",
+   "old_path": "polars.sql",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.SQLContext.execute",
+    "polars.DataFrame.sql",
+    "polars.LazyFrame.sql"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#use-sql-result-scales-for-decimal--and--in-sql",
+   "source_quote": "SQL `*` now returns the sum of the operand scales, as the SQL standard requires",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-043",
+   "description": "Casting integers to Categorical/Enum and back now raises.",
+   "old_path": "polars.Expr.cast",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.cast"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#disable-casting-from-integers-to-categoricals-and-from-categoricals-to-integers",
+   "source_quote": "Disable casting from integers to categoricals, and from categoricals to integers",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-044",
+   "description": "Casting String to Date/Datetime/Time now raises.",
+   "old_path": "polars.Expr.cast",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.cast"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-casts-from-string-to-temporal-types",
+   "source_quote": "Casting a `String` column directly to `Date`/`Datetime`/`Time` is no longer supported.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-045",
+   "description": "Casting a non-nested dtype to List now raises.",
+   "old_path": "polars.Expr.cast",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.cast"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#disallow-casting-from-non-nested-types-to-pllist",
+   "source_quote": "Disallow casting from non-nested types to `pl.List(..)`",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-046",
+   "description": "Bitwise &, |, ^ between Boolean and integer operands now raise.",
+   "old_path": "polars.Expr.__and__",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Expr.__or__",
+    "polars.Expr.__xor__",
+    "polars.Expr.and_",
+    "polars.Expr.or_",
+    "polars.Expr.xor"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#do-not-allow-boolean-operators-between-booleans-and-integer-types",
+   "source_quote": "Do not allow boolean operators between booleans and integer types",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-047",
+   "description": "std() on Duration columns now raises.",
+   "old_path": "polars.Expr.std",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.std"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-support-for-stdvar-on-the-duration-dtype",
+   "source_quote": "This also applies to `var()`, `ewm_std()`, and `ewm_var()` on `Duration` columns.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-048",
+   "description": "var() on Duration columns now raises.",
+   "old_path": "polars.Expr.var",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.var"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-support-for-stdvar-on-the-duration-dtype",
+   "source_quote": "This also applies to `var()`, `ewm_std()`, and `ewm_var()` on `Duration` columns.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-049",
+   "description": "ewm_std() on Duration columns now raises.",
+   "old_path": "polars.Expr.ewm_std",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.ewm_std"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-support-for-stdvar-on-the-duration-dtype",
+   "source_quote": "This also applies to `var()`, `ewm_std()`, and `ewm_var()` on `Duration` columns.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-050",
+   "description": "ewm_var() on Duration columns now raises.",
+   "old_path": "polars.Expr.ewm_var",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.ewm_var"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-support-for-stdvar-on-the-duration-dtype",
+   "source_quote": "This also applies to `var()`, `ewm_std()`, and `ewm_var()` on `Duration` columns.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-051",
+   "description": "Struct-to-struct casts with mismatched fields now raise under strict=True.",
+   "old_path": "polars.Expr.cast",
+   "params": [
+    "strict"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.cast"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#disable-invalid-struct-casts-when-stricttrue",
+   "source_quote": "Under the default `strict=True` it now raises; pass `strict=False` to keep the old truncating behavior.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-052",
+   "description": "list.gather no longer implodes a flat (non-list) argument; it raises instead.",
+   "old_path": "polars.Expr.list.gather",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.list.gather"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#disallow-flat-dtypes-where-a-list-is-expected",
+   "source_quote": "`list.gather`, `str.contains_any`, and `str.replace_many` used to accept a flat (non-list) argument",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-053",
+   "description": "str.contains_any no longer implodes a flat (non-list) argument; it raises instead.",
+   "old_path": "polars.Expr.str.contains_any",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.str.contains_any"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#disallow-flat-dtypes-where-a-list-is-expected",
+   "source_quote": "`list.gather`, `str.contains_any`, and `str.replace_many` used to accept a flat (non-list) argument",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-054",
+   "description": "str.replace_many no longer implodes a flat (non-list) argument; it raises instead.",
+   "old_path": "polars.Expr.str.replace_many",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.str.replace_many"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#disallow-flat-dtypes-where-a-list-is-expected",
+   "source_quote": "`list.gather`, `str.contains_any`, and `str.replace_many` used to accept a flat (non-list) argument",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-055",
+   "description": "is_in converts Datetime/Duration needles to the searched values' time unit.",
+   "old_path": "polars.Expr.is_in",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.is_in"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#convert-time-units-in-is_in-and-listcontains",
+   "source_quote": "The needle is now converted to the unit of the values.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-056",
+   "description": "list.contains converts Datetime/Duration needles to the searched values' time unit.",
+   "old_path": "polars.Expr.list.contains",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.list.contains"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#convert-time-units-in-is_in-and-listcontains",
+   "source_quote": "The needle is now converted to the unit of the values.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-057",
+   "description": "is_in with a Decimal needle in float data now raises.",
+   "old_path": "polars.Expr.is_in",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.is_in"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#stop-comparing-decimal-needles-against-float-data-in-is_in",
+   "source_quote": "A `Decimal` needle in float data now raises.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-058",
+   "description": "list.contains with a Decimal needle in float data now raises.",
+   "old_path": "polars.Expr.list.contains",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.list.contains"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#stop-comparing-decimal-needles-against-float-data-in-is_in",
+   "source_quote": "A `Decimal` needle in float data now raises.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-059",
+   "description": "arr.contains with a Decimal needle in float data now raises.",
+   "old_path": "polars.Expr.arr.contains",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.arr.contains"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#stop-comparing-decimal-needles-against-float-data-in-is_in",
+   "source_quote": "A `Decimal` needle in float data now raises.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-060",
+   "description": "is_in comparing naive and time-zone-aware datetimes now raises.",
+   "old_path": "polars.Expr.is_in",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.is_in"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#raise-when-comparing-naive-and-time-zone-aware-datetimes-in-is_in",
+   "source_quote": "This now raises, as `==` already did.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-061",
+   "description": "list.contains comparing naive and time-zone-aware datetimes now raises.",
+   "old_path": "polars.Expr.list.contains",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.list.contains"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#raise-when-comparing-naive-and-time-zone-aware-datetimes-in-is_in",
+   "source_quote": "This now raises, as `==` already did.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-062",
+   "description": "arr.contains comparing naive and time-zone-aware datetimes now raises.",
+   "old_path": "polars.Expr.arr.contains",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.arr.contains"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#raise-when-comparing-naive-and-time-zone-aware-datetimes-in-is_in",
+   "source_quote": "This now raises, as `==` already did.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-063",
+   "description": "is_in treats labels outside an Enum as absent instead of raising.",
+   "old_path": "polars.Expr.is_in",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.is_in"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#treat-labels-outside-an-enum-as-absent-in-is_in-and-listcontains",
+   "source_quote": "Membership comparisons between `String` and `Enum` now treat unknown labels as absent instead of raising.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-064",
+   "description": "list.contains treats labels outside an Enum as absent instead of raising.",
+   "old_path": "polars.Expr.list.contains",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.list.contains"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#treat-labels-outside-an-enum-as-absent-in-is_in-and-listcontains",
+   "source_quote": "Membership comparisons between `String` and `Enum` now treat unknown labels as absent instead of raising.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-065",
+   "description": "log() on non-numeric input now raises instead of returning nulls.",
+   "old_path": "polars.Expr.log",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.log"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#raise-on-non-numeric-input-to-log-log1p-and-exp",
+   "source_quote": "These used to return a `Float64` column of `null`s for non-numeric input",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-066",
+   "description": "log1p() on non-numeric input now raises instead of returning nulls.",
+   "old_path": "polars.Expr.log1p",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.log1p"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#raise-on-non-numeric-input-to-log-log1p-and-exp",
+   "source_quote": "These used to return a `Float64` column of `null`s for non-numeric input",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-067",
+   "description": "exp() on non-numeric input now raises instead of returning nulls.",
+   "old_path": "polars.Expr.exp",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.exp"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#raise-on-non-numeric-input-to-log-log1p-and-exp",
+   "source_quote": "These used to return a `Float64` column of `null`s for non-numeric input",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-068",
+   "description": "list.to_struct requires fields; n_field_strategy, upper_bound and callable fields are removed.",
+   "old_path": "polars.Expr.list.to_struct",
+   "params": [
+    "fields",
+    "n_field_strategy",
+    "upper_bound"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.list.to_struct"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#simplify-listto_struct-api",
+   "source_quote": "`fields` is now a required, positional argument. The `n_field_strategy`, `upper_bound` parameters",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-069",
+   "description": "arr.to_struct no longer accepts a callable for fields.",
+   "old_path": "polars.Expr.arr.to_struct",
+   "params": [
+    "fields"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.arr.to_struct"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#simplify-listto_struct-api",
+   "source_quote": "only the callable form of `fields` was removed there.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-070",
+   "description": "add_business_days arguments after n are now strictly keyword-only.",
+   "old_path": "polars.Expr.dt.add_business_days",
+   "params": [
+    "week_mask",
+    "holidays",
+    "roll"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.dt.add_business_days"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#make-add_business_days-and-strto_decimal-keyword-only-arguments-strict",
+   "source_quote": "`Expr`/`Series.dt.add_business_days()` (all arguments after `n`)",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-071",
+   "description": "str.to_decimal inference_length is now strictly keyword-only.",
+   "old_path": "polars.Expr.str.to_decimal",
+   "params": [
+    "inference_length"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.str.to_decimal"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#make-add_business_days-and-strto_decimal-keyword-only-arguments-strict",
+   "source_quote": "`Expr`/`Series.str.to_decimal()` (`inference_length`) have accepted these as keyword-only",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-072",
+   "description": "Expr/Series.hash drop seed_1, seed_2, seed_3.",
+   "old_path": "polars.Expr.hash",
+   "params": [
+    "seed_1",
+    "seed_2",
+    "seed_3"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.hash"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#replace-multi-seed-hash-api-with-a-single-seed",
+   "source_quote": "`Expr.hash`, `Series.hash`, and `DataFrame.hash_rows` no longer accept `seed_1`/`seed_2`/`seed_3`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-073",
+   "description": "DataFrame.hash_rows drops seed_1, seed_2, seed_3.",
+   "old_path": "polars.DataFrame.hash_rows",
+   "params": [
+    "seed_1",
+    "seed_2",
+    "seed_3"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#replace-multi-seed-hash-api-with-a-single-seed",
+   "source_quote": "`Expr.hash`, `Series.hash`, and `DataFrame.hash_rows` no longer accept `seed_1`/`seed_2`/`seed_3`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-074",
+   "description": "Series.search_sorted no longer accepts a Python list.",
+   "old_path": "polars.Series.search_sorted",
+   "params": [
+    "element"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#do-not-support-list-type-anymore-for-seriessearch_sorted",
+   "source_quote": "Passing a Python `list` was ambiguous.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-075",
+   "description": "struct.rename_fields with the wrong number of names raises instead of truncating.",
+   "old_path": "polars.Expr.struct.rename_fields",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.struct.rename_fields"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#raise-an-error-on-structrename_fields-with-an-incorrect-number-of-fields",
+   "source_quote": "Passing a number of names that doesn't match the number of struct fields now raises a `SchemaError`",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-076",
+   "description": "pl.Categorical drops the ordering parameter.",
+   "old_path": "polars.Categorical",
+   "params": [
+    "ordering"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.datatypes.Categorical"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-the-ordering-parameter-and-the-physicallexical-special-case-on-plcategorical",
+   "source_quote": "Categoricals are now always ordered lexically, so the `ordering` parameter has been removed.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-077",
+   "description": "pl.Categorical('physical'/'lexical') now names a category pool instead of an ordering.",
+   "old_path": "polars.Categorical",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.datatypes.Categorical"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-the-ordering-parameter-and-the-physicallexical-special-case-on-plcategorical",
+   "source_quote": "the special case where `pl.Categorical(\"physical\")` / `pl.Categorical(\"lexical\")` meant an ordering",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-078",
+   "description": "scan_csv infer_schema_files default becomes 10 instead of all files.",
+   "old_path": "polars.scan_csv",
+   "params": [
+    "infer_schema_files"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.read_csv"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#set-csv-infer_schema_files-default-value-to-10",
+   "source_quote": "Multi-file CSV scans now only inspect the first 10 files (instead of all of them)",
+   "change_type_guess": "default_change"
+  },
+  {
+   "id": "pl-079",
+   "description": "Headerless CSV auto column names start at column_0.",
+   "old_path": "polars.read_csv",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_csv"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#start-csv-column-name-counting-at-0",
+   "source_quote": "Auto-generated column names for headerless files now start at `column_0` instead of `column_1`.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-080",
+   "description": "read_excel headerless auto column names start at column_0.",
+   "old_path": "polars.read_excel",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#start-csv-column-name-counting-at-0",
+   "source_quote": "This also affects `read_excel`/`read_ods` with `has_header=False`.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-081",
+   "description": "read_ods headerless auto column names start at column_0.",
+   "old_path": "polars.read_ods",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#start-csv-column-name-counting-at-0",
+   "source_quote": "This also affects `read_excel`/`read_ods` with `has_header=False`.",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-082",
+   "description": "A user schema for scan_csv/read_csv is matched by name rather than position.",
+   "old_path": "polars.scan_csv",
+   "params": [
+    "schema"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.read_csv"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#respect-file-column-order-when-schema-is-given-for-scan_csv",
+   "source_quote": "is now matched by column name against the file's header, and the file's column order is respected",
+   "change_type_guess": "behaviour_only"
+  },
+  {
+   "id": "pl-083",
+   "description": "read_csv/scan_csv raise_if_empty and truncate_ragged_lines defaults change to None (resolved internally).",
+   "old_path": "polars.read_csv",
+   "params": [
+    "raise_if_empty",
+    "truncate_ragged_lines"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_csv"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#automatically-disable-raise_if_empty-when-has_headerfalse-and-schema-is-given",
+   "source_quote": "`raise_if_empty` (on `read_csv`/`scan_csv`) now has a literal default of `None`",
+   "change_type_guess": "default_change"
+  },
+  {
+   "id": "pl-084",
+   "description": "melt is removed in favour of unpivot.",
+   "old_path": "polars.DataFrame.melt",
+   "params": [],
+   "new_path": "polars.DataFrame.unpivot",
+   "api_names": [
+    "polars.LazyFrame.melt",
+    "polars.LazyFrame.unpivot"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.melt()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-085",
+   "description": "with_row_count is removed in favour of with_row_index.",
+   "old_path": "polars.DataFrame.with_row_count",
+   "params": [],
+   "new_path": "polars.DataFrame.with_row_index",
+   "api_names": [
+    "polars.LazyFrame.with_row_count",
+    "polars.LazyFrame.with_row_index"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.with_row_count()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-086",
+   "description": "Frame-level approx_n_unique is removed.",
+   "old_path": "polars.DataFrame.approx_n_unique",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.approx_n_unique"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.approx_n_unique()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-087",
+   "description": "LazyFrame.fetch is removed.",
+   "old_path": "polars.LazyFrame.fetch",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`LazyFrame.fetch()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-088",
+   "description": "GroupBy.count is removed in favour of len.",
+   "old_path": "polars.dataframe.group_by.GroupBy.count",
+   "params": [],
+   "new_path": "polars.dataframe.group_by.GroupBy.len",
+   "api_names": [
+    "polars.lazyframe.group_by.LazyGroupBy.count"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.group_by(...).count()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-089",
+   "description": "Array.width attribute is removed; use size.",
+   "old_path": "polars.Array.width",
+   "params": [],
+   "new_path": "polars.Array.size",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.Array.width`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-090",
+   "description": "testing.parametric.columns is removed.",
+   "old_path": "polars.testing.parametric.columns",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`polars.testing.parametric.columns()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-091",
+   "description": "testing.parametric.create_list_strategy is removed.",
+   "old_path": "polars.testing.parametric.create_list_strategy",
+   "params": [],
+   "new_path": "polars.testing.parametric.lists",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`polars.testing.parametric.create_list_strategy()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-092",
+   "description": "dt.datetime is removed.",
+   "old_path": "polars.Expr.dt.datetime",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.dt.datetime"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr`/`Series.dt.datetime()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-093",
+   "description": "dt.with_time_unit is removed.",
+   "old_path": "polars.Expr.dt.with_time_unit",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.dt.with_time_unit"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr`/`Series.dt.with_time_unit()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-094",
+   "description": "Expr.agg_groups is removed.",
+   "old_path": "polars.Expr.agg_groups",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.agg_groups()`, `pl.groups()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-095",
+   "description": "pl.groups is removed.",
+   "old_path": "polars.groups",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.agg_groups()`, `pl.groups()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-096",
+   "description": "Expr.flatten is removed.",
+   "old_path": "polars.Expr.flatten",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.flatten()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-097",
+   "description": "Expr.rechunk is removed.",
+   "old_path": "polars.Expr.rechunk",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.rechunk()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-098",
+   "description": "cat.get_categories is removed.",
+   "old_path": "polars.Series.cat.get_categories",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Expr.cat.get_categories"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Series.cat.get_categories()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-099",
+   "description": "Series.cat.is_local is removed.",
+   "old_path": "polars.Series.cat.is_local",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Series.cat.is_local()`, `to_local()`, `uses_lexical_ordering()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-100",
+   "description": "Series.cat.to_local is removed.",
+   "old_path": "polars.Series.cat.to_local",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Series.cat.is_local()`, `to_local()`, `uses_lexical_ordering()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-101",
+   "description": "Series.cat.uses_lexical_ordering is removed.",
+   "old_path": "polars.Series.cat.uses_lexical_ordering",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Series.cat.is_local()`, `to_local()`, `uses_lexical_ordering()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-102",
+   "description": "Enum.union and Enum | Enum are removed.",
+   "old_path": "polars.Enum.union",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Enum.__or__"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Enum.union()` / `Enum.__or__`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-103",
+   "description": "Config.set_auto_structify is removed.",
+   "old_path": "polars.Config.set_auto_structify",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Config.set_auto_structify()`, `POLARS_AUTO_STRUCTIFY` environment variable",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-104",
+   "description": "read_csv_batched is removed.",
+   "old_path": "polars.read_csv_batched",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read_csv_batched()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-105",
+   "description": "str.explode is removed.",
+   "old_path": "polars.Expr.str.explode",
+   "params": [],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.str.explode"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr`/`Series.str.explode()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-106",
+   "description": "read_csv/scan_csv drop missing_utf8_is_empty_string (renamed, inverted, to empty_string_is_null).",
+   "old_path": "polars.read_csv",
+   "params": [
+    "missing_utf8_is_empty_string"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_csv"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read_csv`/`scan_csv(missing_utf8_is_empty_string=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-107",
+   "description": "pl.corr drops the ddof parameter.",
+   "old_path": "polars.corr",
+   "params": [
+    "ddof"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.corr(ddof=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-108",
+   "description": "scan_ipc drops memory_map.",
+   "old_path": "polars.scan_ipc",
+   "params": [
+    "memory_map"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`scan_ipc(memory_map=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-109",
+   "description": "read/scan_parquet drop allow_missing_columns.",
+   "old_path": "polars.read_parquet",
+   "params": [
+    "allow_missing_columns"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_parquet"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read_parquet`/`scan_parquet(allow_missing_columns=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-110",
+   "description": "The rechunk parameter is removed from read/scan functions (other than read_csv/read_ipc, listed separately).",
+   "old_path": "polars.scan_parquet",
+   "params": [
+    "rechunk"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.read_parquet",
+    "polars.scan_ipc",
+    "polars.scan_csv",
+    "polars.read_ndjson",
+    "polars.scan_ndjson",
+    "polars.read_database",
+    "polars.read_excel"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read/scan_*(rechunk=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-111",
+   "description": "LazyFrame.map_batches drops no_optimizations.",
+   "old_path": "polars.LazyFrame.map_batches",
+   "params": [
+    "no_optimizations"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`LazyFrame.map_batches(no_optimizations=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-112",
+   "description": "DataFrame.to_arrow drops future.",
+   "old_path": "polars.DataFrame.to_arrow",
+   "params": [
+    "future"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame.to_arrow`/`write_ipc`/`write_ipc_stream(future=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-113",
+   "description": "DataFrame.write_ipc drops future.",
+   "old_path": "polars.DataFrame.write_ipc",
+   "params": [
+    "future"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame.to_arrow`/`write_ipc`/`write_ipc_stream(future=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-114",
+   "description": "DataFrame.write_ipc_stream drops future.",
+   "old_path": "polars.DataFrame.write_ipc_stream",
+   "params": [
+    "future"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame.to_arrow`/`write_ipc`/`write_ipc_stream(future=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-115",
+   "description": "DataFrame.glimpse drops return_as_string.",
+   "old_path": "polars.DataFrame.glimpse",
+   "params": [
+    "return_as_string"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame.glimpse(return_as_string=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-116",
+   "description": "top_k drops descending (use reverse).",
+   "old_path": "polars.DataFrame.top_k",
+   "params": [
+    "descending"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.top_k"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.top_k`/`bottom_k(descending=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-117",
+   "description": "bottom_k drops descending (use reverse).",
+   "old_path": "polars.DataFrame.bottom_k",
+   "params": [
+    "descending"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.bottom_k"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.top_k`/`bottom_k(descending=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-118",
+   "description": "rolling drops by (use group_by).",
+   "old_path": "polars.DataFrame.rolling",
+   "params": [
+    "by"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.rolling"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.rolling`/`group_by_dynamic(by=...)`, `DataFrame.upsample(by=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-119",
+   "description": "group_by_dynamic drops by (use group_by).",
+   "old_path": "polars.DataFrame.group_by_dynamic",
+   "params": [
+    "by"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.group_by_dynamic"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.rolling`/`group_by_dynamic(by=...)`, `DataFrame.upsample(by=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-120",
+   "description": "upsample drops by (use group_by).",
+   "old_path": "polars.DataFrame.upsample",
+   "params": [
+    "by"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.rolling`/`group_by_dynamic(by=...)`, `DataFrame.upsample(by=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-121",
+   "description": "join drops join_nulls (use nulls_equal).",
+   "old_path": "polars.DataFrame.join",
+   "params": [
+    "join_nulls"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.join"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`LazyFrame.join(join_nulls=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-122",
+   "description": "DataFrame.pivot drops columns (use on).",
+   "old_path": "polars.DataFrame.pivot",
+   "params": [
+    "columns"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame.pivot(columns=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-123",
+   "description": "pl.Array constructor drops width (use shape).",
+   "old_path": "polars.Array",
+   "params": [
+    "width"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.Array(width=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-124",
+   "description": "LazyFrame.collect drops streaming.",
+   "old_path": "polars.LazyFrame.collect",
+   "params": [
+    "streaming"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.collect_async"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`LazyFrame.collect`/`collect_async`/`explain`/`show_graph(streaming=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-125",
+   "description": "LazyFrame.explain drops streaming.",
+   "old_path": "polars.LazyFrame.explain",
+   "params": [
+    "streaming"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`LazyFrame.collect`/`collect_async`/`explain`/`show_graph(streaming=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-126",
+   "description": "LazyFrame.show_graph drops streaming.",
+   "old_path": "polars.LazyFrame.show_graph",
+   "params": [
+    "streaming"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`LazyFrame.collect`/`collect_async`/`explain`/`show_graph(streaming=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-127",
+   "description": "collect_all drops streaming.",
+   "old_path": "polars.collect_all",
+   "params": [
+    "streaming"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.collect_all_async"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.collect_all`/`collect_all_async(streaming=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-128",
+   "description": "explain drops tree_format.",
+   "old_path": "polars.LazyFrame.explain",
+   "params": [
+    "tree_format"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`LazyFrame.explain(tree_format=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-129",
+   "description": "LazyFrame.unpivot drops streamable.",
+   "old_path": "polars.LazyFrame.unpivot",
+   "params": [
+    "streamable"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`LazyFrame.unpivot(streamable=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-130",
+   "description": "LazyFrame.sink_* drop retries.",
+   "old_path": "polars.LazyFrame.sink_parquet",
+   "params": [
+    "retries"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.sink_csv",
+    "polars.LazyFrame.sink_ipc",
+    "polars.LazyFrame.sink_ndjson"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`LazyFrame.sink_*(retries=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-131",
+   "description": "DataFrame.write_* drop retries.",
+   "old_path": "polars.DataFrame.write_parquet",
+   "params": [
+    "retries"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.DataFrame.write_csv",
+    "polars.DataFrame.write_ipc",
+    "polars.DataFrame.write_ndjson"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame.write_*(retries=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-132",
+   "description": "collect drops the individual optimization-flag parameters (use optimizations=).",
+   "old_path": "polars.LazyFrame.collect",
+   "params": [
+    "no_optimization",
+    "type_coercion",
+    "predicate_pushdown",
+    "projection_pushdown",
+    "simplify_expression",
+    "slice_pushdown",
+    "comm_subplan_elim",
+    "comm_subexpr_elim",
+    "cluster_with_columns",
+    "collapse_joins"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.collect_async"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "The individual optimization-flag parameters (`no_optimization`, `predicate_pushdown`, ...)",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-133",
+   "description": "explain drops the individual optimization-flag parameters (use optimizations=).",
+   "old_path": "polars.LazyFrame.explain",
+   "params": [
+    "no_optimization",
+    "type_coercion",
+    "predicate_pushdown",
+    "projection_pushdown",
+    "simplify_expression",
+    "slice_pushdown",
+    "comm_subplan_elim",
+    "comm_subexpr_elim",
+    "cluster_with_columns",
+    "collapse_joins"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "The individual optimization-flag parameters (`no_optimization`, `predicate_pushdown`, ...)",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-134",
+   "description": "show_graph drops the individual optimization-flag parameters (use optimizations=).",
+   "old_path": "polars.LazyFrame.show_graph",
+   "params": [
+    "no_optimization",
+    "type_coercion",
+    "predicate_pushdown",
+    "projection_pushdown",
+    "simplify_expression",
+    "slice_pushdown",
+    "comm_subplan_elim",
+    "comm_subexpr_elim",
+    "cluster_with_columns",
+    "collapse_joins"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "The individual optimization-flag parameters (`no_optimization`, `predicate_pushdown`, ...)",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-135",
+   "description": "collect_all drops the individual optimization-flag parameters (use optimizations=).",
+   "old_path": "polars.collect_all",
+   "params": [
+    "no_optimization",
+    "type_coercion",
+    "predicate_pushdown",
+    "projection_pushdown",
+    "simplify_expression",
+    "slice_pushdown",
+    "comm_subplan_elim",
+    "comm_subexpr_elim",
+    "cluster_with_columns",
+    "collapse_joins"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.collect_all_async"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "The individual optimization-flag parameters (`no_optimization`, `predicate_pushdown`, ...)",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-136",
+   "description": "LazyFrame.with_context is removed.",
+   "old_path": "polars.LazyFrame.with_context",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`LazyFrame.with_context()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-137",
+   "description": "pl.threadpool_size is removed in favour of thread_pool_size.",
+   "old_path": "polars.threadpool_size",
+   "params": [],
+   "new_path": "polars.thread_pool_size",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.threadpool_size()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-138",
+   "description": "Expr.where is removed in favour of filter.",
+   "old_path": "polars.Expr.where",
+   "params": [],
+   "new_path": "polars.Expr.filter",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.where()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-139",
+   "description": "Expr.shrink_dtype is removed.",
+   "old_path": "polars.Expr.shrink_dtype",
+   "params": [],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.shrink_dtype()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-140",
+   "description": "Expr.register_plugin is removed.",
+   "old_path": "polars.Expr.register_plugin",
+   "params": [],
+   "new_path": "polars.plugins.register_plugin_function",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.register_plugin()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-141",
+   "description": "Expr.from_json is removed.",
+   "old_path": "polars.Expr.from_json",
+   "params": [],
+   "new_path": "polars.Expr.deserialize",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.from_json()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-142",
+   "description": "Expr.meta.write_json is removed.",
+   "old_path": "polars.Expr.meta.write_json",
+   "params": [],
+   "new_path": "polars.Expr.meta.serialize",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.meta.write_json()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-143",
+   "description": "str.concat is removed in favour of str.join.",
+   "old_path": "polars.Expr.str.concat",
+   "params": [],
+   "new_path": "polars.Expr.str.join",
+   "api_names": [
+    "polars.Series.str.concat"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr`/`Series.str.concat()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-144",
+   "description": "Series.has_validity is removed in favour of has_nulls.",
+   "old_path": "polars.Series.has_validity",
+   "params": [],
+   "new_path": "polars.Series.has_nulls",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Series.has_validity()`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "pl-145",
+   "description": "Series.dt.mean is removed.",
+   "old_path": "polars.Series.dt.mean",
+   "params": [],
+   "new_path": "polars.Series.mean",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Series.dt.mean()`, `Series.dt.median()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-146",
+   "description": "Series.dt.median is removed.",
+   "old_path": "polars.Series.dt.median",
+   "params": [],
+   "new_path": "polars.Series.median",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Series.dt.mean()`, `Series.dt.median()`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-147",
+   "description": "The polars.type_aliases module is removed.",
+   "old_path": "polars.type_aliases",
+   "params": [],
+   "new_path": "polars._typing",
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`polars.type_aliases` module",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "pl-148",
+   "description": "join no longer accepts how='outer'/'outer_coalesce'.",
+   "old_path": "polars.DataFrame.join",
+   "params": [
+    "how"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.LazyFrame.join"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`join(how=\"outer\")`, `join(how=\"outer_coalesce\")`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-149",
+   "description": "to_numpy drops use_pyarrow.",
+   "old_path": "polars.DataFrame.to_numpy",
+   "params": [
+    "use_pyarrow"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.to_numpy"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame`/`Series.to_numpy(use_pyarrow=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-150",
+   "description": "Series.to_numpy drops zero_copy_only.",
+   "old_path": "polars.Series.to_numpy",
+   "params": [
+    "zero_copy_only"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Series.to_numpy(zero_copy_only=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-151",
+   "description": "replace drops default and return_dtype.",
+   "old_path": "polars.Expr.replace",
+   "params": [
+    "default",
+    "return_dtype"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.replace"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr`/`Series.replace(default=...)`, `(return_dtype=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-152",
+   "description": "Expr.map_batches drops agg_list.",
+   "old_path": "polars.Expr.map_batches",
+   "params": [
+    "agg_list"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.map_batches(agg_list=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-153",
+   "description": "Expr.map_elements drops returns_scalar.",
+   "old_path": "polars.Expr.map_elements",
+   "params": [
+    "returns_scalar"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr.map_elements(returns_scalar=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-154",
+   "description": "str.json_decode drops infer_schema_length.",
+   "old_path": "polars.Expr.str.json_decode",
+   "params": [
+    "infer_schema_length"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.str.json_decode"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr`/`Series.str.json_decode(infer_schema_length=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-155",
+   "description": "Expr/Series.rolling_* drop min_periods (use min_samples).",
+   "old_path": "polars.Expr.rolling_mean",
+   "params": [
+    "min_periods"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.Series.rolling_mean",
+    "polars.Expr.rolling_sum",
+    "polars.Expr.rolling_min",
+    "polars.Expr.rolling_max",
+    "polars.Expr.rolling_std",
+    "polars.Expr.rolling_var",
+    "polars.Expr.rolling_median",
+    "polars.Expr.rolling_quantile",
+    "polars.Expr.rolling_map"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Expr`/`Series.rolling_*(min_periods=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-156",
+   "description": "pl.rolling_cov drops min_periods.",
+   "old_path": "polars.rolling_cov",
+   "params": [
+    "min_periods"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.rolling_cov`/`rolling_corr(min_periods=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-157",
+   "description": "pl.rolling_corr drops min_periods.",
+   "old_path": "polars.rolling_corr",
+   "params": [
+    "min_periods"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.rolling_cov`/`rolling_corr(min_periods=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-158",
+   "description": "Series.equals drops strict (use check_dtypes).",
+   "old_path": "polars.Series.equals",
+   "params": [
+    "strict"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`Series.equals(strict=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-159",
+   "description": "assert_series_equal drops check_dtype.",
+   "old_path": "polars.testing.assert_series_equal",
+   "params": [
+    "check_dtype"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`assert_series_equal`/`assert_frame_equal(check_dtype=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-160",
+   "description": "assert_frame_equal drops check_dtype.",
+   "old_path": "polars.testing.assert_frame_equal",
+   "params": [
+    "check_dtype"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`assert_series_equal`/`assert_frame_equal(check_dtype=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-161",
+   "description": "read_csv/scan_csv drop dtypes (use schema_overrides).",
+   "old_path": "polars.read_csv",
+   "params": [
+    "dtypes"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_csv"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read_csv`/`scan_csv(dtypes=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-162",
+   "description": "read/scan_csv drop row_count_name and row_count_offset.",
+   "old_path": "polars.read_csv",
+   "params": [
+    "row_count_name",
+    "row_count_offset"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_csv"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read`/`scan_csv`/`_ipc`/`_ndjson`/`_parquet(row_count_name=`, `row_count_offset=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-163",
+   "description": "read/scan_ipc drop row_count_name and row_count_offset.",
+   "old_path": "polars.read_ipc",
+   "params": [
+    "row_count_name",
+    "row_count_offset"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_ipc"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read`/`scan_csv`/`_ipc`/`_ndjson`/`_parquet(row_count_name=`, `row_count_offset=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-164",
+   "description": "read/scan_ndjson drop row_count_name and row_count_offset.",
+   "old_path": "polars.read_ndjson",
+   "params": [
+    "row_count_name",
+    "row_count_offset"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_ndjson"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read`/`scan_csv`/`_ipc`/`_ndjson`/`_parquet(row_count_name=`, `row_count_offset=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-165",
+   "description": "read/scan_parquet drop row_count_name and row_count_offset.",
+   "old_path": "polars.read_parquet",
+   "params": [
+    "row_count_name",
+    "row_count_offset"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_parquet"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read`/`scan_csv`/`_ipc`/`_ndjson`/`_parquet(row_count_name=`, `row_count_offset=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-166",
+   "description": "scan_ipc drops cache and file_cache_ttl.",
+   "old_path": "polars.scan_ipc",
+   "params": [
+    "cache",
+    "file_cache_ttl"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`scan_ipc(cache=`, `file_cache_ttl=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-167",
+   "description": "read/scan_ndjson drop file_cache_ttl.",
+   "old_path": "polars.read_ndjson",
+   "params": [
+    "file_cache_ttl"
+   ],
+   "new_path": null,
+   "api_names": [
+    "polars.scan_ndjson"
+   ],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read_ndjson`/`scan_ndjson(file_cache_ttl=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-168",
+   "description": "read_excel drops xlsx2csv_options.",
+   "old_path": "polars.read_excel",
+   "params": [
+    "xlsx2csv_options"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read_excel`/`read_ods(xlsx2csv_options=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-169",
+   "description": "read_ods drops xlsx2csv_options.",
+   "old_path": "polars.read_ods",
+   "params": [
+    "xlsx2csv_options"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read_excel`/`read_ods(xlsx2csv_options=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-170",
+   "description": "read_excel drops read_csv_options.",
+   "old_path": "polars.read_excel",
+   "params": [
+    "read_csv_options"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read_excel`/`read_ods(read_csv_options=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-171",
+   "description": "read_ods drops read_csv_options.",
+   "old_path": "polars.read_ods",
+   "params": [
+    "read_csv_options"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`read_excel`/`read_ods(read_csv_options=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-172",
+   "description": "write_delta drops overwrite_schema.",
+   "old_path": "polars.DataFrame.write_delta",
+   "params": [
+    "overwrite_schema"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`DataFrame.write_delta(overwrite_schema=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-173",
+   "description": "from_repr drops tbl (use data).",
+   "old_path": "polars.from_repr",
+   "params": [
+    "tbl"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.from_repr(tbl=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-174",
+   "description": "SQLContext drops eager_execution (use eager).",
+   "old_path": "polars.SQLContext",
+   "params": [
+    "eager_execution"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.SQLContext(eager_execution=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-175",
+   "description": "QueryOptFlags drops collapse_joins.",
+   "old_path": "polars.QueryOptFlags",
+   "params": [
+    "collapse_joins"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`pl.QueryOptFlags(collapse_joins=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-176",
+   "description": "testing.parametric.series drops size.",
+   "old_path": "polars.testing.parametric.series",
+   "params": [
+    "size"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`polars.testing.parametric.series`/`dataframes(size=...)`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "pl-177",
+   "description": "testing.parametric.dataframes drops size.",
+   "old_path": "polars.testing.parametric.dataframes",
+   "params": [
+    "size"
+   ],
+   "new_path": null,
+   "api_names": [],
+   "documented_in": "2.0.0",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality",
+   "source_quote": "`polars.testing.parametric.series`/`dataframes(size=...)`",
+   "change_type_guess": "signature"
+  }
+ ],
+ "excluded": [
+  {
+   "text": "1.43.0: deprecate casting numeric types to categoricals (removal tracked as pl-043)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.0"
+  },
+  {
+   "text": "1.43.0: deprecate cat.get_categories() and cat.to_local() (removals tracked as pl-098, pl-100)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.0"
+  },
+  {
+   "text": "1.43.0: deprecate LazyFrame.profile() (removal tracked as pl-012)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.0"
+  },
+  {
+   "text": "1.43.0: deprecate casts from non-nested dtypes into List (removal tracked as pl-045)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.0"
+  },
+  {
+   "text": "1.43.0: deprecate bitwise ops between integers and booleans (removal tracked as pl-046)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.0"
+  },
+  {
+   "text": "1.43.0: deprecate list/arr.to_struct() without field names (removal tracked as pl-068)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.0"
+  },
+  {
+   "text": "1.43.0: rename missing_utf8_is_empty_string to empty_string_is_null, old name still accepted (removal tracked as pl-106)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.0"
+  },
+  {
+   "text": "1.43.0: remove hard block on native scan for Iceberg V3 tables",
+   "reason": "addition",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.0"
+  },
+  {
+   "text": "1.43.2: deprecate casts from Categorical to integer dtypes (removal tracked as pl-043)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.2"
+  },
+  {
+   "text": "1.43.2: deprecate not setting plan_stage in show_graph() (default change tracked as pl-011)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.43.2"
+  },
+  {
+   "text": "1.44.0: deprecate rechunk parameter for all read/scan functions (removal tracked as pl-110/pl-008/pl-010)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.44.0"
+  },
+  {
+   "text": "1.44.0: deprecate Expr.rechunk() (removal tracked as pl-097)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.44.0"
+  },
+  {
+   "text": "1.44.0: deprecate struct.rename_fields() with wrong field count (error tracked as pl-075)",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.44.0"
+  },
+  {
+   "text": "1.44.0: relax default CloudRetryConfig for rate-limit stability (no Python API element named)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-1.44.0"
+  },
+  {
+   "text": "2.0.0 breaking: 'More map operations' (no specific API element named)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0 breaking: deprecate cut/qcut",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0: 'Python Polars 2.0' umbrella entry",
+   "reason": "unnamed",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0: enable out-of-core by default at 80% of RAM",
+   "reason": "unnamed",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0: default out-of-core disk budget set to 64 GB",
+   "reason": "unnamed",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0: raise HTTP rate-limiter read defaults / disable system certificates for HTTP sources",
+   "reason": "internal",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0: disable casts from String to Time (same as guide item pl-044)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0: cast is_in/Map needle exactly or not at all; resolve is_in coercion from dtypes (same as pl-016)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0 bug fix: stop casting data to a Decimal needle in is_in (same as pl-057)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0: SQL literal Decimal / Parquet ENUM / plugin CSE / SQL window entries repeated under Enhancements or Bug fixes (pl-001..pl-004)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0 bug fix: raise on ragged rows instead of silently dropping values",
+   "reason": "bugfix",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0 bug fix: raise on nested SQL aggregate calls; raise for SQL window shapes that gave wrong results",
+   "reason": "bugfix",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0 bug fix: panic on empty windows in dynamic group-by",
+   "reason": "bugfix",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0 bug fix: reject non-numeric input to entropy",
+   "reason": "bugfix",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "2.0.0: new scan_lance, scan_external_reader, struct.eval, erf, pipe_with_dtype, binning functions, scan_fn.io_source",
+   "reason": "addition",
+   "source_url": "https://github.com/pola-rs/polars/releases/tag/py-2.0.0"
+  },
+  {
+   "text": "guide: supertype of signed ints with UInt64 becomes Int128 (general coercion rule, no API element)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#change-supertype-of-signed-integer-types-and-uint64-from-float64-to-int128"
+  },
+  {
+   "text": "guide: struct arithmetic supertypes resolved per field (general operator rule, no API element)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#resolve-struct-arithmetic-supertypes-per-field"
+  },
+  {
+   "text": "guide: SQL numeric-literal/DIV heading (same as pl-002)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#type-exact-sql-numeric-literals-as-decimal-and-truncate-sql--and-div"
+  },
+  {
+   "text": "guide: Parquet ENUM as String heading (same as pl-004)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#read-the-parquet-enum-logical-type-as-string"
+  },
+  {
+   "text": "guide: SQL CAST of unparsable string raises a different exception (same change as pl-044 seen through SQL)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#remove-casts-from-string-to-temporal-types"
+  },
+  {
+   "text": "guide: read_csv gains scan_csv parameters (with_column_names, infer_schema_files, ...)",
+   "reason": "addition",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#plread_csv-is-now-dispatched-to-plscan_csvcollect"
+  },
+  {
+   "text": "guide: new extra_columns/missing_columns parameters for read_csv/scan_csv",
+   "reason": "addition",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#respect-file-column-order-when-schema-is-given-for-scan_csv"
+  },
+  {
+   "text": "guide: new pl.Map dtype and Expr/Series.map namespace",
+   "reason": "addition",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#load-arrow-parquet-and-iceberg-map-columns-as-the-new-map-dtype"
+  },
+  {
+   "text": "guide removal table: LazyFrame.profile (same as pl-012)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality"
+  },
+  {
+   "text": "guide removal table: DataFrame.__dataframe__ (same as pl-024)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality"
+  },
+  {
+   "text": "guide removal table: polars.interchange submodules/protocol symbols (same as pl-025)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality"
+  },
+  {
+   "text": "guide removal table: pl.from_dataframe(allow_copy) (same as pl-027)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality"
+  },
+  {
+   "text": "guide removal table: Expr.list.to_struct(n_field_strategy, upper_bound) (same as pl-068)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality"
+  },
+  {
+   "text": "guide removal table: POLARS_STREAMING_CHUNK_SIZE environment variable (not a Python API element)",
+   "reason": "internal",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality"
+  },
+  {
+   "text": "guide removal table: POLARS_AUTO_STRUCTIFY environment variable (not a Python API element; set_auto_structify is pl-103)",
+   "reason": "internal",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#removal-of-deprecated-functionality"
+  },
+  {
+   "text": "guide: mark read_avro()/write_avro() as unstable",
+   "reason": "docs",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#mark-read_avrowrite_avro-as-unstable"
+  },
+  {
+   "text": "guide: deprecate redundant strict=True on horizontal concat/union",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#deprecate-redundant-stricttrue-on-horizontal-plconcatplunion"
+  },
+  {
+   "text": "guide: deprecate cut()/qcut() in favour of bin_* methods",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/pola-rs/polars/blob/main/docs/source/releases/upgrade/2.md#deprecate-cutqcut-in-favour-of-the-bin_-methods"
+  }
+ ],
+ "excluded_counts": {
+  "addition": 5,
+  "bugfix": 4,
+  "deprecation_only": 15,
+  "docs": 1,
+  "duplicate": 12,
+  "internal": 3,
+  "unnamed": 7
+ },
+ "shuffle_order": [
+  "pl-007",
+  "pl-046",
+  "pl-057",
+  "pl-153",
+  "pl-001",
+  "pl-119",
+  "pl-098",
+  "pl-149",
+  "pl-111",
+  "pl-138",
+  "pl-115",
+  "pl-163",
+  "pl-088",
+  "pl-159",
+  "pl-124",
+  "pl-074",
+  "pl-026",
+  "pl-095",
+  "pl-107",
+  "pl-130",
+  "pl-034",
+  "pl-050",
+  "pl-157",
+  "pl-010",
+  "pl-101",
+  "pl-009",
+  "pl-054",
+  "pl-176",
+  "pl-128",
+  "pl-039",
+  "pl-028",
+  "pl-122",
+  "pl-081",
+  "pl-045",
+  "pl-022",
+  "pl-043",
+  "pl-017",
+  "pl-004",
+  "pl-113",
+  "pl-140",
+  "pl-044",
+  "pl-069",
+  "pl-027",
+  "pl-048",
+  "pl-109",
+  "pl-174",
+  "pl-161",
+  "pl-142",
+  "pl-047",
+  "pl-029",
+  "pl-165",
+  "pl-134",
+  "pl-152",
+  "pl-015",
+  "pl-126",
+  "pl-170",
+  "pl-118",
+  "pl-063",
+  "pl-127",
+  "pl-086",
+  "pl-056",
+  "pl-079",
+  "pl-123",
+  "pl-082",
+  "pl-021",
+  "pl-032",
+  "pl-171",
+  "pl-150",
+  "pl-166",
+  "pl-061",
+  "pl-016",
+  "pl-164",
+  "pl-003",
+  "pl-059",
+  "pl-132",
+  "pl-144",
+  "pl-055",
+  "pl-033",
+  "pl-060",
+  "pl-120",
+  "pl-019",
+  "pl-116",
+  "pl-102",
+  "pl-023",
+  "pl-162",
+  "pl-100",
+  "pl-049",
+  "pl-066",
+  "pl-051",
+  "pl-064",
+  "pl-175",
+  "pl-156",
+  "pl-108",
+  "pl-143",
+  "pl-112",
+  "pl-036",
+  "pl-042",
+  "pl-018",
+  "pl-084",
+  "pl-141",
+  "pl-087",
+  "pl-110",
+  "pl-031",
+  "pl-002",
+  "pl-024",
+  "pl-071",
+  "pl-093",
+  "pl-135",
+  "pl-077",
+  "pl-136",
+  "pl-125",
+  "pl-092",
+  "pl-114",
+  "pl-131",
+  "pl-155",
+  "pl-041",
+  "pl-145",
+  "pl-005",
+  "pl-013",
+  "pl-025",
+  "pl-030",
+  "pl-106",
+  "pl-121",
+  "pl-035",
+  "pl-167",
+  "pl-090",
+  "pl-099",
+  "pl-072",
+  "pl-154",
+  "pl-158",
+  "pl-078",
+  "pl-139",
+  "pl-083",
+  "pl-172",
+  "pl-129",
+  "pl-133",
+  "pl-040",
+  "pl-177",
+  "pl-070",
+  "pl-008",
+  "pl-011",
+  "pl-085",
+  "pl-096",
+  "pl-160",
+  "pl-168",
+  "pl-058",
+  "pl-073",
+  "pl-014",
+  "pl-075",
+  "pl-038",
+  "pl-097",
+  "pl-117",
+  "pl-037",
+  "pl-169",
+  "pl-104",
+  "pl-146",
+  "pl-012",
+  "pl-173",
+  "pl-148",
+  "pl-067",
+  "pl-151",
+  "pl-076",
+  "pl-089",
+  "pl-080",
+  "pl-053",
+  "pl-103",
+  "pl-020",
+  "pl-105",
+  "pl-006",
+  "pl-094",
+  "pl-147",
+  "pl-062",
+  "pl-091",
+  "pl-137",
+  "pl-052",
+  "pl-068",
+  "pl-065"
+ ],
+ "verification": [
+  {
+   "id": "pl-007",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/sql/context.py:429 execute(eager=True) returns res.collect(); polars-1.42.1/polars/lazyframe/frame.py:2487-2488 collect engine='auto' falls back to in-memory",
+   "new_evidence": "polars-2.0.0/polars/sql/context.py:436 res.collect(); polars-2.0.0/polars/lazyframe/frame.py:2101-2104 collect engine='auto' defaults to the streaming engine",
+   "change_type": "behaviour_only",
+   "notes": "SQL code path unchanged; the change comes through LazyFrame.collect's 'auto' engine now resolving to streaming."
+  },
+  {
+   "id": "pl-046",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (Expr.__and__/and_ just forward to _pyexpr)."
+  },
+  {
+   "id": "pl-057",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel; 2.0 is_in Notes mention lossy int/float conversions only, nothing about Decimal needles in float data."
+  },
+  {
+   "id": "pl-153",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/expr/expr.py:5067 map_elements(..., returns_scalar: bool = False) (deprecated at :5238)",
+   "new_evidence": "polars-2.0.0/polars/expr/expr.py:5684-5697 @removed_parameters(RemovedParameter('returns_scalar', removed_in='2.0')); signature has no returns_scalar",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-001",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (SQL planner)."
+  },
+  {
+   "id": "pl-119",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/dataframe/frame.py:7448-7449 @deprecate_renamed_parameter('by','group_by') on group_by_dynamic (also lazyframe/frame.py:5588)",
+   "new_evidence": "polars-2.0.0/polars/dataframe/frame.py:7437 @removed_parameters(RenamedParameter(name='by', new_name='group_by', removed_in='2.0')) (also lazyframe/frame.py:5216)",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-098",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/series/categorical.py:23 def get_categories; expr/categorical.py:20 def get_categories",
+   "new_evidence": "polars-2.0.0/polars/expr/categorical.py:340-350 __getattr__ raise_for_removed_attributes({'get_categories': ...}, version='2.0'); no get_categories in series/categorical.py",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "pl-149",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/dataframe/frame.py:1931 to_numpy(..., use_pyarrow=None); series/series.py:4924 to_numpy(..., use_pyarrow=None, ...)",
+   "new_evidence": "polars-2.0.0/polars/dataframe/frame.py:1916 @removed_parameters(RemovedParameter('use_pyarrow', removed_in='2.0')); series/series.py:5063 same",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-111",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/lazyframe/frame.py:8849 map_batches(..., no_optimizations=None, ...)",
+   "new_evidence": "polars-2.0.0/polars/lazyframe/frame.py:8486 @removed_parameters(RemovedParameter('no_optimizations', removed_in='2.0')); parameter absent",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-138",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/expr/expr.py:4866-4867 @deprecated(...) def where(self, predicate)",
+   "new_evidence": "polars-2.0.0/polars/expr/expr.py:12986 removed-attribute hint 'where': 'use `filter` instead.'; Expr.filter at expr/expr.py:5457",
+   "change_type": "rename_move",
+   "notes": ""
+  },
+  {
+   "id": "pl-115",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/dataframe/frame.py:5716 @deprecate_renamed_parameter('return_as_string','return_type') on glimpse",
+   "new_evidence": "polars-2.0.0/polars/dataframe/frame.py:5729 @removed_parameters(RenamedParameter(name='return_as_string', new_name='return_type', removed_in='2.0'))",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-163",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/io/ipc/functions.py:47 read_ipc with @deprecate_renamed_parameter('row_count_name'/'row_count_offset' -> row_index_*); scan_ipc :370 same",
+   "new_evidence": "polars-2.0.0/polars/io/ipc/functions.py:57 read_ipc @removed_parameters(RenamedParameter('row_count_name' ...)); scan_ipc :388 same",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-088",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/dataframe/group_by.py:610-611 @deprecated(...) def count(self)",
+   "new_evidence": "polars-2.0.0/polars/dataframe/group_by.py:909 removed-attribute hint 'count': 'use `GroupBy.len` instead'; GroupBy.len at :572; lazyframe/group_by.py:719 same",
+   "change_type": "rename_move",
+   "notes": ""
+  },
+  {
+   "id": "pl-159",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/testing/asserts/series.py:30 assert_series_equal with @deprecate_renamed_parameter('check_dtype','check_dtypes')",
+   "new_evidence": "polars-2.0.0/polars/testing/asserts/series.py:38 @removed_parameters(RenamedParameter(name='check_dtype', new_name='check_dtypes', removed_in='2.0'))",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-124",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/lazyframe/frame.py:2406 collect decorated @deprecate_streaming_parameter() (streaming accepted via **_kwargs, _utils/deprecation.py:80-90)",
+   "new_evidence": "polars-2.0.0/polars/lazyframe/frame.py:2078 collect @removed_parameters(RemovedParameter('streaming', removed_in='2.0'))",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-074",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/series/series.py:4021 search_sorted: `if isinstance(element, (list, Series, pl.Expr)):` (list accepted)",
+   "new_evidence": "polars-2.0.0/polars/series/series.py:4150-4152 `if isinstance(element, list):` raise InvalidOperationError('passing a list to `search_sorted` is ambiguous ...')",
+   "change_type": "signature",
+   "notes": "accepted type narrowed (list no longer accepted)."
+  },
+  {
+   "id": "pl-026",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/convert/general.py:1164 from_dataframe falls back to polars.interchange.from_dataframe for non-PyCapsule input",
+   "new_evidence": "polars-2.0.0/polars/convert/general.py:1161-1163 `if not is_pycapsule(df):` raise TypeError('expected object supporting the PyCapsule Interface ...')",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "pl-095",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/functions/lazy.py:1885 def groups(column); exported in __init__.py:445",
+   "new_evidence": "polars-2.0.0/polars/__init__.py:554 module __getattr__ removed dict 'groups' -> AttributeRemovedError; no def groups in functions/lazy.py",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "pl-107",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/functions/lazy.py:870 corr(a, b, *, method='pearson', ddof=None, ...)",
+   "new_evidence": "polars-2.0.0/polars/functions/lazy.py:861 corr(a, b, *, method='pearson', propagate_nans=False, eager=False) - no ddof",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-130",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/lazyframe/frame.py:2854 sink_parquet(..., retries=None, ...)",
+   "new_evidence": "polars-2.0.0/polars/lazyframe/frame.py:2459 sink_parquet @removed_parameters(RemovedParameter('retries', removed_in='2.0')); parameter absent",
+   "change_type": "signature",
+   "notes": "checked on sink_parquet only (representative of sink_*)."
+  },
+  {
+   "id": "pl-034",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (Decimal result precision of ceil)."
+  },
+  {
+   "id": "pl-050",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (ewm_var on Duration)."
+  },
+  {
+   "id": "pl-157",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/functions/lazy.py:2717 rolling_corr with @deprecate_renamed_parameter('min_periods','min_samples')",
+   "new_evidence": "polars-2.0.0/polars/functions/lazy.py:2656 @removed_parameters(RenamedParameter(name='min_periods', new_name='min_samples', removed_in='2.0'))",
+   "change_type": "signature",
+   "notes": "2.0 also drops rolling_corr's ddof parameter (undocumented, not part of this item)."
+  },
+  {
+   "id": "pl-010",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/io/ipc/functions.py:47 read_ipc(..., memory_map=True, ..., rechunk=True)",
+   "new_evidence": "polars-2.0.0/polars/io/ipc/functions.py:57 read_ipc(source, *, columns, n_rows, use_pyarrow, storage_options, row_index_name, row_index_offset) - no memory_map/rechunk",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-101",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/series/categorical.py:60 def uses_lexical_ordering (deprecated)",
+   "new_evidence": "polars-2.0.0/polars/series/categorical.py:243 removed-attribute hint 'uses_lexical_ordering' (raise_for_removed_attributes, version='2.0')",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "pl-009",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/io/csv/functions.py:399-412 read_csv pads a short schema_overrides list for a projection (own eager reader, projection applied in file order)",
+   "new_evidence": "polars-2.0.0/polars/io/csv/functions.py:470-530 read_csv builds scan_csv(...) and applies lf.select(F.nth(projection)) (:524) then lf._collect_eager() (:530)",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "pl-054",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (str.replace_many body and docstring identical in both wheels)."
+  },
+  {
+   "id": "pl-176",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/testing/parametric/strategies/core.py:160 series(): `if (size := kwargs.pop('size', None)) is not None:` (size accepted)",
+   "new_evidence": "polars-2.0.0/polars/testing/parametric/strategies/core.py:45-48 RemovedParameter(name='size', removed_in='2.0.0') applied to series (def at :53)",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-128",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/lazyframe/frame.py:1283 explain(..., tree_format=None, ...)",
+   "new_evidence": "polars-2.0.0/polars/lazyframe/frame.py:1298 explain(self, *, format='plain', optimized=True, engine='auto', optimizations=...) - no tree_format",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-039",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (pl.sql/SQLContext.execute Python code identical; resolution timing is in the Rust SQL context)."
+  },
+  {
+   "id": "pl-028",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (DataFrame.transpose Python body identical)."
+  },
+  {
+   "id": "pl-122",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/dataframe/frame.py:9544 pivot with @deprecate_renamed_parameter('columns','on')",
+   "new_evidence": "polars-2.0.0/polars/dataframe/frame.py:9616 @removed_parameters(RenamedParameter(name='columns', new_name='on', removed_in='2.0'))",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-081",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/io/spreadsheet/functions.py:1114 calamine reader (used by read_ods) names headerless columns range(1, width+1); docstring :570-571 'starting at 1'",
+   "new_evidence": "polars-2.0.0/polars/io/spreadsheet/functions.py:1116 `[f\"column_{i}\" for i in range(df.width)]`; docstring :574-575 'starting at 0'",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "pl-045",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (Expr.cast unchanged in Python)."
+  },
+  {
+   "id": "pl-022",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (DataFrame.__init__ data=None branch equivalent in both wheels)."
+  },
+  {
+   "id": "pl-043",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (Expr.cast unchanged in Python)."
+  },
+  {
+   "id": "pl-017",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/selectors.py:473-476 Selector.__and__: `if is_column(other):  # @2.0: remove` -> other = by_name(...) (same in __or__ :494, __xor__ etc.)",
+   "new_evidence": "polars-2.0.0/polars/selectors.py:476-482 Selector.__and__ only special-cases selectors; a pl.col(...) operand falls through to as_expr().__and__",
+   "change_type": "behaviour_only",
+   "notes": ""
+  },
+  {
+   "id": "pl-004",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (Parquet reader)."
+  },
+  {
+   "id": "pl-113",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/dataframe/frame.py:3945-3946 write_ipc @deprecate_renamed_parameter('future','compat_level')",
+   "new_evidence": "polars-2.0.0/polars/dataframe/frame.py:3934 write_ipc @removed_parameters(RenamedParameter(name='future', new_name='compat_level', removed_in='2.0'))",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "pl-140",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/expr/expr.py:11941 def register_plugin(...) (deprecated)",
+   "new_evidence": "polars-2.0.0/polars/expr/expr.py:12984 removed-attribute hint 'register_plugin': 'use `polars.plugins.register_plugin_function` instead.'; plugins.py:24 register_plugin_function",
+   "change_type": "rename_move",
+   "notes": ""
+  },
+  {
+   "id": "pl-044",
+   "status": "failed",
+   "old_evidence": "",
+   "new_evidence": "",
+   "reason": "cannot_locate",
+   "notes": "behaviour implemented in the Rust runtime; no Python-side docstring, default, shim or code change found in either wheel (Expr.cast unchanged in Python)."
+  },
+  {
+   "id": "pl-069",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/expr/array.py:906-907 to_struct(self, fields: Sequence[str] | Callable[[int], str] | None = None)",
+   "new_evidence": "polars-2.0.0/polars/expr/array.py:1073 to_struct(self, fields: Sequence[str] | None = None)",
+   "change_type": "signature",
+   "notes": "accepted type narrowed (callable no longer accepted)."
+  },
+  {
+   "id": "pl-027",
+   "status": "verified",
+   "old_evidence": "polars-1.42.1/polars/convert/general.py:1095 from_dataframe(df, *, allow_copy=None, rechunk=True)",
+   "new_evidence": "polars-2.0.0/polars/convert/general.py:1116 @removed_parameters(RemovedParameter(name='allow_copy', removed_in='2.0.0')); from_dataframe(df, *, rechunk=True)",
+   "change_type": "signature",
+   "notes": ""
+  }
+ ],
+ "sample": [
+  "pl-007",
+  "pl-153",
+  "pl-119",
+  "pl-098",
+  "pl-149",
+  "pl-111",
+  "pl-138",
+  "pl-115",
+  "pl-163",
+  "pl-088",
+  "pl-159",
+  "pl-124",
+  "pl-074",
+  "pl-026",
+  "pl-095",
+  "pl-107",
+  "pl-130",
+  "pl-157",
+  "pl-010",
+  "pl-101",
+  "pl-009",
+  "pl-176",
+  "pl-128",
+  "pl-122",
+  "pl-081",
+  "pl-017",
+  "pl-113",
+  "pl-140",
+  "pl-069",
+  "pl-027"
+ ]
+}

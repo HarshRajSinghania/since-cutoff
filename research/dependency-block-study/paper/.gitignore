@@ -1,0 +1,9 @@
+# LaTeX build output (the committed report is paper.pdf)
+main.pdf
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+figures/*.aux
+figures/*.log

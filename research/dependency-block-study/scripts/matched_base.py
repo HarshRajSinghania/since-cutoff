@@ -16,16 +16,16 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-I1 = HERE.parent
+STUDY = HERE.parent
 OUT = HERE / "matched_base_out.txt"
 sys.path.insert(0, str(HERE))
 from recompute_cost import PRICES  # noqa: E402
 
 P_R, P_W = PRICES["claude-opus-5-5"][2] / 1e6, PRICES["claude-opus-5-5"][3] / 1e6
 B = 704
-fs = json.loads((I1 / "analysis" / "f_sessions.json").read_text(encoding="utf-8"))["primary"]
-eb = json.loads((I1 / "analysis" / "exposure2_breakeven.json").read_text(encoding="utf-8"))["studies"]
-b2 = json.loads((I1 / "analysis" / "breakeven2d.json").read_text(encoding="utf-8"))
+fs = json.loads((STUDY / "analysis" / "f_sessions.json").read_text(encoding="utf-8"))["primary"]
+eb = json.loads((STUDY / "analysis" / "exposure2_breakeven.json").read_text(encoding="utf-8"))["studies"]
+b2 = json.loads((STUDY / "analysis" / "breakeven2d.json").read_text(encoding="utf-8"))
 K = b2["K_control_A_mean_cost_usd"]
 U_PT = b2["u_range_from_controls"]["cost"]["u_point"]
 S = {k: eb[k]["S_gross_usd"] for k in ("main", "replication", "new_tasks")}

@@ -23,7 +23,7 @@ are installed in this environment, so LiteLLM's own test suites cannot run here;
 server directly. Change only tests/integration/mcp/_math_server.py. The lockfile is fixed: do not add, upgrade or
 install dependencies.
 """
-evidence = ['litellm clone BerriAI/litellm @ b6f91a221b6b9df6f8a89ec6f8264ac87d63ff5d (2026-10-21), shallow clone from the real-world scan; pyproject.toml pins mcp>=2.3.0,<3, uv.lock locks mcp 2.3.0', 'I1/analysis/realworld_audit.csv: tests/integration/mcp/_math_server.py imports FastMCP from mcp.server.fastmcp (old form, TP)', "probe 2026-10-22 (mcp 2.3.0 venv): `import mcp.server.fastmcp` -> ModuleNotFoundError ('FastMCP was renamed to MCPServer'); MCPServer.settings has no host/port fields (assignment raises ValueError); MCPServer.run(transport='streamable-http', **kwargs) forwards host/port to run_streamable_http_async", 'mcp 1.28.1 (bench venv): the original file passes the hidden tests']
+evidence = ['litellm clone BerriAI/litellm @ b6f91a221b6b9df6f8a89ec6f8264ac87d63ff5d (2026-10-21), shallow clone from the real-world scan; pyproject.toml pins mcp>=2.3.0,<3, uv.lock locks mcp 2.3.0', '<study>/analysis/realworld_audit.csv: tests/integration/mcp/_math_server.py imports FastMCP from mcp.server.fastmcp (old form, TP)', "probe 2026-10-22 (mcp 2.3.0 venv): `import mcp.server.fastmcp` -> ModuleNotFoundError ('FastMCP was renamed to MCPServer'); MCPServer.settings has no host/port fields (assignment raises ValueError); MCPServer.run(transport='streamable-http', **kwargs) forwards host/port to run_streamable_http_async", 'mcp 1.28.1 (bench venv): the original file passes the hidden tests']
 stale_patterns = [
   '^\s*from\s+mcp\.server\.fastmcp\b',
   '\bFastMCP\s*\(',

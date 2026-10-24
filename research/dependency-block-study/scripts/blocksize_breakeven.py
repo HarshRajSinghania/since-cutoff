@@ -2,9 +2,9 @@
 No model calls, no agent sessions; existing run tables plus static `since-cutoff sync --dry-run` on the scanned clones.
 
 usage: python blocksize_breakeven.py generate [--workers 1]   -> $REALWORLD_DIR/blocks/<owner__name>.<scope>.json (raw)
-       python blocksize_breakeven.py analyse                  -> I1/analysis/blocksize_breakeven.json (aggregates only)
+       python blocksize_breakeven.py analyse                  -> <study>/analysis/blocksize_breakeven.json (aggregates only)
 env:   REALWORLD_DIR (default since_cutoff_runs/realworld), CUTOFFNOTES_EXE (default the scan venv's
-       since-cutoff 0.5.0, the version used for the exposure scan), RUNS_TABLES (default I1/runs_tables).
+       since-cutoff 0.5.0, the version used for the exposure scan), RUNS_TABLES (default <study>/runs_tables).
 
 1. Block sizes. Repositories: the 47 primary repositories of the exposure scan (scripts/realworld_analyze.py rule: first
    50 in star order whose scans succeeded for both cutoffs). For each, `since-cutoff sync <clone> --dry-run --model

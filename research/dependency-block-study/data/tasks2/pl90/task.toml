@@ -15,7 +15,7 @@ Implement `with_running_balance` in wallet/statement.py as its docstring describ
 evidence = [
   "polars-0.20.31: Expr.cumsum exists (deprecated alias of cum_sum)",
   "polars-1.42.1 and 2.0.0: Expr.cumsum does not exist (removed in 1.0.0, released 2024-07-01); Expr.cum_sum exists",
-  "I1/expansion/probes: surface check of polars 1.42.1 (pl_1.42.1.json has Expr.cum_sum, not Expr.cumsum)",
+  "<study>/expansion/probes: surface check of polars 1.42.1 (pl_1.42.1.json has Expr.cum_sum, not Expr.cumsum)",
 ]
 stale_patterns = [
   '''\.cumsum\(''',

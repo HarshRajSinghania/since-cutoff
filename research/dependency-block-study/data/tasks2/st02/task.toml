@@ -16,8 +16,8 @@ dependencies. You can run the tests with `pytest`.
 evidence = [
   "streamlit-1.58.0 elements/image.py: use_column_width=True or 'always' -> width='stretch' (deprecated, warning)",
   "streamlit-1.66.1 elements/image.py: use_column_width kept as a 'compatibility no-op for pre-1.61 callers'; the value is ignored ('`use_column_width` was removed and has no effect. Use width=stretch ...') -> width stays 'content'",
-  "since-cutoff griffe scan 2026-10-22 (I1/expansion/probes/griffe_scan_candidates_2026-10-22.json): ImageMixin.image(use_column_width) changed (keyword-only, deprecated no-op)",
-  "run (2026-10-22, /c/b/venvs/streamlit-*; I1/expansion/probes/streamlit_image_probe_output.txt): layout width passed to create_layout_config for use_column_width=True -> 'stretch' at 1.58.0, 'content' at 1.66.1; width='stretch' and use_container_width=True -> 'stretch' in both",
+  "since-cutoff griffe scan 2026-10-22 (<study>/expansion/probes/griffe_scan_candidates_2026-10-22.json): ImageMixin.image(use_column_width) changed (keyword-only, deprecated no-op)",
+  "run (2026-10-22, /c/b/venvs/streamlit-*; <study>/expansion/probes/streamlit_image_probe_output.txt): layout width passed to create_layout_config for use_column_width=True -> 'stretch' at 1.58.0, 'content' at 1.66.1; width='stretch' and use_container_width=True -> 'stretch' in both",
 ]
 stale_patterns = [
   '''\buse_column_width\b''',

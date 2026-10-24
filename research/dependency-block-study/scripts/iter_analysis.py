@@ -1,4 +1,4 @@
-"""Analysis for PROTOCOL_ADDENDUM section 12 (deployment iteration, condition C2). Writes I1/analysis/iter_C2.json.
+"""Analysis for PROTOCOL_ADDENDUM section 12 (deployment iteration, condition C2). Writes <study>/analysis/iter_C2.json.
 
 usage: python iter_analysis.py
 

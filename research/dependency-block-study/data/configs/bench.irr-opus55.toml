@@ -1,4 +1,4 @@
-# NAACL addendum section 11.1 config (E-irr): the addendum-3 config (same tasks, notes, settings) plus condition R
+# addendum section 11.1 config (E-irr): the addendum-3 config (same tasks, notes, settings) plus condition R
 # (length-matched irrelevant-content notes) and a concurrent A drift check.
 # since-cutoff head-to-head benchmark: harness configuration (plan B.1-B.6).
 # Paths may use forward slashes; "~" expands to the user's home. Relative paths are relative to
@@ -10,7 +10,7 @@ schema = "since-cutoff-bench/config@1"
 model = "claude-opus-5-5"
 effort = "medium"
 reps = 3
-conditions = ["R", "A"]  # NAACL addendum section 11.1: R x 3 reps, A x 1 rep (drift check); A/C/H from tasks2-opus55-2026-10-22
+conditions = ["R", "A"]  # addendum section 11.1: R x 3 reps, A x 1 rep (drift check); A/C/H from tasks2-opus55-2026-10-22
 pilot_tasks = []   # pilot: excluded from the analysis (pre-registered)
 pilot_reps = 2
 max_attempts = 3                   # infrastructure failures are re-queued up to this many attempts per run

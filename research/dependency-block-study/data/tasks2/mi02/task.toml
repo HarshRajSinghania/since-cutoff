@@ -17,7 +17,7 @@ with `pytest`.
 evidence = [
   "mistralai-2.5.0: Ocr.process(..., include_blocks: Optional[bool] = False); request body sends \"include_blocks\": false when the argument is omitted",
   "mistralai-3.3.0: Ocr.process(..., include_blocks: Optional[bool] = True); request body sends \"include_blocks\": true when the argument is omitted (silent change: no warning, no error)",
-  "run (2026-10-22, scratch venvs, httpx/httpx2 MockTransport; I1/expansion/probes/mistral_probe_output.txt): ocr.process without include_blocks -> body include_blocks false at 2.5.0, true at 3.3.0; include_blocks=False -> false in both",
+  "run (2026-10-22, scratch venvs, httpx/httpx2 MockTransport; <study>/expansion/probes/mistral_probe_output.txt): ocr.process without include_blocks -> body include_blocks false at 2.5.0, true at 3.3.0; include_blocks=False -> false in both",
   "https://github.com/mistralai/client-python/releases/tag/v3.0.0 (2026-09-28, major release)",
 ]
 # ocr.process(...) call without an include_blocks argument (comments ignored by the harness)

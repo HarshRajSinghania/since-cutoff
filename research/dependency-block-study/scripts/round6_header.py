@@ -1,7 +1,7 @@
 """Round-6 checks (requested in an internal review): the header-only arm on cost and tokens.
 
-usage: python -I round6_header.py <I1 dir>   ->   <I1>/analysis/round6_header.json
-(in the supplementary archive: RUNS_TABLES=runs python scripts/round6_header.py .)
+usage: python -I round6_header.py <study dir>   ->   <study>/analysis/round6_header.json
+(in the published data folder: RUNS_TABLES=runs python scripts/round6_header.py data)
 
 Existing run tables only; no new sessions. Estimator as in the paper: per task, log(median treat run / median ctrl run)
 over the post-cutoff tasks; geometric mean over tasks; 95% percentile task bootstrap (10,000 resamples, seed 20261001);

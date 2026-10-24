@@ -1,4 +1,4 @@
-"""Add the header-only placebo condition H to the benchmark harness (NAACL addendum, PROTOCOL_ADDENDUM.md).
+"""Add the header-only placebo condition H to the benchmark harness (addendum, PROTOCOL_ADDENDUM.md).
 
 H = base block + the since-cutoff notes block with every change line removed (marker, meta line, heading, intro
 paragraph and the per-package "**pkg X** (Y at the cutoff)" lines are kept). Notes come from a separate frozen
@@ -25,7 +25,7 @@ sub(cfgp, '''    @property
 
     @property
     def notes_header_dir(self) -> Path:
-        """Header-only notes for the placebo condition H (NAACL addendum)."""
+        """Header-only notes for the placebo condition H (addendum)."""
         if "notes_header" in self.raw["paths"]:
             return self.p("notes_header")
         return self.notes_dir.parent / (self.notes_dir.name + "-header")
@@ -34,11 +34,11 @@ sub(cfgp, '''    @property
 cp = ROOT / "conditions.py"
 sub(cp, '''    forced: bool = False  # E: the CLAUDE.md rule tells the agent to look the API up before writing code
 ''', '''    forced: bool = False  # E: the CLAUDE.md rule tells the agent to look the API up before writing code
-    notes_variant: str = ""  # H: "header" = header-only notes (placebo, NAACL addendum)
+    notes_variant: str = ""  # H: "header" = header-only notes (placebo, addendum)
 ''')
 sub(cp, '''    "E": Condition("E", context7=True, notes=False, forced=True),
 }''', '''    "E": Condition("E", context7=True, notes=False, forced=True),
-    # NAACL addendum (PROTOCOL_ADDENDUM.md): header-only notes, every change line removed (placebo for C)
+    # addendum (PROTOCOL_ADDENDUM.md): header-only notes, every change line removed (placebo for C)
     "H": Condition("H", context7=False, notes=True, notes_variant="header"),
 }''')
 sub(cp, '''def claude_md(cfg: Config, task: Task, cond: Condition, manifest: dict[str, Any] | None) -> str:

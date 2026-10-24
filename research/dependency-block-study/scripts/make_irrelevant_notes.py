@@ -87,7 +87,7 @@ for key, entry in sorted(man["tasks"].items()):
                   "source_sha256": entry["sha256"], "source_bytes": entry["bytes"], "donor_section": choice}
     choices[key] = (choice, entry["bytes"], len(data))
 manifest = {"schema": man["schema"],
-            "tool": man["tool"] + " (irrelevant-content control, NAACL addendum section 11 condition R)",
+            "tool": man["tool"] + " (irrelevant-content control, addendum section 11 condition R)",
             "model": man["model"], "source": str(src), "donor": str(donor_dir),
             "created_at": datetime.now(timezone.utc).isoformat(), "frozen": True,
             "frozen_at": datetime.now(timezone.utc).isoformat(), "tasks": tasks}

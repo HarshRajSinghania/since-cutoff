@@ -1,4 +1,4 @@
-"""Aggregate recall / precision (protocol section 7) -> I1/analysis/recall_eval.json.
+"""Aggregate recall / precision (protocol section 7) -> <study>/analysis/recall_eval.json.
 
 Inputs: gt/*.json (frozen ground truth), out/auto/*.json (rule-based proposals), adjudication.json (AI overrides),
 out/precision/judged.json (AI-judged precision), out/norm/* (report counts), the frozen notes manifests."""
@@ -11,7 +11,7 @@ sys.path.insert(0, str(HERE))
 from candidates import gt_items, task_items  # noqa: E402
 
 W = Path(r"recall_eval"); OUT = W / "out"
-I1 = HERE.parent.parent
+STUDY = HERE.parent.parent
 LIBS = ["anthropic", "openai", "huggingface-hub", "mcp", "polars", "streamlit", "mistralai"]
 DET = ["sc041", "scc2m0", "scc2", "griffe", "aexpy"]
 NOTES = ["sc041_cap5", "sc041_cap10", "scc2m0_cap5", "scc2m0_cap10", "scc2_cap5", "sc041_frozen", "scc2_frozen"]
@@ -195,7 +195,7 @@ def main():
     # task-change set
     man = {}
     for folder, key in (("sonnet-5-5", "sc041"), ("tasks2-opus-5-5", "sc041"), ("tasks2-opus-5-5-v2", "scc2")):
-        m = json.loads((I1 / "notes" / folder / "MANIFEST.json").read_text(encoding="utf-8"))
+        m = json.loads((STUDY / "notes" / folder / "MANIFEST.json").read_text(encoding="utf-8"))
         for k, v in m["tasks"].items():
             man.setdefault(key, {})[k] = v["covered"]
     tasks = []
@@ -234,7 +234,7 @@ def main():
     res["precision"] = prec
     res["items"] = rows
     res["task_items"] = trows
-    (I1 / "analysis" / "recall_eval.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+    (STUDY / "analysis" / "recall_eval.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
     # console summary
     for t in DET:
         print(t, rec[t]["overall"], "static", rec[t]["static_visible_types (excl. behaviour_only)"]["p_ci"],

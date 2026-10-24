@@ -15,8 +15,8 @@ says; keep the `READS` counter where it is. Do not add dependencies. You can run
 evidence = [
   "streamlit-1.58.0: st.cache exists (prints 'st.cache is deprecated and will be removed soon. Please use ... st.cache_data or st.cache_resource')",
   "streamlit-1.66.1: `st.cache` removed -> AttributeError 'st.cache has been removed. Use st.cache_data or st.cache_resource instead.'",
-  "since-cutoff griffe scan 2026-10-22 (I1/expansion/probes/griffe_scan_candidates_2026-10-22.json): removed streamlit.cache, streamlit.runtime.caching.legacy_cache_api",
-  "run (2026-10-22, scratch venvs; I1/expansion/probes/streamlit_probe_output.txt): AppTest script with @st.cache -> OK at 1.58.0, AttributeError at 1.66.1",
+  "since-cutoff griffe scan 2026-10-22 (<study>/expansion/probes/griffe_scan_candidates_2026-10-22.json): removed streamlit.cache, streamlit.runtime.caching.legacy_cache_api",
+  "run (2026-10-22, scratch venvs; <study>/expansion/probes/streamlit_probe_output.txt): AppTest script with @st.cache -> OK at 1.58.0, AttributeError at 1.66.1",
 ]
 stale_patterns = [
   '''@st\.cache\b(?!_)''',

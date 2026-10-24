@@ -1520,7 +1520,7 @@
   "rules": {
     "I1_content_matters": true,
     "I2_priming": false,
-    "verdict": "I1 met",
+    "verdict": "the study folder met",
     "drift_ci_excludes_1": false
   }
 }

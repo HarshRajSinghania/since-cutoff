@@ -1,4 +1,4 @@
-# NAACL addendum section 11.3 config (E-case): the addendum-3 config with the private case-study tasks (real LiteLLM repository subset), conditions A/C, 5 reps, notes generated on the real pyproject.toml/uv.lock.
+# addendum section 11.3 config (E-case): the addendum-3 config with the private case-study tasks (real LiteLLM repository subset), conditions A/C, 5 reps, notes generated on the real pyproject.toml/uv.lock.
 # since-cutoff head-to-head benchmark: harness configuration (plan B.1-B.6).
 # Paths may use forward slashes; "~" expands to the user's home. Relative paths are relative to
 # the repository root (the folder that contains bench/). No secrets belong in this file: the OAuth
@@ -9,7 +9,7 @@ schema = "since-cutoff-bench/config@1"
 model = "claude-opus-5-5"
 effort = "medium"
 reps = 5
-conditions = ["A", "C"]  # NAACL addendum section 11.3 (E-case)
+conditions = ["A", "C"]  # addendum section 11.3 (E-case)
 pilot_tasks = []   # pilot: excluded from the analysis (pre-registered)
 pilot_reps = 2
 max_attempts = 3                   # infrastructure failures are re-queued up to this many attempts per run

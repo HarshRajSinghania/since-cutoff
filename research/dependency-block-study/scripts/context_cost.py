@@ -2,7 +2,7 @@
 carry the memory-file channel that delivers CLAUDE.md, and c / f* recomputed per context (round 20, reviewer: 1,281 of
 the 1,308 contexts behind f are subagent runs, while c uses a benchmark session's 16.6 turns).
 
-usage: python -I scripts/context_cost.py [<I1 dir>]   ->   prints aggregates; also written to scripts/context_cost_out.txt
+usage: python -I scripts/context_cost.py [<study dir>]   ->   prints aggregates; also written to scripts/context_cost_out.txt
 
 Privacy: reads the local Claude Code transcript store (~/.claude/projects/**/*.jsonl) and prints COUNTS ONLY. No
 transcript content, prompt, path, project name or session id is printed or written. Deterministic: files are read in
@@ -37,7 +37,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from recompute_cost import PRICES  # noqa: E402
 
-I1 = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else HERE.parent
+STUDY = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else HERE.parent
 STORE = Path(os.path.expanduser("~")) / ".claude" / "projects"
 OUT = HERE / "context_cost_out.txt"
 
@@ -46,7 +46,7 @@ PATH_TOOLS = ("Edit", "MultiEdit", "Write", "NotebookEdit", "Read")
 EDIT_TOOLS = ("Edit", "MultiEdit", "Write", "NotebookEdit")
 X1_PREFIX = ("c:\\b\\",)
 X1_SUB = ("since-cutoff-benchmark", "since-cutoff-bench", "since_cutoff_runs")
-X2_SUB = ("\\<research folder>", "")
+X2_SUB = ("\\<research folder>", "ai-research")
 BUILTIN_AGENTS = {"general-purpose", "Explore", "Plan", "claude-code-guide", "statusline-setup", "fork"}
 
 BLOCK = 704
@@ -175,9 +175,9 @@ def f_star(c, s, uK):
 
 
 def main():
-    fs = json.loads((I1 / "analysis" / "f_sessions.json").read_text(encoding="utf-8"))
-    ex = json.loads((I1 / "analysis" / "exposure2_breakeven.json").read_text(encoding="utf-8"))
-    b2 = json.loads((I1 / "analysis" / "breakeven2d.json").read_text(encoding="utf-8"))
+    fs = json.loads((STUDY / "analysis" / "f_sessions.json").read_text(encoding="utf-8"))
+    ex = json.loads((STUDY / "analysis" / "exposure2_breakeven.json").read_text(encoding="utf-8"))
+    b2 = json.loads((STUDY / "analysis" / "breakeven2d.json").read_text(encoding="utf-8"))
     cutoff = dt.datetime.fromisoformat(fs["generated"])
     files = sorted(glob.glob(str(STORE / "**" / "*.jsonl"), recursive=True))
     ts = [scan(f, cutoff) for f in files]

@@ -1,7 +1,7 @@
 """Exposure study 2, matcher audit (EXPOSURE2_PROTOCOL.md section 7). AI-judged.
 
 usage: python -I audit.py sample      -> $REALWORLD2_DIR/audit/worklist.json (60 hits with full details; raw, has names)
-       python -I audit.py summarise   -> I1/analysis/exposure2.json key "audit" (aggregates only)
+       python -I audit.py summarise   -> <study>/analysis/exposure2.json key "audit" (aggregates only)
 Verdicts: $REALWORLD2_DIR/audit/verdicts.json, {"<sample index>": {"verdict": "TP|FP-resolution|FP-diff",
   "affected": "yes|handled|no|", "runtime": "breaks|warns|runs|", "runtime_basis": "snippet|static|",
   "reason": "..."}}; runtime snippet results: $REALWORLD2_DIR/audit/runtime_results.json (runtime_check.py).
@@ -13,13 +13,13 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-I1 = HERE.parents[1]
+STUDY = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 from common import RW2, SEED_AUDIT, SEED_BOOT, canon, is_pinned, slug  # noqa: E402
 from analyze import pctl, wilson  # noqa: E402
 
 AUD = RW2 / "audit"
-OUT = I1 / "analysis" / "exposure2.json"
+OUT = STUDY / "analysis" / "exposure2.json"
 N_AUDIT = 60
 B = 10000
 

@@ -17,7 +17,7 @@ evidence = [
   "polars-2.0.0: LazyFrame.collect(streaming=True) raises ArgumentRemovedError ('... has been removed in version 2.0. Use `engine=\"streaming\"` instead.')",
   "https://github.com/pola-rs/polars/releases/tag/py-2.0.0 (major release removing deprecated APIs)",
   "polars-2.0.0 LazyFrame.collect docstring (lazyframe/frame.py:2101-2104): engine='auto' without an affinity runs on the streaming engine (independent review 2026-10-22, POLARS_VERBOSE=1: 2.0.0 logs polars-stream, 1.42.1 in-memory); the hidden test counts 'auto' as streaming on polars>=2 and as in-memory on 1.x",
-  "run (2026-10-22, /c/b/venvs/polars-*; I1/expansion/probes/polars_streaming_probe_output.txt): collect(engine='streaming'), collect_all(engine='streaming') and Config.set_engine_affinity('streaming') work in both versions",
+  "run (2026-10-22, /c/b/venvs/polars-*; <study>/expansion/probes/polars_streaming_probe_output.txt): collect(engine='streaming'), collect_all(engine='streaming') and Config.set_engine_affinity('streaming') work in both versions",
 ]
 stale_patterns = [
   '''\bstreaming\s*=\s*True''',

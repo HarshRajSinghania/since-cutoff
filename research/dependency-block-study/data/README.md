@@ -99,8 +99,19 @@ scripts are in `../scripts`. See `../README.md` for the findings and the main co
   No design, hypothesis or decision rule was changed.
 - Personal folders were rewritten to relative names (for example `since_cutoff_runs/...` for the local run results
   and `research/dependency-block-study` for the study folder), one private project name reads `<project>` and one
-  private folder `<research folder>`. Em dashes in the protocols and in two ground-truth quotes were replaced by
-  hyphens.
+  private folder `<research folder>`; a folder named after a flattened local path now reads
+  `since-cutoff==0.5.0@3f0144f`. Em dashes in the protocols and in two ground-truth quotes were replaced by hyphens.
+- Outside `protocol/`, the conference wording of the working files ("NAACL addendum") reads "addendum", and the
+  private name of the study folder ("I1") reads `<study>` or "the study folder" (in code, the variable `STUDY`). Git
+  tag and branch names such as `naacl-addendum-prereg-2026-10-21` are kept as they are, so they can be looked up.
+- The files in `protocol/` were fixed (and some hashed) before the studies, so they keep their original wording,
+  including the conference name, the folder name "I1" and phrases such as "the paper sprint". Only personal paths,
+  internal-review file names and em dashes were changed, so a copy no longer hashes to its recorded value (for
+  example the sha256 of `F_PROTOCOL.md` in `analysis/f_sessions.json`). A path that was only a private folder
+  name reads as that name (for example `ai-research` in `F_PROTOCOL.md`).
+- Scripts that take the study folder as an argument run on `data`, which has the same `analysis/` and `runs/`
+  layout; `round22_holm.py` writes its text output to `analysis/`, and the scripts that cannot be re-run from here
+  write theirs next to the script.
 - List prices ($ per million tokens: input, output, cache read, 1-hour cache write) used for every cost: Opus 5.5
   4 / 20 / 0.20 / 8; Sonnet 5.5 2 / 10 / 0.10 / 4; Sonnet 4.5 3 / 15 / 0.30 / 6; Haiku 5.5 0.10 / 0.50 / 0.01 / 0.20
   (tier for prompts up to 100k tokens; no logged prompt exceeded 70k). Checked against

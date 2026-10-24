@@ -1,4 +1,4 @@
-# NAACL 2027 addendum config: copy of bench/bench.toml at b64d378 with model/conditions/budget/paths overridden.
+# addendum config: copy of bench/bench.toml at b64d378 with model/conditions/budget/paths overridden.
 # since-cutoff head-to-head benchmark: harness configuration (plan B.1-B.6).
 # Paths may use forward slashes; "~" expands to the user's home. Relative paths are relative to
 # the repository root (the folder that contains bench/). No secrets belong in this file: the OAuth
@@ -9,7 +9,7 @@ schema = "since-cutoff-bench/config@1"
 model = "claude-haiku-5-5"
 effort = "medium"
 reps = 3
-conditions = ["A", "C"]  # NAACL addendum (PROTOCOL_ADDENDUM.md): model generalisation, A vs C only
+conditions = ["A", "C"]  # addendum (PROTOCOL_ADDENDUM.md): model generalisation, A vs C only
 pilot_tasks = ["ant01", "mcp01"]   # pilot: excluded from the analysis (pre-registered)
 pilot_reps = 2
 max_attempts = 3                   # infrastructure failures are re-queued up to this many attempts per run

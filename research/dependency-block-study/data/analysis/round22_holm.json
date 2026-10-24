@@ -1,6 +1,6 @@
 {
  "generated_by": "scripts/round22_holm.py",
- "note": "usage: python -I round22_holm.py <I1 dir>   ->   <I1>/scripts/round22_holm_out.txt and <I1>/analysis/round22_holm.json (in the supplementary archive: RUNS_TABLES=runs python scripts/round22_holm.py .)",
+ "note": "usage: python -I round22_holm.py <study dir>   ->   <study>/analysis/round22_holm_out.txt and <study>/analysis/round22_holm.json (in the published data folder: RUNS_TABLES=runs python scripts/round22_holm.py data)",
  "studies": {
   "main": {
    "family": "C/A cost, turns, wall time, failing test runs (pre-committed disjunction)",

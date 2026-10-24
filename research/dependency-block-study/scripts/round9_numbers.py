@@ -1,7 +1,7 @@
 """Round-9 numbers for the paper (no model sessions; existing run tables and analysis JSONs only).
 
-usage: python -I round9_numbers.py <I1 dir>   ->   <I1>/analysis/round9_numbers.json
-(in the supplementary archive: RUNS_TABLES=runs python scripts/round9_numbers.py .)
+usage: python -I round9_numbers.py <study dir>   ->   <study>/analysis/round9_numbers.json
+(in the published data folder: RUNS_TABLES=runs python scripts/round9_numbers.py data)
 
 1. Block-size cap from the break-even model: the block pays for itself while
    b * (t * p_r + p_w) <= f * s, so b_max(f) = f * s / (t * p_r + p_w), with s the gross saving per affected session and

@@ -1,7 +1,7 @@
 """Robustness without the evaluated vendor's own SDK (requested in an internal review). Existing run tables only.
 
-usage: python robust_no_anthropic.py          -> writes I1/analysis/robust_no_anthropic.json
-env:   RUNS_TABLES (default I1/runs_tables), BENCH_TASKS (default ~/projects/since-cutoff-benchmark/bench/tasks),
+usage: python robust_no_anthropic.py          -> writes <study>/analysis/robust_no_anthropic.json
+env:   RUNS_TABLES (default <study>/runs_tables), BENCH_TASKS (default ~/projects/since-cutoff-benchmark/bench/tasks),
        TASKS2 (default since_cutoff_tasks2).
 
 Anthropic-SDK tasks are found from task.toml (`library = "anthropic"`) and checked against each task repo's

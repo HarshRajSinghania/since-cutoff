@@ -15,7 +15,7 @@ tests with `pytest`.
 evidence = [
   "polars-1.42.1: Expr.replace(old, new=<no_default>, *, default=<no_default>, return_dtype=None) (default deprecated since 1.0.0, still works)",
   "polars-2.0.0: Expr.replace(old, new=<no_default>) -> passing default= raises ArgumentRemovedError ('deprecated in version 1.0.0 and has been removed in version 2.0. Use replace_strict instead')",
-  "run (2026-10-22, scratch venvs; I1/expansion/probes/polars_probe_output.txt)",
+  "run (2026-10-22, scratch venvs; <study>/expansion/probes/polars_probe_output.txt)",
 ]
 stale_patterns = [
   '''\.replace\([^)]*\bdefault\s*=''',

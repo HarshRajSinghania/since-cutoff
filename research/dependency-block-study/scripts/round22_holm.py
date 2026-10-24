@@ -1,7 +1,7 @@
 """Round-22 Table 1 p-values: raw and Holm-adjusted exact sign-flip p of each study's pre-committed efficiency metric.
 
-usage: python -I round22_holm.py <I1 dir>   ->   <I1>/scripts/round22_holm_out.txt and <I1>/analysis/round22_holm.json
-(in the supplementary archive: RUNS_TABLES=runs python scripts/round22_holm.py .)
+usage: python -I round22_holm.py <study dir>   ->   <study>/analysis/round22_holm_out.txt and <study>/analysis/round22_holm.json
+(in the published data folder: RUNS_TABLES=runs python scripts/round22_holm.py data)
 
 an internal review W4 and change 3. No model sessions; reads the de-identified per-run tables with the estimator and
 the exact two-sided sign-flip test of round5_table1.py (per task the ratio of median run values; test on per-task log
@@ -122,7 +122,7 @@ def main():
     lines.append(f"smallest attainable two-sided p: 8 tasks {2 / 2 ** 8:.4g}; 17 tasks {2 / 2 ** 17:.4g}; "
                  f"three-contrast Holm floor with 8 tasks {3 * 2 / 2 ** 8:.4g}")
     txt = "\n".join(lines) + "\n"
-    (i1 / "scripts" / "round22_holm_out.txt").write_text(txt, encoding="utf-8")
+    (i1 / "analysis" / "round22_holm_out.txt").write_text(txt, encoding="utf-8")
     print(txt)
 
 

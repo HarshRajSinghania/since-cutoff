@@ -59,9 +59,9 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-I1 = HERE.parent
+STUDY = HERE.parent
 sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(I1 / "expansion" / "fsessions"))
+sys.path.insert(0, str(STUDY / "expansion" / "fsessions"))
 from recompute_cost import PRICES, list_cost  # noqa: E402
 from blocksize_breakeven import load as load_runs  # noqa: E402
 from turns_vs_calls import stream_path, count as count_stream  # noqa: E402
@@ -69,7 +69,7 @@ from context_cost import x1, x2b, low, ts_of, PATH_TOOLS, EDIT_TOOLS  # noqa: E4
 from fsess import project_key  # noqa: E402
 
 OUT_TXT = HERE / "breakeven_unified_out.txt"
-OUT_JSON = I1 / "analysis" / "breakeven_unified.json"
+OUT_JSON = STUDY / "analysis" / "breakeven_unified.json"
 STORE = Path(os.path.expanduser("~")) / ".claude" / "projects"
 OPUS = "claude-opus-5-5"
 P_R, P_W = PRICES[OPUS][2] / 1e6, PRICES[OPUS][3] / 1e6
@@ -83,7 +83,7 @@ Z80 = 1.959964 + 0.841621
 
 # ------------------------------------------------------------------------------------------- benchmark terms
 def benchmark_terms():
-    an = I1 / "analysis"
+    an = STUDY / "analysis"
     ex = json.loads((an / "exposure2_breakeven.json").read_text(encoding="utf-8"))
     b2 = json.loads((an / "breakeven2d.json").read_text(encoding="utf-8"))
     pooled = json.loads((an / "pooled_main_tasks2.json").read_text(encoding="utf-8"))
@@ -306,7 +306,7 @@ def fm(x, d=2):
 def main():
     L = []
     say = L.append
-    an = I1 / "analysis"
+    an = STUDY / "analysis"
     fs = json.loads((an / "f_sessions.json").read_text(encoding="utf-8"))
     r9 = json.loads((an / "round9_numbers.json").read_text(encoding="utf-8"))["live_ab_sizing"]
     T = benchmark_terms()

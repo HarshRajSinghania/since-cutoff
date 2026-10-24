@@ -1,4 +1,4 @@
-# NAACL addendum section 13 config (concurrent mechanism ablation): the addendum-3 config (same tasks, settings, C and H
+# addendum section 13 config (concurrent mechanism ablation): the addendum-3 config (same tasks, settings, C and H
 # notes) plus the R notes of section 11 and the generic instruction G; A, C, H, R, G run concurrently in randomised blocks.
 # since-cutoff head-to-head benchmark: harness configuration (plan B.1-B.6).
 # Paths may use forward slashes; "~" expands to the user's home. Relative paths are relative to
@@ -10,7 +10,7 @@ schema = "since-cutoff-bench/config@1"
 model = "claude-opus-5-5"
 effort = "medium"
 reps = 3
-conditions = ["A", "C", "H", "R", "G"]  # NAACL addendum section 13: all five x 3 reps, same blocks (concurrent)
+conditions = ["A", "C", "H", "R", "G"]  # addendum section 13: all five x 3 reps, same blocks (concurrent)
 pilot_tasks = []   # pilot: excluded from the analysis (pre-registered)
 pilot_reps = 2
 max_attempts = 3                   # infrastructure failures are re-queued up to this many attempts per run
@@ -86,7 +86,7 @@ bootstrap_resamples = 10000
 bootstrap_seed = 20261001
 alpha = 0.05
 primary = ["C", "G"]
-contrasts = [["C", "G"], ["C", "R"], ["G", "H"], ["C", "A"], ["G", "A"], ["H", "A"], ["R", "A"]]   # section 13; token tests in I1/scripts/conc_analysis.py
+contrasts = [["C", "G"], ["C", "R"], ["G", "H"], ["C", "A"], ["G", "A"], ["H", "A"], ["R", "A"]]   # section 13; token tests in <study>/scripts/conc_analysis.py
 noninferiority_margin = -0.10
 ceiling = 0.90
 majority = 2          # a task "passes" for McNemar when at least 2 of its 3 reps pass

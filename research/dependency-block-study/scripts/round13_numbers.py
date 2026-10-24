@@ -1,7 +1,7 @@
 """Round-13 numbers (requested in internal reviews of a draft). No model sessions.
 
-usage: python -I round13_numbers.py <I1 dir>   ->   <I1>/analysis/round13_numbers.json
-(in the supplementary archive: RUNS_TABLES=runs python scripts/round13_numbers.py .)
+usage: python -I round13_numbers.py <study dir>   ->   <study>/analysis/round13_numbers.json
+(in the published data folder: RUNS_TABLES=runs python scripts/round13_numbers.py data)
 Inputs: analysis/breakeven2d.json, exposure2_breakeven.json, round7_checks.json, round9_numbers.json,
 f_sessions.json and the run tables of the Opus studies with a header-only arm (replication, new tasks, concurrent)
 and of the main + new-task controls.

@@ -1,4 +1,4 @@
-# NAACL addendum 3 config (task-set expansion): addendum-2 config with a private task folder, its own notes and header notes.
+# addendum 3 config (task-set expansion): addendum-2 config with a private task folder, its own notes and header notes.
 # since-cutoff head-to-head benchmark: harness configuration (plan B.1-B.6).
 # Paths may use forward slashes; "~" expands to the user's home. Relative paths are relative to
 # the repository root (the folder that contains bench/). No secrets belong in this file: the OAuth
@@ -9,7 +9,7 @@ schema = "since-cutoff-bench/config@1"
 model = "claude-opus-5-5"
 effort = "medium"
 reps = 3
-conditions = ["A", "C", "H"]  # NAACL addendum 3 (PROTOCOL_ADDENDUM.md section 8): new post-cutoff tasks + controls
+conditions = ["A", "C", "H"]  # addendum 3 (PROTOCOL_ADDENDUM.md section 8): new post-cutoff tasks + controls
 pilot_tasks = []   # pilot: excluded from the analysis (pre-registered)
 pilot_reps = 2
 max_attempts = 3                   # infrastructure failures are re-queued up to this many attempts per run

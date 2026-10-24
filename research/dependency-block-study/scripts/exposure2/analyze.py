@@ -1,5 +1,5 @@
 """Exposure study 2 analysis (EXPOSURE2_PROTOCOL.md section 6). Aggregates only (no repository names) ->
-I1/analysis/exposure2.json (key "exposure"; the audit script adds key "audit").
+<study>/analysis/exposure2.json (key "exposure"; the audit script adds key "audit").
 
 usage: python -I analyze.py
 """
@@ -14,11 +14,11 @@ from math import sqrt
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-I1 = HERE.parents[1]
+STUDY = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 from common import CUTOFF, N_PER_STRATUM, RW1, RW2, SEED_BOOT, canon, is_pinned, slug  # noqa: E402
 
-OUT = I1 / "analysis" / "exposure2.json"
+OUT = STUDY / "analysis" / "exposure2.json"
 B = 10000
 
 
@@ -216,7 +216,7 @@ def main():
     ra, oa = rows_for(sel["AI"])
     res = {
         "protocol": "expansion/EXPOSURE2_PROTOCOL.md",
-        "protocol_sha256": hashlib.sha256((I1 / "expansion" / "EXPOSURE2_PROTOCOL.md").read_bytes()).hexdigest(),
+        "protocol_sha256": hashlib.sha256((STUDY / "expansion" / "EXPOSURE2_PROTOCOL.md").read_bytes()).hexdigest(),
         "tool": "since-cutoff 0.5.0 (scan venv)", "model": "anthropic:claude-opus-5-5", "cutoff": CUTOFF,
         "frame": {"query": frame["base_query"], "enumerated_at": frame["finished"],
                   "total_count_unpartitioned": frame["total_count_unpartitioned"],
@@ -260,7 +260,7 @@ def main():
     res["timeout_sensitivity"] = sens
 
     # the earlier 47 under the same definitions (descriptive comparison)
-    sys.path.insert(0, str(I1 / "scripts"))
+    sys.path.insert(0, str(STUDY / "scripts"))
     import os
     os.environ.setdefault("REALWORLD_DIR", str(RW1))
     from blocksize_breakeven import primary_repos

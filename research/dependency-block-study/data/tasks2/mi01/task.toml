@@ -20,7 +20,7 @@ The lockfile is fixed: do not add or install dependencies. You can run the tests
 """
 evidence = [
   "mistralai-3.3.0 METADATA: Requires-Dist httpx2 (no httpx); mistralai-2.5.0 required httpx (probe 2026-10-22: `import httpx` -> ModuleNotFoundError in a clean mistralai==3.3.0 env)",
-  "mistralai 3.x signatures: Mistral.do_request / files.download use httpx2.Request / httpx2.Response (2.5.0: httpx.Request / httpx.Response); I1/expansion/probes/mistral_probe_output.txt",
+  "mistralai 3.x signatures: Mistral.do_request / files.download use httpx2.Request / httpx2.Response (2.5.0: httpx.Request / httpx.Response); <study>/expansion/probes/mistral_probe_output.txt",
   "https://github.com/mistralai/client-python/releases/tag/v3.0.0 (2026-09-28, major release)",
 ]
 # legacy httpx (not httpx2)

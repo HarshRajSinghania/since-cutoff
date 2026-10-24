@@ -1,4 +1,4 @@
-"""Analysis for PROTOCOL_ADDENDUM section 13 (concurrent A/C/H/R/G ablation). Writes I1/analysis/conc_ablation.json.
+"""Analysis for PROTOCOL_ADDENDUM section 13 (concurrent A/C/H/R/G ablation). Writes <study>/analysis/conc_ablation.json.
 
 usage: python conc_analysis.py [--reps 1,2]     (default: every rep that is complete for all 11 tasks x 5 conditions)
 

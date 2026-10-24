@@ -3,14 +3,14 @@ t intervals, task-paired differences between studies, power (smallest detectable
 estimate, the header's share of the token saving, bills per session, Sonnet cost per solved task, exact lower bounds
 for zero control failures, and a repository-clustered bootstrap of the audit precision.
 
-usage: python -I review_checks.py <I1 dir> <runs dir>   (runs dir = the supplement's runs/ or I1/runs_tables)
+usage: python -I review_checks.py <study dir> <runs dir>   (runs dir = the published data/runs/ or <study>/runs_tables)
 """
 import csv, itertools, json, math, random, statistics, sys
 from collections import defaultdict
 from pathlib import Path
 
-I1 = Path(sys.argv[1])
-sys.path.insert(0, str(I1 / "scripts"))
+STUDY = Path(sys.argv[1])
+sys.path.insert(0, str(STUDY / "scripts"))
 from recompute_cost import load, metrics  # noqa
 
 RUNS = Path(sys.argv[2])
@@ -120,7 +120,7 @@ for n in (21, 9, 30):
     print("exact lower bound n", n, round(0.05 ** (1 / n), 3))
 
 # Audit precision, repository-clustered bootstrap
-rows = list(csv.DictReader(open(I1 / "analysis" / "realworld_audit.csv", encoding="utf-8")))
+rows = list(csv.DictReader(open(STUDY / "analysis" / "realworld_audit.csv", encoding="utf-8")))
 by = defaultdict(lambda: [0, 0])
 for r in rows:
     by[r["repository"]][0] += r["verdict"] == "TP"; by[r["repository"]][1] += 1

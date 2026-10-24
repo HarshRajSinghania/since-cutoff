@@ -1,6 +1,6 @@
 {
   "schema": "since-cutoff-bench/notes@1",
-  "tool": "since-cutoff==0.4.1 (header-only, NAACL addendum condition H)",
+  "tool": "since-cutoff==0.4.1 (header-only, addendum condition H)",
   "model": "alibaba:qwen3-coder-30b-a3b-instruct",
   "source": "notes\\qwen3c-main",
   "created_at": "2026-10-22T23:56:29.652905+00:00",

@@ -45,7 +45,7 @@ Exclusion rules, applied in order (counts reported for each):
   Read, lies under `C:\b\`, or contains `since-cutoff-benchmark`, `since-cutoff-bench` or `since_cutoff_runs`.
 - **X2 research agents**: (a) every transcript of the top-level session(s) passed with `--exclude-session` (the session
   that runs this paper's research and its subagents, including this analysis); (b) any transcript whose `cwd` or any
-  path as in X1 lies under the research trees `<research folder>` or `` (the paper sprint's research
+  path as in X1 lies under the research trees `<research folder>` or `ai-research` (the paper sprint's research
   folders).
 - Nothing else is excluded. Sessions that edit nothing (planning, review, e-mail, research reading, scheduled tasks)
   stay in the denominator: every session would pay for the block.

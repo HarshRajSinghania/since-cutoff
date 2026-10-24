@@ -650,13 +650,14 @@ resultado a un modelo de punto de equilibrio, en el que todas las longitudes se 
 resultados principales:
 
 - **Un ahorro pequeño, en un solo modelo.** Con Opus 5.5, el bloque redujo el coste a 0,80 veces el de Claude Code
-  solo en el estudio principal (IC del 95 %: 0,70-0,90) y los tokens a 0,79 veces en ocho tareas nuevas; una réplica
+  solo en el estudio principal (IC del 95 %: 0,70-0,90) y los tokens a 0,79 veces en ocho tareas nuevas (no detectado tras la corrección de Holm, p = 0,094); una réplica
   no cumplió su regla registrada de antemano, y Sonnet 5.5, Haiku 5.5 y un agente de pesos abiertos no mostraron
   ningún ahorro detectable. Todas las tareas las escribió Opus 5.5.
 - **La cabecera sola funcionó casi igual.** Ninguna prueba registrada de antemano distinguió el bloque completo de
   una cabecera que solo nombra los paquetes cambiados, ni de un aviso genérico de "comprueba las firmas instaladas".
 - **Barato, pero las sesiones afectadas no lo amortizan por sí solas.** En los contextos de agente del autor, un
-  bloque de 704 tokens cuesta alrededor del 0,4 % de un contexto; los contextos que necesitan una API cambiada solo lo
+  bloque de 704 tokens cuesta alrededor del 0,4 % de un contexto; suponiendo un ahorro fijo por contexto afectado, los
+  contextos que necesitan una API cambiada solo lo
   amortizan cuando son entre el 14 % y el 49 % del total, frente a un 0,8-7 % estimado.
 - **Decide el efecto sobre todas las demás sesiones.** Las tareas de control lo sitúan en un ahorro del 6,6 %, pero
   no se puede distinguir de cero. Desactivar el bloque por defecto es una elección de aversión a las pérdidas, no la

@@ -1,8 +1,8 @@
 """Round-15 numbers (requested in internal reviews of a draft): coverage split and Header-vs-Notes equivalence.
 All analyses here are POST HOC and EXPLORATORY; none was pre-committed. No model sessions.
 
-usage: python -I round15_coverage.py <I1 dir>   ->   <I1>/analysis/round15_coverage.json
-(in the supplementary archive: RUNS_TABLES=runs python scripts/round15_coverage.py .)
+usage: python -I round15_coverage.py <study dir>   ->   <study>/analysis/round15_coverage.json
+(in the published data folder: RUNS_TABLES=runs python scripts/round15_coverage.py data)
 Inputs: run tables of the Opus 5.5 main study, replication, new-task study and concurrent five-arm study.
 
 Estimator as in the paper (round3_stats.py, round6_header.py): per task, log(median treat run / median ctrl run) over

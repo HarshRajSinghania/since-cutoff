@@ -1,6 +1,6 @@
 {
   "schema": "since-cutoff-bench/notes@1",
-  "tool": "none (lockfile-only header: pinned direct dependencies, NAACL addendum section 14 condition L)",
+  "tool": "none (lockfile-only header: pinned direct dependencies, addendum section 14 condition L)",
   "model": "anthropic:claude-opus-5-5",
   "source": "research/dependency-block-study\\notes\\tasks2-opus-5-5",
   "tasks_dir": "since_cutoff_tasks2",

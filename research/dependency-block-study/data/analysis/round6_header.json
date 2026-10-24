@@ -1,7 +1,7 @@
 {
  "generated_by": "scripts/round6_header.py",
  "estimator": [
-  "(in the supplementary archive: RUNS_TABLES=runs python scripts/round6_header.py .)",
+  "(in the published data folder: RUNS_TABLES=runs python scripts/round6_header.py data)",
   "",
   "Existing run tables only; no new sessions. Estimator as in the paper: per task, log(median treat run / median ctrl run)",
   "over the post-cutoff tasks; geometric mean over tasks; 95% percentile task bootstrap (10,000 resamples, seed 20261001);"

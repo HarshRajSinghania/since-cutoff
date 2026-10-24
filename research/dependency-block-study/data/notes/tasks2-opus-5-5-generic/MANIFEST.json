@@ -1,6 +1,6 @@
 {
   "schema": "since-cutoff-bench/notes@1",
-  "tool": "none (generic instruction, NAACL addendum section 13 condition G)",
+  "tool": "none (generic instruction, addendum section 13 condition G)",
   "model": "anthropic:claude-opus-5-5",
   "source": "research/dependency-block-study\\notes\\tasks2-opus-5-5",
   "created_at": "2026-10-22T23:55:50.107823+00:00",

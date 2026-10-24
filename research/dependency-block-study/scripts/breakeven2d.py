@@ -1,7 +1,7 @@
 """Two-parameter break-even: share f of sessions that need a changed API, and the block's effect u on the other sessions.
 
-usage: python -I breakeven2d.py <I1 dir>   ->   <I1>/analysis/breakeven2d.json
-(in the supplementary archive: RUNS_TABLES=runs python scripts/breakeven2d.py .)
+usage: python -I breakeven2d.py <study dir>   ->   <study>/analysis/breakeven2d.json
+(in the published data folder: RUNS_TABLES=runs python scripts/breakeven2d.py data)
 No model sessions; existing run tables and analysis JSONs only.
 
 Model (per session, Opus 5.5 list prices, all in USD):

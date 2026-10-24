@@ -1,8 +1,8 @@
 """Token-type breakdown, turns decomposition and cost per solved task (requested in an internal review).
 
-usage: python token_breakdown.py            -> writes I1/analysis/token_breakdown.json
+usage: python token_breakdown.py            -> writes <study>/analysis/token_breakdown.json
 env:   RUNS_RESULTS (default since_cutoff_runs/results), BENCH_RESULTS (default
-       ~/projects/since-cutoff-benchmark/results), ANALYSIS_OUT (default I1/analysis). Output contains study names only.
+       ~/projects/since-cutoff-benchmark/results), ANALYSIS_OUT (default <study>/analysis). Output contains study names only.
 
 Existing run data only (runs.jsonl; first valid attempt per planned run, as recompute_cost.load). Per session, the
 CLI's cumulative `result.usage` gives four token types:

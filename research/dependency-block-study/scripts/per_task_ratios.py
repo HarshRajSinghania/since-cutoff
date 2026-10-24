@@ -1,6 +1,6 @@
 """Per-task C/A total-token ratios for the forest plot (requested in an internal review). Existing run data only.
 
-usage: python per_task_ratios.py          -> writes I1/analysis/per_task_ratios.json (study names only, no paths)
+usage: python per_task_ratios.py          -> writes <study>/analysis/per_task_ratios.json (study names only, no paths)
 env:   RUNS_RESULTS, BENCH_RESULTS, ANALYSIS_OUT as in token_breakdown.py.
 
 Cells: every post-cutoff task x Opus 5.5 study with both A and C sessions (first valid attempt per planned run):

@@ -9,7 +9,7 @@ SUFFIX="${1:?date suffix, e.g. 2026-10-22}"
 NSLOTS="${2:-2}"
 REPS="${3:-1 2 3}"
 BATCH="${4:-12}"
-I1="research/dependency-block-study"
+STUDY="research/dependency-block-study"
 BENCH="$HOME/projects/since-cutoff-benchmark"
 PY=sc_openagent/venv/Scripts/python.exe
 LOG="since_cutoff_runs/openagent-qwen3c-$SUFFIX.batches.log"
@@ -35,7 +35,7 @@ echo "$(date -Is) start suffix=$SUFFIX slots=$NSLOTS reps=$REPS batch=$BATCH" >>
 for rep in $REPS; do
   for entry in "${STUDIES[@]}"; do
     cfgname="${entry%%:*}"; study="${entry#*:}"
-    cfg="$I1/configs/bench.openagent-qwen3c-$cfgname.toml"
+    cfg="$<study>/configs/bench.openagent-qwen3c-$cfgname.toml"
     while true; do
       n=$(pending "$cfg" "$study" "$rep")
       [ "$n" -gt 0 ] || break
@@ -47,7 +47,7 @@ for rep in $REPS; do
       a1=$(ls -d "$RESULTS/$study"/runs/*/ "$RESULTS/$study"/runs_invalid/*/ 2>/dev/null | wc -l)
       pids=()
       for ((i = 0; i < NSLOTS; i++)); do
-        "$PY" "$I1/scripts/openagent_run.py" --config "$cfg" --study-id "$study" \
+        "$PY" "$<study>/scripts/openagent_run.py" --config "$cfg" --study-id "$study" \
           --api-base http://127.0.0.1:8090/v1 --model-name openai/qwen3-coder \
           --reps "$rep" --shard "$i/$NSLOTS" --max-sessions "$per" --wall-limit 1800 >> "$LOG" 2>&1 &
         pids+=($!)

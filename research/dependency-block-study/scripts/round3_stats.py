@@ -1,8 +1,8 @@
 """Round-3 statistics (requested in an internal review): exact sign-flip p on per-task log ratios, cost per solved
 task without the pilot tasks, summed cost ratios, header share of the saving, control-pass exact bound, block overhead.
 
-usage: python round3_stats.py            -> writes I1/analysis/round3_stats.json
-env:   RUNS_TABLES (default I1/runs_tables). Existing run tables only; no new sessions.
+usage: python round3_stats.py            -> writes <study>/analysis/round3_stats.json
+env:   RUNS_TABLES (default <study>/runs_tables). Existing run tables only; no new sessions.
 
 Estimators are the paper's: per task, median over runs of treat and ctrl, log(median treat / median ctrl); the exact
 two-sided sign-flip test enumerates all 2^n sign assignments of the non-zero per-task log ratios (meet in the middle

@@ -1,6 +1,6 @@
 {
   "schema": "since-cutoff-bench/notes@1",
-  "tool": "since-cutoff==0.4.1 (irrelevant-content control, NAACL addendum section 11 condition R)",
+  "tool": "since-cutoff==0.4.1 (irrelevant-content control, addendum section 11 condition R)",
   "model": "anthropic:claude-opus-5-5",
   "source": "research/dependency-block-study\\notes\\tasks2-opus-5-5",
   "donor": "bench\\notes",

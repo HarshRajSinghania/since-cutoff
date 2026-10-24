@@ -1,6 +1,6 @@
 {
   "schema": "since-cutoff-bench/notes@1",
-  "tool": "since-cutoff==0.4.1 (header-only, NAACL addendum condition H)",
+  "tool": "since-cutoff==0.4.1 (header-only, addendum condition H)",
   "model": "anthropic:claude-sonnet-5-5",
   "source": "research/dependency-block-study\\notes\\sonnet-5-5",
   "created_at": "2026-10-21T20:58:13.109302+00:00",

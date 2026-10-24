@@ -16,8 +16,10 @@ changed API. This report asks when that trade pays.
 ## What was run
 
 Eleven completed studies, 1,607 sessions in all: Claude Code with Opus 5.5, Sonnet 5.5 and Haiku 5.5, an older-cutoff
-model, and one open-weight agent (Qwen3-Coder in mini-swe-agent). Each ran 35 small Python tasks with hidden tests, 25
-of which need an API that changed after the June 2026 cutoff. Each study's protocol and decision rules were committed
+model, and one open-weight agent (Qwen3-Coder in mini-swe-agent). The tasks come from a pool of 35 small Python tasks
+with hidden tests, 25 of which need an API that changed after the June 2026 cutoff; each study ran between 8 and 31
+tasks that need a changed API for the model tested (with or without controls), and a case study ran two tasks in a real repository. Each
+study's protocol and decision rules were committed
 in git before its first session. The arms were:
 
 | arm | what the agent gets |
@@ -30,7 +32,7 @@ in git before its first session. The arms were:
 
 The first study is the [agent benchmark](benchmark.md). The report adds a replication, eight new tasks in three more
 libraries, a study that ran all five arms in the same batches, three more models and four follow-ups, a scan of 200
-random GitHub repositories, a detector-recall study, and an estimate of how often real agent contexts need a changed
+GitHub repositories (100 random ones with pins and 100 that import an LLM, agent or model library), a detector-recall study, and an estimate of how often real agent contexts need a changed
 API, from the author's own Claude Code transcripts.
 
 ## Findings
@@ -53,7 +55,7 @@ from the generic warning. In the study that ran all five arms together, tokens w
 **The block is cheap, but affected contexts alone do not repay it.** Every length in the break-even model is counted
 in model calls. In the author's 1,308 agent contexts (mostly subagent runs, 45.3 model calls on average) the median
 real block, 704 tokens, costs about $0.012 per context: 0.4% of a context's measured cost of $2.96. If the block has no
-effect on the other contexts, it pays only once 14% of contexts need a changed API (14 to 49% over real block sizes
+effect on the other contexts and saves a fixed amount per affected context, it pays only once 14% of contexts need a changed API (14 to 49% over real block sizes
 and savings). The measured share is 0.8% (a lower bound) to 7.0%, and at those shares the block loses about $11 and $6
 per 1,000 contexts.
 

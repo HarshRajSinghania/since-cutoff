@@ -8,7 +8,8 @@
   nav, and a short "Research" section in the four READMEs). Over 1,607 agent sessions, the block
   saved cost only on Opus 5.5 (main study 0.80 of no block), the header alone did about as well,
   and in real agent contexts the block costs about 0.4% of a context but is repaid by the
-  affected contexts alone only once 14-49% of them need a changed API (measured: 0.8-7%), so its
+  affected contexts alone (at a fixed saving per affected context) only once 14-49% of them need a
+  changed API (measured: 0.8-7%), so its
   effect on the other contexts decides. No code changes.
 - Add a reference for environment variables, files and exit codes, with a docs drift check
   (docs/reference.md, #69). The check fails when the code reads a variable the page has no row

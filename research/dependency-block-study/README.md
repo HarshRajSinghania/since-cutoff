@@ -17,9 +17,10 @@ context file: a header naming the changed packages, then up to five change lines
 into every agent context, so it is paid for every time, while it can only help in the contexts that touch a changed
 API. The study asks when that trade pays.
 
-Eleven completed studies (1,607 Claude Code and open-weight agent sessions, 35 small Python tasks with hidden tests)
-compared the block with no block, the header alone, length-matched irrelevant lines and a generic "your API knowledge
-may be out of date" warning. A break-even model then puts the measured saving next to the block's cost in one
+Eleven completed studies (1,607 Claude Code and open-weight agent sessions) compared the block with no block, the header alone, length-matched irrelevant lines and a generic "your API knowledge
+may be out of date" warning. The tasks come from a pool of 35 small Python tasks with hidden tests: each study ran 8
+to 31 tasks that need a changed API for the model tested (with or without controls), and a case study ran two tasks in
+a real repository. A break-even model then puts the measured saving next to the block's cost in one
 developer's real agent contexts.
 
 ## Findings in plain words
@@ -39,7 +40,7 @@ developer's real agent contexts.
    0.75 with the full block.
 4. **The block is cheap, but affected contexts alone do not repay it.** In the author's 1,308 agent contexts (mostly
    subagent runs, 45.3 model calls on average) the median real block (704 tokens) costs about $0.012 per context,
-   0.4% of a context's measured cost ($2.96). At no effect on other contexts it pays only once 14% of contexts need a
+   0.4% of a context's measured cost ($2.96). At no effect on other contexts, and assuming a fixed saving per affected context, it pays only once 14% of contexts need a
    changed API (14 to 49% over real block sizes and savings); the measured share is 0.8% (a lower bound) to 7.0%. At
    those shares it loses about $11 and $6 per 1,000 contexts.
 5. **The effect on all other contexts decides, and it is unknown.** On control tasks the block made other sessions

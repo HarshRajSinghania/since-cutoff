@@ -8,7 +8,7 @@ compared, and reports how num_turns relates to API calls.
 
 usage: python -I scripts/turns_vs_calls.py   ->   prints aggregates; also written to scripts/turns_vs_calls_out.txt
 
-Run selection is blocksize_breakeven.load(): valid, non-pilot, first attempt per run_id, from I1/runs_tables. Stream
+Run selection is blocksize_breakeven.load(): valid, non-pilot, first attempt per run_id, from <study>/runs_tables. Stream
 logs: BENCH/results/main-2026-09-28/runs/<run_id>/stream.jsonl (public) and RUNS/results/<study>/runs/<run_id>/.
 Counts only; no transcript content is printed.
 """
@@ -19,8 +19,8 @@ from collections import defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-I1 = HERE.parent
-RT = I1 / "runs_tables"
+STUDY = HERE.parent
+RT = STUDY / "runs_tables"
 BENCH = Path(os.path.expanduser("~")) / "projects" / "since-cutoff-benchmark" / "results"
 RUNS = Path("since_cutoff_runs/results")
 OUT = HERE / "turns_vs_calls_out.txt"

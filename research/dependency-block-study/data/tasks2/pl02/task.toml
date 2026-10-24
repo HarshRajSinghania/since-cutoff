@@ -17,7 +17,7 @@ evidence = [
   "https://github.com/pola-rs/polars/releases/tag/py-2.0.0 (major release removing deprecated APIs)",
   "polars-1.42.1: pl.read_csv_batched(...).next_batches(n) works (batches of batch_size rows)",
   "polars-2.0.0: pl.read_csv_batched raises AttributeRemovedError ('was removed in version 2.0; use scan_csv instead, in conjunction with LazyFrame.collect(engine=\"streaming\")')",
-  "run (2026-10-22, scratch venvs; I1/expansion/probes/polars_batched_probe_output.txt): scan_csv(p).collect_batches(chunk_size=1000) -> [1000, 1000, 500] in both versions; read_csv_batched works at 1.42.1 only",
+  "run (2026-10-22, scratch venvs; <study>/expansion/probes/polars_batched_probe_output.txt): scan_csv(p).collect_batches(chunk_size=1000) -> [1000, 1000, 500] in both versions; read_csv_batched works at 1.42.1 only",
 ]
 stale_patterns = [
   '''\bread_csv_batched\b''',

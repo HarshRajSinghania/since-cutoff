@@ -30,7 +30,7 @@ for key, entry in sorted(man["tasks"].items()):
                   "tokens_est": round(len(new) / 4), "empty": not new.strip(), "note_keys": entry.get("note_keys"),
                   "note_keys_found": [], "coverage": 0.0 if entry.get("note_keys") else None, "covered": False,
                   "source_sha256": entry["sha256"]}
-manifest = {"schema": man["schema"], "tool": man["tool"] + " (header-only, NAACL addendum condition H)",
+manifest = {"schema": man["schema"], "tool": man["tool"] + " (header-only, addendum condition H)",
             "model": man["model"], "source": str(src), "created_at": datetime.now(timezone.utc).isoformat(),
             "frozen": True, "frozen_at": datetime.now(timezone.utc).isoformat(), "tasks": tasks}
 manifest["manifest_sha256"] = hashlib.sha256(json.dumps(tasks, sort_keys=True).encode()).hexdigest()

@@ -1,7 +1,7 @@
 """Round-7 checks: header share of the saving in every analysis, main study against replication per task, exact
 control bounds, and turns and wall time with exact tests. Existing runs only.
-usage: python -I round7_checks.py <I1 dir>   ->   <I1>/analysis/round7_checks.json
-(in the supplementary archive: RUNS_TABLES=runs python scripts/round7_checks.py .)
+usage: python -I round7_checks.py <study dir>   ->   <study>/analysis/round7_checks.json
+(in the published data folder: RUNS_TABLES=runs python scripts/round7_checks.py data)
 
 Estimator as in round6_header.py: per task, log(median treat run / median ctrl run); geometric mean over tasks; 95%
 percentile task bootstrap (10,000 resamples, seed 20261001); exact two-sided sign-flip test over per-task log ratios.

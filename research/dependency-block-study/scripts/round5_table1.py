@@ -1,7 +1,7 @@
 """Round-5 Table 1 numbers from the de-identified per-run tables (no model sessions).
 
-usage: python -I round5_table1.py <I1 dir>   ->   <I1>/analysis/round5_table1.json
-(in the supplementary archive: RUNS_TABLES=runs python scripts/round5_table1.py .)
+usage: python -I round5_table1.py <study dir>   ->   <study>/analysis/round5_table1.json
+(in the published data folder: RUNS_TABLES=runs python scripts/round5_table1.py data)
 
 For each Table 1 study: A / C runs on post-cutoff (treatment) tasks, mean list cost per post-cutoff session for A and C,
 C/A (and H/A where H ran) on total tokens and list cost with the paper's estimator (per task the ratio of median run

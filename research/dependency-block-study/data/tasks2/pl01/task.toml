@@ -17,7 +17,7 @@ evidence = [
   "https://github.com/pola-rs/polars/releases/tag/py-2.0.0 (breaking release; rs-0.55.1/py-1.44 notes: 'Add a deprecation warning for .explode() without empty_as_null argument' #28040)",
   "polars-1.42.1: DataFrame.explode(..., empty_as_null=<sentinel>) behaves as empty_as_null=True (empty list -> one null row) and emits DeprecationWarning 'In Polars 2.0, the default behavior for empty_as_null will change to False' (so the change was announced before the cutoff; the break itself shipped 2026-10-06)",
   "polars-2.0.0: DataFrame.explode(..., empty_as_null=False) default; an empty list produces no row",
-  "run (2026-10-22, scratch venvs; I1/expansion/probes/polars_probe_output.txt): 1.42.1 explode -> 4 rows incl. id 2 null; 2.0.0 -> 3 rows (id 2 dropped); empty_as_null=True -> 4 rows in both",
+  "run (2026-10-22, scratch venvs; <study>/expansion/probes/polars_probe_output.txt): 1.42.1 explode -> 4 rows incl. id 2 null; 2.0.0 -> 3 rows (id 2 dropped); empty_as_null=True -> 4 rows in both",
 ]
 # explode() on the tags without empty_as_null (comments ignored by the harness)
 stale_patterns = [

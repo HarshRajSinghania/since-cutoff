@@ -13,7 +13,7 @@ code path. Per-context values (45.3 / 81.6 calls) are already in model calls; un
 they are printed too.
 
 usage: python -I scripts/unit_switch_check.py   ->   prints; also written to scripts/unit_switch_check_out.txt
-Inputs: I1/runs_tables (runs, usage, notes_tokens, num_turns); stream.jsonl logs (BENCH and RUNS, as turns_vs_calls.py);
+Inputs: <study>/runs_tables (runs, usage, notes_tokens, num_turns); stream.jsonl logs (BENCH and RUNS, as turns_vs_calls.py);
 analysis/exposure2_breakeven.json, breakeven2d.json, round9_numbers.json, round13_numbers.json, f_sessions.json;
 recompute_cost.PRICES. Counts and dollar aggregates only; no transcript content is printed.
 """
@@ -25,8 +25,8 @@ from collections import defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-I1 = HERE.parent
-AN = I1 / "analysis"
+STUDY = HERE.parent
+AN = STUDY / "analysis"
 OUT = HERE / "unit_switch_check_out.txt"
 sys.path.insert(0, str(HERE))
 from recompute_cost import PRICES, list_cost  # noqa: E402
@@ -279,7 +279,7 @@ def header_breakeven_calls():
     """round13_numbers.header_breakeven (App. D 'Header break-even') with t = model calls.
     V1: c over calls, s's add-back (each arm's own benchmark block) over num_turns; V2: both over calls."""
     import round13_numbers as rn
-    rt = I1 / "runs_tables"
+    rt = STUDY / "runs_tables"
 
     def per_task(study, mode):
         by = {}
@@ -390,7 +390,7 @@ say("  (V1 per-call breakdown for App. D: main 11.31 calls, replication 12.00, n
 
 try:
     header_breakeven_calls()
-except Exception as e:  # inputs outside I1 (stream logs) missing
+except Exception as e:  # inputs outside the study folder (stream logs) missing
     say(f"\n[12] header break-even re-run skipped: {type(e).__name__}")
 try:
     blocksize_calls()

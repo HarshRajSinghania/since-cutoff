@@ -10,9 +10,9 @@ usage: python scripts/exposure2_breakeven.py   -> writes analysis/exposure2_brea
 import json
 from pathlib import Path
 
-I1 = Path(__file__).resolve().parent.parent
-be = json.loads((I1 / "analysis" / "blocksize_breakeven.json").read_text(encoding="utf-8"))["break_even"]
-ex = json.loads((I1 / "analysis" / "exposure2.json").read_text(encoding="utf-8"))["exposure"]
+STUDY = Path(__file__).resolve().parent.parent
+be = json.loads((STUDY / "analysis" / "blocksize_breakeven.json").read_text(encoding="utf-8"))["break_even"]
+ex = json.loads((STUDY / "analysis" / "exposure2.json").read_text(encoding="utf-8"))["exposure"]
 prices = be["prices_usd_per_mtok"]
 
 sizes = {}
@@ -37,6 +37,6 @@ for name, st in be["studies"].items():
         },
     }
 
-(I1 / "analysis" / "exposure2_breakeven.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
+(STUDY / "analysis" / "exposure2_breakeven.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
 for name, st in out["studies"].items():
     print(name, {k: v["break_even_share"] for k, v in st["by_block_size"].items()})

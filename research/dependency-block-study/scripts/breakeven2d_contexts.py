@@ -1,7 +1,7 @@
 """Figure 4 data (round 22): break-even share f* against u in one unit (model calls), at the length of the agent
 contexts behind f and with K measured from those contexts' logged usage.
 
-usage: python -I breakeven2d_contexts.py <I1 dir>   ->   <I1>/analysis/breakeven2d_contexts.json
+usage: python -I breakeven2d_contexts.py <study dir>   ->   <study>/analysis/breakeven2d_contexts.json
 No model sessions; reads analysis/exposure2_breakeven.json (gross saving s per study, block sizes, prices),
 analysis/breakeven_unified.json (contexts' mean model calls t_ctx, measured K per context, the benchmark's model
 calls, the control-task u and its bootstrap interval, f_strict and f_upper) and analysis/breakeven2d.json (benchmark K).

@@ -53,7 +53,7 @@ PATH_TOOLS = EDIT_TOOLS + ("Read",)
 # X1 / X2 (protocol section 3); matched on lower-cased, back-slashed paths
 X1_PREFIX = ("c:\\b\\",)
 X1_SUB = ("since-cutoff-benchmark", "since-cutoff-bench", "since_cutoff_runs")
-X2_SUB = ("\\<research folder>", "")
+X2_SUB = ("\\<research folder>", "ai-research")
 # common import-name -> distribution mismatches (protocol 4.3)
 ALIASES = {"yaml": "pyyaml", "pil": "pillow", "sklearn": "scikit-learn", "cv2": "opencv-python",
            "bs4": "beautifulsoup4", "dateutil": "python-dateutil", "dotenv": "python-dotenv", "jwt": "pyjwt",

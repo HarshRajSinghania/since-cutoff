@@ -1,4 +1,4 @@
-"""Analysis for PROTOCOL_ADDENDUM section 11 (E-irr, E-anchor, E-case). Writes I1/analysis/addendum5_*.json.
+"""Analysis for PROTOCOL_ADDENDUM section 11 (E-irr, E-anchor, E-case). Writes <study>/analysis/addendum5_*.json.
 
 usage: python addendum5_analysis.py [irr|anchor|case ...]   (default: all whose studies have records)
 
@@ -157,7 +157,7 @@ def analyse_irr():
     i2 = ci("R/A")[1] < 1 and ci("C/R")[0] <= 1 <= ci("C/R")[1]
     d = out["drift_An_over_A_all11"]["total_tokens"]
     out["rules"] = {"I1_content_matters": i1, "I2_priming": i2,
-                    "verdict": "I1 met" if i1 else ("I2 met" if i2 else "inconclusive"),
+                    "verdict": "STUDY met" if i1 else ("I2 met" if i2 else "inconclusive"),
                     "drift_ci_excludes_1": not (d["lo"] <= 1 <= d["hi"])}
     return out
 

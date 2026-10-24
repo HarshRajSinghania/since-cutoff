@@ -15,7 +15,7 @@ Statistics: the unit is the task. For each task we average the 3 runs per condit
 Everything is repeated without the pilot-exposed tasks ant01 and mcp01.
 
 usage: python -I exploration_mechanism.py <main dir> <replication dir> <sonnet dir> <haiku dir> [--out FILE]
-       (study result folders as shipped in the supplement's runs/ folder or as written by the harness;
+       (study result folders as shipped in the published data/runs/ folder or as written by the harness;
        default output ../analysis/exploration_mechanism.json)
 """
 import itertools

@@ -340,15 +340,19 @@ Autres options :
 Claude Code lit CLAUDE.md, et ne lit AGENTS.md que s'il n'y a pas de CLAUDE.md ou si CLAUDE.md
 l'importe avec une ligne `@AGENTS.md`
 ([documentation sur la mémoire](https://code.claude.com/docs/en/memory), en anglais) ; Codex,
-Cursor et Copilot lisent AGENTS.md. Avec les deux fichiers et pas encore de bloc, les notes vont
-dans AGENTS.md seul quand CLAUDE.md l'importe, et dans les deux fichiers sinon
-([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)) ; `scan`, `sync` et
-`status` disent alors comment n'en garder qu'une copie : ajoutez la ligne `@AGENTS.md` à
-CLAUDE.md et lancez `since-cutoff unapply --target CLAUDE.md`. Un bloc déjà dans AGENTS.md seul
-y reste, et ils le signalent quand CLAUDE.md ne l'importe pas. Quand les deux fichiers ont un
-bloc et que CLAUDE.md importe ensuite AGENTS.md, ils signalent que CLAUDE.md en contient une
-deuxième copie, avec la même commande `unapply`. Un `@AGENTS.md` dans du code en ligne ou un
-bloc de code n'est pas une importation.
+Cursor et Copilot lisent AGENTS.md ; Gemini CLI lit GEMINI.md, et AGENTS.md seulement si
+`context.fileName` dans son settings.json le cite
+(`"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}` ; [documentation de
+GEMINI.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md), en
+anglais). Avec les deux fichiers et pas encore de bloc, les notes vont dans AGENTS.md seul quand
+CLAUDE.md l'importe, et dans les deux fichiers sinon
+([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)) ; `scan`, `sync` et `status`
+disent alors comment n'en garder qu'une copie : ajoutez la ligne `@AGENTS.md` à CLAUDE.md et
+lancez `since-cutoff unapply --target CLAUDE.md`. Un bloc déjà dans AGENTS.md seul y reste, et ils
+le signalent quand CLAUDE.md ne l'importe pas. Quand les deux fichiers ont un bloc et que
+CLAUDE.md importe ensuite AGENTS.md, ils signalent que CLAUDE.md en contient une deuxième copie,
+avec la même commande `unapply`. Un `@AGENTS.md` dans du code en ligne ou un bloc de code n'est
+pas une importation.
 
 ### Mesurer votre modèle
 
@@ -518,11 +522,12 @@ existe ; dans les deux quand CLAUDE.md n'importe pas AGENTS.md
 ([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)) ; et dans celui des deux
 qui a déjà un bloc (`--target` désigne n'importe quel fichier). Claude Code lit CLAUDE.md, et
 AGENTS.md seulement si CLAUDE.md l'importe avec une ligne `@AGENTS.md` ; Codex, Cursor et
-Copilot lisent AGENTS.md. Pour garder une seule copie, ajoutez `@AGENTS.md` à CLAUDE.md et
-lancez `since-cutoff unapply --target CLAUDE.md` ; `scan`, `sync` et `status` le signalent tant
-que les deux fichiers ont le bloc, et signalent quand un bloc dans AGENTS.md seul n'est pas
-importé. Ensuite `sync` met à jour chaque fichier qui a un bloc, et `status` rend compte de
-chacun.
+Copilot lisent AGENTS.md ; Gemini CLI lit GEMINI.md, et AGENTS.md seulement si `context.fileName`
+dans son settings.json le cite (`"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}`). Pour
+garder une seule copie, ajoutez `@AGENTS.md` à CLAUDE.md et lancez
+`since-cutoff unapply --target CLAUDE.md` ; `scan`, `sync` et `status` le signalent tant que les
+deux fichiers ont le bloc, et signalent quand un bloc dans AGENTS.md seul n'est pas importé.
+Ensuite `sync` met à jour chaque fichier qui a un bloc, et `status` rend compte de chacun.
 
 **Combien coûtent les notes en tokens ?** L'agent lit le bloc à chaque tour. Pour le projet
 d'exemple, il fait environ 410 tokens, dont environ 140 pour les deux notes ; le reste est
@@ -738,12 +743,12 @@ Ce que renvoie `api_changes("huggingface-hub", model="claude-haiku-4-5", to_vers
 (sortie réelle, abrégée) :
 
 ```markdown
-# huggingface-hub 0.29.1 -> 2.0.0
+# huggingface-hub 0.28.0 -> 2.0.0
 
-- From 0.29.1 (2025-02-20): the newest release on or before 2025-02-28 (training cutoff of claude-haiku-4-5, from models.dev)
+- From 0.28.0 (2025-01-28): the newest release on or before 2025-01-29, 30 days before the cutoff 2025-02-28 (training cutoff of claude-haiku-4-5, from models.dev)
 - To 2.0.0 (2026-09-24): as requested
 - Warning: huggingface-hub 2.0.0: huggingface_hub.hf_file_system.HfFileSystemFile inherits from fsspec.spec.AbstractBufferedFile, which since-cutoff did not read; the attributes it sets are not compared
-- 98 breaking changes, 0 new deprecations (dependencies switched 1, removed or moved 45, parameters removed 43, parameters now required 7, changed kind 1, now keyword-only or positional-only 1, +8 internal)
+- 104 breaking changes, 0 new deprecations (dependencies switched 1, removed or moved 49, parameters removed 45, parameters now required 7, changed kind 1, now keyword-only or positional-only 1, +8 internal)
 
 ## Dependencies switched
 
@@ -761,7 +766,7 @@ Ce que renvoie `api_changes("huggingface-hub", model="claude-haiku-4-5", to_vers
 - `huggingface_hub.snapshot_download(proxies=...)`: parameter `proxies` was removed; 2.0.0's source still handles `proxies` (huggingface_hub/utils/_validators.py:178), so calls passing it may run with a warning; type checkers reject it
 ...
 
-Not listed: 58 breaking changes, 0 new deprecations (removed or moved 30, parameters removed 28). Narrow with symbol="..." or raise limit.
+Not listed: 64 breaking changes, 0 new deprecations (removed or moved 34, parameters removed 30). Narrow with symbol="..." or raise limit.
 ```
 
 Avec `symbol="hf_hub_download"`, il ne liste que les 8 changements de cette fonction

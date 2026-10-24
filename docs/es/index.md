@@ -19,13 +19,15 @@ image:
 **since-cutoff** es una herramienta de línea de comandos de código abierto y un servidor MCP para
 proyectos de Python escritos con agentes de programación. `scan` muestra en qué lugares de tu
 código se usa una API de una dependencia que cambió después de la fecha de corte de entrenamiento
-del modelo, con una nota para cada una redactada a partir del diff de la API; `sync` escribe las
-notas en AGENTS.md o CLAUDE.md y las mantiene al día con tu lockfile; `status`, los hooks de
-pre-commit y una GitHub Action te avisan cuando se quedan atrás; el servidor MCP permite a un
-agente preguntar qué cambió en una biblioteca antes de escribir código. Solo `run`, opcional,
-llama a un modelo: mide en cuáles de los cambios se equivoca y si las notas ayudan. Cada nota
-lleva una etiqueta que dice qué se comprobó: redactada a partir del diff de la API, o escrita por
-el modelo y conservada solo si su ejemplo pasa el verificador de tipos para tu versión.
+del modelo, con una nota para cada una redactada a partir del diff de la API (la versión que
+fijas frente a la versión de comparación, la más reciente publicada al menos 30 días antes de la
+fecha de corte); `sync` escribe las notas en AGENTS.md o CLAUDE.md y las mantiene al día con tu
+lockfile; `status`, los hooks de pre-commit y una GitHub Action te avisan cuando se quedan atrás;
+el servidor MCP permite a un agente preguntar qué cambió en una biblioteca antes de escribir
+código. Solo `run`, opcional, llama a un modelo: mide en cuáles de los cambios se equivoca y si
+las notas ayudan. Cada nota lleva una etiqueta que dice qué se comprobó: redactada a partir del
+diff de la API, o escrita por el modelo y conservada solo si su ejemplo pasa el verificador de
+tipos para tu versión.
 
 ```bash
 # las API modificadas que usa tu código, con una nota para cada una (sin llamadas al modelo, sin clave de API)
@@ -39,15 +41,93 @@ uvx since-cutoff sync
 uvx --with basedpyright since-cutoff run
 ```
 
+`pip install since-cutoff` lo instala todo menos el comprobador de tipos de `run`;
+`pip install "since-cutoff[run]"` lo añade (basedpyright, con el Node.js que trae).
+
 [Código fuente y documentación en GitHub](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.es.md) ·
 [PyPI](https://pypi.org/project/since-cutoff/) ·
-[Cómo funciona, en detalle (en inglés)](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/how-it-works.md)
+[Cómo funciona, en detalle (en inglés)](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/how-it-works.md) ·
+[Solución de problemas (en inglés)](../troubleshooting.md)
+
+## Qué hace, a partir de la 0.6
+
+- **Con qué versión compara.** Para cada dependencia, la versión de comparación es la más
+  reciente publicada al menos 30 días antes de la fecha de corte de entrenamiento del modelo
+  (`--cutoff-margin DÍAS`; `0` compara desde la propia fecha de corte, como antes de la 0.6).
+  Un modelo conoce peor las últimas semanas antes de su fecha de corte: llama-index-core 0.13.0,
+  que eliminó `ReActAgent.from_tools` y `FunctionCallingAgent`, se publicó el día antes de la
+  fecha de corte de Claude Sonnet 4.5, y comparar desde la fecha de corte ocultaba las dos
+  eliminaciones; con el margen, un proyecto que fija la 0.14.25 y llama a las dos recibe aviso
+  de ambas. La línea del modelo, los informes y el bloque de notas dan las dos fechas, las
+  tablas de dependencias titulan la columna «compared from», y el scan dice después de qué día
+  cambiaron las API: «Your code uses 2 APIs that changed after 2025-07-01, 30 days before
+  claude-sonnet-4-5's training cutoff (2025-07-31)».
+- **Dónde usa tu código una API que cambió.** Importaciones y llamadas, y desde la 0.6 también
+  llamadas a métodos sobre objetos cuya clase el archivo nunca nombra: el tipo del receptor se
+  deduce de las anotaciones de la propia versión fijada, así que `df = pd.read_csv(...)` es un
+  `DataFrame`, `df.groupby(...).count()` un `DataFrameGroupBy.count`, y `llm.predict(q)` sobre
+  un `ChatOpenAI` es `BaseChatModel.predict` de langchain-core. Un cambio en un método heredado
+  se detecta en las clases públicas que lo heredan (`DataFrame.fillna` para `NDFrame.fillna`).
+  Un uso detectado solo por el nombre del método se omite salvo con `--include-name-matches`,
+  y el scan dice cuántos omitió.
+- **Qué ve el diff.** Nombres eliminados o movidos, parámetros eliminados o que pasan a ser
+  obligatorios, cambios a solo palabra clave o solo posicionales, nuevas marcas de obsolescencia
+  (también el `@deprecated` de la PEP 702 importado a través de un módulo de compatibilidad) y
+  cambios de dependencia (`httpx` por `httpx2`). Novedades de la 0.6: los parámetros eliminados
+  detrás de `**kwargs: Unpack[UnTypedDict]` (`read_csv` de pandas 3.0 recibe así sus palabras
+  clave y perdió `delim_whitespace`, `date_parser`, `infer_datetime_format`, `keep_date_col` y
+  `verbose`) y los nombres que un módulo toma de otra distribución con `from x import *`
+  (`mcp.types` de mcp viene de mcp-types, que pasó todos sus campos a snake_case).
+- **Cambios públicos e internos.** Cada cambio es público (el nivel superior del paquete lo
+  exporta, un módulo lo nombra en `__all__`, lo reexporta o lo documenta) o interno. Los
+  recuentos dan los internos aparte, como «+N internal», y `scan --internal` los lista; las
+  notas solo cubren las API que usa tu código.
+- **Qué dicen las notas.** El sustituto que nombra el propio texto de obsolescencia de la
+  biblioteca, con sus palabras, con la etiqueta `[diff + library]` (httpx 0.28: «Use `proxy` or
+  `mounts` instead of `proxies`»). El texto se busca donde lo ponen las bibliotecas: una
+  directiva `.. deprecated::`, la entrada de un parámetro en el docstring, un mensaje de
+  `warnings.warn` y, para un método eliminado sin texto propio, el de su clase
+  (`ReActAgent.from_tools` de llama-index-core: «Use `llama_index.core.agent.workflow.ReActAgent`
+  instead.»). Si el texto no nombra ninguno, la nota enlaza la guía de migración, el changelog
+  o la página de versiones del paquete para los cambios desde la versión de comparación. Las
+  citas conservan intacto el código de la biblioteca. Las viñetas que dicen lo mismo de varias
+  API de un paquete se funden en una. Una dependencia publicada por primera vez después de la
+  fecha de corte, o dentro del margen anterior, recibe una nota `[metadata]` con la fecha de su
+  primera versión y su resumen.
+- **Qué avisa que no pudo ver.** Un módulo que la versión fijada distribuye compilado, sin
+  fuente `.py` ni stub `.pyi`; una distribución reexportada que no se pudo descargar; una clase
+  cuyos atributos puede definir una clase base de otro paquete; fuentes con una sintaxis que el
+  Python que ejecuta since-cutoff no sabe analizar (el stub de numpy 2.5.4 en Python 3.10: el
+  paquete no se pudo comprobar, y el scan nombra el Python que sí puede). El scan, el informe y
+  las herramientas MCP avisan de cada caso en lugar de informar de eliminaciones que quizá no lo
+  sean, o de ningún cambio. Un metapaquete como llama-index, sin API propia, se presenta como
+  tal, con las partes que se comprobaron y las que no. Si no se puede acceder a PyPI, se usa una
+  lista de versiones guardada en la caché hace más de 12 horas, y el scan dice de qué día es.
+- **Dónde van las notas.** AGENTS.md, CLAUDE.md o los dos: si existen ambos archivos y
+  CLAUDE.md no importa AGENTS.md (`@AGENTS.md`), `sync` escribe el bloque en los dos, porque
+  Claude Code solo lee CLAUDE.md y Codex, Cursor y Copilot leen AGENTS.md; y explica cómo
+  quedarse con una sola copia.
+- **Para scripts y agentes.** `since-cutoff sync --json` (con `--yes`, `--check` o
+  `--dry-run`), `since-cutoff models --json`, y `models --makers` para ver solo los listados de
+  los fabricantes de los modelos, sin pasarelas ni revendedores. El servidor MCP tiene dos
+  prompts, `check_project` y `before_upgrade`. Sin `--model`, el modelo de Gemini CLI se lee de
+  `GEMINI_MODEL` o de `.gemini/settings.json`.
+- **Instalación, arranque y caché.** basedpyright, que solo usa `run`, es el extra `[run]`. Una
+  instalación sin extras ocupó unos 73 MB de paquetes en un entorno virtual nuevo (unos 254 MB
+  con `[run]`), y `since-cutoff --help` arranca en unos 100 ms (ambas cifras medidas en
+  Windows, con Python 3.13). `since-cutoff cache info` muestra la caché por tipo,
+  `cache clear --sources`, `--diffs` o `--pypi` vacía un tipo, y `SINCE_CUTOFF_CACHE_MAX_MB`
+  limita las fuentes extraídas (2048 por defecto).
+
+Sigue siendo solo para Python, y las notas siguen saliendo de un diff estático de dos
+versiones: dicen qué cambió, no qué sabe el modelo. Los cambios de comportamiento que mantienen
+la misma firma no se ven.
 
 El resto de esta página cuenta cómo surgió la herramienta y presenta las primeras mediciones,
 hechas con since-cutoff 0.1.0 en septiembre de 2026. Mediciones más recientes (en inglés):
 [Lo que tu modelo no ha visto](../ai-stack.md) (36 bibliotecas, 21 modelos, sin llamadas al
-modelo) y [el benchmark con un agente de programación](../benchmark.md) (360 sesiones de Claude
-Code).
+modelo, repetido con la 0.6) y [el benchmark con un agente de programación](../benchmark.md)
+(360 sesiones de Claude Code, con las notas de la 0.4.1).
 
 ---
 
@@ -74,15 +154,16 @@ y **Claude Opus 4.6** (mayo de 2025). Las tareas y las notas las escribió Claud
 
 ## Cómo mide
 
-1. **Qué cambió.** Para cada dependencia, se toma la versión más reciente publicada en la fecha de
-   corte del modelo o antes (la regla de since-cutoff 0.1.0 a 0.5.0, con la que se obtuvieron
-   todas las cifras de esta página; desde la 0.6.0, el análisis compara por defecto desde la
-   versión más reciente publicada al menos 30 días antes de la fecha de corte), y se compara su API pública con la versión fijada, de forma estática
-   (con griffe, sin importar ningún módulo del paquete). Así se detectan objetos eliminados o
-   movidos, parámetros eliminados o que pasan a ser obligatorios, parámetros que pasan a ser solo
-   de palabra clave o solo posicionales, y nuevas marcas de obsolescencia. Para este proyecto y la fecha de corte de Claude
-   Haiku 4.5, cambiaron 7 de las 9 dependencias; el diff actual (0.5.0) señala 475 cambios
-   incompatibles y 48 obsolescencias nuevas, algunos de ellos en elementos internos.
+1. **Qué cambió.** Para cada dependencia, se toma la versión de comparación, la versión más
+   reciente publicada al menos 30 días antes de la fecha de corte de entrenamiento del modelo
+   (por defecto; las ejecuciones con la 0.1.0 de más abajo tomaron la más reciente publicada en
+   la fecha de corte o antes), y se compara su API pública con la versión fijada, de forma
+   estática (con griffe, sin importar ningún módulo del paquete). Así se detectan objetos
+   eliminados o movidos, parámetros eliminados o que pasan a ser obligatorios, parámetros que
+   pasan a ser solo de palabra clave o solo posicionales, y nuevas marcas de obsolescencia. Para
+   este proyecto y la fecha de corte de Claude Haiku 4.5, cambiaron 7 de las 9 dependencias; el
+   diff de la 0.6, que compara desde el 29 de enero de 2025, señala 344 cambios incompatibles y
+   48 obsolescencias nuevas en API públicas, y 168 cambios en API internas.
 2. **Tareas que requieren el cambio.** Para los cambios de mayor prioridad, un modelo redactor de
    tareas genera tareas de programación breves y realistas que requieren la funcionalidad modificada,
    pero sin nombrar nunca el identificador que cambió ni su sustituto. Una tarea es el sondeo; las
@@ -90,9 +171,9 @@ y **Claude Opus 4.6** (mayo de 2025). Las tareas y las notas las escribió Claud
 3. **Respuestas sin nada que consultar.** El modelo recibe la tarea y el número de la versión
    fijada, sin herramientas, sin web y sin archivos del proyecto.
 4. **Puntuación con un verificador de tipos, dos veces.** La respuesta se verifica con
-   basedpyright frente a la versión de comparación (la más reciente en la fecha de corte del modelo)
-   y frente a la versión fijada, cada una en un entorno aislado con sus propias dependencias. Solo cuentan los errores de
-   conocimiento de la API (nombres, importaciones y parámetros desconocidos, argumentos que
+   basedpyright frente a la versión de comparación (la del paso 1) y frente a la versión
+   fijada, cada una en un entorno aislado con sus propias dependencias. Solo cuentan los errores
+   de conocimiento de la API (nombres, importaciones y parámetros desconocidos, argumentos que
    faltan, aridad), nunca los avisos del modo estricto de tipado.
    - **stale**: válida para la versión de comparación, inválida para la fijada
    - **wrong**: inválida, y no se explica por el cambio de versión
@@ -166,10 +247,11 @@ modelo siguió usando bien, con las notas en su contexto, las seis API que ya ac
   invisibles.
 - **Las tareas reservadas son paráfrasis sobre el mismo cambio,** así que el antes y el después
   miden si una nota corrige *ese* cambio, no la capacidad general.
-- **«La versión de comparación» es una regla basada en fechas** (la versión más reciente
-  publicada en la fecha de corte o antes en estas mediciones; desde la 0.6.0, por defecto, la
-  más reciente publicada al menos 30 días antes). Los modelos conocen mal los meses inmediatamente anteriores a su
-  fecha de corte, así que la desactualización real puede empezar antes.
+- **«La versión de comparación» es una regla basada en fechas.** En estas ejecuciones con la
+  0.1.0 era la versión más reciente publicada en la fecha de corte o antes. Los modelos conocen
+  mal las semanas inmediatamente anteriores a su fecha de corte, así que la desactualización
+  real puede empezar antes; desde la 0.6 es la versión más reciente publicada al menos 30 días
+  antes de la fecha de corte de entrenamiento del modelo (por defecto).
 
 ## Por qué me importa
 

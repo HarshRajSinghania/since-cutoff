@@ -210,6 +210,22 @@
   the MCP and `[diff]` tables, the `sync` and block descriptions describe the comparison release
   as the latest release published at least 30 days before the model's training cutoff by
   default; they still said "on or before the cutoff".
+- The READMEs' `api_changes` example is the real output with the default margin (huggingface-hub
+  0.28.0 -> 2.0.0, 104 breaking changes); it showed the output at the cutoff itself (0.29.1, 98)
+  under a call without `cutoff_margin=0`. They also say that Gemini CLI reads GEMINI.md, and
+  AGENTS.md only when `context.fileName` in its settings.json lists it.
+- Docs site for 0.6: index.md (English, Spanish, French) says what 0.6 does (the comparison
+  release and its margin, typed receivers, `**kwargs: Unpack[TypedDict]`, the library's own
+  replacements and the pointer for the changes since the comparison release, public and
+  internal changes, the warnings for what the diff cannot see, AGENTS.md and CLAUDE.md, `sync
+  --json`, `models --json` and `--makers`, the `[run]` extra, start-up and the `cache` commands),
+  and the nav bar links the troubleshooting guide. ai-stack.md is re-run with 0.6, comparing
+  from 30 days before each cutoff and counting public changes only (Claude Opus 5.5: 23 of the
+  36 libraries with a public API break, was 20), and its table gives the comparison date.
+  `examples/ai-stack/stack_report.py` counts public changes, names the version and the margin
+  under the chart, and no longer reads a stack.json it wrote as a scan. docs/img/scan.svg is
+  made again, with the note that points at huggingface-hub's releases "for the changes since
+  0.33.1".
 - `scripts/check_versions.py` checks the pre-commit `rev` and the action's `since-cutoff-version`
   default in all four READMEs (the Spanish and French pins and the translated action tables
   were not checked).

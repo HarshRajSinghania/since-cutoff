@@ -8,7 +8,7 @@
    out.
 4. **Probe.** The model under test answers the probe task with no tools and no docs. Its code
    is type-checked against *both* versions (each with its own runtime dependencies). An answer
-   is **stale** when a statement that is valid for the cutoff version is invalid for yours and
+   is **stale** when a statement that is valid for the comparison release is invalid for yours and
    the error involves an API that changed; **wrong** when the package API errors are not
    explained by a change; **untouched** when the answer never exercises the changed API.
 5. **Notes.** For each failure the task writer writes a short AGENTS.md note with an example; it
@@ -78,6 +78,7 @@ from since_cutoff.models import (
     ModelInfo,
     ModelRegistry,
     compare_date,
+    days_text,
     listing_note,
 )
 from since_cutoff.notes import (
@@ -151,7 +152,7 @@ UNCHANGED = "unchanged"
 KNOWN = "known"
 NEW = "new"
 SKIPPED = "skipped"
-# A release at the cutoff with files this small and nothing in its modules only reserved the
+# A comparison release with files this small and nothing in its modules only reserved the
 # name (see Engine._placeholder); a compiled extension would not fit.
 _PLACEHOLDER_BYTES = 64 * 1024
 # Distributions a release's modules take their names from with ``from x import *`` (mcp 2.3's
@@ -322,7 +323,17 @@ class ModelTarget:
     def compare_when(self) -> str:
         """When the release a scan compares from was the latest one, in words: ``30 days
         before the cutoff``, or ``at the cutoff`` with a margin of 0."""
-        return f"{self.margin} days before the cutoff" if self.margin else "at the cutoff"
+        return f"{days_text(self.margin)} before the cutoff" if self.margin else "at the cutoff"
+
+    @property
+    def changed_after(self) -> str:
+        """What the changes a scan finds came after, in words: ``2025-07-01, 30 days before
+        the cutoff``, the day the comparison releases were published by, or ``the cutoff``
+        with a margin of 0. A release published within the margin is older than the cutoff,
+        so "changed after the cutoff" is not true of its changes."""
+        if not self.margin:
+            return "the cutoff"
+        return f"{self.compare_date.isoformat()}, {self.compare_when}"
 
     def released_within_margin(self, p: PackageScan) -> bool:
         """Was ``p``, a dependency the scan counts as new (NEW), first released within the
@@ -359,7 +370,7 @@ class PackageScan:
     summary: str | None = None
     changelog: str | None = None
     # CHANGED: modules the pinned release ships compiled, without a source or a stub, that hid
-    # something the release at the cutoff had: the diff did not report its removal, and could
+    # something the comparison release had: the diff did not report its removal, and could
     # not compare it (issue #52; diff_sources_with_unread); and classes whose attributes a
     # base outside the package may set, which were not compared (apidiff.UNREAD_BASE).
     unread: list[str] = field(default_factory=list)
@@ -625,6 +636,12 @@ class ScanResult:
     # have the uses matched by a member's name alone (selection.NAME_ONLY): hidden from all of
     # them unless Settings.include_name_matches asked for them (:meth:`uses`).
     name_matches: bool = False
+    # Whether every dependency the lockfile or environment lists was checked (--all-deps), and
+    # the dependencies --only/--exclude (or the MCP tools' ``only``) left out, by their
+    # canonical names: what a metapackage's line says of the parts it did not check
+    # (report.metapackage_text).
+    all_deps: bool = False
+    left_out: frozenset[str] = frozenset()
 
     @property
     def changed(self) -> list[PackageScan]:
@@ -711,8 +728,9 @@ class ScanResult:
 
     def new_package_notes(self) -> list[Note]:
         """One note (:func:`notes.new_package_note`, ``[metadata]``) for each dependency first
-        released after the cutoff, or within the margin before it, that the project's code
-        imports (:meth:`new_imported`)."""
+        released after the cutoff, or within the margin before it, or whose comparison release
+        was an empty placeholder, that the project's code imports (:meth:`new_imported`)."""
+        target = self.target
         return [
             new_package_note(
                 p.name,
@@ -721,7 +739,10 @@ class ScanResult:
                 p.summary,
                 p.changelog,
                 p.locked_date,
-                self.target.margin if self.target.released_within_margin(p) else None,
+                target.margin if target.released_within_margin(p) or p.cutoff_version else None,
+                # A NEW dependency with a comparison release: an empty placeholder.
+                placeholder=p.cutoff_version,
+                by=target.compare_date.isoformat() if p.cutoff_version else None,
             )
             for p in self.new_imported()
         ]
@@ -807,7 +828,7 @@ class ScanResult:
 
     def new_imported(self) -> list[PackageScan]:
         """The dependencies first released after the cutoff that the project's code imports:
-        by their import names when the scan read them (a placeholder release at the cutoff),
+        by their import names when the scan read them (a placeholder comparison release),
         else by the dependency's own name (``foo-bar`` for ``import foo_bar``)."""
         modules = {canonicalize_name(m) for m in self.project.imported_modules}
         return [
@@ -1367,6 +1388,16 @@ class Engine:
             include=self.settings.include,
             exclude=self.settings.exclude,
         )
+        # Left out by --only/--exclude, even with --all-deps.
+        left_out = frozenset(d.key for d in project.dependencies) - {
+            d.key
+            for d in scanned_dependencies(
+                project,
+                all_deps=True,
+                include=self.settings.include,
+                exclude=self.settings.exclude,
+            )
+        }
         for w in warnings:
             self.reporter.warn(w)
 
@@ -1380,10 +1411,11 @@ class Engine:
 
         to_diff = [s for s in scans if s.status == CHANGED]
         if to_diff:
-            # Newer than at the cutoff: whether their API changed is what the diff finds out.
+            # Newer than the comparison release: whether their API changed is what the diff
+            # finds out.
             one = len(to_diff) == 1
             what = f"{len(to_diff)} package{'' if one else 's'} released after {'its' if one else 'their'}"
-            self.reporter.stage(f"Diffing the API of {what} cutoff version", len(to_diff))
+            self.reporter.stage(f"Diffing the API of {what} comparison release", len(to_diff))
             locked = {d.key: d.version for d in project.dependencies if d.version}
             self._diff_all(to_diff, locked=locked, when=target.compare_date)
         self.reporter.done()
@@ -1411,7 +1443,14 @@ class Engine:
             key=lambda s: (s.status != CHANGED, not s.imported, *(-n for n in s.counts), s.name)
         )
         return ScanResult(
-            project, target, scans, warnings, stale, self.settings.include_name_matches
+            project,
+            target,
+            scans,
+            warnings,
+            stale,
+            self.settings.include_name_matches,
+            all_deps=self.settings.all_deps,
+            left_out=left_out,
         )
 
     def _scan_versions(self, dep: Dependency, target: ModelTarget, project: Project) -> PackageScan:
@@ -1438,7 +1477,7 @@ class Engine:
                 scan.summary = self.pypi.summary(dep.key)
                 if first is not None and target.compare_date < first.date() <= target.cutoff:
                     scan.reason = (
-                        f"first released within {target.margin} days of the cutoff "
+                        f"first released within {days_text(target.margin)} of the cutoff "
                         f"({scan.first_released})"
                     )
                 return scan
@@ -1491,10 +1530,10 @@ class Engine:
         """Diff each scan's two releases. ``locked`` (the project's dependencies by canonical
         name) and ``when`` (the comparison date) pick the versions of the distributions each
         side takes names from (:meth:`_siblings`): the locked one for the pinned release, the
-        newest allowed on ``when`` for the release at the cutoff.
+        newest allowed on ``when`` for the comparison release.
 
         The pinned release is always read: a cached diff still needs its import names. The
-        release at the cutoff is read when the diff is not cached, and once to learn which
+        comparison release is read when the diff is not cached, and once to learn which
         distributions it takes names from (the diff's key names them: :meth:`_diff_key`), which
         the store then keeps (:meth:`_wanted_siblings`), so that a later scan serves the cached
         diff from the pinned release alone, with nothing else to download."""
@@ -1507,7 +1546,7 @@ class Engine:
                 wanted.append((s.name, s.cutoff_version))
         trees = self._fetch_sources(wanted)
 
-        # Served from the cache, or in need of the release at the cutoff after all.
+        # Served from the cache, or in need of the comparison release after all.
         served: set[int] = set()
         missing: list[tuple[str, str]] = []
         for s in scans:
@@ -1548,7 +1587,7 @@ class Engine:
             if self._placeholder(s, old):
                 # Nothing to compare with: the model has never seen this API.
                 s.status, s.import_names = NEW, list(new.import_names)
-                s.reason = f"{s.cutoff_version} at the cutoff was an empty placeholder"
+                s.reason = f"the comparison release {s.cutoff_version} was an empty placeholder"
                 self.reporter.advance(label=s.name)
                 continue
             if isinstance(old, PackageIndexError):
@@ -1723,7 +1762,7 @@ class Engine:
         return out
 
     def _placeholder(self, s: PackageScan, old: SourceTree | PackageIndexError) -> bool:
-        """Is the release at the cutoff one that only reserved the name: no modules at all
+        """Is the comparison release one that only reserved the name: no modules at all
         (nvidia-cuda-runtime's sdist) or modules with nothing in them (zensical 0.0.0)?
 
         Only for a release of small pure-Python files: a compiled extension (ujson has no
@@ -2068,7 +2107,7 @@ class Engine:
         """Sources of the package's runtime dependencies, so the checker can resolve its types.
 
         For the locked version, dependencies use the project's locked versions where known; for
-        the cutoff version, the newest release allowed by the specifier on the cutoff date.
+        the comparison release, the newest release allowed by the specifier on the comparison date.
         """
         key = (tree.name, tree.version, when)
         if key in self._dep_roots:
@@ -2351,11 +2390,11 @@ def classify(
     related: frozenset[str] = frozenset(),
     vocab: frozenset[str] = frozenset(),
 ) -> tuple[str, list[str]]:
-    """Label one answer by comparing checker results for the locked and the cutoff version.
+    """Label one answer by comparing checker results for the locked and the comparison release.
 
     Only *knowledge errors* count (unknown names, imports and parameters, missing required
     arguments, arity), never pure type-strictness complaints. An answer is STALE when a
-    statement that is clean on the cutoff version has knowledge errors on the locked version;
+    statement that is clean on the comparison release has knowledge errors on the locked version;
     WRONG when its knowledge errors are not explained by the version change.
     """
     if not new.syntax_ok:

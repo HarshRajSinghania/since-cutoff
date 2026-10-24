@@ -75,7 +75,9 @@ y **Claude Opus 4.6** (mayo de 2025). Las tareas y las notas las escribió Claud
 ## Cómo mide
 
 1. **Qué cambió.** Para cada dependencia, se toma la versión más reciente publicada en la fecha de
-   corte del modelo o antes, y se compara su API pública con la versión fijada, de forma estática
+   corte del modelo o antes (la regla de since-cutoff 0.1.0 a 0.5.0, con la que se obtuvieron
+   todas las cifras de esta página; desde la 0.6.0, el análisis compara por defecto desde la
+   versión más reciente publicada al menos 30 días antes de la fecha de corte), y se compara su API pública con la versión fijada, de forma estática
    (con griffe, sin importar ningún módulo del paquete). Así se detectan objetos eliminados o
    movidos, parámetros eliminados o que pasan a ser obligatorios, parámetros que pasan a ser solo
    de palabra clave o solo posicionales, y nuevas marcas de obsolescencia. Para este proyecto y la fecha de corte de Claude
@@ -165,7 +167,8 @@ modelo siguió usando bien, con las notas en su contexto, las seis API que ya ac
 - **Las tareas reservadas son paráfrasis sobre el mismo cambio,** así que el antes y el después
   miden si una nota corrige *ese* cambio, no la capacidad general.
 - **«La versión de comparación» es una regla basada en fechas** (la versión más reciente
-  publicada en la fecha de corte o antes). Los modelos conocen mal los meses inmediatamente anteriores a su
+  publicada en la fecha de corte o antes en estas mediciones; desde la 0.6.0, por defecto, la
+  más reciente publicada al menos 30 días antes). Los modelos conocen mal los meses inmediatamente anteriores a su
   fecha de corte, así que la desactualización real puede empezar antes.
 
 ## Por qué me importa

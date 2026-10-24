@@ -64,8 +64,10 @@ Two models were tested: **Claude Haiku 4.5** (training cutoff February 2025) and
 ## How it measures
 
 1. **What changed.** For each dependency, take the newest release published on or before the
-   model's cutoff, and diff its public API against the pinned version, statically (griffe, no code
-   imported). That finds removed and moved objects, removed or newly required parameters,
+   model's cutoff (the rule of since-cutoff 0.1.0 to 0.5.0, which made every count on this page;
+   since 0.6.0 the scan compares from the newest release published at least 30 days before the
+   cutoff by default), and diff its public API against the pinned version, statically (griffe,
+   no code imported). That finds removed and moved objects, removed or newly required parameters,
    keyword/positional-only changes and new deprecation markers. For this project and Claude
    Haiku 4.5's cutoff, 7 of the 9 dependencies changed; the current diff (0.5.0) flags 475
    breaking changes and 48 new deprecations, some of them internals.
@@ -147,8 +149,9 @@ context.
   Behaviour changes behind an unchanged signature are invisible.
 - **Held-out tasks are paraphrases of the same change,** so the before/after measures whether a
   note fixes *that* change, not general ability.
-- **"The comparison release" is a date rule** (the newest release on or before the cutoff). Models know
-  the months right before their cutoff poorly, so real staleness can begin earlier.
+- **"The comparison release" is a date rule** (the newest release on or before the cutoff in
+  these measurements; since 0.6.0, by default, the newest published at least 30 days before it).
+  Models know the months right before their cutoff poorly, so real staleness can begin earlier.
 
 ## Why I care about this
 

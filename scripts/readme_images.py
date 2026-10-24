@@ -191,8 +191,9 @@ FLOW = {
     "en": FlowText(
         title="How since-cutoff works",
         desc=(
-            "Scan, with no model calls: read the lockfile, find each dependency's release at the "
-            "model's training cutoff, and diff the public API statically with griffe. Probe: write "
+            "Scan, with no model calls: read the lockfile, find each dependency's latest release "
+            "published at least 30 days before the model's training cutoff, and diff the public "
+            "API statically with griffe. Probe: write "
             "short tasks that need a changed API, let the model answer with no tools and no docs, "
             "and type-check the answer with basedpyright against both versions. Write and test "
             "notes: keep a model-written note only if its example type-checks, otherwise state the "
@@ -205,7 +206,7 @@ FLOW = {
                 "no model calls",
                 [
                     "Lockfile: your exact versions",
-                    "The release at the model's cutoff",
+                    "Release 30 days before the model's cutoff",
                     "Static API diff with griffe",
                 ],
             ),
@@ -232,8 +233,9 @@ FLOW = {
     "es": FlowText(
         title="Cómo funciona since-cutoff",
         desc=(
-            "Análisis, sin llamadas al modelo: se lee el lockfile, se busca la versión de cada "
-            "dependencia en la fecha de corte de entrenamiento del modelo y se compara la API "
+            "Análisis, sin llamadas al modelo: se lee el lockfile, se busca la última versión de "
+            "cada dependencia publicada al menos 30 días antes de la fecha de corte de "
+            "entrenamiento del modelo y se compara la API "
             "pública de forma estática con griffe. Sondeo: tareas breves que requieren una API "
             "modificada, el modelo responde sin herramientas ni documentación y basedpyright "
             "comprueba la respuesta con ambas versiones. Escribir y probar las notas: una nota "
@@ -248,7 +250,7 @@ FLOW = {
                 "sin llamadas al modelo",
                 [
                     "Lockfile: tus versiones exactas",
-                    "La versión en la fecha de corte del modelo",
+                    "Versión 30 días antes del corte del modelo",
                     "Diff estático de la API con griffe",
                 ],
             ),
@@ -276,7 +278,8 @@ FLOW = {
         title="Fonctionnement de since-cutoff",
         desc=(
             "Analyse, sans appel au modèle : le fichier de verrouillage donne vos versions exactes, "
-            "since-cutoff trouve la version de chaque dépendance à la date limite d'entraînement du "
+            "since-cutoff trouve la dernière version de chaque dépendance publiée au moins 30 jours "
+            "avant la date limite d'entraînement du "
             "modèle et compare l'API publique de façon statique avec griffe. Sonde : de courtes "
             "tâches qui nécessitent une API modifiée, le modèle répond sans outils ni "
             "documentation, et basedpyright vérifie la réponse avec les deux versions. Rédaction "
@@ -293,7 +296,7 @@ FLOW = {
                 "aucun appel au modèle",
                 [
                     f"Verrouillage{NBSP}: vos versions exactes",
-                    "La version à la date limite du modèle",
+                    "La version 30 jours avant la date limite du modèle",
                     "Diff statique de l'API avec griffe",
                 ],
             ),

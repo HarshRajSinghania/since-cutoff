@@ -31,7 +31,8 @@ and the other pilot task removed, every arm passes every post-cutoff task and th
 A coding model learned its libraries before its training cutoff. When a project pins a newer
 release, the model's memory of that API can be wrong. since-cutoff writes short notes about such
 changes into `AGENTS.md` or `CLAUDE.md`, from a static diff of the package's public API between
-the release current at the model's cutoff and the pinned release. The other common answer is a
+the release current at the model's cutoff (in 0.4.1, which this study used; 0.6.0 compares
+from 30 days before the cutoff by default) and the pinned release. The other common answer is a
 documentation server such as [Context7](https://github.com/upstash/context7), which the agent
 queries while it works.
 
@@ -76,7 +77,7 @@ B.4; that session ran `claude-opus-5-5`, the model under test
 ([REVIEW.md](https://github.com/MohammadHijjawi97/since-cutoff-benchmark/blob/main/REVIEW.md)).
 The model's training cutoff was taken as 2026-06-30.
 
-| stratum | tasks | package: pinned (release at the cutoff) | role |
+| stratum | tasks | package: pinned (release at the cutoff, as 0.4.1 compared) | role |
 |---|---|---|---|
 | post-cutoff (primary endpoint) | 17: ant01-ant05, oai01-oai03, hf01-hf04, mcp01, mcp02, mcp04-mcp06 | anthropic 1.8.0 (0.115.0), openai 3.19.2 (2.44.0), huggingface-hub 2.0.0 (1.21.0), mcp 2.2.0 (1.28.1) | the API the task needs changed after the cutoff |
 | pre-cutoff control | 5: pd01-pd03, lc01, lc02 | pandas 3.0.6 (3.0.3), langchain-core 1.6.5 (1.4.8) | the change predates the cutoff: do the notes get in the way? |

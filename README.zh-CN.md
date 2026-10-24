@@ -32,7 +32,7 @@ pipx install since-cutoff    # 或：pip install since-cutoff
 
 `run` 用 [basedpyright](https://github.com/DetachHead/basedpyright) 对模型的回答做类型检查，这是一个 180 MB 的 extra，其他命令都用不到：`pip install "since-cutoff[run]"`（或 `pipx install "since-cutoff[run]"`）会安装它，`uvx --with basedpyright since-cutoff run` 则不用安装就能在这次运行中加上它；没有它时，`run` 会立即停止并说明原因。
 
-请在项目根目录运行。它会读取 `uv.lock`、`poetry.lock`、`pdm.lock`、`pylock.toml`、`Pipfile.lock`、`requirements*.txt`、`pyproject.toml`、`Pipfile` 或 `.venv`（不读取 `setup.py` 和 `setup.cfg`）。不加 `--model` 时，它使用你的编程 Agent 所配置的模型，从 Claude Code、Codex、Gemini CLI、OpenCode 或 Aider 的设置中读取；要使用其他模型，请传入 `--model`（见[选择模型](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#选择模型)）。`scan`、`sync` 和 `status` 不调用模型，也不需要 API key；`run` 会把提示词发送给模型服务商，消耗你的 API 额度或 Claude Code 用量。
+请在项目根目录运行。它会读取 `uv.lock`、`poetry.lock`、`pdm.lock`、`pylock.toml`、`Pipfile.lock`、`requirements*.txt`、`pyproject.toml`、`Pipfile`、conda `environment.yml` 的 `pip:` 部分或 `.venv`（不读取 `setup.py` 和 `setup.cfg`）。不加 `--model` 时，它使用你的编程 Agent 所配置的模型，从 Claude Code、Codex、Gemini CLI、OpenCode 或 Aider 的设置中读取；要使用其他模型，请传入 `--model`（见[选择模型](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#选择模型)）。`scan`、`sync` 和 `status` 不调用模型，也不需要 API key；`run` 会把提示词发送给模型服务商，消耗你的 API 额度或 Claude Code 用量。
 
 在编程 Agent 中，可以由技能替你运行这些命令：见[在 Claude Code 中使用](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#在-claude-code-中使用)和[在其他编程 Agent 中使用](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#在其他编程-agent-中使用)。[MCP 服务器](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.zh-CN.md#在任意-agent-中使用mcp)把同样的对比结果提供给任意 Agent。
 
@@ -42,7 +42,8 @@ pipx install since-cutoff    # 或：pip install since-cutoff
 
 ```console
 $ uvx since-cutoff scan --model anthropic:claude-sonnet-4-5
-Your code uses 2 APIs that changed after claude-sonnet-4-5's training cutoff (2025-07-31)
+Your code uses 2 APIs that changed after 2025-07-01, 30 days before claude-sonnet-4-5's training
+  cutoff (2025-07-31)
 
 huggingface-hub 0.33.1 -> 2.0.0 (0.33.1 was the latest release 30 days before the cutoff;
   pyproject.toml pins 2.0.0)
@@ -110,14 +111,14 @@ uvx since-cutoff scan
 
 下面是 `since-cutoff scan` 针对 Claude Sonnet 4.5（训练截止 2025 年 7 月）在[示例项目](https://github.com/MohammadHijjawi97/since-cutoff/tree/main/examples/agent-app)中找到的部分变更。这个项目的 9 个依赖中有 6 个锁定在当前版本，另外 3 个没有锁定（工具使用它们的最新版本）：
 
-| 库 | 截止日期时的版本 | 锁定版本 | 变了什么 |
+| 库 | 对照版本 | 锁定版本 | 变了什么 |
 |---|---|---|---|
-| anthropic | 0.60.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` 不再被接受 |
-| huggingface-hub | 0.34.3 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)` 这些参数在 1.0 中已从函数签名里去掉（2.0.0 在运行时仍接受它们，但会忽略并发出警告） |
-| langchain-core | 0.3.72 | 1.6.5 | `retriever.get_relevant_documents()` 和 `llm.predict()` 已移除 |
-| openai | 1.98.0 | 3.19.2 | 19 个破坏性变更，6 个新的弃用（另有 3 个内部 API 变更） |
+| anthropic | 0.56.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` 不再被接受 |
+| huggingface-hub | 0.33.1 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)` 这些参数在 1.0 中已从函数签名里去掉（2.0.0 在运行时仍接受它们，但会忽略并发出警告） |
+| langchain-core | 0.3.67 | 1.6.5 | `retriever.get_relevant_documents()` 和 `llm.predict()` 已移除 |
+| openai | 1.93.0 | 3.19.2 | 24 个破坏性变更，6 个新的弃用（另有 5 个内部 API 变更） |
 
-在这个项目中，9 个依赖里有 7 个在截止日期之后改了公开 API。静态对比共标出公开 API 的 257 个破坏性变更和 23 个新的弃用，以及内部 API 的 71 个变更；项目代码用到了其中 2 个有变更的 API。
+每个库都从截止日期前至少 30 天发布的最新版本开始对比（扫描默认的余量），所以一项变更可能来自截止日期前的最后几周。在这个项目中，9 个依赖里有 7 个在这个版本之后改了公开 API。静态对比共标出公开 API 的 331 个破坏性变更和 24 个新的弃用，以及内部 API 的 139 个变更；项目代码用到了其中 2 个有变更的 API。
 
 这不是某一个模型或某一家厂商的问题。在 36 个常用的 Python AI 库和来自 OpenAI、Anthropic、Google、xAI、DeepSeek、Qwen、Moonshot、Mistral 的 21 个模型上，即使是测试中最新的模型（Claude Opus 5.5，训练截止 2026 年 6 月），这 36 个库里也有 20 个在它的截止日期之后发生了公开 API 的破坏性变更（[完整结果](https://mohammadhijjawi97.github.io/since-cutoff/ai-stack.html)，英文）：
 
@@ -153,7 +154,7 @@ uvx --with basedpyright since-cutoff run
 
 `scan` 在示例项目上的完整输出：
 
-<p align="center"><img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/scan.svg" width="100%" alt="在示例项目上运行 since-cutoff scan --model anthropic:claude-sonnet-4-5。你的代码用到了 2 个在 claude-sonnet-4-5 训练截止日期（2025-07-31）之后发生变化的 API。huggingface-hub 0.33.1 -> 2.0.0：app/main.py 用到的 hf_hub_download 的签名中不再有 force_filename、local_dir_use_symlinks、resume_download 和 proxies；它的说明标为 [diff]，一行 Runtime 提示指出 2.0.0 的源码仍会处理这些参数，所以传入它们的调用可能会带着警告运行。anthropic 0.56.0 -> 1.8.0：app/main.py 调用的 Messages.create 不再接受 temperature、top_k 和 top_p；它的说明标为 [diff]。2 条说明可以写入 AGENTS.md；uses this API 和 [diff] 的含义；代码没有用到的另外 7 个包中的 348 个变更，以及内部 API 的 139 个变更。"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/scan.svg" width="100%" alt="在示例项目上运行 since-cutoff scan --model anthropic:claude-sonnet-4-5。你的代码用到了 2 个在 2025-07-01（claude-sonnet-4-5 训练截止日期 2025-07-31 前 30 天）之后发生变化的 API。huggingface-hub 0.33.1 -> 2.0.0：app/main.py 用到的 hf_hub_download 的签名中不再有 force_filename、local_dir_use_symlinks、resume_download 和 proxies；它的说明标为 [diff]，一行 Runtime 提示指出 2.0.0 的源码仍会处理这些参数，所以传入它们的调用可能会带着警告运行。anthropic 0.56.0 -> 1.8.0：app/main.py 调用的 Messages.create 不再接受 temperature、top_k 和 top_p；它的说明标为 [diff]。2 条说明可以写入 AGENTS.md；uses this API 和 [diff] 的含义；代码没有用到的另外 7 个包中的 348 个变更，以及内部 API 的 139 个变更。"></p>
 
 这两个 API 都是“uses this API”；如果某个文件传了 `resume_download=True` 或 `temperature=0.2`，它们就会变成“old form”。`scan -v` 列出用到某个 API 的所有文件（默认显示 3 个），`scan --all` 会逐个包列出公共 API 的其余所有变更（`--internal` 再加上内部 API 的变更，各项计数把它们单独记为“+N internal”）。`scan --json` 和 `.since-cutoff/results.json` 的 `used_apis` 中有同样的内容（每个 API、用到它的位置、它的变更和说明，以及说明的标签、适用的版本和检查了什么），`.since-cutoff/report.md` 以“Used by your code”开头。
 
@@ -435,7 +436,7 @@ Not listed: 58 breaking changes, 0 new deprecations (removed or moved 30, parame
 name: since-cutoff
 on:
   pull_request:
-    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
+    paths: ["**/*.lock", "**/pylock*.toml", "**/requirements*.txt", "**/environment.y*ml", "**/pyproject.toml", "**/AGENTS.md", "**/CLAUDE.md"]
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -456,7 +457,7 @@ jobs:
 | `only`、`exclude` | | 逗号分隔的 PyPI 包名 |
 | `cutoff` | | 覆盖训练截止日期（`YYYY-MM` 或 `YYYY-MM-DD`） |
 | `cutoff-margin` | | 从截止日期前这么多天发布的最新版本开始对比（since-cutoff 的默认值是 30；`0` 表示从截止日期当天算起） |
-| `fail-on-changes` | `false` | 有依赖在截止日期之后改了 API 时，让这一步失败 |
+| `fail-on-changes` | `false` | 有依赖相对于它的对比版本（默认是截止日期前 30 天发布的最新版本）改了 API 时，让这一步失败 |
 | `check-notes` | `false` | 同时运行 `since-cutoff sync --check`（不写入任何内容），当 AGENTS.md / CLAUDE.md 中的说明已过时或区块被手动修改过时，让任务失败；说明沿用写入时的模型，`model`（和 `cutoff`）用于还没有区块的项目 |
 | `step-summary` | `true` | 把 Markdown 摘要加到任务摘要（job summary）中 |
 | `cache` | `true` | 在多次运行之间保留 PyPI 元数据、包源码和 API 对比结果（`fail-on-changes` 让任务失败时也会保留） |
@@ -480,7 +481,7 @@ repos:
       - id: since-cutoff-sync  # 让 AGENTS.md 中的说明保持最新；args: [--check] 只检查
 ```
 
-`since-cutoff-scan` 在 lockfile、requirements 文件或 `pyproject.toml` 变更时运行，并打印扫描结果；需要在 `args` 里给出 `--model`。`since-cutoff-sync` 在这些文件或 AGENTS.md、CLAUDE.md 变更时运行，并更新说明；如果它修改了文件，这个钩子就会失败，和其他会修改文件的 pre-commit 钩子一样：把文件加入暂存区后重新提交即可。使用 `args: [--check]` 时，它不修改任何内容，只要说明已过时就失败。它沿用说明写入时的模型；写第一个区块时，请给它指定一个：`args: [--model=anthropic:claude-sonnet-4-5]`。这两个钩子都要访问 PyPI，所以在 pre-commit.ci 上请跳过它们（`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`）。`since-cutoff-status` 不需要联网：说明与 lockfile 不一致时它会失败。
+`since-cutoff-scan` 在 lockfile、requirements 文件、conda `environment.yml` 或 `pyproject.toml` 变更时运行，并打印扫描结果；需要在 `args` 里给出 `--model`。`since-cutoff-sync` 在这些文件或 AGENTS.md、CLAUDE.md 变更时运行，并更新说明；如果它修改了文件，这个钩子就会失败，和其他会修改文件的 pre-commit 钩子一样：把文件加入暂存区后重新提交即可。使用 `args: [--check]` 时，它不修改任何内容，只要说明已过时就失败。它沿用说明写入时的模型；写第一个区块时，请给它指定一个：`args: [--model=anthropic:claude-sonnet-4-5]`。这两个钩子都要访问 PyPI，所以在 pre-commit.ci 上请跳过它们（`ci: {skip: [since-cutoff-scan, since-cutoff-sync]}`）。`since-cutoff-status` 不需要联网：说明与 lockfile 不一致时它会失败。
 
 ### 其他 CI
 
@@ -502,7 +503,7 @@ since-cutoff run --quick --fail-on-stale --json > since-cutoff.json
 - `0` 正常；
 - `1` 出错（例如 `run` 没能探测任何 API 变更，或没有任何模型回答能被打分；或 `sync` 无法检查其说明所涉及的某个包）；
 - `2` 用法错误；
-- `3` 检查未通过：`scan --fail-on changes`、`used` 或 `old-form`（有依赖在截止日期之后改了 API、你的代码用到了有变更的 API，或以旧写法用到它；`--fail-on-changes` 等同于 `--fail-on changes`；无论哪一项，运行它的 Python 无法解析其源码的依赖也算未通过），`run --fail-on-stale`（发现了过时的 API 用法），或 `sync --check`、`status` 发现说明已过时（以及 `sync` 没有写入时）；
+- `3` 检查未通过：`scan --fail-on changes`、`used` 或 `old-form`（有依赖相对于它的对比版本改了 API，默认的对比版本是截止日期前 30 天发布的最新版本；你的代码用到了有变更的 API，或以旧写法用到它；`--fail-on-changes` 等同于 `--fail-on changes`；无论哪一项，运行它的 Python 无法解析其源码的依赖也算未通过），`run --fail-on-stale`（发现了过时的 API 用法），或 `sync --check`、`status` 发现说明已过时（以及 `sync` 没有写入时）；
 - `4` `sync`：区块被手动修改过，没有 `--force` 时不写入任何内容；
 - `141` 输出被提前关闭（例如通过管道传给了 `head`）。
 
@@ -512,7 +513,7 @@ since-cutoff run --quick --fail-on-stale --json > since-cutoff.json
 
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works-dark.svg">
-  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="三个阶段。扫描（不调用模型）：从 lockfile 得到你的确切版本，找到模型截止日期时的版本，再用 griffe 做静态 API 对比。探测：给出需要用到该变更的简短任务，模型凭记忆作答，basedpyright 针对两个版本检查回答。写出并测试说明：模型写的说明只有示例能通过类型检查才保留，否则改用从 API 对比结果得出的变更陈述；留出任务在无说明和有说明时各回答一次，--apply 把一个区块写入 AGENTS.md。">
+  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="三个阶段。扫描（不调用模型）：从 lockfile 得到你的确切版本，找到模型截止日期前至少 30 天发布的最新版本，再用 griffe 做静态 API 对比。探测：给出需要用到该变更的简短任务，模型凭记忆作答，basedpyright 针对两个版本检查回答。写出并测试说明：模型写的说明只有示例能通过类型检查才保留，否则改用从 API 对比结果得出的变更陈述；留出任务在无说明和有说明时各回答一次，--apply 把一个区块写入 AGENTS.md。">
 </picture></p>
 
 | 结果 | 含义 |
@@ -538,7 +539,7 @@ since-cutoff 从不单独使用“verified”（已验证）这个词。每条�
 | `[diff]` | 这个变更出现在对两个版本公开 API 的静态对比（griffe）中：默认在模型训练截止日期至少 30 天之前发布的最新版本，以及你的项目锁定的版本。源码只被读取，不被导入。只有 `[diff]` 时，说明不会给出任何替代项：它转述库自己的弃用说明中的话（“there is no replacement for `resume_download`”，没有替代项），或者指向该包的变更日志（其 PyPI 元数据中的 Changelog 链接，否则是它在 GitHub 上的 releases 页面），查看自对照版本以来的变更，或者在 PyPI 两者都没有列出时，说明 since-cutoff 在那段文字中没有找到替代项。 | 行为，以及调用是否仍能运行：锁定的版本可能仍会接受一个已移除的参数并发出警告，比如 huggingface-hub 2.0.0 对 `resume_download` 就是这样。当锁定版本的源码仍会处理某个参数时，终端、report.md、MCP 工具和 JSON 会加上一行“Runtime:”；区块中不写，因为建议是一样的。你的模型是否会写错。 |
 | `[diff + library]` | 同 `[diff]`，并且库自己的弃用说明（docstring、docstring 中某个参数的条目、`@deprecated` 消息或 `warnings.warn` 文本，来自旧版本；对于弃用，则来自锁定版本）明确给出了替代项（“Use `stop` instead”），而且这个名称在你锁定的版本中存在。只是作为建议提到某个名称的文字，会在 `[diff]` 下引用，不被当作替代项。 | 替代项的行为是否相同。 |
 | `[diff + move checked]` | 同 `[diff]`，并且就能统计的方面而言，新路径上的对象就是同一个对象：类或模块至少保留了旧对象一半的公开名称，函数保留了它的参数，值保持不变。 | 行为。 |
-| `[diff + metadata]` | 旧版本的 Requires-Dist（其 wheel 的 METADATA）列出了一个锁定的版本不再列出的库，而公开 API 中原先用到该库类型的位置（参数、返回类型、属性、基类、重新导出）改为用到锁定的版本所依赖的另一个库的类型，或它自带的旧库副本的类型，旧库的类型一个也没有留下：openai 3.x、anthropic 1.8、huggingface-hub 2.0 和 mcp 2.2 在原先接受 `httpx` 对象的地方改为接受 `httpx2` 对象。单独的 `[metadata]` 标记的是你的代码导入的、在截止日期之后（或截止日期前的余量天数内）才首次发布的包的那一条说明：没有任何版本可以对比，所以说明给出它首次发布的日期、它在 PyPI 上的简介和它的变更日志链接。 | 行为：锁定的版本是否仍接受旧库的对象（根据各自的源码，openai 3 会转换其中一部分，anthropic 1.8 会抛出 `TypeError`）。终端、report.md、MCP 工具和 JSON 会加上一行“Installed:”（你的项目，包括其虚拟环境，是否仍有旧库）和一行“Runtime:”，指出锁定版本的源码在哪里仍提到它。 |
+| `[diff + metadata]` | 旧版本的 Requires-Dist（其 wheel 的 METADATA）列出了一个锁定的版本不再列出的库，而公开 API 中原先用到该库类型的位置（参数、返回类型、属性、基类、重新导出）改为用到锁定的版本所依赖的另一个库的类型，或它自带的旧库副本的类型，旧库的类型一个也没有留下：openai 3.x、anthropic 1.8、huggingface-hub 2.0 和 mcp 2.2 在原先接受 `httpx` 对象的地方改为接受 `httpx2` 对象。单独的 `[metadata]` 标记的是你的代码导入的、在截止日期之后（或截止日期前的余量天数内）才首次发布的包，或对比版本只是一个空的占位版本（zensical 0.0.0）的包的那一条说明：没有任何带 API 的版本可以对比，所以说明给出它首次发布的日期（或那个占位版本的版本号）、它在 PyPI 上的简介和它的变更日志链接。 | 行为：锁定的版本是否仍接受旧库的对象（根据各自的源码，openai 3 会转换其中一部分，anthropic 1.8 会抛出 `TypeError`）。终端、report.md、MCP 工具和 JSON 会加上一行“Installed:”（你的项目，包括其虚拟环境，是否仍有旧库）和一行“Runtime:”，指出锁定版本的源码在哪里仍提到它。 |
 | `[diff; probable rename]` | 位置相同、类型注解相同的参数换了新名字，且锁定版本 docstring 中的版本说明（`.. versionadded::`、`.. versionchanged::`）没有说新参数是新增的或旧参数已被移除。这是推测，并标明为推测。 | 它是否就是同一个参数。 |
 | `[type-checked]` | 由模型在 `since-cutoff run` 中写出，因为它的示例通过了下面的类型检查而被保留。 | 行为；这条说明的解释在它展示的名称之外是否也正确。 |
 | `[not confirmed]` | 仅在使用 `sync --suggestions` 时出现：锁定版本中与被移除内容相似的名称（这时说明条目的标签写作 `[diff; not confirmed]`）。 | 其中任何一个能替代它。 |
@@ -579,7 +580,7 @@ AGENTS.md 中的区块包含带标签的说明条目，以及每个包的说明�
 - 类型检查器能发现错误的名称、错误的参数和 PEP 702 弃用，但看不到签名不变而行为改变的情况，也看不到只在运行时发出警告的弃用。`scan` 还会列出用库自己的装饰器（名称包含 "deprecat"）声明的弃用，以及已被移除、但模块仍通过 `__getattr__` 提供并发出警告的名称；不过 `run` 不会探测这些弃用。
 - 对比只覆盖公开 API：`_private` 名称，以及包内自带的测试、基准测试和示例，都会被跳过。
 - 源码由运行 since-cutoff 的 Python 解析，它读不懂更新版本的语法：在 Python 3.10 上，numpy 2.5（其 stub 中有 PEP 695 的 `type` 语句）无法检查。扫描会说明这一点以及哪个 Python 可以（“run since-cutoff with Python 3.12 or later to check it”），`--fail-on` 也会因此判定未通过。请用你的项目所用的 Python 或更新的版本运行 since-cutoff。
-- “Your code uses”（你的代码用到了）是逐个文件的静态匹配：导入（包括重新导出的名称）、调用、属性读取和关键字参数；方法调用的接收者会根据包自身的注解确定类型（`df = pd.read_csv(...)` 是一个 `DataFrame`；一个类连同它的基类一起计入，跨越你锁定的各个包）。它不追踪 `getattr` 这类动态访问，目前只指出文件，不指出行号（[#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)）。在代码没有显示其类的值上读取的方法，可以只按名称计入：这个名称仅属于一个有变更的 API，既不是常见名称，也不是内置类型或标准库类型的成员。除非给出 `--include-name-matches`（通过 MCP 时为 `include_name_matches`），这种 `[name match]` 不会出现在任何报告、说明、`--fail-on` 和 `--annotate` 中，因为它们大多是另一个库中同名的方法。变为必需、仅限关键字或仅限位置的参数，目前总是显示为“uses this API”，从不显示为“old form”。
+- “Your code uses”（你的代码用到了）是逐个文件的静态匹配：导入（包括重新导出的名称）、调用、属性读取和关键字参数；方法调用的接收者会根据包自身的注解确定类型（`df = pd.read_csv(...)` 是一个 `DataFrame`；一个类连同它的基类一起计入，跨越你锁定的各个包）。它不追踪 `getattr` 这类动态访问，目前只指出文件，不指出行号（[#8](https://github.com/MohammadHijjawi97/since-cutoff/issues/8)）。在代码没有显示其类的值上读取的方法，可以只按名称计入：这个名称仅属于一个有变更的 API，既不是常见名称，也不是内置类型或标准库类型的成员。除非给出 `--include-name-matches`（通过 MCP 时为 `include_name_matches`），这种 `[name match]` 不会出现在任何报告、说明、`--fail-on` 和 `--annotate` 中，因为它们大多是另一个库中同名的方法；`scan`、`sync` 和 `project_changes` 会说明隐藏了多少处这样的用法（results.json 中的 `name_matches_hidden`）。变为必需、仅限关键字或仅限位置的参数，目前总是显示为“uses this API”，从不显示为“old form”。
 - 只有当库自己的弃用说明明确给出替代项时，说明才会写出替代项。只出现在迁移指南里的建议（anthropic 的 [MIGRATION.md](https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md) 建议对仍接受 `temperature` 的旧模型使用 `extra_body`）不会出现在说明中。
 - 探测的是破坏性变更中按优先级排序的一个**样本**（你的代码已经用到的符号优先），而不是全部。
 - “对照版本”指在截止日期至少 30 天之前发布的最新版本（`--cutoff-margin`；`0` 表示从截止日期当天算起）。模型对截止日期前几周的了解最少，所以实际的过时可能开始得更早；这个余量只是对“早多少”的一个估计。

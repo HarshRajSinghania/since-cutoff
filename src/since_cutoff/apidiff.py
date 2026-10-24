@@ -100,7 +100,7 @@ log = logging.getLogger(__name__)
 # form differs by a positional-only parameter or a ``*args`` / ``**kwargs`` (cachetools'
 # ``cached(cache, key, lock, info, /)``), which no keyword names. A
 # ``**kwargs: Unpack[SomeTypedDict]`` takes the TypedDict's keys (its bases' included) and no
-# other keyword, so a key the release at the cutoff had and the pinned one has not is a removed
+# other keyword, so a key the comparison release had and the pinned one has not is a removed
 # parameter (issue #60: pandas 3's ``read_csv`` overloads take ``**kwds: Unpack[_read_shared]``
 # and lost ``delim_whitespace``), and so is a key of the old TypedDict the new signature does
 # not name; a bare ``**kwargs``, or a TypedDict open to other keys (PEP 728), still takes

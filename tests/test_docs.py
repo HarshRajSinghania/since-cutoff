@@ -324,8 +324,10 @@ def test_the_first_screen_quotes_what_the_scan_writes(name: str) -> None:
     assert sections[2].count("```console") == 1
     lines = console.splitlines()
     assert lines[0] == "$ uvx since-cutoff scan --model anthropic:claude-sonnet-4-5"
-    assert lines[1] == (
-        "Your code uses 2 APIs that changed after claude-sonnet-4-5's training cutoff (2025-07-31)"
+    # After the day the comparison releases were published by, not after the cutoff.
+    assert _unwrapped(console.split("\n\n", 1)[0].split("\n", 1)[1]) == (
+        "Your code uses 2 APIs that changed after 2025-07-01, 30 days before claude-sonnet-4-5's "
+        "training cutoff (2025-07-31)"
     )
     note = _anthropic_note()
     assert note.endswith(" [diff]")
@@ -500,3 +502,57 @@ def test_troubleshooting_quotes_current_source_text(fragment: str) -> None:
     )
     assert fragment in source
     assert fragment in _text("docs/troubleshooting.md")
+
+
+# What `--fail-on changes` fails on, in each README's words, and what they said before 0.6.
+FAIL_ON_CHANGES = {
+    "README.md": ("since the release it is compared from", "after the cutoff"),
+    "README.es.md": ("desde la versión con la que se compara", "después de la fecha de corte"),
+    "README.fr.md": (
+        "depuis la version à partir de laquelle elle est comparée",
+        "après la date limite",
+    ),
+    "README.zh-CN.md": ("相对于它的对比版本", "截止日期之后"),
+}
+
+
+def _flat(text: str) -> str:
+    return " ".join(text.split())
+
+
+@pytest.mark.parametrize("name", READMES)
+def test_fail_on_changes_is_said_to_fail_on_a_change_since_the_comparison_release(
+    name: str,
+) -> None:
+    """`--fail-on changes` (and the action's `fail-on-changes`) fails on a change since the
+    release a dependency is compared from, by default the latest one published 30 days before
+    the cutoff, so a change older than the cutoff counts: the action table and the exit codes
+    said "changed its API after the cutoff", as did `--help`, action.yml and
+    docs/reference.md."""
+    since, old = FAIL_ON_CHANGES[name]
+    text = _text(name)
+    [row] = [line for line in text.splitlines() if line.startswith("| `fail-on-changes` |")]
+    three = text.split("- `3` ", 1)[1].split("- `4` ", 1)[0]  # the exit codes' 3
+    for said in (row, _flat(three)):
+        assert since in said and "30" in said and old not in said, said
+    if name != "README.md":
+        return
+    # The --help of scan, the action and the reference say the same.
+    [sub] = [a for a in build_parser()._actions if isinstance(a, argparse._SubParsersAction)]
+    help_text = _flat(sub.choices["scan"]._option_string_actions["--fail-on"].help or "")
+    assert (
+        "changed its API since the release it is compared from, by default the latest one "
+        "published 30 days before the cutoff (changes)" in help_text
+    )
+    action = _flat(_text("action.yml"))
+    assert (
+        "Fail the step when any dependency changed its API since the release it is compared "
+        "from (by default the latest one published 30 days before the cutoff)." in action
+    )
+    assert "dependencies whose API changed since the release they are compared from" in action
+    [scan_row] = [line for line in _text("docs/reference.md").splitlines() if "| `scan` |" in line]
+    assert "`changes` (a dependency changed its API since the release it is compared from" in (
+        scan_row
+    )
+    for said in (help_text, action, scan_row):
+        assert "API after the cutoff" not in said

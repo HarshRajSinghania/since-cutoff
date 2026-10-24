@@ -646,8 +646,8 @@ def _metapackage(name: str, version: str, requires: list[str]) -> str | None:
     griffe 2, llama-index): no API of its own, only requirements on the packages that have one.
     Those are dependencies of their own, which the scan checks under the same rules as any
     other (direct, imported by the code, or ``--all-deps``): the text is information, not a
-    failure, and the report shows it so (:data:`errors.METAPACKAGE`); the list comes last,
-    where the terminal clips it."""
+    failure, and the report shows it so (:data:`errors.METAPACKAGE`), saying which parts it
+    checked (:func:`since_cutoff.report.metapackage_text`); the list comes last, whole."""
     installs = []
     for line in requires:
         try:
@@ -658,13 +658,13 @@ def _metapackage(name: str, version: str, requires: list[str]) -> str | None:
             installs.append(f"{req.name}{req.specifier}")
     if not installs:
         return None
-    parts = f"{', '.join(installs[:3])}{', ...' if len(installs) > 3 else ''}"
+    # Every part, last: the report names which of them the scan checked (report.metapackage_text).
     these = (
-        "its part is a dependency of its own, checked like any other"
+        "its part is checked like any other dependency when the project depends on it"
         if len(installs) == 1
-        else "its parts are dependencies of their own, checked like any other"
+        else "its parts are checked like any other dependency when the project depends on them"
     )
-    return f"{name} {version} {METAPACKAGE}; {these}: {parts}"
+    return f"{name} {version} {METAPACKAGE}; {these}: {', '.join(installs)}"
 
 
 def _read_marker(

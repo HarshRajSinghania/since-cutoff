@@ -119,7 +119,14 @@
   before the cutoff gets the note too, which says so ("first appeared on PyPI on 2025-07-15,
   within 30 days before the cutoff; the model has little or no training data on it"), and `sync`
   drops the note once the code no longer imports the package ("first released 2025-07-15, within
-  30 days of the cutoff, and your code no longer imports it").
+  30 days of the cutoff, and your code no longer imports it"). One whose comparison release was
+  an empty placeholder existed, but not its API, and its note says that ("zensical's latest
+  release by 2025-07-01 (0.0.0) was an empty placeholder; the model has little or no training
+  data on its API"), not that it "first appeared on PyPI after the cutoff". The headline counts
+  these apart ("1 dependency's latest release 30 days before the cutoff was an empty
+  placeholder"), not among the dependencies that "did not exist yet", and so does the MCP
+  `project_changes` answer ("only an empty placeholder by that day: 1", under a heading of
+  their own).
 - The comparison release is the latest release published at least 30 days before the model's
   training cutoff, not at the cutoff itself. A model's training data lags its stated cutoff, so
   it knows the last weeks before the cutoff least: llama-index-core 0.13.0, which removed
@@ -139,13 +146,44 @@
   dependency first released within the margin counts as new to the model, and the scan, the
   MCP tools and `sync` say it was "first released 2025-07-15, within 30 days of the cutoff", not
   "after the cutoff"; one the model knows is "the latest release 30 days before the cutoff".
+  The rest of the text that called the comparison release "the release at the cutoff" says
+  what it is: the GitHub annotations ("fastapi 0.115.14 is the comparison release (the latest
+  one published at least 30 days before claude-sonnet-4-5's training cutoff, 2025-07-31)"; with
+  `--cutoff-margin 0`, "was the latest release at" as before), the dependency tables' column
+  ("compared from", was "at cutoff"), the old-form legend ("valid for the comparison release")
+  and the MCP `project_changes` answer ("as the comparison release allowed"), an empty
+  placeholder release ("the comparison release 0.0.1 was an empty placeholder", and in the
+  tables that, not "first released after the cutoff", as for one first released within the
+  margin), the progress line ("released after their comparison release", was "cutoff
+  version"), `sync --help`, the skill and the Codex plugin's description. What changed is said
+  to have changed after the day the comparison releases were published by, not after the
+  cutoff: "Your code uses 2 APIs that changed after 2025-07-01, 30 days before
+  claude-sonnet-4-5's training cutoff (2025-07-31)", "7 of 9 dependencies changed their API
+  after 2025-07-01, 30 days before the cutoff", and the same in the Markdown summary, `sync`,
+  `--fail-on` and the MCP answers ("API changed after 2025-07-01 (30 days before the cutoff)";
+  `api_changes`: "no release on or before 2025-07-01"), since a release within the margin is
+  older than the cutoff (openai 1.93.0 -> 1.98.0 shipped before it). A cutoff given with
+  `--cutoff` is "the cutoff given for claude-sonnet-4-5", not its training cutoff, and a margin
+  of 1 is "1 day", not "1 days". In the docs, the README's table of the sample project gives its
+  versions 30 days before the cutoff, as the Quick start does (openai 1.93.0, 24 breaking
+  changes; 331 breaking changes in all), and the "How it works" diagram says "Release 30 days
+  before the model's cutoff" in every language. `--fail-on changes` and the action's
+  `fail-on-changes` fail when a dependency "changed its API since the release it is compared
+  from (by default the latest one published 30 days before the cutoff)", as `scan --help`,
+  action.yml, the READMEs' action table and exit codes and docs/reference.md now say (they said
+  "after the cutoff"), and `status` says the same of a file with no notes. A test fails on a
+  message, a tool description, the skill, a plugin manifest or docs/reference.md that calls the
+  comparison release the release at the cutoff
+  ("release at the cutoff", "cutoff version", "on or before the model's training cutoff"), but
+  in the text of a margin of 0, and on a report or MCP answer for a scan with a margin that
+  says "at the cutoff" or "changed after the cutoff".
 - A module that takes its names from another distribution with `from x import *` is compared
   with that distribution read next to the release: mcp 2.3.0's `mcp/types/__init__.py` is `from
   mcp_types import *` (mcp requires `mcp-types==2.3.0`), and the report had no entry under
   `mcp.types` while mcp-types had renamed every field to snake_case, so
   `types.Tool(name=..., inputSchema=...)` broke unreported. The sibling distribution is
   downloaded at the version the project locks (or the newest its requirement allows on the
-  comparison date, for the release at the cutoff), under the usual download limit and cache, and
+  comparison date, for the comparison release), under the usual download limit and cache, and
   its names are compared under the paths that re-export them (`mcp.types.Tool.inputSchema`
   removed). Only a star import that runs counts: not one in a docstring, a function or an `if
   TYPE_CHECKING:` block. An object a release only re-exports from elsewhere is now compared too,
@@ -159,10 +197,11 @@
   Quick start on the sample project with the real `scan` output and the block `sync` writes,
   when to use it and what it does not do, then the existing sections. New FAQ: the training
   cutoff against the release date, what is sent where, why some notes name no replacement,
-  AGENTS.md and CLAUDE.md, the notes' cost in tokens, offline use. The counts come from 0.5.0's
-  scan (307 breaking changes and 23 new deprecations in the sample project). The Chinese,
-  Spanish and French READMEs follow the same structure, and now also describe the Gemini CLI
-  model detection and `sync --json`, which only the English README had.
+  AGENTS.md and CLAUDE.md, the notes' cost in tokens, offline use. The counts come from this
+  release's scan, comparing from 30 days before the cutoff (331 breaking changes and 24 new
+  deprecations in public APIs, and 139 changes to internal ones, in the sample project). The
+  Chinese, Spanish and French READMEs follow the same structure, and now also describe the
+  Gemini CLI model detection and `sync --json`, which only the English README had.
 - Docs site: index.md and ai-stack.md describe 0.5.0 (scan, sync, status, pre-commit, the Action
   and the MCP server) and ai-stack.md's counts come from a re-run with 0.5.0; a nav bar links
   the pages and the GitHub docs (#67); the link-preview text no longer says "verified AGENTS.md
@@ -189,6 +228,13 @@
   standard-library type, can count by its name alone. Such name matches are hidden from every
   report, the notes, `--fail-on` and `--annotate` unless `--include-name-matches` (`scan`,
   `sync`) or `include_name_matches` (MCP) asks for them; they are then tagged `[name match]`.
+  `scan` (the terminal, report.md and the `--markdown` summary), `sync` and the MCP tool
+  `project_changes` say how many places they hid ("2 uses matched by name alone are hidden;
+  --include-name-matches shows them"; `include_name_matches=true` over MCP; run's report.md
+  names `since-cutoff scan --include-name-matches`, as `run` has no such flag), and nothing when
+  there is none; `results.json`, `scan --json` and `sync --json` have it as
+  `name_matches_hidden`. A call passing two removed keywords is one place; with blocks written
+  for different cutoffs, sync says which file each count is for.
 - A class that became a function, or the reverse, is no longer "old form" at a call site: with
   pandas 3.0.6, `with pd.option_context("mode.copy_on_write", True):` was labelled old form
   although `option_context` is called the same way as a class and as a function. The call is
@@ -241,11 +287,30 @@
 - The MCP tool `api_changes` carries the "older copy from the cache" warning also in its reply
   that a package had no release by the cutoff: the copy may not know an older release either.
   That reply was built before the check.
-- A metapackage is reported as information, not as a failure: "llama-index 0.14.25 is a
-  metapackage with no API of its own; its parts are dependencies of their own, checked like
-  any other: llama-index-core, ..." on a line of its own in `scan` and `run`, and with a `•`
-  in `sync`, in place of "1 of 3 dependencies could not be checked: llama-index 0.14.25 is a
-  metapackage without code of its own: it installs ...; check those packages instead".
+- A metapackage is reported as information, not as a failure, saying what the scan did with
+  each of its parts: "llama-index 0.14.25 is a metapackage with no API of its own; checked like
+  any other dependency: llama-index-core; not checked, as the project depends on them only
+  through other packages: llama-index-embeddings-openai, llama-index-llms-openai and nltk
+  (--all-deps checks them)" on a line of its own in `scan` and `run`, with a `•` in `sync` and
+  as a bullet of the MCP `project_changes` answer, in place of "1 of 3 dependencies could not
+  be checked: llama-index 0.14.25 is a metapackage without code of its own: it installs ...;
+  check those packages instead". A part the project depends on but the scan could not check
+  ("could not be checked: llama-index-core", its reason given with the others) or
+  `--only`/`--exclude` left out ("left out by --only/--exclude") is not called one the project
+  does not depend on, and the `--all-deps` hint is given only for parts the lockfile or
+  environment pins, in `scan` and `run` without `--all-deps` (`sync` and MCP have none). The
+  table cell no longer names every part again, nor `scan --all`'s summary panel the line. At
+  most 5 parts are named per clause
+  ("and 154 more" for pyobjc 11.1); `results.json` lists them all under the package's
+  `metapackage`. Its row in the dependency tables reads "metapackage (no API of its own; 1 of 4
+  parts checked)", compared from "-", and it is in no count of dependencies, in the terminal as
+  in the MCP answer: "1 of 2 dependencies could not be checked" and "app · 2 dependencies (1 not
+  checked) and 1 metapackage" (the terminal said "1 of 3" and "3 dependencies"). A project whose
+  only dependency is a metapackage (llama-index, docling, pydantic-ai, griffe 2) no longer
+  fails with "No dependency could be checked (... is PyPI reachable?)", and its reports say "No
+  API to compare: the only dependency is a metapackage" instead of "0 of 0 dependencies changed
+  their API" (`scan --all`, report.md, the Markdown summary) or "0 dependencies checked" (the
+  terminal, and the heading of MCP `project_changes`, which also drops its line of zero counts).
 - `sync --json`'s help says it needs `--yes`, `--check` or `--dry-run`, and the README that
   stdout stays empty whenever sync fails, not only on a usage error.
 - basedpyright, which only `run` uses, is an extra: `pip install "since-cutoff[run]"`, or
@@ -396,6 +461,34 @@
   `breaking_changes`). `api_changes(symbol=...)` matches the symbol against every change and
   lists the internal ones when they are all that match: a question about an API asks for its
   changes. The notes are not affected: they cover the APIs the code uses.
+- The pip block of a conda environment file (`environment.yml`, else `environment.yaml`) is read
+  like a requirements file (#3, started by @wufangyong973 in #10): `- pip:` under
+  `dependencies:` declares the packages pip installs from PyPI, with their pins
+  (`anthropic==1.8.0`), ranges and extras; a conda project failed with "no dependencies found".
+  A file it includes (`-r requirements-x.txt`, `--requirement ...`) is read too, relative to
+  the environment file as conda has pip read it, with its own includes; one that does not exist
+  gets a warning ("the pip block of environment.yml includes requirements-x.txt, which does not
+  exist"), and an include of a file already read is not read again. In any requirements file,
+  an include is now followed with or without a space after `-r` and with a space or `=` after
+  `--requirement`, its name being the first word after the option, as pip reads it
+  (`-r base.txt --pre` includes base.txt; `--require-hashes` is no include), and one of a name
+  the system cannot hold, `-r a<NUL>b`, is skipped like a missing one (Python 3.10 stopped with a traceback). A pip
+  block that YAML aliases repeat (`- *e`) is read once, and no more than its first 10,000 lines
+  are read, with a warning. The conda packages around it (`python=3.12`, `numpy=1.26`) are not
+  read, as they do not come from PyPI (`--debug` lists them), nor are other options (`-e .`),
+  local paths and bare git URLs; a direct reference (`pkg @ git+https://...`) is not looked up
+  on PyPI. A version pinned there, or in a file it includes, is labelled with the environment
+  file ("environment.yml pins 1.8.0"), as one that `requirements.txt` includes is with
+  `requirements.txt`, also next to a `.venv`: the versions then come from ".venv,
+  environment.yml for 1 not in it" when the environment lacks one. A `requirements*.txt` that
+  the pip block includes and that is also read on its own keeps its own label. A lockfile still
+  wins over its pins, with the usual warning when they disagree. A file that is not YAML stops
+  the scan in one line ("could not parse environment.yml: ... (line 3, column 4)"), also next
+  to a lockfile, as a `pyproject.toml` that is not TOML does; "no dependencies found" names the
+  pip block among what is read, says when the environment file has no package in it, and names
+  an included file that does not exist. The pre-commit hooks, the Action's cache key and the
+  README's workflow `paths:` take `environment.yml` and `environment.yaml` into account. PyYAML
+  6.0.1 or later is now a dependency (6.0 does not install on Python 3.12 and later).
 
 ## 0.5.0 - 2026-09-28
 

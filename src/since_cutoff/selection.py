@@ -197,7 +197,7 @@ BUILTIN_MEMBERS = frozenset(
     if not name.startswith("_")
 )
 
-# How the project's code uses a changed API (form): as the release at the cutoff allowed and
+# How the project's code uses a changed API (form): as the comparison release allowed and
 # the pinned one no longer does, or only uses the API (the line is fine today, but an assistant
 # editing it may add the old form). A static name match: nothing is run.
 OLD_FORM = "old_form"
@@ -1123,7 +1123,7 @@ def type_project(
     keeps the files as the scan read them.
 
     The releases read are those whose source tree the scan has: every package newer than its
-    release at the cutoff (the diff read its pinned tree), and a package the model knows whose
+    comparison release (the diff read its pinned tree), and a package the model knows whose
     pinned tree an earlier run left in the cache (nothing is downloaded for this). Each tree's
     :func:`apidiff.receiver_map` is kept in ``store`` per release and griffe, and per Python
     when the running one could not parse all of the tree. A tree griffe cannot read types

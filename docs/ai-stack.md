@@ -12,7 +12,8 @@ of 26 September 2026
 ([the list](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/examples/ai-stack/requirements.txt))
 and ran `since-cutoff scan` against the training cutoff of **21 models from 8 vendors**: OpenAI,
 Anthropic, Google, xAI, DeepSeek, Qwen, Moonshot and Mistral. For each library, the scan takes
-the release that was current at the model's cutoff and diffs its public API against the pinned
+the release that was current at the model's cutoff (as 0.5.0 did; 0.6.0 compares from the
+release current 30 days before it by default) and diffs its public API against the pinned
 release, statically. No model was called for this page. The scan was first run with since-cutoff
 0.2.0 in September 2026 and again with 0.5.0 on 10 October 2026, on the same pins; the table and
 the chart are from the 0.5.0 run. The two runs agree on every count below except two cells:

@@ -12,7 +12,7 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
 
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works-dark.svg">
-  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="Three stages. Scan, with no model calls: the lockfile gives your exact versions, then the release at the model's cutoff, then a static API diff with griffe. Probe: short tasks that need the change, the model answers from memory, basedpyright checks the answer against both versions. Write and test notes: a model-written note is kept only if its example type-checks, otherwise the change is stated from the API diff; held-out tasks are answered without and with the notes, and --apply writes a block into AGENTS.md.">
+  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.svg" width="640" alt="Three stages. Scan, with no model calls: the lockfile gives your exact versions, then the latest release published at least 30 days before the model's cutoff, then a static API diff with griffe. Probe: short tasks that need the change, the model answers from memory, basedpyright checks the answer against both versions. Write and test notes: a model-written note is kept only if its example type-checks, otherwise the change is stated from the API diff; held-out tasks are answered without and with the notes, and --apply writes a block into AGENTS.md.">
 </picture></p>
 
 ## 1. Scan (no model calls)
@@ -20,9 +20,26 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
 1. **Dependencies and exact versions** come from the first source found: `uv.lock`,
    `poetry.lock`, `pdm.lock`, `pylock.toml`, `Pipfile.lock`; then the project's `.venv`
    (read from `*.dist-info/METADATA`, nothing is executed); then pins in `pyproject.toml`,
-   `requirements*.txt` and `Pipfile`. `setup.py` and `setup.cfg` are not read (that would mean
-   running the project's code); a project with nothing else gets an error that says so.
+   `requirements*.txt`, `Pipfile` and the `pip:` block of a conda `environment.yml` (or
+   `environment.yaml`). `setup.py` and `setup.cfg` are not read (that would mean running the
+   project's code); a project with nothing else gets an error that says so.
    The version source in the reports names every place the versions come from.
+   - A conda environment file's `pip:` block is read as a requirements file: pins, ranges,
+     extras and direct references (`pkg @ git+https://...`, not looked up on PyPI), and the
+     files it includes (`-r requirements-x.txt`, relative to the environment file, as conda
+     has pip read it), with a warning for one that does not exist. An include is followed with
+     or without a space after `-r` and with a space or `=` after `--requirement`, its name
+     being the first word after the option (`-r base.txt --pre` includes base.txt), here and
+     in any requirements file. A block that YAML aliases repeat is read once, and no more than
+     its first 10,000 lines are read, with a warning. Its conda packages (`python=3.12`,
+     `numpy=1.26`) are not read, as they do not come from PyPI, and neither are other options
+     (`-e .`) or local paths. A version pinned there or in a file it includes is labelled
+     `environment.yml` (the pins of a file that `requirements.txt` includes are labelled
+     `requirements.txt`), also when a `.venv` provides the others; a `requirements*.txt` that
+     the block includes and that is also read on its own keeps its own label. An environment
+     file that is not YAML stops the scan with an error (`could not parse environment.yml:
+     ...`), also when a lockfile provides the versions, as a `pyproject.toml` that is not TOML
+     does.
    - A lockfile the project is not set up for (a `poetry.lock` or `pdm.lock` next to a
      `pyproject.toml` without that tool's table or build backend, a `Pipfile.lock` without a
      `Pipfile`) is ignored, with a warning, when its versions disagree with the pinned
@@ -68,7 +85,16 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
    `settings.cutoff_margin`. A package that had only pre-releases by the comparison date is
    compared with the newest of them (development releases do not count). A package first
    released after it, or whose release then only reserved the name (no modules, or only empty
-   ones), is reported as first released after the cutoff (within the margin of it, when it was).
+   ones), is new to the model: the reports say it was first released after the cutoff, "first
+   released within 30 days of the cutoff (2025-07-15)", or "the comparison release 0.0.1 was an
+   empty placeholder". As a release within the margin is older than the cutoff, the reports say
+   what changed after the day compared from, not after the cutoff: "Your code uses 2 APIs that
+   changed after 2025-07-01, 30 days before claude-sonnet-4-5's training cutoff (2025-07-31)".
+   A metapackage (no API of its own, only requirements on the packages that have one:
+   llama-index, docling, griffe 2) is reported as information, with what the scan did with each
+   of its parts: checked like any other dependency, could not be checked, left out by
+   `--only`/`--exclude`, pinned by the lockfile as a dependency of a dependency (which
+   `--all-deps` checks), or not a dependency of the project at all.
 4. **The API diff.** Both versions are downloaded once (wheels, falling back to sdists; only
    `.py`/`.pyi` files are extracted) and loaded *statically* with
    [griffe](https://mkdocstrings.github.io/griffe/). A module the pinned release ships
@@ -145,8 +171,8 @@ versions, and all intermediate data (changes, uses, notes, tasks, answers, diagn
    place is one change, with the new name as a suggestion. A removed `*args` or `**kwargs` is
    reported as such (its parameter in results.json is `*args` or `**kwargs`), unless the new
    signature names the parameters it took. A `**kwargs` annotated `Unpack[SomeTypedDict]`
-   (PEP 692) takes the TypedDict's keys and no other keyword, so a keyword the release at the
-   cutoff took and the pinned release's TypedDict has not is a removed parameter (pandas 3.0's
+   (PEP 692) takes the TypedDict's keys and no other keyword, so a keyword the comparison
+   release took and the pinned release's TypedDict has not is a removed parameter (pandas 3.0's
    `read_csv(delim_whitespace=...)`, whose overloads end in `**kwds: Unpack[_read_shared]`),
    and so is a key of the old TypedDict that the new signature does not name; a key that moved
    to a base TypedDict is still a key, `self` and `cls` are no keywords, and a bare `**kwargs`
@@ -269,11 +295,15 @@ unpacking, `:=` and `except ... as err`.
 
 Such a name match is hidden by default: no report (the terminal, report.md, the JSON lists, the
 MCP answers), no note and no count of `--fail-on` or `--annotate github` has it, as on ordinary
-code most of them are another library's method of the same name. `--include-name-matches` (on
-`scan` and `sync`; `include_name_matches` for the MCP `project_changes`) shows them: the
-reports tag each such use `[name match]` (the terminal next to its label and its place, the
-Markdown summary in the form column, the JSON as `"match": "name_only"`), its note is written,
-and CI counts it. CI counts per use: an API matched through a path in one file does not bring
+code most of them are another library's method of the same name. `scan` (the terminal,
+report.md and the Markdown summary), `sync` and the MCP `project_changes` say in how many places
+they left one out ("2 uses matched by name alone are hidden; --include-name-matches shows
+them"; a call passing two removed keywords is one place), and nothing when there is none;
+`results.json`, `scan --json` and `sync --json` have the count as `name_matches_hidden`.
+`--include-name-matches` (on `scan` and `sync`; `include_name_matches` for the MCP
+`project_changes`) shows them: the reports tag each such use `[name match]` (the terminal next
+to its label and its place, the Markdown summary in the form column, the JSON as
+`"match": "name_only"`), its note is written, and CI counts it. CI counts per use: an API matched through a path in one file does not bring
 its name-only places in other files along. The block does not keep the choice, so give the flag
 on every sync.
 
@@ -329,8 +359,8 @@ heading and `--all` name the form the same way. A stubs package's note (`pandas-
 declarations no longer have and that type checkers reject it. Text from a package (deprecation
 messages) is quoted as whole sentences and cannot close the block or open code.
 
-A dependency first released after the cutoff that the code imports has no release at the cutoff
-to compare with, so it gets one bullet from PyPI's metadata instead of a diff, tagged
+A dependency first released after the cutoff that the code imports has no release before the
+cutoff to compare with, so it gets one bullet from PyPI's metadata instead of a diff, tagged
 `[metadata]`: "httpx2 first appeared on PyPI on 2026-05-11, after the cutoff; the model has no
 training data on it. The project pins 2.13.1 (released 2026-09-23). Summary: The next generation
 HTTP client. Changelog: https://github.com/pydantic/httpx2/blob/main/src/httpx2/CHANGELOG.md".
@@ -498,8 +528,8 @@ file:
 3. **What changes.** Notes for APIs the code starts using are added, and a bumped package is
    diffed again (diffs are cached per package and pair of versions, so the others come from the
    cache). A
-   package's notes are dropped when it is no longer a dependency, is no newer than the release at
-   the cutoff, has an unchanged API, or its changed APIs are no longer used; sync says why. A
+   package's notes are dropped when it is no longer a dependency, is no newer than the release it
+   is compared from, has an unchanged API, or its changed APIs are no longer used; sync says why. A
    bullet whose API had one before counts as changed ("toylib 2.0: 1 changed"), and so do two
    bullets that merged into one ("2 changed") and the bullets that the one `[metadata]` bullet
    of a package first released after the cutoff takes the place of.
@@ -544,8 +574,13 @@ What it prints, from the sample project:
 
 - up to date: "AGENTS.md is up to date: 2 notes for claude-sonnet-4-5 (cutoff 2025-07-31),
   versions from pyproject.toml, latest on PyPI for 3 unpinned. Nothing written."
-- `--check`, out of date: "AGENTS.md is out of date: anthropic 0.60.0 in pyproject.toml is the
-  latest release at the cutoff. Run `since-cutoff sync`."
+- `--check`, out of date: "AGENTS.md is out of date: anthropic 0.56.0 in pyproject.toml is the
+  latest release 30 days before the cutoff. Run `since-cutoff sync`."
+- with the uses matched by a method's name alone left out (the default), and at least one of
+  them in the code: "1 use matched by name alone is hidden; --include-name-matches shows it"
+  (`scan` prints the same line, and report.md has it under "Used by your code"; nothing when
+  there is none). With blocks written for different cutoffs, each such line starts with the
+  files it is for ("CLAUDE.md: 1 use matched by name alone is hidden; ...").
 - a hand edit: "The since-cutoff block in AGENTS.md was edited by hand; sync would replace it
   (diff above). Move your text below `<!-- since-cutoff:end -->`, or run
   `since-cutoff sync --force`."
@@ -607,7 +642,7 @@ starts (0.4.0 and later).
 4. **Scoring.** The code is type-checked with
    [basedpyright](https://github.com/DetachHead/basedpyright) (the `"since-cutoff[run]"`
    extra) twice: against the locked version
-   and against the cutoff version, each in an isolated environment that contains that package
+   and against the comparison release, each in an isolated environment that contains that package
    version and its own runtime dependencies, nothing else. Only diagnostics that involve the
    package count (other imports are absent from the environment and are ignored):
 
@@ -723,7 +758,7 @@ was checked, and nothing else is claimed:
 | `[diff]` | The change is in a static comparison (griffe) of the public APIs of two releases: the latest release published at least 30 days before the model's training cutoff (by default), and the version your project pins. The sources are read, not imported. With `[diff]` alone, no replacement is named: the note says what the library's own deprecation text says ("there is no replacement for `resume_download`"), or points at the package's changelog (the Changelog URL in its PyPI metadata, else its GitHub releases page) for the changes since the comparison release, or, when PyPI lists none, that since-cutoff found no replacement in that text. | Behaviour, and whether a call still runs: the pinned release may still accept a removed parameter with a warning, as huggingface-hub 2.0.0 does for `resume_download` ([_validators.py](https://github.com/huggingface/huggingface_hub/blob/v2.0.0/src/huggingface_hub/utils/_validators.py#L171-L191)). The terminal, report.md, the MCP tools and the JSON add a "Runtime:" line when the pinned source still handles one; the block does not, since the advice is the same. Whether your model gets it wrong. |
 | `[diff + library]` | As `[diff]`, and the library's own deprecation text (a docstring, a parameter's docstring entry, an `@deprecated` message or a `warnings.warn` text, in the older release or, for a deprecation, in the pinned one) states the replacement ("Use `stop` instead"), and that name exists in your pinned version. Text that only mentions a name as advice is quoted under `[diff]`, not taken as a replacement. | That the replacement behaves the same. |
 | `[diff + move checked]` | As `[diff]`, and the object at the new path is the same object as far as can be counted: a class or module keeps at least half of the old one's public names, a function keeps its parameters, a value is the same. | Behaviour. |
-| `[diff + metadata]` | The older release's Requires-Dist (its wheel's METADATA) lists a library the pinned one does not, and places in the public API that named that library's types (parameters, return types, attributes, base classes, re-exports) name the types of another library the pinned release requires, or of a copy of the old one it ships, with none of the old library left: openai 3.x, anthropic 1.8, huggingface-hub 2.0 and mcp 2.2 take `httpx2` objects where they took `httpx` ones. `[metadata]` alone marks the one bullet for a package first released after the cutoff (or within the margin before it) that your code imports: there is no release to compare from, so the note gives the date of its first release, its PyPI summary and its changelog URL. | Behaviour: whether the pinned release still accepts the old library's objects (openai 3 converts some, anthropic 1.8 raises `TypeError`, according to their sources). The terminal, report.md, the MCP tools and the JSON add an "Installed:" line (whether your project, its virtual environment included, still has the old library) and a "Runtime:" line that points to where the pinned source still names it. |
+| `[diff + metadata]` | The older release's Requires-Dist (its wheel's METADATA) lists a library the pinned one does not, and places in the public API that named that library's types (parameters, return types, attributes, base classes, re-exports) name the types of another library the pinned release requires, or of a copy of the old one it ships, with none of the old library left: openai 3.x, anthropic 1.8, huggingface-hub 2.0 and mcp 2.2 take `httpx2` objects where they took `httpx` ones. `[metadata]` alone marks the one bullet for a package first released after the cutoff (or within the margin before it), or whose comparison release was an empty placeholder (zensical 0.0.0), that your code imports: there is no release with an API to compare from, so the note gives the date of its first release (or the placeholder's version), its PyPI summary and its changelog URL. | Behaviour: whether the pinned release still accepts the old library's objects (openai 3 converts some, anthropic 1.8 raises `TypeError`, according to their sources). The terminal, report.md, the MCP tools and the JSON add an "Installed:" line (whether your project, its virtual environment included, still has the old library) and a "Runtime:" line that points to where the pinned source still names it. |
 | `[diff; probable rename]` | A parameter in the same position, with the same annotation, has a new name, and no version note in the pinned release's docstring (`.. versionadded::`, `.. versionchanged::`) says that one was added or the other removed. A guess, labelled as one. | That it is the same parameter. |
 | `[type-checked]` | Written by a model during `since-cutoff run` and kept because its example passed the type check below. | Behaviour; that the bullet's explanation is true beyond the names it shows. |
 | `[not confirmed]` | Only with `sync --suggestions`: names in the pinned version that look similar to what was removed (the bullet's tag then reads `[diff; not confirmed]`). | That any of them replaces it. |

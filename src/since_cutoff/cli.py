@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import IO, TYPE_CHECKING, Any, cast
 
 from since_cutoff import __version__
-from since_cutoff.errors import METAPACKAGE, SinceCutoffError
+from since_cutoff.errors import SinceCutoffError
 
 if TYPE_CHECKING:
     from datetime import date
@@ -473,7 +473,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--fail-on",
         choices=FAIL_ON,
         action="append",
-        help="exit with code 3 (for CI) when a dependency changed its API after the cutoff "
+        help="exit with code 3 (for CI) when a dependency changed its API since the release it "
+        "is compared from, by default the latest one published 30 days before the cutoff "
         "(changes), when your code uses an API that changed (used), or when it uses one in the "
         "old form (old-form); repeat it for several",
     )
@@ -497,7 +498,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Write the notes from the API diff for the changed APIs your code uses into "
         "the since-cutoff block of AGENTS.md / CLAUDE.md, or update them: notes for newly used "
         "APIs are added, those of a bumped package checked again, and those of a package that "
-        "is no longer a dependency, no longer newer than the release at the cutoff, or no "
+        "is no longer a dependency, no longer newer than the release it is compared from, or no "
         "longer used, dropped. Text outside the block stays byte for byte. It shows the diff "
         "and asks before writing (--yes writes without asking). It keeps the model and cutoff "
         "the block was written for unless --model or --cutoff is given, and the [type-checked] "
@@ -872,6 +873,7 @@ def _cmd_run(args: argparse.Namespace, ui: Console, json_mode: bool) -> int:
     from since_cutoff.report import (
         fail_reason,
         github_annotations,
+        is_metapackage,
         render_console,
         render_scan,
         render_scan_markdown,
@@ -965,15 +967,17 @@ def _cmd_run(args: argparse.Namespace, ui: Console, json_mode: bool) -> int:
         STDOUT.write("".join(line + "\n" for line in github_annotations(scan, env=os.environ)))
         STDOUT.flush()
 
-    checked = [p for p in scan.packages if p.status != "skipped"]
-    if not checked and scan.packages:
+    # A metapackage has no API of its own: its line says what of its parts was checked.
+    failed = [p for p in scan.skipped if not is_metapackage(p)]
+    if failed and len(failed) == sum(not is_metapackage(p) for p in scan.packages):
         # PyPI was reached when every package was skipped for its syntax (this Python).
-        pypi = "" if all(p.unparsed for p in scan.packages) else "; is PyPI reachable?"
+        pypi = "" if all(p.unparsed for p in failed) else "; is PyPI reachable?"
         ui.print(f"[red]No dependency could be checked[/red] (see the reasons above{pypi}).")
         return 1
     if args.command == "run" and not scan.changed:
         ui.print(
-            "[green]Nothing to probe:[/green] no checked dependency changed its API after the cutoff."
+            "[green]Nothing to probe:[/green] no checked dependency changed its API after "
+            f"{_escape(scan.target.changed_after)}."
         )
     if run is not None and run.all_errored:
         first = next((a.error for a in run.probes if a.error), "unknown error")
@@ -1145,6 +1149,7 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
         EXIT_OUT_OF_DATE,
         diff_lines,
         edited_text,
+        hidden_name_match_lines,
         out_of_date_text,
         propose,
         read_target,
@@ -1220,6 +1225,8 @@ def _cmd_sync(args: argparse.Namespace, out: Console) -> int:
         for line in diff_lines(p):
             out.print(_diff_text(line))
     out.print()
+    for line in hidden_name_match_lines(proposals, scans):
+        out.print(f"[dim]{_escape(line)}[/dim]")
     if tip:
         out.print(f"[yellow]![/yellow] {_escape(tip)}.")
     edited = [p for p in changed if p.edited and not args.force]
@@ -1276,7 +1283,8 @@ def _sync_scans(
     package the notes are about could not be (PyPI unreachable): sync then writes nothing."""
     from datetime import date
 
-    from since_cutoff.engine import SKIPPED, Settings
+    from since_cutoff.engine import Settings
+    from since_cutoff.report import is_metapackage, metapackage_text
     from since_cutoff.sync import blocked_by, lockfile_changes, target_status
 
     settings = Settings(
@@ -1300,9 +1308,11 @@ def _sync_scans(
         scans[key] = engine.scan(project, basis)
     reporter.done()
     for scan in scans.values():
-        if scan.packages and all(p.status == SKIPPED for p in scan.packages):
-            first = next((p.reason for p in scan.skipped if p.reason), "")
-            pypi = "" if all(p.unparsed for p in scan.packages) else " (is PyPI reachable?)"
+        # A metapackage is information (its parts are checked like any other dependency).
+        failed = [p for p in scan.skipped if not is_metapackage(p)]
+        if failed and len(failed) == sum(not is_metapackage(p) for p in scan.packages):
+            first = next((p.reason for p in failed if p.reason), "")
+            pypi = "" if all(p.unparsed for p in failed) else " (is PyPI reachable?)"
             raise SinceCutoffError(f"no dependency could be checked: {first}{pypi}")
     for t, basis, *_ in plans:
         for p in blocked_by(scans[(basis.model_id, basis.cutoff)], [t]):
@@ -1312,8 +1322,8 @@ def _sync_scans(
             )
     for scan in scans.values():
         for p in scan.skipped:
-            if p.reason and METAPACKAGE in p.reason:  # information: its parts are checked
-                reporter.info(p.reason)
+            if is_metapackage(p):  # information: what of its parts was checked
+                reporter.info(metapackage_text(scan, p, hint=False))  # sync has no --all-deps
             else:
                 reporter.warn(f"{p.name} could not be checked ({p.reason}), so it has no notes")
     return scans

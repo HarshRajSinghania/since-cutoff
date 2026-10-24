@@ -451,7 +451,8 @@ def test_a_package_the_code_no_longer_imports_leaves_an_imported_block(sc, tmp_p
     _, out = sc("sync", root, *SONNET, "--scope", "imported", "--yes")
     assert (
         "AGENTS.md: no notes to write; none of the packages your code imports changed their API "
-        "after claude-sonnet-4-5's training cutoff (2025-07-31). Nothing written." in out
+        "after 2025-07-01, 30 days before claude-sonnet-4-5's training cutoff (2025-07-31). "
+        "Nothing written." in out
     )
 
 
@@ -798,7 +799,8 @@ def test_scope_imported_notes_the_packages_the_code_imports(sc, tmp_path) -> Non
     # The message counts what --scope imported would write (0.4.1).
     assert (
         "AGENTS.md: no notes to write; your code uses none of the APIs that changed after "
-        "claude-sonnet-4-5's training cutoff (2025-07-31). `since-cutoff sync --scope imported` "
+        "2025-07-01, 30 days before claude-sonnet-4-5's training cutoff (2025-07-31). "
+        "`since-cutoff sync --scope imported` "
         "writes the 5 changes most likely to matter in the 1 package your code imports (up to 5 "
         "per package; --per-package N for more). Nothing written." in out
     )

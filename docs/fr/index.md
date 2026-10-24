@@ -73,7 +73,9 @@ et **Claude Opus 4.6** (mai 2025). Les tâches et les notes ont été rédigées
 ## La méthode de mesure
 
 1. **Ce qui a changé.** Pour chaque dépendance, on prend la version la plus récente publiée au
-   plus tard à la date limite du modèle, et on compare son API publique à celle de la version
+   plus tard à la date limite du modèle (la règle de since-cutoff 0.1.0 à 0.5.0, qui a produit
+   tous les chiffres de cette page ; depuis la 0.6.0, l'analyse compare par défaut à partir
+   de la version la plus récente publiée au moins 30 jours avant la date limite), et on compare son API publique à celle de la version
    épinglée, de façon statique (griffe, aucun code importé). On trouve ainsi les objets supprimés
    ou déplacés, les paramètres supprimés ou devenus obligatoires, les passages en paramètres
    nommés uniquement ou positionnels uniquement (keyword-only, positional-only) et les nouveaux
@@ -171,7 +173,8 @@ dans son contexte.
 - **Les tâches réservées sont des reformulations du même changement** : la comparaison
   avant/après mesure donc si une note corrige *ce* changement, pas une capacité générale.
 - **« La version de comparaison » découle d'une règle de date** (la version la plus récente
-  publiée au plus tard à la date limite). Les modèles connaissent mal les mois qui précèdent immédiatement leur
+  publiée au plus tard à la date limite dans ces mesures ; depuis la 0.6.0, par défaut, la plus
+  récente publiée au moins 30 jours avant). Les modèles connaissent mal les mois qui précèdent immédiatement leur
   date limite, si bien que leurs connaissances peuvent être périmées plus tôt.
 
 ## Pourquoi ce sujet m'intéresse

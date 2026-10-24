@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.utils import canonicalize_name
 from rich.console import Console, Group
 from rich.markup import escape
 from rich.panel import Panel
@@ -58,6 +60,7 @@ from since_cutoff.engine import (
     UNTOUCHED,
     WRONG,
     Attempt,
+    ModelTarget,
     PackageScan,
     Pairing,
     RunResult,
@@ -65,6 +68,7 @@ from since_cutoff.engine import (
     UsedAPI,
 )
 from since_cutoff.errors import METAPACKAGE
+from since_cutoff.models import days_text
 from since_cutoff.notes import (
     EVIDENCE_LIBRARY,
     EVIDENCE_METADATA,
@@ -119,7 +123,9 @@ from since_cutoff.stats import (
 REPO_URL = "https://github.com/MohammadHijjawi97/since-cutoff"
 # results.json and ``scan --json`` gained keys in 0.4 (``used``, ``used_apis``,
 # ``notes_preview``); none of 0.3's was removed or changed. 0.3 wrote no report_schema.
-# 3: ``settings.griffe_version``, the griffe that read the sources for the diff.
+# 3: ``settings.griffe_version``, the griffe that read the sources for the diff;
+# ``name_matches_hidden``; each package's ``metapackage`` (its parts, by what the scan did
+# with them: metapackage_parts).
 REPORT_SCHEMA = 3
 # The import paths results.json lists per change (the shortest; ``import_paths_total`` counts
 # them all). A method of a base class can have thousands: transformers' PreTrainedModel.
@@ -245,6 +251,8 @@ def per_package(scan: ScanResult, run: RunResult | None) -> list[dict[str, Any]]
                 "correct": sum(a.outcome == PASS for a in valid),
                 "excluded": len(probes) - len(valid),
                 "reason": p.reason,
+                # A metapackage's parts, every one, by what the scan did with them.
+                "metapackage": metapackage_parts(scan, p) if is_metapackage(p) else None,
             }
         )
     return rows
@@ -274,6 +282,9 @@ def summary(scan: ScanResult, run: RunResult | None = None) -> dict[str, Any]:
         "breaking_changes": sum(r["breaking_changes"] for r in packages),
         "deprecations": sum(r["deprecations"] for r in packages),
         "internal_changes": sum(r["internal_changes"] for r in packages),
+        # The places a member's name alone matched, which every report leaves out unless
+        # --include-name-matches (0 then): hidden_name_matches.
+        "name_matches_hidden": hidden_name_matches(scan),
         "warnings": list(scan.warnings),
         "settings": {
             "tool_version": __version__,
@@ -434,13 +445,17 @@ def headline(
                 )
             )
     checked = s["dependencies_checked"]
-    lines.append(
-        Text.assemble(
-            (f"{s['dependencies_changed']} of {checked}", "bold yellow"),
-            f" {_deps_word(checked)} changed {'its' if checked == 1 else 'their'} API "
-            "after the cutoff",
+    no_api = no_api_text(scan)
+    if no_api:  # not "0 of 0 dependencies changed"
+        lines.append(Text(no_api, style="bold"))
+    else:
+        lines.append(
+            Text.assemble(
+                (f"{s['dependencies_changed']} of {checked}", "bold yellow"),
+                f" {_deps_word(checked)} changed {'its' if checked == 1 else 'their'} API "
+                f"after {scan.target.changed_after}",
+            )
         )
-    )
     internal = s.get("internal_changes", 0)
     if s["breaking_changes"] or s["deprecations"] or internal:
         lines.append(
@@ -451,13 +466,18 @@ def headline(
             )
         )
     if s["dependencies_newer_than_model"]:
-        new = s["dependencies_newer_than_model"]
-        # A dependency first released within the margin existed at the cutoff.
-        within = any(scan.target.released_within_margin(p) for p in scan.packages)
-        when = scan.target.compare_when if within else "at the cutoff"
-        lines.append(Text(f"{_deps(new)} did not exist yet {when}", style="dim"))
+        # One whose comparison release was an empty placeholder existed, but not its API.
+        empty = sum(is_placeholder(p) for p in scan.packages)
+        new = s["dependencies_newer_than_model"] - empty
+        if new:
+            # A dependency first released within the margin existed at the cutoff.
+            within = any(scan.target.released_within_margin(p) for p in scan.packages)
+            when = scan.target.compare_when if within else "at the cutoff"
+            lines.append(Text(f"{_deps(new)} did not exist yet {when}", style="dim"))
+        if empty:
+            lines.append(Text(_placeholders_text(scan, empty), style="dim"))
     if s["dependencies_skipped"]:
-        not_checked = _not_checked(scan, s["dependencies_total"])
+        not_checked = _not_checked(scan)
         lines += [Text(t, style=style) for t, style in not_checked]
     if run is not None and run.probes:
         p = s["probes"]
@@ -639,12 +659,17 @@ def render_console(
         title = f"since-cutoff · {escape(s['model'])} · training cutoff {s['cutoff']}"
     else:
         title = f"since-cutoff · custom cutoff {s['cutoff']}"
-    sub = Text(
-        f"{scan.project.root.name} · {_deps(s['dependencies_total'])}"
-        + (f" ({s['dependencies_skipped']} not checked)" if s["dependencies_skipped"] else "")
-        + f" · versions from {s['version_source']}"
-    )
-    lines = headline(scan, run, s)
+    failed = sum(not is_metapackage(p) for p in scan.skipped)  # a metapackage is information
+    # A metapackage is in no total, as in the MCP answer: it is counted apart.
+    metas = sum(is_metapackage(p) for p in scan.packages)
+    total = len(scan.packages) - metas
+    deps = _deps(total) + (f" ({failed} not checked)" if failed else "")
+    if metas:
+        apart = _plural(metas, "metapackage")
+        deps = f"{deps} and {apart}" if total else apart
+    sub = Text(f"{scan.project.root.name} · {deps} · versions from {s['version_source']}")
+    # Not the lines printed already (``scan --all``: a metapackage's, by scan_lines).
+    lines = [t for t in headline(scan, run, s) if t.plain not in shown]
     # rich fits a panel to its body and title but not to its subtitle, which it would cut: size
     # it here (expand=True then means "exactly this wide"). A subtitle too long for the console
     # goes into the body instead, where it wraps.
@@ -679,7 +704,9 @@ def render_console(
     table = Table(show_edge=False, header_style="bold", pad_edge=False)
     table.add_column("package", overflow="fold", width=widths.get("package"))
     table.add_column("you use", justify="right", overflow="fold", width=widths.get("you use"))
-    table.add_column("at cutoff", justify="right", overflow="fold", width=widths.get("at cutoff"))
+    table.add_column(
+        COMPARED_FROM, justify="right", overflow="fold", width=widths.get(COMPARED_FROM)
+    )
     table.add_column("status", overflow="fold")
     table.add_column("breaking", justify="right", overflow="fold")
     table.add_column("deprecated", justify="right", overflow="fold")
@@ -689,13 +716,22 @@ def render_console(
         table.add_column("wrong", justify="right", style="magenta", overflow="fold")
     for row in rows:
         status = _status_text(row, short=bool(widths))
-        if _new_reason(row["status"], row["reason"]) and (verbose or row["status"] == SKIPPED):
+        meta = scan.package(row["package"])
+        # A new dependency's reason is its label, but in the short form ("new").
+        said = row["status"] == NEW and not widths
+        if is_metapackage(meta):  # information: how many of its parts the scan checked
+            status = _metapackage_cell(scan, meta)
+        elif (
+            _new_reason(row["status"], row["reason"])
+            and (verbose or row["status"] == SKIPPED)
+            and not said
+        ):
             status += f" ({clip(row['reason'], REASON_WIDTH)})"
         name = row["package"]
         cells = [
             escape(_fold_at_hyphens(name, widths["package"]) if widths else name),
             escape(row["locked"] or "?"),
-            escape(row["cutoff_version"] or "-"),
+            escape(_compared_cell(row, meta)),
             escape(status),
             *_count_cells(row),
         ]
@@ -750,20 +786,39 @@ def _new_reason(status: str, reason: str | None) -> str | None:
     return reason
 
 
+def _label(status: str, reason: str | None) -> str:
+    """A dependency's status label (:data:`STATUS_LABEL`). A new one first released within
+    the margin, or whose comparison release was an empty placeholder, is labelled by its
+    reason ("first released within 30 days of the cutoff (2026-05-11)"): it is new to the
+    model, but "first released after the cutoff" is not true of it."""
+    if status == NEW and _new_reason(NEW, reason):
+        return reason or ""
+    return STATUS_LABEL.get(status, status)
+
+
 def _status_text(row: dict[str, Any], *, short: bool = False) -> str:
-    """A dependency's status label, with :data:`IMPORTED` when the code imports it; with
-    ``short``, in the form that fits a narrow table ("changed, imported")."""
+    """A dependency's status label (:func:`_label`), with :data:`IMPORTED` when the code
+    imports it; with ``short``, in the form that fits a narrow table ("changed, imported")."""
     if short:
         status = _STATUS_SHORT.get(row["status"]) or STATUS_LABEL.get(row["status"], "")
         return f"{status}, imported" if row["imported"] else status
-    status = STATUS_LABEL.get(row["status"], row["status"])
+    status = _label(row["status"], row["reason"])
     return f"{status}, {IMPORTED}" if row["imported"] else status
+
+
+def _compared_cell(row: dict[str, Any], p: PackageScan) -> str:
+    """The "compared from" cell: the comparison release, or ``-`` when nothing was compared
+    from it (none, or a metapackage, which has no API of its own)."""
+    return "-" if is_metapackage(p) else row["cutoff_version"] or "-"
 
 
 # In a terminal narrower than this, the table uses the short status labels, the version
 # columns get the width their versions need and the package names the rest, folded at "-".
 # (At 80 columns every row took three lines, and names broke as "opentelemetr" / "y-sdk".)
 NARROW_TABLE = 100
+# The column of the release each dependency is compared from: the latest one published
+# --cutoff-margin days before the cutoff (ModelTarget.compare_when), not the one at it.
+COMPARED_FROM = "compared from"
 _STATUS_SHORT = {CHANGED: "changed", NEW: "new"}
 _STATUS_WIDTH = len("changed, imported")
 
@@ -774,7 +829,8 @@ def _narrow_widths(width: int, rows: list[dict[str, Any]], probes: bool) -> dict
     if width >= NARROW_TABLE or not rows:
         return {}
     locked = max(len("you use"), *(len(r["locked"] or "?") for r in rows))
-    cutoff = max(len("at cutoff"), *(len(r["cutoff_version"] or "-") for r in rows))
+    # The header folds to "compared" / "from" when the versions are shorter.
+    cutoff = max(len("compared"), *(len(r["cutoff_version"] or "-") for r in rows))
     counts = ["breaking", "deprecated", *(["probed", "stale", "wrong"] if probes else [])]
     columns = 4 + len(counts)
     # Each column is padded by a space on either side, but for the outer edges, and a line
@@ -783,7 +839,7 @@ def _narrow_widths(width: int, rows: list[dict[str, Any]], probes: bool) -> dict
     if room < 10:
         return {}
     longest = max(len(r["package"]) for r in rows)
-    return {"package": min(room, longest), "you use": locked, "at cutoff": cutoff}
+    return {"package": min(room, longest), "you use": locked, COMPARED_FROM: cutoff}
 
 
 def _fold_at_hyphens(name: str, width: int) -> str:
@@ -892,7 +948,9 @@ def render_scan(
         console.print(line, soft_wrap=True)
     if show_all:
         console.print()
-        render_console(console, scan, verbose=verbose, shown=scan.warnings)
+        # A metapackage's line is printed once, above.
+        meta = [metapackage_text(scan, p) for p in scan.skipped if is_metapackage(p)]
+        render_console(console, scan, verbose=verbose, shown=[*scan.warnings, *meta])
         render_scan_changes(console, scan, limit=limit, internal=internal)
 
 
@@ -931,6 +989,8 @@ def scan_lines(
         prose(f"Your code uses {_plural(len(used), 'API')} that changed after {after}", "bold")
     elif scan.changed:
         prose(f"Your code uses none of the APIs that changed after {after}.", "bold")
+    elif no_api_text(scan):  # not "0 dependencies checked; none changed its API"
+        prose(f"{no_api_text(scan)}.", "bold")
     else:
         checked = _deps(len(scan.packages) - len(scan.skipped))
         prose(
@@ -979,40 +1039,212 @@ def scan_lines(
             out.append(Text(IMPORTED_COMMAND))
         else:
             out.append(Text("No notes to write."))
-    for text, style in _not_checked(scan, len(scan.packages)):
+    hidden = hidden_name_matches_text(scan)
+    if hidden:
+        prose(hidden, "dim")
+    for text, style in _not_checked(scan):
         prose(text, style)
     out += [Text(f"! {w}", "yellow") for w in scan.warnings if w not in shown]
     return out
 
 
-def _not_checked(scan: ScanResult, total: int | None = None) -> list[tuple[str, str]]:
+def is_metapackage(p: PackageScan) -> bool:
+    """A dependency skipped as a metapackage (errors.METAPACKAGE): information, not a failure."""
+    return p.status == SKIPPED and bool(p.reason) and METAPACKAGE in (p.reason or "")
+
+
+def no_api_text(scan: ScanResult) -> str | None:
+    """``No API to compare: the only dependency is a metapackage``, when every dependency the
+    scan has is a metapackage (llama-index alone in requirements.txt), which the reports say
+    instead of "0 of 0 dependencies changed their API"; None otherwise."""
+    metas = sum(is_metapackage(p) for p in scan.packages)
+    if not metas or metas != len(scan.packages):
+        return None
+    if metas == 1:
+        return "No API to compare: the only dependency is a metapackage"
+    return f"No API to compare: all {metas} dependencies are metapackages"
+
+
+def is_placeholder(p: PackageScan) -> bool:
+    """A dependency new to the model (NEW) because its comparison release was an empty
+    placeholder (Engine._placeholder: zensical 0.0.0): it existed then, but not its API."""
+    return p.status == NEW and bool(p.cutoff_version)
+
+
+def _placeholders_text(scan: ScanResult, n: int) -> str:
+    """``1 dependency's latest release 30 days before the cutoff was an empty placeholder``:
+    the headline's count of :func:`is_placeholder` dependencies, apart from those that did not
+    exist yet (``at the cutoff`` with a margin of 0)."""
+    when = scan.target.compare_when
+    if n == 1:
+        return f"1 dependency's latest release {when} was an empty placeholder"
+    return f"{n} dependencies' latest releases {when} were empty placeholders"
+
+
+# What the scan did with each part of a metapackage (metapackage_parts), in the order its line
+# says it; results.json has these keys.
+PART_CHECKED = "checked"
+PART_FAILED = "could_not_be_checked"
+PART_LEFT_OUT = "left_out"
+PART_TRANSITIVE = "transitive"
+PART_UNDECLARED = "not_declared"
+_PART_GROUPS = (PART_CHECKED, PART_FAILED, PART_LEFT_OUT, PART_TRANSITIVE, PART_UNDECLARED)
+# The parts a metapackage's line names in each clause; past it, "and N more" (pyobjc 11.1 has
+# 159). results.json lists every one.
+PARTS_SHOWN = 5
+
+
+def metapackage_parts(scan: ScanResult, p: PackageScan) -> dict[str, list[str]]:
+    """The parts of a metapackage (the requirements its reason lists last, pypi._metapackage),
+    by what the scan did with them: checked like any other dependency (PART_CHECKED); in the
+    scan, but not checked (PART_FAILED: the scan says why); left out by --only/--exclude or
+    the MCP tools' ``only`` (PART_LEFT_OUT, ScanResult.left_out); pinned by the lockfile or
+    the environment as a dependency of a dependency, which the scan checks only with
+    --all-deps (PART_TRANSITIVE); and the rest, which the project does not depend on directly
+    (PART_UNDECLARED). Every group is a key, empty or not."""
+    scanned = {canonicalize_name(q.name): q for q in scan.packages}
+    known = {d.key for d in scan.project.dependencies}
+    groups: dict[str, list[str]] = {g: [] for g in _PART_GROUPS}
+    for part in (p.reason or "").rsplit(": ", 1)[-1].split(", "):
+        try:
+            name = Requirement(part).name
+        except InvalidRequirement:
+            continue  # not a requirement: the reason is not pypi._metapackage's
+        key = canonicalize_name(name)
+        q = scanned.get(key)
+        if q is not None:
+            group = PART_FAILED if q.status == SKIPPED else PART_CHECKED
+        elif key in scan.left_out:
+            group = PART_LEFT_OUT
+        elif key in known:
+            group = PART_TRANSITIVE
+        else:
+            group = PART_UNDECLARED
+        if name not in groups[group]:
+            groups[group].append(name)
+    return groups
+
+
+def metapackage_text(
+    scan: ScanResult, p: PackageScan, *, hint: bool = True, left_out_by: str = "--only/--exclude"
+) -> str:
+    """``llama-index 0.14.25 is a metapackage with no API of its own; checked like any other
+    dependency: llama-index-core; not checked, as the project depends on them only through
+    other packages: llama-index-embeddings-openai and llama-index-llms-openai (--all-deps
+    checks them)``: what the scan did with each of its parts (:func:`metapackage_parts`), at
+    most :data:`PARTS_SHOWN` of them named in each clause. ``hint``: say that --all-deps checks
+    those the lockfile or environment pins (``scan`` and ``run``; ``sync`` and the MCP tools
+    have no --all-deps). ``left_out_by``: what left the project's own dependencies out."""
+    head = (p.reason or "").split(f" {METAPACKAGE}", 1)[0] + f" {METAPACKAGE}"
+    groups = {g: names for g, names in metapackage_parts(scan, p).items() if names}
+    if not groups:
+        return p.reason or head
+    hint = hint and not scan.all_deps  # given already
+    alone = len(groups) == 1  # one clause: "its parts are ..."
+    clauses = [
+        _part_clause(g, names, alone=alone, hint=hint, left_out_by=left_out_by)
+        for g, names in groups.items()
+    ]
+    return f"{head}; {'; '.join(clauses)}"
+
+
+def _part_clause(group: str, names: list[str], *, alone: bool, hint: bool, left_out_by: str) -> str:
+    """One clause of :func:`metapackage_text`: ``checked like any other dependency: a and b``,
+    or ``its parts are checked ...`` when it is the only one."""
+    one = len(names) == 1
+    them = "it" if one else "them"
+    listed = _some(names)
+    subject = ("its part " if one else "its parts ") if alone else ""
+    be = ("is " if one else "are ") if alone else ""
+    if group == PART_CHECKED:
+        return f"{subject}{be}checked like any other dependency: {listed}"
+    if group == PART_FAILED:
+        return f"{subject}could not be checked: {listed}"
+    if group == PART_LEFT_OUT:
+        were = ("was " if one else "were ") if alone else ""
+        return f"{subject}{were}left out by {left_out_by}: {listed}"
+    if group == PART_TRANSITIVE:
+        return (
+            f"{subject}{be}not checked, as the project depends on {them} only through other "
+            f"packages: {listed}" + (f" (--all-deps checks {them})" if hint else "")
+        )
+    return f"{subject}{be}not checked, as the project does not depend on {them} directly: {listed}"
+
+
+def _some(names: Sequence[str], limit: int = PARTS_SHOWN) -> str:
+    """``a, b and c``; past ``limit`` names, the first ``limit`` and ``and 154 more``."""
+    if len(names) <= limit:
+        return _joined(names, "and")
+    return f"{', '.join(names[:limit])} and {len(names) - limit} more"
+
+
+def _metapackage_cell(scan: ScanResult, p: PackageScan) -> str:
+    """A metapackage's status in a dependency table: information, not "not checked";
+    ``metapackage (no API of its own; 1 of 4 parts checked)``. Its line says which."""
+    groups = metapackage_parts(scan, p)
+    total = sum(len(names) for names in groups.values())
+    if not total:
+        return "metapackage (no API of its own)"
+    checked = len(groups[PART_CHECKED])
+    return f"metapackage (no API of its own; {checked} of {_plural(total, 'part')} checked)"
+
+
+def _not_checked(scan: ScanResult) -> list[tuple[str, str]]:
     """The lines on the dependencies the scan skipped, with their style: "N of M could not be
-    checked" for those it failed on, and each metapackage as information (it has no API of
-    its own, and its parts are dependencies of their own: errors.METAPACKAGE)."""
-    meta = [p.reason for p in scan.skipped if p.reason and METAPACKAGE in p.reason]
-    failed = [p for p in scan.skipped if not (p.reason and METAPACKAGE in p.reason)]
+    checked" for those it failed on (M: the dependencies but the metapackages, as in the MCP
+    answer), and each metapackage as information (it has no API of its own, and its parts are
+    dependencies of their own: errors.METAPACKAGE), saying what the scan did with its parts
+    (:func:`metapackage_text`)."""
+    meta = [metapackage_text(scan, p) for p in scan.skipped if is_metapackage(p)]
+    failed = [p for p in scan.skipped if not is_metapackage(p)]
     lines = []
     if failed:
         first = next((p.reason for p in failed if p.reason), "")
         if first:
             first = ("; for example: " if len(failed) > 1 else ": ") + clip(first, REASON_WIDTH)
-        of = _deps(len(scan.packages) if total is None else total)
+        of = _deps(len(scan.packages) - len(meta))
         lines.append((f"{len(failed)} of {of} could not be checked{first}", "yellow"))
-    return lines + [(reason, "dim") for reason in meta]  # at most three parts: not clipped
+    return lines + [(text, "dim") for text in meta]  # PARTS_SHOWN parts per clause: not clipped
+
+
+def _whose(target: ModelTarget) -> str:
+    """``claude-sonnet-4-5's training cutoff``; ``the cutoff given for claude-sonnet-4-5``
+    when --cutoff gave it, not the model's listing; ``the cutoff`` without a model."""
+    if not target.model_id:
+        return "the cutoff"
+    if target.cutoff_source.startswith("--cutoff"):
+        return f"the cutoff given for {target.model_id}"
+    return f"{target.model_id}'s training cutoff"
 
 
 def _after(scan: ScanResult) -> str:
-    """``claude-sonnet-4-5's training cutoff (2025-07-31)``, or ``the cutoff (2025-03-31)``."""
+    """What the changes the scan found came after: ``claude-sonnet-4-5's training cutoff
+    (2025-07-31)``, or ``the cutoff (2025-03-31)``; with a margin, the day the comparison
+    releases were published by, ``2025-07-01, 30 days before claude-sonnet-4-5's training
+    cutoff (2025-07-31)``: a release published within the margin is older than the cutoff."""
     target = scan.target
-    day = target.cutoff.isoformat()
+    cutoff = f"{_whose(target)} ({target.cutoff.isoformat()})"
+    if not target.margin:
+        return cutoff
+    return f"{target.compare_date.isoformat()}, {days_text(target.margin)} before {cutoff}"
+
+
+def _compared_from(scan: ScanResult, p: PackageScan) -> str:
+    """``fastapi 0.115.14 is the comparison release (the latest one published at least 30 days
+    before claude-sonnet-4-5's training cutoff, 2025-07-31)``; with a margin of 0, ``fastapi
+    0.115.14 was the latest release at claude-sonnet-4-5's training cutoff (2025-07-31)``."""
+    target = scan.target
+    if not target.margin:
+        return f"{p.name} {p.cutoff_version} was the latest release at {_after(scan)}"
     return (
-        f"{target.model_id}'s training cutoff ({day})" if target.model_id else f"the cutoff ({day})"
+        f"{p.name} {p.cutoff_version} is the comparison release (the latest one published at "
+        f"least {days_text(target.margin)} before {_whose(target)}, {target.cutoff.isoformat()})"
     )
 
 
 def versions_text(scan: ScanResult, p: PackageScan) -> str:
-    """``anthropic 0.60.0 -> 1.8.0 (0.60.0 was the latest release at the cutoff; uv.lock pins
-    1.8.0)``."""
+    """``anthropic 0.56.0 -> 1.8.0 (0.56.0 was the latest release 30 days before the cutoff;
+    uv.lock pins 1.8.0)`` (``at the cutoff`` with a margin of 0)."""
     source = scan.versions_from(p)
     locked = p.locked or "?"
     if source != p.version_source or source in LOCKFILES or source.startswith("pylock."):
@@ -1255,12 +1487,13 @@ def _new_package_text(scan: ScanResult, p: PackageScan) -> str:
     if scan.target.released_within_margin(p):  # before the cutoff, after the comparison day
         return (
             f"Your code imports {name} (first released {p.first_released}, within "
-            f"{scan.target.margin} days of the cutoff): its whole API is newer than the "
+            f"{days_text(scan.target.margin)} of the cutoff): its whole API is newer than the "
             "releases the scan compares from."
         )
-    if p.cutoff_version:  # the release at the cutoff was an empty placeholder
-        when = p.reason or "empty at the cutoff"
-    elif p.first_released:
+    if p.cutoff_version:  # the comparison release was an empty placeholder
+        when = p.reason or f"the comparison release {p.cutoff_version} was an empty placeholder"
+        return f"Your code imports {name} ({when}): its whole API is newer than that release."
+    if p.first_released:
         when = f"first released {p.first_released}, after the cutoff"
     else:
         when = "first released after the cutoff"
@@ -1288,7 +1521,7 @@ def _form_legend(used: Sequence[UsedAPI]) -> list[str]:
             old, new = next(iter(packages))
             valid = f"valid for {old}; {new} {did}"
         else:
-            valid = f"valid for the release at the cutoff; the pinned release {did}"
+            valid = f"valid for the comparison release; the pinned release {did}"
         out.append(f"old form: {valid} (a static name match; nothing was run)")
     if USES_API in forms:
         out.append(
@@ -1364,10 +1597,46 @@ def counted(scan: ScanResult) -> list[UsedAPI]:
     return out
 
 
+def hidden_name_matches(scan: ScanResult) -> int:
+    """How many places in the project's code (files, until the scan records lines: issue #8)
+    use a changed API matched by a member's name alone (selection.NAME_ONLY), which the
+    reports, the notes and the counts leave out: the places ``--include-name-matches`` adds,
+    so one call passing two removed keywords counts once. 0 with it, which shows them."""
+    if scan.name_matches:
+        return 0
+    key = scan._used_key()
+    cached = scan.__dict__.get("_hidden")
+    if cached is not None and cached[0] == key:
+        return int(cached[1])
+
+    def at(s: ScanResult) -> dict[tuple[str, str], set[str]]:
+        return {(u.package.name, u.note.api): {w for w, _ in places(u)} for u in s.used_apis()}
+
+    hidden = at(scan)
+    shown = at(replace(scan, name_matches=True))
+    n = sum(len(where - hidden.get(api, set())) for api, where in shown.items())
+    scan.__dict__["_hidden"] = (key, n)
+    return n
+
+
+def hidden_name_matches_text(scan: ScanResult, flag: str = "--include-name-matches") -> str | None:
+    """``2 uses matched by name alone are hidden; --include-name-matches shows them``, for
+    scan (the terminal, report.md and the Markdown summary), sync and, with
+    ``include_name_matches=true`` as the ``flag``, the MCP tool project_changes; None when
+    there is none."""
+    n = hidden_name_matches(scan)
+    if not n:
+        return None
+    if n == 1:
+        return f"1 use matched by name alone is hidden; {flag} shows it"
+    return f"{n} uses matched by name alone are hidden; {flag} shows them"
+
+
 def fail_reason(scan: ScanResult, conditions: set[str]) -> str | None:
     """Why ``scan --fail-on`` exits with code 3, or None: ``old-form`` when the code uses a
     changed API in the old form, ``used`` when it uses one at all, ``changes`` when any
-    dependency changed its API after the cutoff (``--fail-on-changes``). A name match counts
+    dependency changed its API since the release it is compared from (``--fail-on-changes``;
+    by default the latest one published 30 days before the cutoff). A name match counts
     only with ``--include-name-matches`` (:func:`counted`). Whatever the condition, a dependency
     the running Python cannot parse the sources of fails it too (PackageScan.unparsed): it may
     well have changed, and a newer Python checks it, so a CI job does not pass on Python 3.10
@@ -1380,12 +1649,13 @@ def fail_reason(scan: ScanResult, conditions: set[str]) -> str | None:
         )
     if "used" in conditions and used:
         apis = _plural(len(used), "API")
-        return f"--fail-on used: your code uses {apis} that changed after the cutoff"
+        after = scan.target.changed_after
+        return f"--fail-on used: your code uses {apis} that changed after {after}"
     if "changes" in conditions and scan.changed:
         n = len(scan.changed)
         return (
             f"--fail-on changes: {_deps(n)} changed {'its' if n == 1 else 'their'} API after "
-            "the cutoff"
+            f"{scan.target.changed_after}"
         )
     unparsed = [p.name for p in scan.packages if p.unparsed]
     if conditions and unparsed:
@@ -1416,9 +1686,8 @@ def github_annotations(scan: ScanResult, env: Mapping[str, str] | None = None) -
         p = u.package
         title = f"since-cutoff: {p.name} {p.locked}"
         message = (
-            f"{api_head(u)}. {p.name} {p.cutoff_version} was the latest release at "
-            f"{_after(scan)}; {p.locked} is pinned. Note: {u.note.line} Static match; nothing "
-            "was run."
+            f"{api_head(u)}. {_compared_from(scan, p)}; {p.locked} is pinned. Note: "
+            f"{u.note.line} Static match; nothing was run."
         )
         for _, here in places(u):
             use = here[0]
@@ -1511,7 +1780,7 @@ def render_markdown(scan: ScanResult, run: RunResult | None = None) -> str:
         f"- Project: `{scan.project.root.name}`, versions from `{s['version_source']}`",
         f"- Generated by since-cutoff {__version__} at {s['generated_at']}",
     ]
-    out += _used_report_md(scan)
+    out += _used_report_md(scan, run)
     out += [
         "",
         "## Summary",
@@ -1526,17 +1795,21 @@ def render_markdown(scan: ScanResult, run: RunResult | None = None) -> str:
         "",
         "## Dependencies",
         "",
-        "| package | you use | at cutoff | status | breaking | deprecated |"
+        "| package | you use | compared from | status | breaking | deprecated |"
         + (" probed | stale | wrong |" if probed else ""),
         "|---|---|---|---|---:|---:|" + ("---:|---:|---:|" if probed else ""),
     ]
     for r in s["packages"]:
-        reason = _new_reason(r["status"], r["reason"])
+        p = scan.package(r["package"])
+        # A new dependency's reason is its label (_label).
+        reason = _new_reason(r["status"], r["reason"]) if r["status"] != NEW else None
         status = _status_text(r) + (f": {reason}" if reason else "")
+        if is_metapackage(p):
+            status = _metapackage_cell(scan, p)
         counts = " | ".join(_count_cells(r))
         row = (
             f"| {r['package']} | {r['locked'] or '?'} ({r['locked_date'] or '-'}) "
-            f"| {r['cutoff_version'] or '-'} | {_cell(status)} | {counts} |"
+            f"| {_compared_cell(r, p)} | {_cell(status)} | {counts} |"
         )
         if probed:
             row += f" {r['probed'] or ''} | {r['stale'] or ''} | {r['wrong'] or ''} |"
@@ -1589,12 +1862,15 @@ def render_markdown(scan: ScanResult, run: RunResult | None = None) -> str:
     return "\n".join(out).rstrip() + "\n"
 
 
-def _used_report_md(scan: ScanResult) -> list[str]:
+def _used_report_md(scan: ScanResult, run: RunResult | None = None) -> list[str]:
     """report.md's "Used by your code": each changed API the code uses, by package, with
     every file that uses it (the lines are issue #8's), the note with its tag, the runtime
-    caveat and the names that merely look similar."""
+    caveat and the names that merely look similar; last, how many uses matched by a name
+    alone are hidden (``run`` has no --include-name-matches: ``scan`` does)."""
     used = scan.used_apis()
     new = scan.new_imported()
+    flag = "--include-name-matches" if run is None else "`since-cutoff scan --include-name-matches`"
+    hidden = hidden_name_matches_text(scan, flag)
     if not used and not new:
         if not scan.changed:
             return []
@@ -1603,6 +1879,7 @@ def _used_report_md(scan: ScanResult) -> list[str]:
             "## Used by your code",
             "",
             f"Your code uses none of the APIs that changed after {_after(scan)}.",
+            *(["", f"{hidden}."] if hidden else []),
         ]
     out = ["", "## Used by your code", ""]
     if used:
@@ -1635,6 +1912,8 @@ def _used_report_md(scan: ScanResult) -> list[str]:
             )
     if new:
         out += ["", *(f"- {_new_package_text(scan, p)}" for p in new)]
+    if hidden:
+        out += ["", f"{hidden}."]
     return out
 
 
@@ -1922,6 +2201,9 @@ def render_scan_markdown(
     ]
     out += _used_markdown(scan, env)
     out += [f"- {t.plain}" for t in headline(scan, None, s)]
+    hidden = hidden_name_matches_text(scan)
+    if hidden:
+        out.append(f"- {hidden}")
     out += [f"- Warning: {w}" for w in scan.warnings]
 
     changed = scan.changed
@@ -1929,20 +2211,23 @@ def render_scan_markdown(
     if flagged:
         out += [
             "",
-            "| package | you use | at cutoff | status | breaking | deprecated |",
+            "| package | you use | compared from | status | breaking | deprecated |",
             "|---|---|---|---|---:|---:|",
         ]
     for p in flagged:
-        status = STATUS_LABEL.get(p.status, p.status)
-        if p.imported:
+        status = _label(p.status, p.reason)  # a new dependency's reason is its label
+        meta = is_metapackage(p)
+        if meta:
+            status = _metapackage_cell(scan, p)
+        elif p.imported:
             status += f", {IMPORTED}"
-        elif _new_reason(p.status, p.reason):
+        elif _new_reason(p.status, p.reason) and p.status != NEW:
             status += f": {clip(p.reason or '', 2 * REASON_WIDTH)}"
         counts = p.counts if p.status == CHANGED else ("", "")
+        compared = "-" if meta else _version_cell(p.cutoff_version, p.cutoff_version_date)
         out.append(
             f"| {p.name} | {_version_cell(p.locked, p.locked_date)} "
-            f"| {_version_cell(p.cutoff_version, p.cutoff_version_date)} | {_cell(status)} "
-            f"| {counts[0]} | {counts[1]} |"
+            f"| {compared} | {_cell(status)} | {counts[0]} | {counts[1]} |"
         )
     quiet = [p for p in scan.packages if p.status in (KNOWN, UNCHANGED)]
     if quiet:
@@ -1991,7 +2276,8 @@ def _used_markdown(scan: ScanResult, env: Mapping[str, str] | None) -> list[str]
     if used:
         link = _github_link(scan.project.root, env)
         out += [
-            f"**Your code uses {_plural(len(used), 'API')} that changed after the cutoff**",
+            f"**Your code uses {_plural(len(used), 'API')} that changed after "
+            f"{scan.target.changed_after}**",
             "",
             "| where | API | change | form | replacement |",
             "|---|---|---|---|---|",
@@ -2025,7 +2311,9 @@ def _used_markdown(scan: ScanResult, env: Mapping[str, str] | None) -> list[str]
             ]
             out.append("| " + " | ".join(_cell(c) for c in cells) + " |")
     elif scan.changed:
-        out.append("**Your code uses none of the APIs that changed after the cutoff**")
+        out.append(
+            f"**Your code uses none of the APIs that changed after {scan.target.changed_after}**"
+        )
     for p in new:
         out += ["", _new_package_text(scan, p)]
     notes = scan.scope_notes()

@@ -1,0 +1,1118 @@
+{
+  "library": "openai",
+  "from": "2.44.0",
+  "to": "3.19.2",
+  "built_by": "Claude (AI), single pass",
+  "built_utc": "2026-10-23T19:40:44Z",
+  "sources_read": [
+    "releases_openai.md",
+    "range_openai_CHANGELOG.md",
+    "openai_httpx2.md"
+  ],
+  "candidates": [
+    {
+      "id": "oai-001",
+      "description": "Compatibility aliases for beta annotation types were removed.",
+      "old_path": null,
+      "params": [],
+      "new_path": null,
+      "api_names": [],
+      "documented_in": "2.46.0",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.46.0",
+      "source_quote": "remove beta annotation compatibility aliases",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "oai-002",
+      "description": "HTTPX2 replaced httpx as the SDK's HTTP library; httpx is no longer installed and custom clients/transports/timeouts must be httpx2 objects.",
+      "old_path": "openai.OpenAI",
+      "params": [
+        "http_client",
+        "timeout"
+      ],
+      "new_path": null,
+      "api_names": [
+        "openai.AsyncOpenAI",
+        "openai.DefaultHttpxClient",
+        "openai.DefaultAsyncHttpxClient",
+        "openai.DefaultAioHttpClient",
+        "openai.Timeout",
+        "openai.http_client",
+        "openai.APIStatusError.response",
+        "httpx",
+        "httpx2"
+      ],
+      "documented_in": "3.0.0",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.0.0",
+      "source_quote": "HTTPX2 is now the default HTTP client, and `httpx` is no longer installed automatically.",
+      "change_type_guess": "dependency_switch"
+    },
+    {
+      "id": "oai-003",
+      "description": "The default HTTP client now verifies TLS against the operating-system trust store instead of the certifi bundle.",
+      "old_path": "openai.DefaultHttpxClient",
+      "params": [
+        "verify"
+      ],
+      "new_path": null,
+      "api_names": [
+        "openai.OpenAI",
+        "openai.AsyncOpenAI",
+        "openai.DefaultAsyncHttpxClient"
+      ],
+      "documented_in": "3.0.0",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#tls-certificates-and-trust-stores",
+      "source_quote": "HTTPX2 instead uses the operating-system trust store, and the SDK no longer installs `certifi`.",
+      "change_type_guess": "behaviour_only"
+    },
+    {
+      "id": "oai-004",
+      "description": "The Responses function-call-arguments done event had its fields corrected (name field dropped).",
+      "old_path": "openai.types.responses.ResponseFunctionCallArgumentsDoneEvent",
+      "params": [
+        "name"
+      ],
+      "new_path": null,
+      "api_names": [
+        "openai.types.responses.response_function_call_arguments_done_event.ResponseFunctionCallArgumentsDoneEvent"
+      ],
+      "documented_in": "3.9.0",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.9.0",
+      "source_quote": "correct function argument completion event fields (openapi-545)",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "oai-005",
+      "description": "Transport errors raised while iterating a stream are now normalised to SDK exceptions (APITimeoutError / APIConnectionError).",
+      "old_path": "openai.Stream",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "openai.AsyncStream",
+        "openai.APITimeoutError",
+        "openai.APIConnectionError"
+      ],
+      "documented_in": "3.14.0",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0",
+      "source_quote": "normalize errors raised while reading streams",
+      "change_type_guess": "behaviour_only"
+    }
+  ],
+  "excluded": [
+    {
+      "text": "[v2.45.0 / Features] api: gpt-5.6-sol updates",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.45.0"
+    },
+    {
+      "text": "[v2.45.0 / Bug Fixes] api: restore beta resource accessors",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.45.0"
+    },
+    {
+      "text": "[v2.45.0 / Chores] retrigger release automation",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.45.0"
+    },
+    {
+      "text": "[v2.46.0 / Features] api: /organization/projects/{project_id}/service_accounts/{service_account_id}/api_keys\" endpoint",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.46.0"
+    },
+    {
+      "text": "[v2.46.0 / Features] api: add owner_project_access to APIKeyListParams",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.46.0"
+    },
+    {
+      "text": "[v2.46.0 / Features] api: manual updates",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.46.0"
+    },
+    {
+      "text": "[v2.46.0 / Features] api: manual updates",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.46.0"
+    },
+    {
+      "text": "[v2.46.0 / Bug Fixes] api: preserve generated type compatibility",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.46.0"
+    },
+    {
+      "text": "[v2.47.0 / Features] client: Add experimental runtime support for HTTPX2 clients",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.47.0"
+    },
+    {
+      "text": "[v2.47.0 / Features] stlc: configurable CI runner and private-production-repo support in workflow templates",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.47.0"
+    },
+    {
+      "text": "[v2.47.0 / Bug Fixes] deps: require patched aiohttp on Python 3.10+",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.47.0"
+    },
+    {
+      "text": "[v2.48.0 / Features] api: accept `None` for prompt_cache_key/safety_identifier",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.48.0"
+    },
+    {
+      "text": "[v2.48.0 / Features] api: add support for `spend_limit` admin apis",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.48.0"
+    },
+    {
+      "text": "[v2.49.0 / Features] require Python 3.10 and automate version reviews",
+      "reason": "python_version",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.49.0"
+    },
+    {
+      "text": "[v2.50.0 / Features] api: transcription model updates",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.50.0"
+    },
+    {
+      "text": "[v2.50.0 / Bug Fixes] audio: restore transcription keyword overload",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.50.0"
+    },
+    {
+      "text": "[v2.51.0 / Features] api: fast tier",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.51.0"
+    },
+    {
+      "text": "[v2.51.0 / Bug Fixes] api: add fast tier to helper methods",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.51.0"
+    },
+    {
+      "text": "[v2.52.0 / Features] api: content provenance checks",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.52.0"
+    },
+    {
+      "text": "[v2.52.0 / Bug Fixes] client: honor Retry-After delays up to two minutes",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.52.0"
+    },
+    {
+      "text": "[v2.52.0 / Documentation] add API-key mTLS HTTP client recipes",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.52.0"
+    },
+    {
+      "text": "[v2.52.1 / Chores] ci: pin setup-uv v5 to its underlying commit",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.52.1"
+    },
+    {
+      "text": "[v2.53.0 / Features] api: Add gpt-5.5 and tool name/namespace to Responses types",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.53.0"
+    },
+    {
+      "text": "[v2.53.0 / Bug Fixes] ci: avoid NumPy source builds and duplicate HTTPX coverage",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.53.0"
+    },
+    {
+      "text": "[v2.54.0 / Features] api: Add new Responses model identifiers",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.54.0"
+    },
+    {
+      "text": "[v2.54.0 / Bug Fixes] api: clarify audio upload metadata requirements",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.54.0"
+    },
+    {
+      "text": "[v2.54.0 / Chores] api: Update generated-file header attribution to Castiron",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v2.54.0"
+    },
+    {
+      "text": "[v3.0.0 / Features] api: migrate to HTTPX2",
+      "reason": "duplicate",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.0.0"
+    },
+    {
+      "text": "[v3.1.0 / Features] api: add WebSocket stream IDs",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.1.0"
+    },
+    {
+      "text": "[v3.1.0 / Features] api: add workload identity access token issued event",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.1.0"
+    },
+    {
+      "text": "[v3.1.0 / Features] api: deprecate Sora video APIs",
+      "reason": "deprecation_only",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.1.0"
+    },
+    {
+      "text": "[v3.1.0 / Features] api: Ultrafast tier, structured MCP and websocket errors, separate websocket events",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.1.0"
+    },
+    {
+      "text": "[v3.1.0 / Chores] remove Stainless attribution and infrastructure",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.1.0"
+    },
+    {
+      "text": "[v3.2.0 / Features] add Bedrock Runtime endpoint support (SDK-290)",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.2.0"
+    },
+    {
+      "text": "[v3.2.0 / Features] api: Add shell call streaming events and new service/image types",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.2.0"
+    },
+    {
+      "text": "[v3.3.0 / Features] support named data-residency endpoints",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.0"
+    },
+    {
+      "text": "[v3.3.0 / Bug Fixes] require patched optional networking dependencies",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.0"
+    },
+    {
+      "text": "[v3.3.0 / Chores] remove unused dependencies and pin build tooling",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.0"
+    },
+    {
+      "text": "[v3.3.0 / Documentation] strengthen Python SDK security contribution guidance",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.0"
+    },
+    {
+      "text": "[v3.3.1 / Bug Fixes] deps: update dependencies with published security fixes",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.1"
+    },
+    {
+      "text": "[v3.3.1 / Chores] build: migrate to uv",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.1"
+    },
+    {
+      "text": "[v3.3.1 / Chores] deps: remove jsonschema and unused fixture-validation dependencies",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.1"
+    },
+    {
+      "text": "[v3.3.1 / Chores] lock the repository Pyright toolchain",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.1"
+    },
+    {
+      "text": "[v3.3.1 / Chores] run the mock server from locked local tooling",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.1"
+    },
+    {
+      "text": "[v3.3.1 / Refactors] deps: use the standard library for platform detection",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.1"
+    },
+    {
+      "text": "[v3.3.1 / Build System] replace the external README metadata hook",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.3.1"
+    },
+    {
+      "text": "[v3.4.0 / Features] api: Add obfuscation field to ChatCompletionChunk",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Features] api: add project residency configuration and cost quantity units",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] api: encode Realtime call offers and session configuration",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] apply consistent origin checks to WebSocket redirects",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] azure: encode deployment names consistently",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] azure: keep provider validation errors value-free",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] azure: resolve one authentication mode",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] compute custom-code summaries from trusted workflow code",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] create upload example fixtures in private directories",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] decode SSE incrementally without limiting event size",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] keep Python SDK diagnostics metadata-only",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] Preserve Azure authentication boundaries across transports",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] preserve the configured TLS hostname",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Bug Fixes] preserve WebSocket send queue byte accounting during flush",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Chores] api: Clarify image background docs and preview support",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Chores] api: document supported image generation models",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Chores] api: move chat validation tests out of generated code",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Chores] api: move webhook tests out of generated code",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Chores] api: remove redundant generated formatting",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Chores] api: remove redundant generated test edits",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Chores] api: Update SDK generation metadata only",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Chores] set a ceiling for Python SDK customization",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Documentation] api: restore generated ChatKit API index",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Documentation] standardize Python SDK vulnerability disclosure policy",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Refactors] api: isolate audio response format selection",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Refactors] api: isolate vector-store polling helpers",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Refactors] api: move file processing polling into SDK-owned helpers",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Refactors] api: share embedding response decoding",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.4.0 / Refactors] api: share webhook signature verification",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.4.0"
+    },
+    {
+      "text": "[v3.5.0 / Features] api: make function call output call IDs optional",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.5.0"
+    },
+    {
+      "text": "[v3.6.0 / Features] api: add compute_units to Responses and Chat Completions usage",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Bug Fixes] auth: harden X.509 workload identity integration",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Chores] deps-dev: bump @stdy/cli from 0.22.1 to 0.22.2",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Chores] deps-dev: bump mypy from 1.17 to 2.3.1",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Chores] deps-dev: bump pandas-stubs from 2.2.2.240807 to 2.3.3.260113",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Chores] deps-dev: bump pyright from 1.1.399 to 1.1.413",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Chores] deps-dev: bump rich from 14.2.0 to 15.0.0",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Chores] deps: bump actions/checkout from 6.0.2 to 7.0.1",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Chores] deps: bump actions/download-artifact from 6.0.0 to 8.0.1",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Chores] deps: bump github/codeql-action/init from 4.37.1 to 4.37.7",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Build System] deps: bump actions/setup-python from 5.6.0 to 7.0.0",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.6.0 / Build System] deps: bump pypa/gh-action-pypi-publish from 1.14.0 to 1.14.2",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.6.0"
+    },
+    {
+      "text": "[v3.7.0 / Features] api: update usage APIs and documentation",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.7.0"
+    },
+    {
+      "text": "[v3.7.0 / Bug Fixes] avoid repeated numpy checks for embeddings",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.7.0"
+    },
+    {
+      "text": "[v3.8.0 / Features] api: add gpt-6-astra and related features",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.8.0"
+    },
+    {
+      "text": "[v3.8.0 / Documentation] add canonical SDK security model",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.8.0"
+    },
+    {
+      "text": "[v3.9.0 / Features] api: Add prompt cache diagnostics",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.9.0"
+    },
+    {
+      "text": "[v3.9.0 / Bug Fixes] api: accept incomplete web search call statuses",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.9.0"
+    },
+    {
+      "text": "[v3.9.0 / Bug Fixes] refuse overflowing server retry delays",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.9.0"
+    },
+    {
+      "text": "[v3.9.0 / Chores] api: document throttling and model overload responses - SDK-235",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.9.0"
+    },
+    {
+      "text": "[v3.9.0 / Chores] migrate to forked steady",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.9.0"
+    },
+    {
+      "text": "[v3.10.0 / Features] api: add GPT Image 2.5 models and image options",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.10.0"
+    },
+    {
+      "text": "[v3.10.0 / Features] api: add service-account API key expiration fields",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.10.0"
+    },
+    {
+      "text": "[v3.11.0 / Features] api: Add expiration controls for service account keys",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.11.0"
+    },
+    {
+      "text": "[v3.12.0 / Features] api: Add Live API",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.12.0"
+    },
+    {
+      "text": "[v3.12.0 / Bug Fixes] add aclose() to AsyncStream for standard async cleanup",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.12.0"
+    },
+    {
+      "text": "[v3.12.0 / Bug Fixes] handle bare `dict` and `list` annotations without type arguments",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.12.0"
+    },
+    {
+      "text": "[v3.12.0 / Bug Fixes] preserve finalized output on null response completion",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.12.0"
+    },
+    {
+      "text": "[v3.13.0 / Features] api: add Agents API",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.13.0"
+    },
+    {
+      "text": "[v3.14.0 / Bug Fixes] bound vector store file polling",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0"
+    },
+    {
+      "text": "[v3.14.0 / Bug Fixes] example: refresh realtime push_to_talk_app session types",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0"
+    },
+    {
+      "text": "[v3.14.0 / Bug Fixes] files: normalize PathLike upload tuples",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0"
+    },
+    {
+      "text": "[v3.14.0 / Bug Fixes] include completion in content filter errors",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0"
+    },
+    {
+      "text": "[v3.14.0 / Bug Fixes] logging: support standard OPENAI_LOG levels",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0"
+    },
+    {
+      "text": "[v3.14.0 / Bug Fixes] normalize API error codes to strings",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0"
+    },
+    {
+      "text": "[v3.14.0 / Bug Fixes] preserve response stream indexes after empty items",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0"
+    },
+    {
+      "text": "[v3.14.0 / Bug Fixes] responses: handle null text in output_text",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0"
+    },
+    {
+      "text": "[v3.14.0 / Documentation] use the vision guide image in README example",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.0"
+    },
+    {
+      "text": "[v3.14.1 / Bug Fixes] client: validate retry limits and preserve application errors",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Bug Fixes] correct typo \"th\" to \"the\" in StreamAlreadyConsumed error message",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Bug Fixes] examples: correct Azure endpoint hostname",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Bug Fixes] examples: refresh chat streaming examples",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Bug Fixes] examples: split push-to-talk shebang arguments",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Bug Fixes] examples: use uv in remaining Python launchers",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Bug Fixes] log only metadata for Live WebSocket diagnostics",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Bug Fixes] responses: skip structured parsing for commentary",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Chores] examples: bump module_client.py to gpt-5.6",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Chores] remove unused fine-tuning data validators",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] clarify async client cleanup",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] clarify filenames for in-memory file uploads",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] client: correct retry jitter comment",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] fix Realtime docstring wording",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] fix reusing wording in Azure client docstrings",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] fix streaming comment typo",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] fix vector store polling helper paths",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] readme: correct SSE terminology",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] update Responses API reference link",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.14.1 / Documentation] utils: correct query component RFC reference",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.14.1"
+    },
+    {
+      "text": "[v3.15.0 / Features] api: add agent session model settings",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.15.0"
+    },
+    {
+      "text": "[v3.15.0 / Features] api: add audio-mini model choices",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.15.0"
+    },
+    {
+      "text": "[v3.15.0 / Features] api: add compaction progress events",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.15.0"
+    },
+    {
+      "text": "[v3.15.0 / Features] api: add managed Responses WebSocket sessions",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.15.0"
+    },
+    {
+      "text": "[v3.15.0 / Features] api: add prompt-cache prewarming",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.15.0"
+    },
+    {
+      "text": "[v3.15.0 / Bug Fixes] preserve chat stream moderation results",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.15.0"
+    },
+    {
+      "text": "[v3.15.0 / Chores] api: clarify incoming SIP call ID usage",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.15.0"
+    },
+    {
+      "text": "[v3.15.0 / Chores] api: update image request examples",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.15.0"
+    },
+    {
+      "text": "[v3.15.0 / Documentation] realtime: remove nonexistent type imports",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.15.0"
+    },
+    {
+      "text": "[v3.16.0 / Features] api: add webhook endpoint management",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.16.0"
+    },
+    {
+      "text": "[v3.16.0 / Chores] api: deprecate MCP connector_id",
+      "reason": "deprecation_only",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.16.0"
+    },
+    {
+      "text": "[v3.16.1 / Bug Fixes] api: avoid loading unrelated API resources on first use",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.16.1"
+    },
+    {
+      "text": "[v3.16.2 / Bug Fixes] parsing: drop TextFormatT parameterization in parse_response to fix memory leak",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.16.2"
+    },
+    {
+      "text": "[v3.17.0 / Features] api: add external storage configuration management",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Features] api: add safety case retrieval",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Features] api: add safety warning and deactivation webhook events",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Features] api: add session environment reset events",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Features] api: add SIP media security to incoming call events",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Features] api: support environment variable vault credentials",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Bug Fixes] api: correct model types and network policy docs",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Bug Fixes] api: preserve model choices and defer error response docs",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Bug Fixes] lib: treat null message content as empty in parse_response",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Bug Fixes] lib: use log.warning instead of the deprecated log.warn",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Chores] api: document API error response contracts",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Chores] api: document response management resources",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Chores] deps: bump actions/github-script from 7.1.0 to 9.0.0",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Chores] deps: bump actions/upload-artifact from 5.0.0 to 7.0.1",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Chores] deps: bump CodeQL init and analyze to 4.37.8",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Chores] deps: bump CodeQL init and analyze to 4.37.8",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Chores] deps: bump httpx2 from 2.7.0 to 2.12.0 in the python-security group across 1 directory",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.17.0 / Chores] deps: bump openai/codex-action from 1.11 to 1.12",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.17.0"
+    },
+    {
+      "text": "[v3.18.0 / Features] api: add GPT-6 Sol and Luna model identifiers",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.18.0"
+    },
+    {
+      "text": "[v3.19.0 / Features] api: add GCP external storage support",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.0"
+    },
+    {
+      "text": "[v3.19.0 / Features] api: add GPT-Rosalind research model",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.0"
+    },
+    {
+      "text": "[v3.19.0 / Bug Fixes] _utils/_transform: propagate __api_exclude__ in _async_transform_recursive",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.0"
+    },
+    {
+      "text": "[v3.19.0 / Bug Fixes] api: handle omission markers in queued WebSocket events",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.0"
+    },
+    {
+      "text": "[v3.19.0 / Bug Fixes] client: retry only replayable request content",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.0"
+    },
+    {
+      "text": "[v3.19.0 / Bug Fixes] client: tolerate older optional aiohttp installations",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.0"
+    },
+    {
+      "text": "[v3.19.0 / Bug Fixes] helpers: use asyncio.get_running_loop() inside async methods",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.0"
+    },
+    {
+      "text": "[v3.19.1 / Bug Fixes] chat: preserve single-pass tool iterables",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.1"
+    },
+    {
+      "text": "[v3.19.1 / Bug Fixes] client: merge HTTP headers case-insensitively",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.1"
+    },
+    {
+      "text": "[v3.19.1 / Chores] api: clarify Chat Completions seed limits",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.1"
+    },
+    {
+      "text": "[v3.19.1 / Documentation] clarify collaborator-only pull request policy",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.1"
+    },
+    {
+      "text": "[v3.19.2 / Bug Fixes] preserve single files for fallback extraction paths",
+      "reason": "bugfix",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.2"
+    },
+    {
+      "text": "[v3.19.2 / Chores] api: clarify approximate web search location defaults",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.2"
+    },
+    {
+      "text": "[v3.19.2 / Chores] api: clarify Realtime modality array definitions",
+      "reason": "docs",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.2"
+    },
+    {
+      "text": "[v3.19.2 / Chores] api: correct fine-tuning bounds and Realtime response reference",
+      "reason": "internal",
+      "source_url": "https://github.com/openai/openai-python/releases/tag/v3.19.2"
+    },
+    {
+      "text": "[httpx2.md] httpx is no longer installed transitively; add it yourself or move imports to httpx2",
+      "reason": "duplicate",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#if-you-use-the-sdks-default-http-client"
+    },
+    {
+      "text": "[httpx2.md] custom clients/transports/timeouts/limits/URLs must be httpx2 objects; DefaultHttpxClient names now build httpx2 clients",
+      "reason": "duplicate",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#if-you-provide-a-custom-http-client"
+    },
+    {
+      "text": "[httpx2.md] new DefaultHttpx2Client / DefaultAsyncHttpx2Client helpers",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#if-you-provide-a-custom-http-client"
+    },
+    {
+      "text": "[httpx2.md] object mapping table httpx.X -> httpx2.X",
+      "reason": "duplicate",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#timeouts-urls-transports-and-connection-settings"
+    },
+    {
+      "text": "[httpx2.md] auth handlers and event hooks receive httpx2 request/response objects",
+      "reason": "duplicate",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#authentication-and-event-hooks"
+    },
+    {
+      "text": "[httpx2.md] raw responses, cast_to and transport exception causes are httpx2 types",
+      "reason": "duplicate",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#raw-responses-streaming-and-exceptions"
+    },
+    {
+      "text": "[httpx2.md] aiohttp extra uses an httpx2-native transport, no longer installs httpx-aiohttp; DefaultAioHttpClient is an httpx2.AsyncClient",
+      "reason": "duplicate",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#aiohttp"
+    },
+    {
+      "text": "[httpx2.md] mocks (RESPX) must intercept httpx2",
+      "reason": "duplicate",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#request-mocking-and-tests"
+    },
+    {
+      "text": "[httpx2.md] runtime-only escape hatch for injecting a legacy httpx client",
+      "reason": "addition",
+      "source_url": "https://github.com/openai/openai-python/blob/main/httpx2.md#temporary-escape-hatch-a-legacy-httpx-client"
+    }
+  ],
+  "excluded_counts": {
+    "addition": 52,
+    "bugfix": 57,
+    "deprecation_only": 2,
+    "docs": 29,
+    "duplicate": 8,
+    "internal": 41,
+    "python_version": 1
+  },
+  "shuffle_order": [
+    "oai-004",
+    "oai-002",
+    "oai-001",
+    "oai-005",
+    "oai-003"
+  ],
+  "verification": [
+    {
+      "id": "oai-004",
+      "status": "verified",
+      "old_evidence": "openai-2.44.0/openai/types/responses/response_function_call_arguments_done_event.py:19 name: str",
+      "new_evidence": "openai-3.19.2/openai/types/responses/response_function_call_arguments_done_event.py:10-25 fields arguments, item_id, output_index, sequence_number, type (no name)",
+      "change_type": "removal",
+      "notes": "the doc does not name the field; the only field difference between the wheels is the dropped name"
+    },
+    {
+      "id": "oai-002",
+      "status": "verified",
+      "old_evidence": "openai-2.44.0/openai-2.44.0.dist-info/METADATA:27 Requires-Dist: httpx<1,>=0.23.0; openai/_base_client.py:36 import httpx; :834 class _DefaultHttpxClient(httpx.Client)",
+      "new_evidence": "openai-3.19.2/openai-3.19.2.dist-info/METADATA:26 Requires-Dist: httpx2<3,>=2.12.0 (no httpx); openai/_base_client.py:37 import httpx2; :932 class _DefaultHttpxClient(httpx2.Client)",
+      "change_type": "dependency_switch",
+      "notes": ""
+    },
+    {
+      "id": "oai-001",
+      "status": "failed",
+      "reason": "cannot_locate",
+      "old_evidence": "openai-2.44.0/openai/types: no annotation-related name that is absent at 3.19.2 (AST scan of module-level names containing 'annotation'); beta thread/chatkit annotation modules identical",
+      "new_evidence": "openai-3.19.2/openai/types/beta/threads/annotation.py etc. unchanged",
+      "change_type": null,
+      "notes": "the aliases were most likely introduced in 2.45.0 and removed in 2.46.0, i.e. never present at the cutoff-era release"
+    },
+    {
+      "id": "oai-005",
+      "status": "verified",
+      "old_evidence": "openai-2.44.0/openai/_streaming.py:52-53 _iter_events: yield from self._decoder.iter_bytes(self.response.iter_bytes()) (transport errors propagate raw)",
+      "new_evidence": "openai-3.19.2/openai/_streaming.py:54-60 _iter_events wraps timeout/request exceptions into APITimeoutError / APIConnectionError (async twin :168-175)",
+      "change_type": "behaviour_only",
+      "notes": ""
+    },
+    {
+      "id": "oai-003",
+      "status": "verified",
+      "old_evidence": "openai-2.44.0/openai-2.44.0.dist-info/METADATA:27 Requires-Dist: httpx (httpx verifies with the certifi bundle by default)",
+      "new_evidence": "openai-3.19.2/openai-3.19.2.dist-info/METADATA:26 Requires-Dist: httpx2 (no httpx/certifi); httpx2 2.13.1 METADATA Requires-Dist truststore, _config.py:40-41 default SSL context = truststore.SSLContext",
+      "change_type": "behaviour_only",
+      "notes": "verified at the dependency level: the SDK code itself has no TLS settings; the httpx2 source read is 2.13.1 from an existing venv (pinned range >=2.12.0)"
+    }
+  ],
+  "sample": [
+    "oai-004",
+    "oai-002",
+    "oai-005",
+    "oai-003"
+  ]
+}

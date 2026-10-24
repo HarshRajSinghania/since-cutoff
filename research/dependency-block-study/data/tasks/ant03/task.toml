@@ -1,0 +1,40 @@
+schema = "since-cutoff-bench/task@1"
+id = "ant03-beta-structured-output"
+library = "anthropic"
+pinned = "1.8.0"
+cutoff_version = "0.115.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"   # stale code raises TypeError (unexpected keyword argument) at call time
+timeout_s = 900
+target_files = ["app/invoices.py"]
+instruction = """
+Implement `extract_invoice` in app/invoices.py for the ledger import.
+
+It gets the Files API id of an uploaded invoice and must return the invoice's fields as a dict that
+matches INVOICE_SCHEMA (app/schemas.py). Don't ask for JSON in the prompt and parse free text, and
+don't route the answer through a tool call: use Claude's structured outputs (JSON outputs), so the
+API itself constrains the text of the reply to INVOICE_SCHEMA.
+
+Send one request to MODEL with max_tokens=1024 and the invoice as a document block, like
+`summarize_invoice` does. File ids only work on the beta Messages API, so keep using
+`client.beta.messages` with FILES_BETA. Return the decoded JSON object.
+
+Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md (catalogue source; the change itself is verified in the wheels below)",
+  "anthropic-0.115.0 wheel: anthropic/resources/beta/messages/messages.py:1177-1178 Messages.create() takes output_config and output_format (docstring :300 'Deprecated: Use `output_config.format` instead'); :4198 _merge_output_configs() sends output_format as output_config.format; :4210 only a DeprecationWarning",
+  "anthropic-1.0.0 and 1.8.0 wheels: beta Messages.create() has no output_format parameter (1.8.0 anthropic/resources/beta/messages/messages.py:1120-1155, output_config at :1137; body :1203 sends output_config as given)",
+  "anthropic-1.8.0 wheel: beta Messages.parse() keeps output_format for a type only (:1238) and rejects a dict (:1298-1300: 'pass a schema dict as `output_config={'format': ...}` instead')",
+]
+# output_format given a dict / variable (not a CamelCase pydantic class, which parse() still accepts), or as a kwargs key
+stale_patterns = [
+  '''(?<![\w.])output_format\s*=(?!=)(?!\s*[A-Z][a-z])''',
+  '''["']output_format["']\s*:''',
+]
+note_keys = ['\boutput_format\b']
+doc_keys = ['output_config']
+answer_tokens = ["output_config", "output_format"]
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_parse = "pass"   # beta.messages.parse() with a pydantic type: a valid 1.x answer the hidden test must accept

@@ -1,0 +1,1055 @@
+{
+ "generated_by": "scripts/round6_header.py",
+ "estimator": [
+  "(in the supplementary archive: RUNS_TABLES=runs python scripts/round6_header.py .)",
+  "",
+  "Existing run tables only; no new sessions. Estimator as in the paper: per task, log(median treat run / median ctrl run)",
+  "over the post-cutoff tasks; geometric mean over tasks; 95% percentile task bootstrap (10,000 resamples, seed 20261001);"
+ ],
+ "per_study": {
+  "replication": {
+   "H/A": {
+    "cost": {
+     "ratio": 0.9854,
+     "lo": 0.8395,
+     "hi": 1.1604,
+     "signflip_p": 0.86479,
+     "tasks": 17,
+     "below_1": 11
+    },
+    "tokens": {
+     "ratio": 0.9466,
+     "lo": 0.793,
+     "hi": 1.1416,
+     "signflip_p": 0.58054,
+     "tasks": 17,
+     "below_1": 10
+    }
+   },
+   "H/A w/o pilot": {
+    "cost": {
+     "ratio": 0.97,
+     "lo": 0.8074,
+     "hi": 1.1604,
+     "signflip_p": 0.75018,
+     "tasks": 15,
+     "below_1": 10
+    },
+    "tokens": {
+     "ratio": 0.8992,
+     "lo": 0.7551,
+     "hi": 1.0573,
+     "signflip_p": 0.26575,
+     "tasks": 15,
+     "below_1": 9
+    }
+   },
+   "C/A": {
+    "cost": {
+     "ratio": 0.8501,
+     "lo": 0.693,
+     "hi": 1.008,
+     "signflip_p": 0.12534,
+     "tasks": 17,
+     "below_1": 10
+    },
+    "tokens": {
+     "ratio": 0.8263,
+     "lo": 0.6772,
+     "hi": 0.9929,
+     "signflip_p": 0.0743,
+     "tasks": 17,
+     "below_1": 11
+    }
+   },
+   "C/A w/o pilot": {
+    "cost": {
+     "ratio": 0.9151,
+     "lo": 0.7779,
+     "hi": 1.0439,
+     "signflip_p": 0.30743,
+     "tasks": 15,
+     "below_1": 8
+    },
+    "tokens": {
+     "ratio": 0.8741,
+     "lo": 0.7249,
+     "hi": 1.0347,
+     "signflip_p": 0.17712,
+     "tasks": 15,
+     "below_1": 9
+    }
+   },
+   "C/H": {
+    "cost": {
+     "ratio": 0.8626,
+     "lo": 0.6826,
+     "hi": 1.0277,
+     "signflip_p": 0.18147,
+     "tasks": 17,
+     "below_1": 12
+    },
+    "tokens": {
+     "ratio": 0.8729,
+     "lo": 0.66,
+     "hi": 1.0641,
+     "signflip_p": 0.35037,
+     "tasks": 17,
+     "below_1": 12
+    }
+   },
+   "C/H w/o pilot": {
+    "cost": {
+     "ratio": 0.9434,
+     "lo": 0.833,
+     "hi": 1.0662,
+     "signflip_p": 0.39661,
+     "tasks": 15,
+     "below_1": 10
+    },
+    "tokens": {
+     "ratio": 0.972,
+     "lo": 0.8652,
+     "hi": 1.1014,
+     "signflip_p": 0.66718,
+     "tasks": 15,
+     "below_1": 11
+    }
+   },
+   "header_share_of_log_saving": {
+    "cost": 0.0903,
+    "tokens": 0.2877
+   }
+  },
+  "new_tasks": {
+   "H/A": {
+    "cost": {
+     "ratio": 0.9411,
+     "lo": 0.803,
+     "hi": 1.1076,
+     "signflip_p": 0.48438,
+     "tasks": 8,
+     "below_1": 5
+    },
+    "tokens": {
+     "ratio": 0.86,
+     "lo": 0.7381,
+     "hi": 1.0093,
+     "signflip_p": 0.11719,
+     "tasks": 8,
+     "below_1": 6
+    }
+   },
+   "H/A w/o pilot": {
+    "cost": {
+     "ratio": 0.9411,
+     "lo": 0.803,
+     "hi": 1.1076,
+     "signflip_p": 0.48438,
+     "tasks": 8,
+     "below_1": 5
+    },
+    "tokens": {
+     "ratio": 0.86,
+     "lo": 0.7381,
+     "hi": 1.0093,
+     "signflip_p": 0.11719,
+     "tasks": 8,
+     "below_1": 6
+    }
+   },
+   "C/A": {
+    "cost": {
+     "ratio": 0.8349,
+     "lo": 0.7675,
+     "hi": 0.9066,
+     "signflip_p": 0.00781,
+     "tasks": 8,
+     "below_1": 8
+    },
+    "tokens": {
+     "ratio": 0.794,
+     "lo": 0.6845,
+     "hi": 0.9154,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "below_1": 6
+    }
+   },
+   "C/A w/o pilot": {
+    "cost": {
+     "ratio": 0.8349,
+     "lo": 0.7675,
+     "hi": 0.9066,
+     "signflip_p": 0.00781,
+     "tasks": 8,
+     "below_1": 8
+    },
+    "tokens": {
+     "ratio": 0.794,
+     "lo": 0.6845,
+     "hi": 0.9154,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "below_1": 6
+    }
+   },
+   "C/H": {
+    "cost": {
+     "ratio": 0.8872,
+     "lo": 0.7781,
+     "hi": 0.9962,
+     "signflip_p": 0.14844,
+     "tasks": 8,
+     "below_1": 6
+    },
+    "tokens": {
+     "ratio": 0.9232,
+     "lo": 0.7837,
+     "hi": 1.0671,
+     "signflip_p": 0.39844,
+     "tasks": 8,
+     "below_1": 3
+    }
+   },
+   "C/H w/o pilot": {
+    "cost": {
+     "ratio": 0.8872,
+     "lo": 0.7781,
+     "hi": 0.9962,
+     "signflip_p": 0.14844,
+     "tasks": 8,
+     "below_1": 6
+    },
+    "tokens": {
+     "ratio": 0.9232,
+     "lo": 0.7837,
+     "hi": 1.0671,
+     "signflip_p": 0.39844,
+     "tasks": 8,
+     "below_1": 3
+    }
+   },
+   "header_share_of_log_saving": {
+    "cost": 0.3364,
+    "tokens": 0.6538
+   }
+  },
+  "concurrent": {
+   "H/A": {
+    "cost": {
+     "ratio": 0.7969,
+     "lo": 0.6914,
+     "hi": 0.9207,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "below_1": 7
+    },
+    "tokens": {
+     "ratio": 0.7258,
+     "lo": 0.6049,
+     "hi": 0.8494,
+     "signflip_p": 0.01562,
+     "tasks": 8,
+     "below_1": 7
+    }
+   },
+   "H/A w/o pilot": {
+    "cost": {
+     "ratio": 0.7969,
+     "lo": 0.6914,
+     "hi": 0.9207,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "below_1": 7
+    },
+    "tokens": {
+     "ratio": 0.7258,
+     "lo": 0.6049,
+     "hi": 0.8494,
+     "signflip_p": 0.01562,
+     "tasks": 8,
+     "below_1": 7
+    }
+   },
+   "C/A": {
+    "cost": {
+     "ratio": 0.7915,
+     "lo": 0.6997,
+     "hi": 0.895,
+     "signflip_p": 0.01562,
+     "tasks": 8,
+     "below_1": 7
+    },
+    "tokens": {
+     "ratio": 0.7541,
+     "lo": 0.619,
+     "hi": 0.9045,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "below_1": 6
+    }
+   },
+   "C/A w/o pilot": {
+    "cost": {
+     "ratio": 0.7915,
+     "lo": 0.6997,
+     "hi": 0.895,
+     "signflip_p": 0.01562,
+     "tasks": 8,
+     "below_1": 7
+    },
+    "tokens": {
+     "ratio": 0.7541,
+     "lo": 0.619,
+     "hi": 0.9045,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "below_1": 6
+    }
+   },
+   "C/H": {
+    "cost": {
+     "ratio": 0.9932,
+     "lo": 0.8929,
+     "hi": 1.1066,
+     "signflip_p": 0.92969,
+     "tasks": 8,
+     "below_1": 5
+    },
+    "tokens": {
+     "ratio": 1.039,
+     "lo": 0.9023,
+     "hi": 1.1721,
+     "signflip_p": 0.59375,
+     "tasks": 8,
+     "below_1": 3
+    }
+   },
+   "C/H w/o pilot": {
+    "cost": {
+     "ratio": 0.9932,
+     "lo": 0.8929,
+     "hi": 1.1066,
+     "signflip_p": 0.92969,
+     "tasks": 8,
+     "below_1": 5
+    },
+    "tokens": {
+     "ratio": 1.039,
+     "lo": 0.9023,
+     "hi": 1.1721,
+     "signflip_p": 0.59375,
+     "tasks": 8,
+     "below_1": 3
+    }
+   },
+   "header_share_of_log_saving": {
+    "cost": 0.9708,
+    "tokens": 1.1357
+   }
+  }
+ },
+ "pool_randomised_H_post_hoc": {
+  "H/A": {
+   "cost, 25 tasks": {
+    "ratio": 0.9455,
+    "lo": 0.8451,
+    "hi": 1.0635,
+    "signflip_p": 0.37514,
+    "tasks": 25,
+    "below_1": 18
+   },
+   "cost, 8 new tasks (two studies averaged)": {
+    "ratio": 0.866,
+    "lo": 0.7996,
+    "hi": 0.9341,
+    "signflip_p": 0.01562,
+    "tasks": 8,
+    "below_1": 7
+   },
+   "cost, 23 tasks w/o pilot": {
+    "ratio": 0.9325,
+    "lo": 0.822,
+    "hi": 1.0549,
+    "signflip_p": 0.29984,
+    "tasks": 23,
+    "below_1": 17
+   },
+   "tokens, 25 tasks": {
+    "ratio": 0.8934,
+    "lo": 0.7887,
+    "hi": 1.0243,
+    "signflip_p": 0.11232,
+    "tasks": 25,
+    "below_1": 18
+   },
+   "tokens, 8 new tasks (two studies averaged)": {
+    "ratio": 0.79,
+    "lo": 0.7366,
+    "hi": 0.8534,
+    "signflip_p": 0.00781,
+    "tasks": 8,
+    "below_1": 8
+   },
+   "tokens, 23 tasks w/o pilot": {
+    "ratio": 0.8596,
+    "lo": 0.7604,
+    "hi": 0.963,
+    "signflip_p": 0.01841,
+    "tasks": 23,
+    "below_1": 17
+   }
+  },
+  "C/A": {
+   "cost, 25 tasks": {
+    "ratio": 0.838,
+    "lo": 0.7236,
+    "hi": 0.9459,
+    "signflip_p": 0.0058,
+    "tasks": 25,
+    "below_1": 18
+   },
+   "cost, 8 new tasks (two studies averaged)": {
+    "ratio": 0.8129,
+    "lo": 0.7493,
+    "hi": 0.8798,
+    "signflip_p": 0.00781,
+    "tasks": 8,
+    "below_1": 8
+   },
+   "cost, 23 tasks w/o pilot": {
+    "ratio": 0.8782,
+    "lo": 0.7856,
+    "hi": 0.9671,
+    "signflip_p": 0.0159,
+    "tasks": 23,
+    "below_1": 16
+   },
+   "tokens, 25 tasks": {
+    "ratio": 0.8091,
+    "lo": 0.6999,
+    "hi": 0.9242,
+    "signflip_p": 0.00449,
+    "tasks": 25,
+    "below_1": 18
+   },
+   "tokens, 8 new tasks (two studies averaged)": {
+    "ratio": 0.7738,
+    "lo": 0.6873,
+    "hi": 0.8727,
+    "signflip_p": 0.01562,
+    "tasks": 8,
+    "below_1": 7
+   },
+   "tokens, 23 tasks w/o pilot": {
+    "ratio": 0.8378,
+    "lo": 0.7349,
+    "hi": 0.9463,
+    "signflip_p": 0.0115,
+    "tasks": 23,
+    "below_1": 16
+   }
+  },
+  "C/H": {
+   "cost, 25 tasks": {
+    "ratio": 0.8863,
+    "lo": 0.7572,
+    "hi": 1.0004,
+    "signflip_p": 0.08255,
+    "tasks": 25,
+    "below_1": 19
+   },
+   "cost, 8 new tasks (two studies averaged)": {
+    "ratio": 0.9387,
+    "lo": 0.9016,
+    "hi": 0.9886,
+    "signflip_p": 0.03906,
+    "tasks": 8,
+    "below_1": 7
+   },
+   "cost, 23 tasks w/o pilot": {
+    "ratio": 0.9418,
+    "lo": 0.8649,
+    "hi": 1.0222,
+    "signflip_p": 0.18471,
+    "tasks": 23,
+    "below_1": 17
+   },
+   "tokens, 25 tasks": {
+    "ratio": 0.9057,
+    "lo": 0.7473,
+    "hi": 1.0402,
+    "signflip_p": 0.30181,
+    "tasks": 25,
+    "below_1": 16
+   },
+   "tokens, 8 new tasks (two studies averaged)": {
+    "ratio": 0.9794,
+    "lo": 0.8911,
+    "hi": 1.0827,
+    "signflip_p": 0.69531,
+    "tasks": 8,
+    "below_1": 4
+   },
+   "tokens, 23 tasks w/o pilot": {
+    "ratio": 0.9746,
+    "lo": 0.8965,
+    "hi": 1.0637,
+    "signflip_p": 0.57649,
+    "tasks": 23,
+    "below_1": 15
+   }
+  }
+ },
+ "combined_opus_C_over_A_post_hoc": {
+  "cost": {
+   "ratio": 0.8296,
+   "lo": 0.7673,
+   "hi": 0.8932,
+   "signflip_p": 1e-05,
+   "tasks": 25,
+   "below_1": 22,
+   "saving_pct": 17.0,
+   "saving_ci_pct": [
+    10.7,
+    23.3
+   ]
+  },
+  "tokens": {
+   "ratio": 0.7806,
+   "lo": 0.7099,
+   "hi": 0.8558,
+   "signflip_p": 1e-05,
+   "tasks": 25,
+   "below_1": 20,
+   "saving_pct": 21.9,
+   "saving_ci_pct": [
+    14.4,
+    29.0
+   ]
+  }
+ },
+ "token_types_per_post_cutoff_session": {
+  "main": {
+   "A": {
+    "sessions": 51,
+    "cache_write_tokens": 31882,
+    "cache_read_tokens": 338190,
+    "input_tokens": 26,
+    "output_tokens": 4824,
+    "cost_usd": 0.4193,
+    "cache_write_share_of_cost": 0.6083,
+    "cache_read_share_of_cost": 0.1613,
+    "cache_read_share_of_tokens": 0.902
+   },
+   "C": {
+    "sessions": 51,
+    "cache_write_tokens": 25706,
+    "cache_read_tokens": 248846,
+    "input_tokens": 23,
+    "output_tokens": 4075,
+    "cost_usd": 0.337,
+    "cache_write_share_of_cost": 0.6102,
+    "cache_read_share_of_cost": 0.1477,
+    "cache_read_share_of_tokens": 0.893
+   }
+  },
+  "replication": {
+   "A": {
+    "sessions": 51,
+    "cache_write_tokens": 26566,
+    "cache_read_tokens": 272134,
+    "input_tokens": 25,
+    "output_tokens": 4549,
+    "cost_usd": 0.358,
+    "cache_write_share_of_cost": 0.5936,
+    "cache_read_share_of_cost": 0.152,
+    "cache_read_share_of_tokens": 0.8973
+   },
+   "C": {
+    "sessions": 51,
+    "cache_write_tokens": 20408,
+    "cache_read_tokens": 231522,
+    "input_tokens": 24,
+    "output_tokens": 4214,
+    "cost_usd": 0.2939,
+    "cache_write_share_of_cost": 0.5554,
+    "cache_read_share_of_cost": 0.1575,
+    "cache_read_share_of_tokens": 0.9038
+   },
+   "H": {
+    "sessions": 51,
+    "cache_write_tokens": 25034,
+    "cache_read_tokens": 255367,
+    "input_tokens": 24,
+    "output_tokens": 4436,
+    "cost_usd": 0.3402,
+    "cache_write_share_of_cost": 0.5888,
+    "cache_read_share_of_cost": 0.1501,
+    "cache_read_share_of_tokens": 0.8965
+   }
+  },
+  "new_tasks": {
+   "A": {
+    "sessions": 24,
+    "cache_write_tokens": 12501,
+    "cache_read_tokens": 148818,
+    "input_tokens": 21,
+    "output_tokens": 3193,
+    "cost_usd": 0.1937,
+    "cache_write_share_of_cost": 0.5162,
+    "cache_read_share_of_cost": 0.1536,
+    "cache_read_share_of_tokens": 0.9045
+   },
+   "C": {
+    "sessions": 24,
+    "cache_write_tokens": 10026,
+    "cache_read_tokens": 109505,
+    "input_tokens": 18,
+    "output_tokens": 2512,
+    "cost_usd": 0.1524,
+    "cache_write_share_of_cost": 0.5263,
+    "cache_read_share_of_cost": 0.1437,
+    "cache_read_share_of_tokens": 0.8971
+   },
+   "H": {
+    "sessions": 24,
+    "cache_write_tokens": 11684,
+    "cache_read_tokens": 128981,
+    "input_tokens": 20,
+    "output_tokens": 2837,
+    "cost_usd": 0.1761,
+    "cache_write_share_of_cost": 0.5308,
+    "cache_read_share_of_cost": 0.1465,
+    "cache_read_share_of_tokens": 0.8987
+   }
+  },
+  "concurrent": {
+   "A": {
+    "sessions": 24,
+    "cache_write_tokens": 14117,
+    "cache_read_tokens": 170022,
+    "input_tokens": 23,
+    "output_tokens": 3463,
+    "cost_usd": 0.2163,
+    "cache_write_share_of_cost": 0.5222,
+    "cache_read_share_of_cost": 0.1572,
+    "cache_read_share_of_tokens": 0.9062
+   },
+   "C": {
+    "sessions": 24,
+    "cache_write_tokens": 11182,
+    "cache_read_tokens": 127118,
+    "input_tokens": 19,
+    "output_tokens": 2599,
+    "cost_usd": 0.1669,
+    "cache_write_share_of_cost": 0.5358,
+    "cache_read_share_of_cost": 0.1523,
+    "cache_read_share_of_tokens": 0.9021
+   },
+   "G": {
+    "sessions": 24,
+    "cache_write_tokens": 14025,
+    "cache_read_tokens": 151007,
+    "input_tokens": 22,
+    "output_tokens": 3024,
+    "cost_usd": 0.203,
+    "cache_write_share_of_cost": 0.5528,
+    "cache_read_share_of_cost": 0.1488,
+    "cache_read_share_of_tokens": 0.8984
+   },
+   "H": {
+    "sessions": 24,
+    "cache_write_tokens": 11302,
+    "cache_read_tokens": 131882,
+    "input_tokens": 19,
+    "output_tokens": 2840,
+    "cost_usd": 0.1737,
+    "cache_write_share_of_cost": 0.5207,
+    "cache_read_share_of_cost": 0.1519,
+    "cache_read_share_of_tokens": 0.903
+   },
+   "R": {
+    "sessions": 24,
+    "cache_write_tokens": 11420,
+    "cache_read_tokens": 132706,
+    "input_tokens": 20,
+    "output_tokens": 2820,
+    "cost_usd": 0.1744,
+    "cache_write_share_of_cost": 0.5239,
+    "cache_read_share_of_cost": 0.1522,
+    "cache_read_share_of_tokens": 0.903
+   }
+  }
+ },
+ "started_at_windows_utc": {
+  "replication": {
+   "A": [
+    "2026-10-22T00:14:43+00:00",
+    "2026-10-22T01:50:03+00:00"
+   ],
+   "C": [
+    "2026-10-22T00:13:03+00:00",
+    "2026-10-22T01:48:37+00:00"
+   ],
+   "H": [
+    "2026-10-22T00:13:01+00:00",
+    "2026-10-22T01:47:28+00:00"
+   ]
+  },
+  "new_tasks": {
+   "A": [
+    "2026-10-22T17:34:28+00:00",
+    "2026-10-22T18:23:28+00:00"
+   ],
+   "C": [
+    "2026-10-22T17:32:42+00:00",
+    "2026-10-22T18:25:00+00:00"
+   ],
+   "H": [
+    "2026-10-22T17:32:37+00:00",
+    "2026-10-22T18:24:11+00:00"
+   ]
+  },
+  "concurrent": {
+   "A": [
+    "2026-10-23T00:05:24+00:00",
+    "2026-10-23T01:36:16+00:00"
+   ],
+   "C": [
+    "2026-10-23T00:09:13+00:00",
+    "2026-10-23T01:36:50+00:00"
+   ],
+   "G": [
+    "2026-10-23T00:03:22+00:00",
+    "2026-10-23T01:34:34+00:00"
+   ],
+   "H": [
+    "2026-10-23T00:03:22+00:00",
+    "2026-10-23T01:32:32+00:00"
+   ],
+   "R": [
+    "2026-10-23T00:03:16+00:00",
+    "2026-10-23T01:38:26+00:00"
+   ]
+  }
+ },
+ "control_failures": {
+  "main": {
+   "control_runs": {
+    "A": 21,
+    "B": 21,
+    "C": 21,
+    "D": 21,
+    "E": 21
+   },
+   "failed": {}
+  },
+  "replication": {
+   "control_runs": {},
+   "failed": {}
+  },
+  "new_tasks": {
+   "control_runs": {
+    "A": 9,
+    "C": 9,
+    "H": 9
+   },
+   "failed": {
+    "H": [
+     "st90 rep 1"
+    ]
+   }
+  },
+  "concurrent": {
+   "control_runs": {
+    "A": 9,
+    "C": 9,
+    "G": 9,
+    "H": 9,
+    "R": 9
+   },
+   "failed": {
+    "R": [
+     "st90 rep 2"
+    ]
+   }
+  },
+  "sonnet55": {
+   "control_runs": {
+    "A": 21,
+    "C": 21,
+    "H": 21
+   },
+   "failed": {}
+  },
+  "haiku55": {
+   "control_runs": {
+    "A": 21,
+    "C": 21
+   },
+   "failed": {}
+  },
+  "irrelevant_earlier": {
+   "control_runs": {
+    "A": 3,
+    "R": 9
+   },
+   "failed": {}
+  },
+  "notes_v2": {
+   "control_runs": {
+    "A": 3,
+    "C2": 9,
+    "C": 3
+   },
+   "failed": {}
+  }
+ },
+ "mi01_failures": {
+  "new_tasks": [
+   "mi01 C rep 2"
+  ],
+  "concurrent": [
+   "mi01 R rep 2"
+  ]
+ },
+ "failing_test_runs_main_post_cutoff": {
+  "A": {
+   "mean_per_session": 0.1373,
+   "sessions": 51,
+   "tasks_with_nonzero_median": 1
+  },
+  "C": {
+   "mean_per_session": 0.1373,
+   "sessions": 51,
+   "tasks_with_nonzero_median": 1
+  }
+ },
+ "sonnet55_passes": {
+  "per_task": {
+   "ant01": {
+    "A": 0,
+    "C": 3,
+    "H": 0
+   },
+   "ant02": {
+    "A": 3,
+    "C": 3,
+    "H": 3
+   },
+   "ant03": {
+    "A": 3,
+    "C": 3,
+    "H": 3
+   },
+   "ant04": {
+    "A": 1,
+    "C": 1,
+    "H": 1
+   },
+   "ant05": {
+    "A": 1,
+    "C": 2,
+    "H": 3
+   },
+   "hf01": {
+    "A": 3,
+    "C": 3,
+    "H": 3
+   },
+   "hf02": {
+    "A": 3,
+    "C": 2,
+    "H": 3
+   },
+   "hf03": {
+    "A": 3,
+    "C": 3,
+    "H": 3
+   },
+   "hf04": {
+    "A": 3,
+    "C": 3,
+    "H": 3
+   },
+   "mcp01": {
+    "A": 0,
+    "C": 2,
+    "H": 3
+   },
+   "mcp02": {
+    "A": 2,
+    "C": 3,
+    "H": 3
+   },
+   "mcp04": {
+    "A": 3,
+    "C": 3,
+    "H": 3
+   },
+   "mcp05": {
+    "A": 3,
+    "C": 3,
+    "H": 3
+   },
+   "mcp06": {
+    "A": 3,
+    "C": 3,
+    "H": 3
+   },
+   "oai01": {
+    "A": 2,
+    "C": 3,
+    "H": 3
+   },
+   "oai02": {
+    "A": 3,
+    "C": 3,
+    "H": 3
+   },
+   "oai03": {
+    "A": 2,
+    "C": 3,
+    "H": 3
+   }
+  },
+  "differences": {
+   "C-A": {
+    "ant01": 3,
+    "ant05": 1,
+    "hf02": -1,
+    "mcp01": 2,
+    "mcp02": 1,
+    "oai01": 1,
+    "oai03": 1
+   },
+   "H-A": {
+    "ant05": 2,
+    "mcp01": 3,
+    "mcp02": 1,
+    "oai01": 1,
+    "oai03": 1
+   }
+  },
+  "totals": {
+   "A": 38,
+   "C": 46,
+   "H": 46
+  }
+ },
+ "covered_C_over_H": {
+  "replication_covered_C/H_tokens": {
+   "all": 0.5924,
+   "w/o ant01": 0.8413,
+   "per_task": {
+    "ant01": 0.1457,
+    "ant03": 0.9972,
+    "hf01": 0.6619,
+    "hf02": 0.7956,
+    "hf03": 0.9538
+   }
+  },
+  "new_tasks_C/H_tokens_pl02_st01": {
+   "pl02": 1.0711,
+   "st01": 0.6249
+  },
+  "concurrent_C/H_tokens_pl02_st01": {
+   "pl02": 0.678,
+   "st01": 1.174
+  }
+ },
+ "break_even": {
+  "mean_nonempty_block_tokens": 1305.8,
+  "main": {
+   "overhead_at_mean_block_usd": 0.01479,
+   "break_even_share_at_mean_block": 0.1696,
+   "break_even_share_at_764": 0.0992,
+   "break_even_share_at_764_ci95": [
+    0.0718,
+    0.1588
+   ]
+  },
+  "replication": {
+   "overhead_at_mean_block_usd": 0.01505,
+   "break_even_share_at_mean_block": 0.2177,
+   "break_even_share_at_764": 0.1274,
+   "break_even_share_at_764_ci95": [
+    0.0767,
+    0.2945
+   ]
+  },
+  "new_tasks": {
+   "overhead_at_mean_block_usd": 0.01363,
+   "break_even_share_at_mean_block": 0.299,
+   "break_even_share_at_764": 0.175,
+   "break_even_share_at_764_ci95": [
+    0.1306,
+    0.2683
+   ]
+  },
+  "note": "1,000 sessions a day, a fifth touching a listed package, main study: overhead 1000 x O(764), gross saving 200 x S_gross, net = gross - overhead",
+  "fleet_example_main": {
+   "overhead_usd_per_day": 8.66,
+   "gross_saving_usd_per_day": 17.45,
+   "net_saving_usd_per_day": 8.79
+  }
+ },
+ "table1_H_over_A_extra": {
+  "sonnet55": {
+   "cost": {
+    "ratio": 1.1281,
+    "lo": 0.9805,
+    "hi": 1.3145,
+    "signflip_p": 0.14767,
+    "tasks": 17,
+    "below_1": 7
+   },
+   "tokens": {
+    "ratio": 1.1291,
+    "lo": 0.9553,
+    "hi": 1.346,
+    "signflip_p": 0.20149,
+    "tasks": 17,
+    "below_1": 6
+   }
+  },
+  "replication_w/o_anthropic": {
+   "cost": {
+    "ratio": 0.9461,
+    "lo": 0.8554,
+    "hi": 1.0538,
+    "signflip_p": 0.33838,
+    "tasks": 12,
+    "below_1": 9
+   },
+   "tokens": {
+    "ratio": 0.8795,
+    "lo": 0.7883,
+    "hi": 0.9888,
+    "signflip_p": 0.06201,
+    "tasks": 12,
+    "below_1": 9
+   }
+  },
+  "replication_w/o_anthropic_C/H": {
+   "cost": {
+    "ratio": 0.9914,
+    "lo": 0.8782,
+    "hi": 1.126,
+    "signflip_p": 0.89697,
+    "tasks": 12,
+    "below_1": 7
+   },
+   "tokens": {
+    "ratio": 1.0133,
+    "lo": 0.8909,
+    "hi": 1.1675,
+    "signflip_p": 0.84863,
+    "tasks": 12,
+    "below_1": 7
+   }
+  }
+ }
+}

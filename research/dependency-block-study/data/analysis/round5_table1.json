@@ -1,0 +1,518 @@
+{
+ "generated_by": "scripts/round5_table1.py",
+ "estimator": "geometric mean over tasks of per-task median-run ratios; exact two-sided sign-flip over per-task log ratios",
+ "studies": {
+  "main": {
+   "runs": {
+    "A": 51,
+    "C": 51
+   },
+   "passed": {
+    "A": 48,
+    "C": 51
+   },
+   "mean_list_cost_per_session": {
+    "A": 0.4193,
+    "C": 0.337
+   },
+   "C/A": {
+    "tokens": {
+     "ratio": 0.7258,
+     "signflip_p": 0.0033111572265625,
+     "tasks": 17,
+     "sd_log_ratio": 0.4204
+    },
+    "cost": {
+     "ratio": 0.8048,
+     "signflip_p": 0.000274658203125,
+     "tasks": 17,
+     "sd_log_ratio": 0.2636
+    },
+    "cost_no_pilot": {
+     "ratio": 0.7841,
+     "signflip_p": 0.000244140625,
+     "tasks": 15,
+     "sd_log_ratio": 0.268
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.6902,
+     "signflip_p": 0.0018310546875,
+     "tasks": 15,
+     "sd_log_ratio": 0.4208
+    }
+   }
+  },
+  "replication": {
+   "runs": {
+    "A": 51,
+    "C": 51,
+    "H": 51
+   },
+   "passed": {
+    "A": 47,
+    "C": 51,
+    "H": 51
+   },
+   "mean_list_cost_per_session": {
+    "A": 0.358,
+    "C": 0.2939,
+    "H": 0.3402
+   },
+   "C/A": {
+    "tokens": {
+     "ratio": 0.8263,
+     "signflip_p": 0.0742950439453125,
+     "tasks": 17,
+     "sd_log_ratio": 0.4142
+    },
+    "cost": {
+     "ratio": 0.8501,
+     "signflip_p": 0.125335693359375,
+     "tasks": 17,
+     "sd_log_ratio": 0.4093
+    },
+    "cost_no_pilot": {
+     "ratio": 0.9151,
+     "signflip_p": 0.30743408203125,
+     "tasks": 15,
+     "sd_log_ratio": 0.3035
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.8741,
+     "signflip_p": 0.1771240234375,
+     "tasks": 15,
+     "sd_log_ratio": 0.3657
+    }
+   },
+   "H/A": {
+    "tokens": {
+     "ratio": 0.9466,
+     "signflip_p": 0.580535888671875,
+     "tasks": 17,
+     "sd_log_ratio": 0.3975
+    },
+    "cost": {
+     "ratio": 0.9854,
+     "signflip_p": 0.8647918701171875,
+     "tasks": 17,
+     "sd_log_ratio": 0.3536
+    },
+    "cost_no_pilot": {
+     "ratio": 0.97,
+     "signflip_p": 0.75018310546875,
+     "tasks": 15,
+     "sd_log_ratio": 0.3697
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.8992,
+     "signflip_p": 0.2657470703125,
+     "tasks": 15,
+     "sd_log_ratio": 0.3478
+    }
+   }
+  },
+  "new_tasks": {
+   "runs": {
+    "A": 24,
+    "C": 24,
+    "H": 24
+   },
+   "passed": {
+    "A": 24,
+    "C": 23,
+    "H": 24
+   },
+   "mean_list_cost_per_session": {
+    "A": 0.1937,
+    "C": 0.1524,
+    "H": 0.1761
+   },
+   "C/A": {
+    "tokens": {
+     "ratio": 0.794,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "sd_log_ratio": 0.2281
+    },
+    "cost": {
+     "ratio": 0.8349,
+     "signflip_p": 0.0078125,
+     "tasks": 8,
+     "sd_log_ratio": 0.1309
+    },
+    "cost_no_pilot": {
+     "ratio": 0.8349,
+     "signflip_p": 0.0078125,
+     "tasks": 8,
+     "sd_log_ratio": 0.1309
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.794,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "sd_log_ratio": 0.2281
+    }
+   },
+   "H/A": {
+    "tokens": {
+     "ratio": 0.86,
+     "signflip_p": 0.1171875,
+     "tasks": 8,
+     "sd_log_ratio": 0.2422
+    },
+    "cost": {
+     "ratio": 0.9411,
+     "signflip_p": 0.484375,
+     "tasks": 8,
+     "sd_log_ratio": 0.2504
+    },
+    "cost_no_pilot": {
+     "ratio": 0.9411,
+     "signflip_p": 0.484375,
+     "tasks": 8,
+     "sd_log_ratio": 0.2504
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.86,
+     "signflip_p": 0.1171875,
+     "tasks": 8,
+     "sd_log_ratio": 0.2422
+    }
+   }
+  },
+  "concurrent": {
+   "runs": {
+    "A": 24,
+    "C": 24,
+    "H": 24
+   },
+   "passed": {
+    "A": 24,
+    "C": 24,
+    "H": 24
+   },
+   "mean_list_cost_per_session": {
+    "A": 0.2163,
+    "C": 0.1669,
+    "H": 0.1737
+   },
+   "C/A": {
+    "tokens": {
+     "ratio": 0.7541,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "sd_log_ratio": 0.2956
+    },
+    "cost": {
+     "ratio": 0.7915,
+     "signflip_p": 0.015625,
+     "tasks": 8,
+     "sd_log_ratio": 0.1905
+    },
+    "cost_no_pilot": {
+     "ratio": 0.7915,
+     "signflip_p": 0.015625,
+     "tasks": 8,
+     "sd_log_ratio": 0.1905
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.7541,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "sd_log_ratio": 0.2956
+    }
+   },
+   "H/A": {
+    "tokens": {
+     "ratio": 0.7258,
+     "signflip_p": 0.015625,
+     "tasks": 8,
+     "sd_log_ratio": 0.2658
+    },
+    "cost": {
+     "ratio": 0.7969,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "sd_log_ratio": 0.2235
+    },
+    "cost_no_pilot": {
+     "ratio": 0.7969,
+     "signflip_p": 0.03125,
+     "tasks": 8,
+     "sd_log_ratio": 0.2235
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.7258,
+     "signflip_p": 0.015625,
+     "tasks": 8,
+     "sd_log_ratio": 0.2658
+    }
+   }
+  },
+  "sonnet55": {
+   "runs": {
+    "A": 51,
+    "C": 51,
+    "H": 51
+   },
+   "passed": {
+    "A": 38,
+    "C": 46,
+    "H": 46
+   },
+   "mean_list_cost_per_session": {
+    "A": 0.0954,
+    "C": 0.0777,
+    "H": 0.0977
+   },
+   "C/A": {
+    "tokens": {
+     "ratio": 0.9321,
+     "signflip_p": 0.54510498046875,
+     "tasks": 17,
+     "sd_log_ratio": 0.4518
+    },
+    "cost": {
+     "ratio": 0.9444,
+     "signflip_p": 0.69256591796875,
+     "tasks": 17,
+     "sd_log_ratio": 0.4395
+    },
+    "cost_no_pilot": {
+     "ratio": 0.929,
+     "signflip_p": 0.65338134765625,
+     "tasks": 15,
+     "sd_log_ratio": 0.4544
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.9143,
+     "signflip_p": 0.49041748046875,
+     "tasks": 15,
+     "sd_log_ratio": 0.4756
+    }
+   },
+   "H/A": {
+    "tokens": {
+     "ratio": 1.1291,
+     "signflip_p": 0.2014923095703125,
+     "tasks": 17,
+     "sd_log_ratio": 0.375
+    },
+    "cost": {
+     "ratio": 1.1281,
+     "signflip_p": 0.147674560546875,
+     "tasks": 17,
+     "sd_log_ratio": 0.3221
+    },
+    "cost_no_pilot": {
+     "ratio": 1.109,
+     "signflip_p": 0.17547607421875,
+     "tasks": 15,
+     "sd_log_ratio": 0.2739
+    },
+    "tokens_no_pilot": {
+     "ratio": 1.0918,
+     "signflip_p": 0.3399658203125,
+     "tasks": 15,
+     "sd_log_ratio": 0.3424
+    }
+   }
+  },
+  "haiku55": {
+   "runs": {
+    "A": 51,
+    "C": 51
+   },
+   "passed": {
+    "A": 41,
+    "C": 44
+   },
+   "mean_list_cost_per_session": {
+    "A": 0.01,
+    "C": 0.01
+   },
+   "C/A": {
+    "tokens": {
+     "ratio": 0.922,
+     "signflip_p": 0.2313385009765625,
+     "tasks": 17,
+     "sd_log_ratio": 0.2671
+    },
+    "cost": {
+     "ratio": 0.992,
+     "signflip_p": 0.9486846923828125,
+     "tasks": 17,
+     "sd_log_ratio": 0.363
+    },
+    "cost_no_pilot": {
+     "ratio": 1.0305,
+     "signflip_p": 0.85418701171875,
+     "tasks": 15,
+     "sd_log_ratio": 0.3701
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.9582,
+     "signflip_p": 0.54779052734375,
+     "tasks": 15,
+     "sd_log_ratio": 0.2583
+    }
+   }
+  },
+  "sonnet45": {
+   "runs": {
+    "A": 45,
+    "C": 45
+   },
+   "passed": {
+    "A": 37,
+    "C": 32
+   },
+   "mean_list_cost_per_session": {
+    "A": 0.2784,
+    "C": 0.2529
+   },
+   "C/A": {
+    "tokens": {
+     "ratio": 0.8786,
+     "signflip_p": 0.38214111328125,
+     "tasks": 15,
+     "sd_log_ratio": 0.5484
+    },
+    "cost": {
+     "ratio": 0.8939,
+     "signflip_p": 0.36627197265625,
+     "tasks": 15,
+     "sd_log_ratio": 0.4282
+    },
+    "cost_no_pilot": {
+     "ratio": 0.8939,
+     "signflip_p": 0.36627197265625,
+     "tasks": 15,
+     "sd_log_ratio": 0.4282
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.8786,
+     "signflip_p": 0.38214111328125,
+     "tasks": 15,
+     "sd_log_ratio": 0.5484
+    }
+   }
+  },
+  "qwen3c_AC": {
+   "runs": {
+    "A": 93,
+    "C": 93
+   },
+   "passed": {
+    "A": 18,
+    "C": 23
+   },
+   "mean_list_cost_per_session": {
+    "A": null,
+    "C": null
+   },
+   "C/A": {
+    "tokens": {
+     "ratio": 1.0752,
+     "signflip_p": 0.5035475641489029,
+     "tasks": 31,
+     "sd_log_ratio": 0.5952
+    },
+    "tokens_no_pilot": {
+     "ratio": 1.141,
+     "signflip_p": 0.2021901272237301,
+     "tasks": 29,
+     "sd_log_ratio": 0.5434
+    }
+   }
+  },
+  "qwen3c_orig17_ACH": {
+   "runs": {
+    "A": 51,
+    "C": 51,
+    "H": 51
+   },
+   "passed": {
+    "A": 2,
+    "C": 5,
+    "H": 2
+   },
+   "mean_list_cost_per_session": {
+    "A": null,
+    "C": null,
+    "H": null
+   },
+   "C/A": {
+    "tokens": {
+     "ratio": 1.1228,
+     "signflip_p": 0.4571990966796875,
+     "tasks": 17,
+     "sd_log_ratio": 0.6207
+    },
+    "tokens_no_pilot": {
+     "ratio": 1.2666,
+     "signflip_p": 0.0882568359375,
+     "tasks": 15,
+     "sd_log_ratio": 0.5026
+    }
+   },
+   "H/A": {
+    "tokens": {
+     "ratio": 0.7896,
+     "signflip_p": 0.195831298828125,
+     "tasks": 17,
+     "sd_log_ratio": 0.7079
+    },
+    "tokens_no_pilot": {
+     "ratio": 0.8853,
+     "signflip_p": 0.4281005859375,
+     "tasks": 15,
+     "sd_log_ratio": 0.5714
+    }
+   }
+  }
+ },
+ "ab_test_sizing": {
+  "main": {
+   "sd_log_cost_ratio": 0.2636,
+   "tasks_for_15pct_saving": 20.6,
+   "tasks_for_20pct_saving": 11.0
+  },
+  "replication": {
+   "sd_log_cost_ratio": 0.4093,
+   "tasks_for_15pct_saving": 49.8,
+   "tasks_for_20pct_saving": 26.4
+  },
+  "new_tasks": {
+   "sd_log_cost_ratio": 0.1309,
+   "tasks_for_15pct_saving": 5.1,
+   "tasks_for_20pct_saving": 2.7
+  }
+ },
+ "figure1_pl02": {
+  "A": {
+   "runs": 3,
+   "passed": 3,
+   "median_turns": 17,
+   "median_tokens": 202961,
+   "median_list_cost": 0.2565,
+   "median_site_packages_reads": 6
+  },
+  "C": {
+   "runs": 3,
+   "passed": 3,
+   "median_turns": 11,
+   "median_tokens": 126897,
+   "median_list_cost": 0.1765,
+   "median_site_packages_reads": 2
+  },
+  "H": {
+   "runs": 3,
+   "passed": 3,
+   "median_turns": 13,
+   "median_tokens": 118476,
+   "median_list_cost": 0.1627,
+   "median_site_packages_reads": 4
+  }
+ }
+}

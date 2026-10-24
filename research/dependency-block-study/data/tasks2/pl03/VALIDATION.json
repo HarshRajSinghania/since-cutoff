@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "pl03",
+  "task_id": "pl03-replace-default",
+  "task_sha256": "95fb2f3db24b656641bebdc9bf55f9f0d7e0326729ccf7208a9364f14065580b",
+  "parts_sha256": {
+    "task.toml": "4d5b15161769a983f42e2685adebf9425cbf41c007938004342c203018ceab97",
+    "repo": "72a984acf0d79ac67a45bfb448c39a7d397929c7bd48e31bf81863ec090b2dfb",
+    "hidden": "16da6e44c1d9cea567b6f460063bc61fc4a5647d03a7d53c20cc4a1dcf5e79d5",
+    "reference": "5ebb3bb3f65a915a3c84501e221281eeae7136d34dac6f7133927d51082e1c76",
+    "stale": "243a4bf4837eac9e9cc0d177516d2cb0cca67096fb436b4f1723e9c4e0ac65b9"
+  },
+  "validated_at": "2026-10-22T17:27:53+00:00",
+  "library": "polars",
+  "pinned": "2.0.0",
+  "stale_version": "1.42.1",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 2,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.85,
+        "timed_out": false,
+        "first_error": "NotImplementedError"
+      },
+      "summary": "2 failed in 0.33s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "2.0.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 2,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.8,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "2 passed in 0.27s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 2,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.93,
+        "timed_out": false,
+        "first_error": "polars.exceptions.ArgumentRemovedError: the argument 'default' for 'Expr.replace' was deprecated in version 1.0.0 and has been removed in version 2.0. Use `replace_strict` instead to set a default while replacing values."
+      },
+      "summary": "2 failed in 0.32s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.42.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 2,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.86,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "2 passed, 2 warnings in 0.25s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "polars-2.0.0 bd3c78b38a76",
+    "stale": "polars-1.42.1 225ce1b17d49"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 4.2
+}

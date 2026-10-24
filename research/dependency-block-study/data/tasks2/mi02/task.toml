@@ -1,0 +1,29 @@
+schema = "since-cutoff-bench/task@1"
+id = "mi02-ocr-markdown-only"
+library = "mistralai"
+pinned = "3.3.0"
+cutoff_version = "2.5.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-silent"  # ocr.process(include_blocks=...) default flipped False -> True; stale code raises nothing but requests block-level output
+timeout_s = 900
+target_files = ["invoices/ocr.py"]
+instruction = """
+Implement `invoice_markdown(client, document_url)` in invoices/ocr.py: run Mistral OCR (model
+"mistral-ocr-latest") on the PDF at `document_url` and return the markdown of all pages, in page order,
+joined by a blank line. OCR responses are billed by size on our account, so request page markdown only:
+do not request base64 images or block-level layout data. Do not add dependencies. You can run the tests
+with `pytest`.
+"""
+evidence = [
+  "mistralai-2.5.0: Ocr.process(..., include_blocks: Optional[bool] = False); request body sends \"include_blocks\": false when the argument is omitted",
+  "mistralai-3.3.0: Ocr.process(..., include_blocks: Optional[bool] = True); request body sends \"include_blocks\": true when the argument is omitted (silent change: no warning, no error)",
+  "run (2026-10-22, scratch venvs, httpx/httpx2 MockTransport; I1/expansion/probes/mistral_probe_output.txt): ocr.process without include_blocks -> body include_blocks false at 2.5.0, true at 3.3.0; include_blocks=False -> false in both",
+  "https://github.com/mistralai/client-python/releases/tag/v3.0.0 (2026-09-28, major release)",
+]
+# ocr.process(...) call without an include_blocks argument (comments ignored by the harness)
+stale_patterns = [
+  '''\.ocr\.process\((?!(?:[^()]|\([^()]*\))*include_blocks)(?:[^()]|\([^()]*\))*\)''',
+]
+note_keys = ['include_blocks']
+doc_keys = ['include_blocks']
+answer_tokens = ["include_blocks"]

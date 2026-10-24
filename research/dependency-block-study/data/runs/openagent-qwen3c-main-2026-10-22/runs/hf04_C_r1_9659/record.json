@@ -1,0 +1,54 @@
+{
+ "schema": "since-cutoff-bench/openagent-run@1",
+ "study_id": "openagent-qwen3c-main-2026-10-22",
+ "run_id": "hf04_C_r1_9659",
+ "attempt": 1,
+ "attempt_id": "hf04_C_r1_9659",
+ "task": "hf04",
+ "library": "huggingface-hub",
+ "stratum": "post-cutoff",
+ "kind": "post-cutoff-loud",
+ "condition": "C",
+ "rep": 1,
+ "block_id": "hf04#1",
+ "order_index": 111,
+ "pilot": false,
+ "condition_config": {
+  "notes_tokens": 508,
+  "notes_covered": false
+ },
+ "agent": {
+  "scaffold": "mini-swe-agent",
+  "step_limit": 40,
+  "textbased": false,
+  "wall_limit_s": 1800,
+  "temperature": 0.7,
+  "command_timeout_s": 180
+ },
+ "wall_s": 215.6,
+ "exit": {
+  "status": "Submitted"
+ },
+ "process": {
+  "turns": 25,
+  "commands": 25,
+  "calls": 25,
+  "input_tokens": 126290,
+  "output_tokens": 4458,
+  "total_tokens": 130748,
+  "stale_in_first_edit": false,
+  "stale_in_final": false,
+  "first_edit": {
+   "command_index": 17,
+   "stale": false
+  }
+ },
+ "valid": true,
+ "invalid_reason": null,
+ "grade": {
+  "passed": false,
+  "hidden_passed": false,
+  "visible_passed": true,
+  "lock_modified": false
+ }
+}

@@ -1,0 +1,41 @@
+schema = "since-cutoff-bench/task@1"
+id = "mcp04-http-host-port"
+library = "mcp"
+pinned = "2.2.0"
+cutoff_version = "1.28.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # host/port on the constructor -> TypeError; server.settings.host = ... -> ValueError (at start-up)
+timeout_s = 900
+target_files = ["app/server.py"]
+instruction = '''
+Remote agents need to reach our inventory MCP server, so `python -m app.server --http` must work.
+Implement `serve_http(host, port)` in app/server.py: serve the server from `build_server()` over
+the MCP Streamable HTTP transport, listening on the given host and port with the MCP endpoint at
+the default `/mcp` path, and block until the process is stopped (like the stdio mode does).
+`main()` already calls it. Keep the stdio mode working. Do not add dependencies. You can run the
+tests with `pytest`.
+'''
+evidence = [
+  "https://py.sdk.modelcontextprotocol.io/migration/ ('Transport parameters moved off the MCPServer constructor': TypeError: MCPServer.__init__() got an unexpected keyword argument 'port')",
+  "mcp-1.28.1 wheel: mcp/server/fastmcp/server.py:147-176 FastMCP.__init__(..., host='127.0.0.1', port=8000, streamable_http_path='/mcp', json_response=False, stateless_http=False, ...) stored in Settings (:98-99 host/port)",
+  "mcp-1.28.1 wheel: mcp/server/fastmcp/server.py:279-283 run(transport, mount_path) takes no host/port; :777-790 run_streamable_http_async reads self.settings.host/port",
+  "mcp-2.2.0 wheel: mcp/server/mcpserver/server.py:158-186 MCPServer.__init__ has no host/port/streamable_http_path/json_response/stateless_http; :111-133 Settings has no host/port",
+  "mcp-2.2.0 wheel: mcp/server/mcpserver/server.py:382-398 run('streamable-http', *, host, port, streamable_http_path, json_response, stateless_http, ...) overload; :400-421 run(transport, **kwargs); :1104-1142 run_streamable_http_async(*, host='127.0.0.1', port=8000, ...)",
+  "run (2026-09-27, bench venvs): MCPServer('x', host=..., port=...) -> TypeError at 2.2.0; FastMCP('x', host=..., port=...) accepted at 1.28.1",
+]
+# 1.x ways of choosing the HTTP host/port (constructor keywords or the settings object)
+stale_patterns = [
+  '\bsettings\.(?:host|port)\s*=',
+  '\b(?:MCPServer|FastMCP)\s*\([^)]*\b(?:host|port)\s*=',
+]
+# host/port named on the same line as the constructor or run() (a bare "port" could come from anything)
+note_keys = ['\b(?:host|port)\b[^\n]{0,160}\b(?:run|__init__|constructor|MCPServer|FastMCP)\b|\b(?:run|__init__|constructor|MCPServer|FastMCP)\b[^\n]{0,160}\b(?:host|port)\b']
+doc_keys = ['''\.run\(\s*(?:transport\s*=\s*)?["']streamable-http["']\s*,[^)]*\bport\s*=''']
+answer_tokens = ["streamable-http", "streamable_http_app", "run_streamable_http_async"]
+# the repo is a project already on mcp 2.x, so its existing server necessarily names the 2.x class
+# (mcp01's answer, not this task's); this task's own answer tokens above still apply
+leak_allow = ["MCPServer", "mcpserver"]
+
+[extra_solutions]
+halfmigrated = "fail"        # repo's MCPServer kept, server.settings.host/port = ... (1.x idiom) -> ValueError
+halfmigrated_ctor = "fail"   # MCPServer("inventory", host=..., port=...) -> TypeError

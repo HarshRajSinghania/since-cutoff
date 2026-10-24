@@ -1,0 +1,47 @@
+context_cost.py: aggregates only (counts); records before the f run, 2026-10-24T00:19:47+00:00
+transcripts in store: 1877; exclusions: {'X0_empty_or_after_f_run': 263, 'X1_benchmark': 206, 'X2a_session_of_research_transcript': 100, 'included': 1308}
+check against analysis/f_sessions.json (this script, fsess.py): included 1308 vs 1308 MATCH; top_level_sessions 28 vs 28 MATCH; subagent_transcripts 1281 vs 1281 MATCH; models {'claude-sonnet-4-5-20250929': 2, 'claude-opus-5-5': 1120, 'claude-sonnet-4-6': 108, 'claude-fable-5-1': 76, 'claude-haiku-4-5-20251001': 2} vs {'claude-sonnet-4-5-20250929': 2, 'claude-opus-5-5': 1120, 'claude-sonnet-4-6': 108, 'claude-fable-5-1': 76, 'claude-haiku-4-5-20251001': 2} MATCH
+main-session contexts n = 27; subagent contexts n = 1281
+
+1. Model API calls per context (distinct assistant message ids)
+   main: {'n': 27, 'median': 1, 'mean': 131.78, 'p90': 13, 'min': 1, 'max': 3341}
+   subagent: {'n': 1281, 'median': 30, 'mean': 43.44, 'p90': 102, 'min': 1, 'max': 356}
+   all (as f counted): {'n': 1308, 'median': 29.0, 'mean': 45.26, 'p90': 102, 'min': 1, 'max': 3341}
+   Python-editing contexts (edit_py, the paper's 2-18% base): {'n': 513, 'median': 63, 'mean': 81.55, 'p90': 136, 'min': 9, 'max': 3341}
+   subagent type Explore: {'n': 9, 'median': 53, 'mean': 50.11, 'p90': 75, 'min': 4, 'max': 85}
+   subagent type claude-code-guide: {'n': 1, 'median': 6, 'mean': 6, 'p90': 6, 'min': 6, 'max': 6}
+   subagent type general-purpose: {'n': 597, 'median': 42, 'mean': 47.36, 'p90': 92, 'min': 3, 'max': 225}
+   subagent type no meta file: {'n': 1, 'median': 43, 'mean': 43, 'p90': 43, 'min': 43, 'max': 43}
+   subagent type other (custom): {'n': 673, 'median': 15, 'mean': 39.93, 'p90': 110, 'min': 1, 'max': 356}
+
+2. Memory-file channel in the context before its first API call
+   main: literal CLAUDE.md marker ('claudeMd' or 'Contents of'+'CLAUDE.md') 0/27; 'instructions' attachment (the channel that injects CLAUDE.md / memory files) 21/27; file types in it: {'AutoMem': 21}
+   subagent: literal CLAUDE.md marker ('claudeMd' or 'Contents of'+'CLAUDE.md') 0/1281; 'instructions' attachment (the channel that injects CLAUDE.md / memory files) 1166/1281; file types in it: {'AutoMem': 1166}
+   subagent type Explore: instructions attachment 0/9
+   subagent type claude-code-guide: instructions attachment 1/1
+   subagent type general-purpose: instructions attachment 597/597
+   subagent type no meta file: instructions attachment 0/1
+   subagent type other (custom): instructions attachment 568/673
+
+3. Python-editing share (fsess.py edit_py rule) by context kind; f_upper / f_strict cannot be split from
+   f_sessions.json (per-transcript scan flags were deleted with the private work folder)
+   edit_py: main 3/27 = 0.111; subagent 510/1281 = 0.398; all 513/1308 (f_sessions.json: 513)
+   session level (top session pooled with its subagents, f_sessions.json): upper 3/28 = 0.107, strict 2/28 = 0.071
+   bounds (each main transcript is in its own top session): f_upper main <= 3/27 = 0.111, subagent in [0.069, 0.071]; f_strict main <= 2/27 = 0.074, subagent in [0.0070, 0.0086]
+
+4. Cost per context: c = b (t p_r + p_w), b = 704, p_r = $0.2/MTok, p_w = $8.0/MTok (recompute_cost.py, Opus 5.5); s = $0.0872 (main), K = $0.1717
+   benchmark session (paper): t = 16.647058823529413, c = $0.00798; u = 0 (reference): f* = 0.0914; u = -0.037 (cost CI low): f* = 0.1531; u = 0.0663 (cost point): f* = 0.0000; pays at every f once u >= c/K = 0.0465
+   main session, mean: t = 131.78, c = $0.02419; u = 0 (reference): f* = 0.2772; u = -0.037 (cost CI low): f* = 0.3263; u = 0.0663 (cost point): f* = 0.1688; pays at every f once u >= c/K = 0.1409
+   main session, median: t = 1, c = $0.00577; u = 0 (reference): f* = 0.0662; u = -0.037 (cost CI low): f* = 0.1296; u = 0.0663 (cost point): f* = 0.0000; pays at every f once u >= c/K = 0.0336
+   subagent context, mean: t = 43.44, c = $0.01175; u = 0 (reference): f* = 0.1347; u = -0.037 (cost CI low): f* = 0.1934; u = 0.0663 (cost point): f* = 0.0048; pays at every f once u >= c/K = 0.0684
+   subagent context, median: t = 30, c = $0.00986; u = 0 (reference): f* = 0.1130; u = -0.037 (cost CI low): f* = 0.1732; u = 0.0663 (cost point): f* = 0.0000; pays at every f once u >= c/K = 0.0574
+   pooled per context as f counted, mean: t = 45.26, c = $0.01200; u = 0 (reference): f* = 0.1376; u = -0.037 (cost CI low): f* = 0.1961; u = 0.0663 (cost point): f* = 0.0082; pays at every f once u >= c/K = 0.0699
+   Python-editing context, mean: t = 81.55, c = $0.01711; u = 0 (reference): f* = 0.1962; u = -0.037 (cost CI low): f* = 0.2507; u = 0.0663 (cost point): f* = 0.0755; pays at every f once u >= c/K = 0.0997
+   floor: one cache write, t = 0: t = 0, c = $0.00563; u = 0 (reference): f* = 0.0646; u = -0.037 (cost CI low): f* = 0.1280; u = 0.0663 (cost point): f* = 0.0000; pays at every f once u >= c/K = 0.0328
+   per top-level session incl. its subagents (every context loads the block; 1308 contexts / 28 sessions = 46.7): c = $0.5608 = 6.43 x s, so at a single-context saving s the block never pays per session (f* = 1.00, capped) unless the saving also scales with the number of contexts
+
+5. The paper's u = 0 range '9-30%' re-evaluated: low end = main saving, 704 tokens; high end = new-task saving $0.0456, 1320 tokens (AI-stack mean)
+   paper (benchmark turns): 0.0914 to 0.3023
+   main session, mean: 0.2772 to 0.9946
+   subagent context, mean: 0.1347 to 0.4831
+   pooled per context, mean: 0.1376 to 0.4936

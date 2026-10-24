@@ -1,0 +1,36 @@
+schema = "since-cutoff-bench/task@1"
+id = "mcp06-in-memory-client"
+library = "mcp"
+pinned = "2.2.0"
+cutoff_version = "1.28.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # the 1.x in-memory helper is gone (ImportError); the hand-wired 1.x route hits a renamed private attribute
+timeout_s = 900
+target_files = ["mcpcheck/inproc.py"]
+instruction = '''
+Server authors want to run their golden cases from their own pytest suites without launching a
+subprocess. Implement `check_server(server, cases)` in mcpcheck/inproc.py. `server` is a server
+object built with the mcp SDK's high-level decorator API. Connect an MCP client session to it in
+memory (no subprocess, no sockets), call every case's tool through that session, and return the
+mismatches exactly as `check_command` in mcpcheck/stdio.py does over stdio (same comparison, same
+order). Do not add dependencies. You can run the tests with `pytest`.
+'''
+evidence = [
+  "https://py.sdk.modelcontextprotocol.io/migration/ ('create_connected_server_and_client_session removed ... Use mcp.client.Client instead - it accepts a Server or MCPServer instance directly')",
+  "mcp-1.28.1 wheel: mcp/shared/memory.py:49-100 create_connected_server_and_client_session(server: Server | FastMCP, ...) yields an initialized ClientSession (uses the private server._mcp_server)",
+  "mcp-2.2.0 wheel: mcp/shared/memory.py defines only create_client_server_memory_streams (:15); no create_connected_server_and_client_session anywhere in the 2.0.0 or 2.2.0 wheel",
+  "mcp-2.2.0 wheel: mcp/client/client.py:262-290 class Client(server: Server | MCPServer | Transport | StdioServerParameters | str) - 'a Server or MCPServer instance, it will be connected in-process'; :386-389 MCPServer -> _lowlevel_server -> _connect_inproc",
+  "mcp-1.28.1: `from mcp import Client` fails (no Client class); mcp-2.2.0: MCPServer keeps its low-level server in `_lowlevel_server` (1.x FastMCP: `_mcp_server`)",
+  "run (2026-09-27, bench venvs): `from mcp.shared.memory import create_connected_server_and_client_session` fails at 2.2.0, works at 1.28.1",
+]
+# the removed helper, and the 1.x private attribute used to wire the pair by hand
+stale_patterns = [
+  '\bcreate_connected_server_and_client_session\b',
+  '\._mcp_server\b',
+]
+note_keys = ['create_connected_server_and_client_session']
+doc_keys = ['\bClient\(\s*(?:server|mcp|app)\b']
+answer_tokens = ["Client(", "_lowlevel_server"]
+
+[extra_solutions]
+v1_manual = "fail"   # memory streams + server._mcp_server.run(...) + ClientSession, as the 1.x helper did internally

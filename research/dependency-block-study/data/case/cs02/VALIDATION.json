@@ -1,0 +1,124 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "cs02",
+  "task_id": "cs02-litellm-math-server-http",
+  "task_sha256": "2695c8ce5e8ef6072c9279960f49222c16f3692c9119a5d9c53c7978d9394c2e",
+  "parts_sha256": {
+    "task.toml": "e7c3d7dd45360225caeacb87cf6505e51d79ab7b5e1810a893e1228ae8e8eae8",
+    "repo": "e134e64b9b6b87f1e286303a339cdef07dad5114158cfca3541e4bd0f83270aa",
+    "hidden": "e8fb581ee6588d09e8808eac9c8c1f7eb64db78b17915e15753dabf244f9fd06",
+    "reference": "f189777e139355e45b9bff37082c0cc58581890e5709091c04d8adca281f4695",
+    "stale": "f54a1e70bac70553eb09a0a1df67bd27d4670956b25f62a5f14af68fcf40e4ea",
+    "importonly": "189a68de0fdca959714a3f8cf403ec8d8065b38b170a999ffb62ab7876f502cf"
+  },
+  "validated_at": "2026-10-22T20:59:26+00:00",
+  "library": "mcp",
+  "pinned": "2.3.0",
+  "stale_version": "1.28.1",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "2.3.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 2.3,
+        "timed_out": false,
+        "first_error": "AssertionError: server exited: Traceback (most recent call last):"
+      },
+      "summary": "1 failed in 1.50s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "2.3.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 2.74,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "1 passed in 2.00s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.3.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 3.69,
+        "timed_out": false,
+        "first_error": "AssertionError: server exited: Traceback (most recent call last):"
+      },
+      "summary": "1 failed in 2.92s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.28.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 2.26,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "1 passed in 1.51s"
+    }
+  },
+  "extra": {
+    "extra_importonly_fails_at_pinned": {
+      "ok": true,
+      "solution": "importonly",
+      "version": "2.3.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 2.23,
+        "timed_out": false,
+        "first_error": "AssertionError: server exited: Traceback (most recent call last):"
+      },
+      "summary": "1 failed in 1.49s"
+    }
+  },
+  "leaks": [],
+  "envs": {
+    "pinned": "mcp-2.3.0 ed99fefe648a",
+    "stale": "mcp-1.28.1 c1f82f8ed8f1"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 14.8
+}

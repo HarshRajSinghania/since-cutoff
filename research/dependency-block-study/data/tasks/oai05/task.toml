@@ -1,0 +1,44 @@
+schema = "since-cutoff-bench/task@1"
+id = "oai05-http-client-hooks-pinned-behind"
+library = "openai"
+pinned = "2.44.0"            # the project is pinned BEHIND the latest release (3.19.2)
+cutoff_version = "2.44.0"    # latest release before claude-opus-5-5's 2026-06 cutoff (same as the pin)
+# pinned-behind: stale/ holds the too-new answer (openai 3.x / httpx2, what default-branch docs show);
+# gate 3 checks it fails at the pin, gate 4 that it is right for the release it was written for.
+stale_version = "3.19.2"
+stratum = "pinned-behind"
+kind = "pinned-behind-loud"  # the 3.x answer imports httpx2, which openai 2.44.0 does not install
+timeout_s = 900
+target_files = ["app/llm_client.py"]
+# identical to oai01 (only the pin differs), so oai01 vs oai05 is a paired contrast
+instruction = """
+Implement `build_client(api_key, transport=None)` in app/llm_client.py. Requirements from ops:
+
+1. connect timeout 5 seconds; read, write and pool timeouts 30 seconds;
+2. max_retries=2;
+3. every outgoing HTTP request (including retries) is logged at INFO level on the logger
+   named "app.http" as "<METHOD> <URL>", using an event hook on the HTTP client;
+4. when `transport` is given (the tests pass a stub transport), the HTTP client must use it.
+
+The lockfile is fixed: do not add or install dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "pinned-behind variant of oai01 (plan B.4 / bench.md 3.1): same repo, instruction and hidden tests, pyproject pins openai==2.44.0",
+  "openai-2.44.0 wheel METADATA: Requires-Dist httpx<1,>=0.23.0 and no httpx2; openai/_base_client.py:36 `import httpx`, :834 `class _DefaultHttpxClient(httpx.Client)`; openai/__init__.py exports DefaultHttpxClient and no DefaultHttpx2Client",
+  "openai-3.19.2 wheel: openai/__init__.py:13 `from ._httpx2 import DefaultHttpx2Client, ...`; METADATA (README) documents DefaultHttpx2Client / httpx2.Timeout and never DefaultHttpxClient, so default-branch docs (Context7 has no 2.44.0 tag) describe the answer that fails here",
+  "checked: the httpx2 answer fails at 2.44.0 with ModuleNotFoundError: No module named 'httpx2'; the httpx answer passes at 2.44.0 (and fails at 3.19.2, oai01 gate 3)",
+]
+# for this stratum the "stale" code is the too-new 3.x API
+stale_patterns = [
+  '\bhttpx2\b',
+  '\bDefault(?:Async)?Httpx2Client\b',
+]
+# the notes for a project pinned at the cutoff-era version have nothing to cover (any 3.x hint would mislead)
+note_keys = []
+# for this stratum, doc_hit means Context7 served documentation of the PINNED (2.x) client API
+doc_keys = ['\bDefaultHttpxClient\b']
+answer_tokens = ["DefaultHttpxClient", "event_hooks", "httpx.Timeout"]
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_review = "pass"   # reviewer's alternative correct answer for 2.44.0 (oai01's alt_review with httpx): must be accepted

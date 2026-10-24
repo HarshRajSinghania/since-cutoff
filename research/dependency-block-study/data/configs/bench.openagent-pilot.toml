@@ -1,0 +1,89 @@
+# Workstream B CPU pilot of the mini-swe-agent adapter (scripts/openagent_run.py); tasks, notes, envs as tasks2.
+# since-cutoff head-to-head benchmark: harness configuration (plan B.1-B.6).
+# Paths may use forward slashes; "~" expands to the user's home. Relative paths are relative to
+# the repository root (the folder that contains bench/). No secrets belong in this file: the OAuth
+# token and the Context7 key are read from the environment at run time and never written anywhere.
+schema = "since-cutoff-bench/config@1"
+
+[study]
+model = "local:qwen2.5-coder-1.5b-instruct-q4_k_m (CPU adapter pilot, not a study)"
+effort = "medium"
+reps = 3
+conditions = ["A", "C", "H"]  # NAACL addendum 3 (PROTOCOL_ADDENDUM.md section 8): new post-cutoff tasks + controls
+pilot_tasks = []   # pilot: excluded from the analysis (pre-registered)
+pilot_reps = 2
+max_attempts = 3                   # infrastructure failures are re-queued up to this many attempts per run
+
+[claude]
+executable = "~/.local/bin/claude.exe"   # absolute path recorded in every run
+version = "2.1.283"                      # pinned; `bench prepare` and every run check it
+max_turns = 40
+max_budget_usd = 3
+permission_mode = "dontAsk"
+tools = ["Bash", "Read", "Edit", "Write", "Glob", "Grep", "TodoWrite", "Skill"]
+wall_timeout_s = 900
+auth = "login"         # "login": the maintainer's normal Claude Code login, user settings excluded with
+                       # --setting-sources project; "token": CLAUDE_CODE_OAUTH_TOKEN + fresh CLAUDE_CONFIG_DIR
+isolate_home = false   # only used with auth = "token"; login mode needs the real home for the credentials
+git_bash = "C:/Program Files/Git/bin/bash.exe"   # CLAUDE_CODE_GIT_BASH_PATH (Bash tool on Windows)
+# fixed environment of the claude process (plan B.2); nothing else is inherited from the shell
+env = { CLAUDE_CODE_SUBPROCESS_ENV_SCRUB = "1", CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1", DISABLE_AUTOUPDATER = "1", ENABLE_TOOL_SEARCH = "false", MCP_TIMEOUT = "60000", PYTEST_ADDOPTS = "--allow-hosts=127.0.0.1,::1", HF_HUB_DISABLE_IMPLICIT_TOKEN = "1" }
+# variables that must never reach the claude process
+forbidden_env = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_EFFORT_LEVEL", "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy", "CONTEXT7_API_KEY", "OPENAI_API_KEY", "HF_TOKEN"]
+
+[context7]
+package = "@upstash/context7-mcp"
+version = "4.1.1"
+node = "C:/Program Files/nodejs/node.exe"
+entry = "~/AppData/Roaming/npm/node_modules/@upstash/context7-mcp/dist/index.js"
+allowed_tools = "mcp__context7"
+# Context7's own recommended rule, verbatim, is in claude_md/context7_rule.md
+
+[python]
+base = "~/projects/.sc-venv/Scripts/python.exe"   # Python 3.13; every venv is created from it
+version = "3.13"
+test_requirements = ["pytest==8.4.2", "pytest-socket==0.8.1"]
+
+[paths]
+root = "C:/b"
+wheelhouse = "C:/b/wheelhouse"
+venvs = "C:/b/venvs"            # cached venvs for `bench validate`
+runs = "C:/b/runs"              # agent projects: C:/b/runs/<study_id>/<run_id>
+claude_config = "C:/b/claude-config"   # a fresh CLAUDE_CONFIG_DIR per run below this folder
+home = "C:/b/home"
+tmp = "C:/b/tmp"
+results = "since_cutoff_runs/results"
+tasks = "since_cutoff_tasks2"   # private: hidden tests stay out of the public repository
+notes = "research/dependency-block-study/notes/tasks2-opus-5-5"
+notes_header = "research/dependency-block-study/notes/tasks2-opus-5-5-header"
+
+[grade]
+pytest_args = ["-q", "-p", "no:cacheprovider", "--allow-hosts=127.0.0.1,::1"]
+timeout_s = 300
+dead_proxy = "http://127.0.0.1:9"
+# environment variables removed before grading (fnmatch, case-insensitive)
+strip_env = ["*KEY*", "*TOKEN*", "*SECRET*", "*PASSWORD*", "*CREDENTIAL*", "ANTHROPIC*", "OPENAI*", "HF_*", "CLAUDE*", "CONTEXT7*", "PYTEST_ADDOPTS", "PYTHONPATH", "PYTHONSTARTUP", "PIP_*", "VIRTUAL_ENV", "CONDA*"]
+lock_files = ["uv.lock", "poetry.lock", "pdm.lock", "Pipfile", "Pipfile.lock", "requirements*.txt", "constraints*.txt"]
+
+[leak]
+# answer tokens that must not appear in any task's repo/ or instruction (task.toml adds its own)
+answer_tokens = ["extra_body", "httpx2", "Httpx2", "MCPServer", "mcpserver", "ToolError", ".text()"]
+
+[notes]
+tool = "since-cutoff==0.4.1"
+model = "anthropic:claude-opus-5-5"
+target = "CLAUDE.md"
+# run in a scratch copy of each task's repo/; {python} is the tool venv's python
+command = ["{python}", "-m", "since_cutoff", "sync", "--yes", "--scope", "imported", "--model", "{model}", "--target", "{target}"]
+start_marker = "<!-- since-cutoff:start -->"
+end_marker = "<!-- since-cutoff:end -->"
+
+[analysis]
+bootstrap_resamples = 10000
+bootstrap_seed = 20261001
+alpha = 0.05
+primary = ["C", "A"]
+contrasts = [["C", "A"], ["H", "A"], ["C", "H"]]   # addendum 2: Holm family
+noninferiority_margin = -0.10
+ceiling = 0.90
+majority = 2          # a task "passes" for McNemar when at least 2 of its 3 reps pass

@@ -1,0 +1,33 @@
+round22_holm.py: raw and Holm-adjusted exact sign-flip p of the pre-committed efficiency metric
+[main] family: C/A cost, turns, wall time, failing test runs (pre-committed disjunction)
+  C/A cost: ratio 0.8048, signflip_p 0.0002747, tasks 17, sd_log_ratio 0.2636, holm_p 0.001099
+  C/A turns: ratio 0.8263, signflip_p 0.000885, tasks 17, sd_log_ratio 0.2353, holm_p 0.002655
+  C/A wall: ratio 0.8724, signflip_p 0.007034, tasks 17, sd_log_ratio 0.2023, holm_p 0.01407
+  C/A fail_runs: mean_diff 0, signflip_p 1, tasks 17, tasks_nonzero 3, holm_p 1
+[replication] family: C/A, H/A, C/H on the pre-committed metric
+  tokens C/A: ratio 0.8263, tasks 17, raw p 0.0743, Holm p 0.2229
+  tokens H/A: ratio 0.9466, tasks 17, raw p 0.5805, Holm p 0.7007
+  tokens C/H: ratio 0.8729, tasks 17, raw p 0.3504, Holm p 0.7007
+  cost C/A: ratio 0.8501, tasks 17, raw p 0.1253, Holm p 0.376
+  cost H/A: ratio 0.9854, tasks 17, raw p 0.8648, Holm p 0.8648
+  cost C/H: ratio 0.8626, tasks 17, raw p 0.1815, Holm p 0.376
+[new_tasks] family: C/A, H/A, C/H on the pre-committed metric
+  tokens C/A: ratio 0.794, tasks 8, raw p 0.03125, Holm p 0.09375
+  tokens H/A: ratio 0.86, tasks 8, raw p 0.1172, Holm p 0.2344
+  tokens C/H: ratio 0.9232, tasks 8, raw p 0.3984, Holm p 0.3984
+  cost C/A: ratio 0.8349, tasks 8, raw p 0.007812, Holm p 0.02344
+  cost H/A: ratio 0.9411, tasks 8, raw p 0.4844, Holm p 0.4844
+  cost C/H: ratio 0.8872, tasks 8, raw p 0.1484, Holm p 0.2969
+[sonnet55] family: C/A, H/A, C/H on the pre-committed metric
+  tokens C/A: ratio 0.9321, tasks 17, raw p 0.5451, Holm p 0.5451
+  tokens H/A: ratio 1.1291, tasks 17, raw p 0.2015, Holm p 0.403
+  tokens C/H: ratio 0.8255, tasks 17, raw p 0.08879, Holm p 0.2664
+[concurrent] family: pre-committed C/G, C/R, G/H tokens
+  tokens C/G: ratio 0.8041, tasks 8, raw p 0.125, Holm p 0.25
+  tokens C/R: ratio 0.9317, tasks 8, raw p 0.4531, Holm p 0.4531
+  tokens G/H: ratio 1.2921, tasks 8, raw p 0.05469, Holm p 0.1641
+[haiku55] family: C/A only
+  tokens C/A: ratio 0.922, tasks 17, raw p 0.2313, Holm p 0.2313
+[qwen3c_AC] family: C/A only (31 tasks)
+  tokens C/A: ratio 1.0752, tasks 31, raw p 0.5035, Holm p 0.5035
+smallest attainable two-sided p: 8 tasks 0.007812; 17 tasks 1.526e-05; three-contrast Holm floor with 8 tasks 0.02344

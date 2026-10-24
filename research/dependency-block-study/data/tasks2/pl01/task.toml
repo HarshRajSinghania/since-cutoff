@@ -1,0 +1,28 @@
+schema = "since-cutoff-bench/task@1"
+id = "pl01-explode-empty-lists"
+library = "polars"
+pinned = "2.0.0"
+cutoff_version = "1.42.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-silent"  # stale explode() raises nothing; members with an empty tag list silently disappear
+timeout_s = 900
+target_files = ["rosterkit/tags.py"]
+instruction = """
+Implement `member_tag_rows` in rosterkit/tags.py: turn the roster (one row per member, `tags` is a
+list of strings) into long form with one row per (member, tag) and the columns member_id, name, tag.
+Every member must appear in the result: a member without tags (an empty list or a missing list) keeps
+exactly one row, with tag set to null. Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "https://github.com/pola-rs/polars/releases/tag/py-2.0.0 (breaking release; rs-0.55.1/py-1.44 notes: 'Add a deprecation warning for .explode() without empty_as_null argument' #28040)",
+  "polars-1.42.1: DataFrame.explode(..., empty_as_null=<sentinel>) behaves as empty_as_null=True (empty list -> one null row) and emits DeprecationWarning 'In Polars 2.0, the default behavior for empty_as_null will change to False' (so the change was announced before the cutoff; the break itself shipped 2026-10-06)",
+  "polars-2.0.0: DataFrame.explode(..., empty_as_null=False) default; an empty list produces no row",
+  "run (2026-10-22, scratch venvs; I1/expansion/probes/polars_probe_output.txt): 1.42.1 explode -> 4 rows incl. id 2 null; 2.0.0 -> 3 rows (id 2 dropped); empty_as_null=True -> 4 rows in both",
+]
+# explode() on the tags without empty_as_null (comments ignored by the harness)
+stale_patterns = [
+  '''\.explode\((?!(?:[^()]|\([^()]*\))*empty_as_null)(?:[^()]|\([^()]*\))*\)''',
+]
+note_keys = ['empty_as_null']
+doc_keys = ['empty_as_null']
+answer_tokens = ["empty_as_null"]

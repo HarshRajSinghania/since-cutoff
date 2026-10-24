@@ -1,0 +1,279 @@
+{
+  "repos": 47,
+  "failed_parse": 16,
+  "query": "language:Python stars:>=200 pushed:>=2026-09-01",
+  "selected_at": "2026-10-21T21:13:27.890065+00:00",
+  "examined_in_search": 205,
+  "by_cutoff": {
+    "opus-5-5 (2026-06-30)": {
+      "direct_deps": {
+        "median": 38,
+        "p25": 23,
+        "p75": 75,
+        "mean": 60.93617021276596,
+        "max": 465
+      },
+      "direct_with_date": {
+        "median": 38,
+        "p25": 23,
+        "p75": 75,
+        "mean": 60.5531914893617,
+        "max": 464
+      },
+      "share_direct_locked_after_cutoff": {
+        "median": 0.15789473684210525,
+        "p25": 0.057692307692307696,
+        "p75": 0.5,
+        "mean": 0.26532550639120295,
+        "max": 0.7073170731707317
+      },
+      "direct_locked_after_cutoff": {
+        "median": 7,
+        "p25": 2,
+        "p75": 21,
+        "mean": 18.02127659574468,
+        "max": 289
+      },
+      "deps_changed": {
+        "median": 3,
+        "p25": 0,
+        "p75": 8,
+        "mean": 6.76595744680851,
+        "max": 101
+      },
+      "imported_deps_changed": {
+        "median": 2,
+        "p25": 0,
+        "p75": 6,
+        "mean": 4.723404255319149,
+        "max": 69
+      },
+      "breaking_changes": {
+        "median": 46,
+        "p25": 0,
+        "p75": 122,
+        "mean": 230.85106382978722,
+        "max": 4878
+      },
+      "breaking_in_imported": {
+        "median": 20,
+        "p25": 0,
+        "p75": 92,
+        "mean": 151.5744680851064,
+        "max": 4081
+      },
+      "used_apis": {
+        "median": 0,
+        "p25": 0,
+        "p75": 0,
+        "mean": 1.127659574468085,
+        "max": 22
+      },
+      "used_changes": {
+        "median": 0,
+        "p25": 0,
+        "p75": 0,
+        "mean": 2.723404255319149,
+        "max": 68
+      },
+      "used_files": {
+        "median": 0,
+        "p25": 0,
+        "p75": 0,
+        "mean": 2.0,
+        "max": 30
+      },
+      "used_packages": {
+        "median": 0,
+        "p25": 0,
+        "p75": 0,
+        "mean": 0.2765957446808511,
+        "max": 4
+      },
+      "repos_with_any_direct_dep_after_cutoff": 38,
+      "repos_with_imported_breaking_change": 31,
+      "repos_with_used_changed_api": 10,
+      "total_used_changed_apis": 53
+    },
+    "cutoff-2025-07-31 (2025-07-31)": {
+      "direct_deps": {
+        "median": 38,
+        "p25": 23,
+        "p75": 75,
+        "mean": 60.93617021276596,
+        "max": 465
+      },
+      "direct_with_date": {
+        "median": 38,
+        "p25": 23,
+        "p75": 75,
+        "mean": 60.5531914893617,
+        "max": 464
+      },
+      "share_direct_locked_after_cutoff": {
+        "median": 0.7659574468085106,
+        "p25": 0.6756756756756757,
+        "p75": 0.8529411764705882,
+        "mean": 0.7296067410784854,
+        "max": 1.0
+      },
+      "direct_locked_after_cutoff": {
+        "median": 29,
+        "p25": 15,
+        "p75": 57,
+        "mean": 44.91489361702128,
+        "max": 386
+      },
+      "deps_changed": {
+        "median": 16,
+        "p25": 11,
+        "p75": 31,
+        "mean": 26.148936170212767,
+        "max": 202
+      },
+      "imported_deps_changed": {
+        "median": 11,
+        "p25": 5,
+        "p75": 22,
+        "mean": 18.595744680851062,
+        "max": 143
+      },
+      "breaking_changes": {
+        "median": 588,
+        "p25": 272,
+        "p75": 1385,
+        "mean": 1848.8297872340424,
+        "max": 13343
+      },
+      "breaking_in_imported": {
+        "median": 305,
+        "p25": 50,
+        "p75": 1151,
+        "mean": 1560.276595744681,
+        "max": 10695
+      },
+      "used_apis": {
+        "median": 2,
+        "p25": 0,
+        "p75": 4,
+        "mean": 4.51063829787234,
+        "max": 56
+      },
+      "used_changes": {
+        "median": 3,
+        "p25": 0,
+        "p75": 10,
+        "mean": 9.808510638297872,
+        "max": 134
+      },
+      "used_files": {
+        "median": 3,
+        "p25": 0,
+        "p75": 5,
+        "mean": 7.0,
+        "max": 102
+      },
+      "used_packages": {
+        "median": 1,
+        "p25": 0,
+        "p75": 3,
+        "mean": 2.0425531914893615,
+        "max": 17
+      },
+      "repos_with_any_direct_dep_after_cutoff": 46,
+      "repos_with_imported_breaking_change": 46,
+      "repos_with_used_changed_api": 33,
+      "total_used_changed_apis": 212
+    }
+  },
+  "secondary_current_cutoff_only": {
+    "repos": 50,
+    "direct_deps": {
+      "median": 41.5,
+      "p25": 26,
+      "p75": 77,
+      "mean": 67.02,
+      "max": 465
+    },
+    "share_direct_locked_after_cutoff": {
+      "median": 0.25595238095238093,
+      "p25": 0.08,
+      "p75": 0.5445544554455446,
+      "mean": 0.2889740034991261,
+      "max": 0.7073170731707317
+    },
+    "repos_with_any_direct_dep_after_cutoff": 42,
+    "repos_with_imported_breaking_change": 36,
+    "breaking_in_imported": {
+      "median": 31.5,
+      "p25": 0,
+      "p75": 180,
+      "mean": 295.04,
+      "max": 4081
+    },
+    "repos_with_used_changed_api": 13,
+    "total_used_changed_apis": 58,
+    "packages_behind_used_changes": [
+      [
+        "mcp",
+        3
+      ],
+      [
+        "modal",
+        1
+      ],
+      [
+        "websockets",
+        1
+      ],
+      [
+        "gradio",
+        1
+      ],
+      [
+        "modelscope",
+        1
+      ],
+      [
+        "openai",
+        1
+      ],
+      [
+        "anyio",
+        1
+      ],
+      [
+        "islo",
+        1
+      ],
+      [
+        "pydantic-ai-slim",
+        1
+      ],
+      [
+        "anthropic",
+        1
+      ],
+      [
+        "pgvector",
+        1
+      ],
+      [
+        "django-stubs",
+        1
+      ],
+      [
+        "openviking-sdk",
+        1
+      ],
+      [
+        "temporalio",
+        1
+      ],
+      [
+        "optuna",
+        1
+      ]
+    ]
+  }
+}

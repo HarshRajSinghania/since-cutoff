@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "st02",
+  "task_id": "st02-image-column-width",
+  "task_sha256": "c6a4d524031d41b96a03b9c1dec6fde00bddbe2d0ae4ddf3aaf210c39ca60f50",
+  "parts_sha256": {
+    "task.toml": "24ca84e0d0e6d86e43bea14f6e469a7b0e2b5763151dd3d90b4031cb5548fb04",
+    "repo": "e9323400209226966ea2d2929317db9bcd38c59de86d8b067f5b592de61e0109",
+    "hidden": "88a8a0acbb42bf0aab4832fee04c5b810c0d1fed6dd6246b1354937cdd49a74c",
+    "reference": "90b811b02d3e2e33e8189b596f65aac0a5c2fe15f89cbb4b20691c853dae291d",
+    "stale": "ea4f0cb50982b9e0572c924b0f066d73ed76678880228903f3b102c23226723c"
+  },
+  "validated_at": "2026-10-22T17:28:24+00:00",
+  "library": "streamlit",
+  "pinned": "1.66.1",
+  "stale_version": "1.58.0",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "1.66.1",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 2,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.85,
+        "timed_out": false,
+        "first_error": "AssertionError: ['']"
+      },
+      "summary": "2 failed in 1.04s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "1.66.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 2,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.79,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "2 passed in 0.99s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.66.1",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 1,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.72,
+        "timed_out": false,
+        "first_error": "AssertionError: ['content', 'content', 'content', 'content']"
+      },
+      "summary": "1 failed, 1 passed in 0.95s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.58.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 2,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.55,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "2 passed in 0.77s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "streamlit-1.66.1 c9e7bccd410d",
+    "stale": "streamlit-1.58.0 a1397a7a9c62"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 7.3
+}

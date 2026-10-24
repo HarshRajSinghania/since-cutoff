@@ -1,0 +1,40 @@
+schema = "since-cutoff-bench/task@1"
+id = "mcp02-tool-result-fields"
+library = "mcp"
+pinned = "2.2.0"
+cutoff_version = "1.28.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # result.isError / result.structuredContent raise AttributeError on 2.x (a getattr() fallback fails silently)
+timeout_s = 900
+target_files = ["opsbot/calls.py"]
+instruction = '''
+Implement `run_tool(session, name, arguments)` in opsbot/calls.py (the opsbot CLI already uses it).
+It calls the tool `name` with `arguments` on the connected MCP client session and returns what the
+tool produced:
+
+  - if the server reports that the tool call failed, raise `ToolCallFailed(name, message)`, where
+    `message` is the text the server sent back (its text blocks joined with "\n");
+  - otherwise, if the result carries structured output, return that structured value as-is;
+  - otherwise return the text of the result's text blocks joined with "\n".
+
+Do not add dependencies. You can run the tests with `pytest`.
+'''
+evidence = [
+  "https://py.sdk.modelcontextprotocol.io/migration/ ('isError -> is_error', 'structuredContent -> structured_content'; 'attribute access must use snake_case')",
+  "mcp-1.28.1 wheel: mcp/types.py:1363-1369 class CallToolResult has `structuredContent` and `isError: bool = False`",
+  "mcp_types-2.2.0 wheel (Requires-Dist of mcp 2.2.0; mirrored as mcp.types): mcp_types/_types.py:1463-1480 class CallToolResult has `structured_content` and `is_error`",
+  "mcp_types-2.2.0 wheel: mcp_types/_types.py:45-48 MCPModel uses alias_generator=to_camel, populate_by_name=True, so camelCase is accepted as a constructor kwarg and on the wire, but `result.isError` raises AttributeError",
+  "run (2026-09-27, bench venvs): 2.2.0 `CallToolResult(..., isError=True).isError` -> AttributeError; `.is_error` -> True; 1.28.1 the reverse",
+]
+# 1.x attribute names read as attributes (or via getattr); a camelCase dict key is not flagged because
+# model_dump(by_alias=True)["isError"] is correct 2.x code (checked: it passes the hidden tests)
+stale_patterns = [
+  '''\.isError\b|getattr\(\s*\w+\s*,\s*["']isError["']''',
+  '''\.structuredContent\b|getattr\(\s*\w+\s*,\s*["']structuredContent["']''',
+]
+note_keys = ['isError|is_error', 'structuredContent|structured_content']
+doc_keys = ['\bis_error\b', '\bstructured_content\b']
+answer_tokens = ["is_error", "structured_content"]
+
+[extra_solutions]
+stale_getattr = "fail"   # getattr(result, "isError", False): no exception, but errors pass and structured values come back as text

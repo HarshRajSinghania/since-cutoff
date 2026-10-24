@@ -1,0 +1,145 @@
+{
+  "generated_by": "scripts/exposure2_breakeven.py",
+  "prices_usd_per_mtok": {
+    "cache_read": 0.2,
+    "cache_write_1h": 8.0
+  },
+  "block_sizes_tokens": {
+    "G_median_nonempty": 704,
+    "G_mean_nonempty": 1014,
+    "AI_median_nonempty": 1024.5,
+    "AI_mean_nonempty": 1320
+  },
+  "studies": {
+    "main": {
+      "mean_C_turns": 16.647058823529413,
+      "S_gross_usd": 0.08724311764705882,
+      "by_block_size": {
+        "G_median_nonempty": {
+          "T_tokens": 704,
+          "overhead_per_session_usd": 0.00798,
+          "break_even_share": 0.0914
+        },
+        "G_mean_nonempty": {
+          "T_tokens": 1014,
+          "overhead_per_session_usd": 0.01149,
+          "break_even_share": 0.1317
+        },
+        "AI_median_nonempty": {
+          "T_tokens": 1024.5,
+          "overhead_per_session_usd": 0.01161,
+          "break_even_share": 0.133
+        },
+        "AI_mean_nonempty": {
+          "T_tokens": 1320,
+          "overhead_per_session_usd": 0.01495,
+          "break_even_share": 0.1714
+        }
+      }
+    },
+    "replication": {
+      "mean_C_turns": 17.647058823529413,
+      "S_gross_usd": 0.06915338431372549,
+      "by_block_size": {
+        "G_median_nonempty": {
+          "T_tokens": 704,
+          "overhead_per_session_usd": 0.00812,
+          "break_even_share": 0.1174
+        },
+        "G_mean_nonempty": {
+          "T_tokens": 1014,
+          "overhead_per_session_usd": 0.01169,
+          "break_even_share": 0.1691
+        },
+        "AI_median_nonempty": {
+          "T_tokens": 1024.5,
+          "overhead_per_session_usd": 0.01181,
+          "break_even_share": 0.1708
+        },
+        "AI_mean_nonempty": {
+          "T_tokens": 1320,
+          "overhead_per_session_usd": 0.01522,
+          "break_even_share": 0.2201
+        }
+      }
+    },
+    "new_tasks": {
+      "mean_C_turns": 12.208333333333332,
+      "S_gross_usd": 0.04559704166666667,
+      "by_block_size": {
+        "G_median_nonempty": {
+          "T_tokens": 704,
+          "overhead_per_session_usd": 0.00735,
+          "break_even_share": 0.1612
+        },
+        "G_mean_nonempty": {
+          "T_tokens": 1014,
+          "overhead_per_session_usd": 0.01059,
+          "break_even_share": 0.2322
+        },
+        "AI_median_nonempty": {
+          "T_tokens": 1024.5,
+          "overhead_per_session_usd": 0.0107,
+          "break_even_share": 0.2346
+        },
+        "AI_mean_nonempty": {
+          "T_tokens": 1320,
+          "overhead_per_session_usd": 0.01378,
+          "break_even_share": 0.3023
+        }
+      }
+    },
+    "pooled_main_new": {
+      "mean_C_turns": 15.226666666666667,
+      "S_gross_usd": 0.07391637333333334,
+      "by_block_size": {
+        "G_median_nonempty": {
+          "T_tokens": 704,
+          "overhead_per_session_usd": 0.00778,
+          "break_even_share": 0.1052
+        },
+        "G_mean_nonempty": {
+          "T_tokens": 1014,
+          "overhead_per_session_usd": 0.0112,
+          "break_even_share": 0.1515
+        },
+        "AI_median_nonempty": {
+          "T_tokens": 1024.5,
+          "overhead_per_session_usd": 0.01132,
+          "break_even_share": 0.1531
+        },
+        "AI_mean_nonempty": {
+          "T_tokens": 1320,
+          "overhead_per_session_usd": 0.01458,
+          "break_even_share": 0.1972
+        }
+      }
+    },
+    "pooled_repl_new": {
+      "mean_C_turns": 15.906666666666668,
+      "S_gross_usd": 0.061615354666666663,
+      "by_block_size": {
+        "G_median_nonempty": {
+          "T_tokens": 704,
+          "overhead_per_session_usd": 0.00787,
+          "break_even_share": 0.1278
+        },
+        "G_mean_nonempty": {
+          "T_tokens": 1014,
+          "overhead_per_session_usd": 0.01134,
+          "break_even_share": 0.184
+        },
+        "AI_median_nonempty": {
+          "T_tokens": 1024.5,
+          "overhead_per_session_usd": 0.01146,
+          "break_even_share": 0.1859
+        },
+        "AI_mean_nonempty": {
+          "T_tokens": 1320,
+          "overhead_per_session_usd": 0.01476,
+          "break_even_share": 0.2395
+        }
+      }
+    }
+  }
+}

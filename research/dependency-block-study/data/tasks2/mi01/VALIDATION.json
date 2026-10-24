@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "mi01",
+  "task_id": "mi01-http-request-ids",
+  "task_sha256": "998563484c7f56a19c1f3f0f0012d6e8521335f679457850214f6c23fd770c95",
+  "parts_sha256": {
+    "task.toml": "e48dee638c61d78e64063b1a1055428d7b976da5f97899fd7cfcae8bb75a2180",
+    "repo": "450cf5d4497bbf27848546a2b65b5feb43f987cb2a8291d170278b22d9a60449",
+    "hidden": "bcd73baf33278fa9d2b772d55774d19b99e82560ef84cbebb98ee43f1f3d99cf",
+    "reference": "27b78b8f2ba19375a5227b32dd37c094df1ee3db05d7a3fb6106b24c4ca3f2e5",
+    "stale": "169527247c252beade47cf4a9b2451dbd3fdf285ef06c26ecc7ebb175afe0971"
+  },
+  "validated_at": "2026-10-22T17:27:25+00:00",
+  "library": "mistralai",
+  "pinned": "3.3.0",
+  "stale_version": "2.5.0",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "3.3.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 3,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.47,
+        "timed_out": false,
+        "first_error": "NotImplementedError"
+      },
+      "summary": "3 failed in 0.64s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "3.3.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.42,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed in 0.66s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "3.3.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 2,
+        "passed": 0,
+        "failed": 0,
+        "errors": 1,
+        "skipped": 0,
+        "duration_s": 0.98,
+        "timed_out": false,
+        "first_error": "ModuleNotFoundError: No module named 'httpx'"
+      },
+      "summary": "1 error in 0.27s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.5.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 5.35,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed in 4.13s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "mistralai-3.3.0 f09e6f5cb07c",
+    "stale": "mistralai-2.5.0 ed207d6b1b93"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 9.6
+}

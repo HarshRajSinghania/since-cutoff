@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "mi02",
+  "task_id": "mi02-ocr-markdown-only",
+  "task_sha256": "da4beaf25e418c9b9f7d25be5d88663a39f673d4e07a7c75971efbbf4b2ad802",
+  "parts_sha256": {
+    "task.toml": "c735cab34ab57672096a93d29987947ab2586998607b789f43d4edc159737a04",
+    "repo": "1701fe55589fdabb3e30418627b4f9c4cfe33c4324becf574067271232cb8e7a",
+    "hidden": "afa01eff0e373279b972535cff228b84b47cbe173ff45c41578263a8c4b9624b",
+    "reference": "39b85659fb057c266f75c53b988556eed5cfbdecc70be34e4ac3f8694f2c3589",
+    "stale": "0a5b21ffe481377fbb7adcb9471f9fa312651cce5a5d01fe16f1465df7375de0"
+  },
+  "validated_at": "2026-10-22T17:27:34+00:00",
+  "library": "mistralai",
+  "pinned": "3.3.0",
+  "stale_version": "2.5.0",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "3.3.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 3,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.47,
+        "timed_out": false,
+        "first_error": "NotImplementedError"
+      },
+      "summary": "3 failed in 0.70s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "3.3.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.41,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed in 0.63s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "3.3.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 2,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.52,
+        "timed_out": false,
+        "first_error": "AssertionError: {'document': {'document_url': 'https://files.example.com/invoices/inv-0042.pdf', 'type': 'document_url'}, 'include_blocks': True, 'include_image_base64': False, 'model': 'mistral-ocr-latest'}"
+      },
+      "summary": "1 failed, 2 passed in 0.74s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.5.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 5.45,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed in 4.22s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "mistralai-3.3.0 f09e6f5cb07c",
+    "stale": "mistralai-2.5.0 ed207d6b1b93"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 10.5
+}

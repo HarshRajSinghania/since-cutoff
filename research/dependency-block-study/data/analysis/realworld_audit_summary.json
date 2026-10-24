@@ -1,0 +1,24 @@
+{
+  "matched_changed_apis": 53,
+  "used_changes_total": 128,
+  "tp": 46,
+  "fp_resolution": 3,
+  "fp_diff": 4,
+  "precision": 0.8679,
+  "precision_wilson95": [
+    0.7516,
+    0.9345
+  ],
+  "tp_affected_yes": 5,
+  "tp_affected_handled": 1,
+  "tp_affected_no": 40,
+  "tool_old_form_labels": 12,
+  "old_form_labels_correct": 5,
+  "repos_with_match": 10,
+  "repos_with_tp": 8,
+  "repos_total": 47,
+  "repos_with_tp_wilson95": [
+    0.0889,
+    0.3014
+  ]
+}

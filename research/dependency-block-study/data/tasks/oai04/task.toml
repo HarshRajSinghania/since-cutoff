@@ -1,0 +1,38 @@
+schema = "since-cutoff-bench/task@1"
+id = "oai04-responses-draft-control"
+library = "openai"
+pinned = "3.19.2"            # lockfile version the agent must target
+cutoff_version = "2.44.0"    # latest release before claude-opus-5-5's 2026-06 cutoff
+stratum = "no-change-control"
+kind = "no-change-control"   # everything the task needs works the same at 2.44.0 and 3.19.2
+timeout_s = 900
+target_files = ["app/drafts.py"]
+instruction = """
+Implement `draft_reply(client, ticket)` in app/drafts.py. Like `suggest_tag`, use the
+Responses API: model `DRAFT_MODEL`, `STYLE_GUIDE` as the instructions, and the ticket's
+subject and body as the input. Cap the reply at `MAX_DRAFT_TOKENS` output tokens, don't let
+OpenAI store the response, and attach the ticket id as request metadata under the key
+"ticket_id".
+
+Return a `Draft`: `text` is the reply text without surrounding whitespace, and `truncated` is
+True only when the reply was cut off because it hit the output-token cap.
+
+Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "no-change control: gate 3 is inverted for this stratum (bench/validate.py gates_for): stale/ holds a cutoff-era (2.44.0) solution and must pass at 3.19.2 as well as at 2.44.0",
+  "openai-2.44.0 vs 3.19.2 wheels, openai/resources/responses/responses.py Responses.create (AST diff over all 4 overloads): no parameter removed, only `prompt_cache_options` added; input/instructions/max_output_tokens/metadata/model/store at 2.44.0 lines 139-154 and 3.19.2 lines 145-161",
+  "openai/types/responses/response.py: Response.output_text aggregates the output_text parts of message items in both (2.44.0:441-453, 3.19.2:548-560; 3.19.2 also skips null text); status and incomplete_details unchanged (2.44.0:186,392; 3.19.2:270,499); IncompleteDetails.reason only gained literals ('max_messages', 'steered') next to 'max_output_tokens'/'content_filter' (2.44.0:43-46, 3.19.2:51-54)",
+  "the hidden tests pass the client in with a mock transport, so the HTTP-client change of openai 3.x (httpx -> httpx2) does not touch this task",
+]
+# nothing is stale for a no-change control; the transcript metrics then report stale_in_* = False
+stale_patterns = []
+# nothing to cover: the notes can only distract here (non-inferiority is what this control measures)
+note_keys = []
+# for this control, doc_hit means Context7 served documentation of the API the task uses
+doc_keys = ['responses\.create', 'max_output_tokens']
+answer_tokens = ["incomplete_details"]
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+any_incomplete = "fail"   # flags every incomplete response as truncated (shows the hidden tests discriminate)

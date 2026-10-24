@@ -1,0 +1,47 @@
+schema = "since-cutoff-bench/task@1"
+id = "oai02-respx-test-double"
+library = "openai"
+pinned = "3.19.2"            # lockfile version the agent must target
+cutoff_version = "2.44.0"    # latest release before claude-opus-5-5's 2026-06 cutoff
+stratum = "post-cutoff"
+kind = "post-cutoff-silent"  # respx keeps patching legacy httpcore without a warning; requests go to the network
+timeout_s = 900
+target_files = ["tests/fakes.py"]
+instruction = """
+Since we bumped openai to the version pinned in pyproject.toml, the digest tests fail: the
+requests that `mock_openai()` in tests/fakes.py should answer now try to reach the real API
+(and error out, because the test environment has no network access). The respx mocks no
+longer catch the OpenAI client's requests, and nothing warns about it.
+
+Fix `mock_openai()` so it works as its docstring says again: every request a synchronous
+OpenAI client sends inside the `with` block gets the canned replies, including app.digest's
+cached client and clients created before the block, and nothing is intercepted after the
+block ends. The fix belongs in tests/fakes.py: keep the helper's interface, and don't change
+app/ or the pytest configuration.
+
+The dependencies are pinned: do not add, remove or upgrade packages. You can run the tests
+with `pytest`.
+"""
+evidence = [
+  "openai-3.19.2 wheel METADATA: Requires-Dist httpx2<3,>=2.12.0 (no httpx); openai-2.44.0 METADATA: Requires-Dist httpx<1,>=0.23.0",
+  "openai-2.44.0 wheel: openai/_base_client.py:834 `class _DefaultHttpxClient(httpx.Client)`; openai-3.19.2 wheel: openai/_base_client.py:932 `class _DefaultHttpxClient(httpx2.Client)`, :952 SyncHttpxClientWrapper(DefaultHttpxClient), :963 `class SyncAPIClient(BaseClient[httpx2.Client, ...])`",
+  "openai-3.19.2 wheel METADATA (README) lines 388-390: '### HTTPX2 migration ... If you configure a custom HTTP client, transport, timeout, authentication handler, event hook, or request mock, see the HTTPX2 migration guide' (https://github.com/openai/openai-python/tree/main/httpx2.md)",
+  "respx-0.23.1 wheel (latest on PyPI, 2026-09-27): respx/mocks.py:262-271 HTTPCoreMocker patches only legacy `httpcore._sync.connection_pool.ConnectionPool` etc., :144-149 HTTPXMocker patches `httpx._client.Client`, :339 DEFAULT_MOCKER = 'httpcore'; METADATA Requires-Dist httpx>=0.25.0",
+  "respx-0.23.1 wheel: entry_points.txt registers the pytest11 plugin respx.plugin, which imports httpx at pytest start-up, so httpx2/_alias.py:58-65 alias_httpx() ('Must be called before anything imports httpx'; :51 raises) raises RuntimeError inside pytest unless the plugin is disabled (checked: 'httpx was already imported'); the grader ignores the project's pytest config, hence 'don't change the pytest configuration' in the instruction",
+  "checked 2026-09-27 (bench validate + by hand): at 3.19.2 the respx helper lets requests escape (grader: httpcore2.ConnectError to the dead proxy; agent env: pytest_socket.SocketConnectBlockedError for api.openai.com); at 2.44.0 the same helper passes all hidden tests",
+]
+# the cutoff-era interception points: legacy httpx / httpcore, or respx's httpx mocker
+stale_patterns = [
+  '^\s*import\s+httpx\b(?!2)',
+  '^\s*from\s+httpx\b(?!2)[\w.]*\s+import\b',
+  '\bhttpcore\b',
+  '''using\s*=\s*["']httpx["']''',
+]
+note_keys = ['httpx2']
+doc_keys = ['(?i)httpx2', '(?i)respx|request mock|MockTransport']
+answer_tokens = ["httpx2", "Httpx2", "httpcore2", "HTTPTransport", "alias_httpx"]
+extra_requirements = ["respx==0.23.1"]   # the project's test extra (pyproject.toml), installed in every env of this task
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+legacy_patch = "fail"   # cutoff-era rewrite without respx: patches httpx.HTTPTransport (passes at 2.44.0)

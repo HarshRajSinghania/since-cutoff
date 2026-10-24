@@ -1,0 +1,25 @@
+schema = "since-cutoff-bench/task@1"
+id = "pl90-running-balance"
+library = "polars"
+pinned = "2.0.0"
+cutoff_version = "1.42.1"
+stale_version = "0.20.31"
+stratum = "pre-cutoff-control"
+kind = "pre-cutoff-control"  # Expr.cumsum was renamed cum_sum in 0.19.14 and removed in 1.0.0 (2024-07), long before the cutoff
+timeout_s = 900
+target_files = ["wallet/statement.py"]
+instruction = """
+Implement `with_running_balance` in wallet/statement.py as its docstring describes (running total of
+`amount` per account, in `seq` order). Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "polars-0.20.31: Expr.cumsum exists (deprecated alias of cum_sum)",
+  "polars-1.42.1 and 2.0.0: Expr.cumsum does not exist (removed in 1.0.0, released 2024-07-01); Expr.cum_sum exists",
+  "I1/expansion/probes: surface check of polars 1.42.1 (pl_1.42.1.json has Expr.cum_sum, not Expr.cumsum)",
+]
+stale_patterns = [
+  '''\.cumsum\(''',
+]
+note_keys = ['cum_sum|cumsum']
+doc_keys = ['cum_sum']
+answer_tokens = []

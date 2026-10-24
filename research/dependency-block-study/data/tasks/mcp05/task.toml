@@ -1,0 +1,38 @@
+schema = "since-cutoff-bench/task@1"
+id = "mcp05-streamable-http-client"
+library = "mcp"
+pinned = "2.2.0"
+cutoff_version = "1.28.1"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # ImportError (old name); renamed-only -> TypeError 'headers'; 1.2x http_client form -> ModuleNotFoundError httpx
+timeout_s = 900
+target_files = ["kb/remote.py"]
+instruction = '''
+Our knowledge-base MCP server is now deployed remotely. Implement `search_remote(url, token, query)`
+in kb/remote.py: connect to the MCP server at `url` over the Streamable HTTP transport, sending the
+header `Authorization: Bearer <token>` on every HTTP request, call its `search` tool with
+`{"query": query}` and return the titles the same way `search_local` in kb/local.py does. The kb CLI
+already uses it when KB_URL is set. Do not add dependencies. You can run the tests with `pytest`.
+'''
+evidence = [
+  "https://py.sdk.modelcontextprotocol.io/migration/ ('streamablehttp_client removed': ImportError: cannot import name 'streamablehttp_client'; 'httpx and httpx-sse replaced by httpx2')",
+  "mcp-1.28.1 wheel: mcp/client/streamable_http.py:684-693 @deprecated('Use `streamable_http_client` instead.') streamablehttp_client(url, headers, timeout, sse_read_timeout, terminate_on_close, httpx_client_factory, auth)",
+  "mcp-1.28.1 wheel: mcp/client/streamable_http.py:600-606 streamable_http_client(url, *, http_client: httpx.AsyncClient | None, terminate_on_close); :670 yields (read_stream, write_stream, get_session_id)",
+  "mcp-2.2.0 wheel: mcp/client/streamable_http.py:680-686 streamable_http_client(url, *, http_client: httpx2.AsyncClient | None, terminate_on_close); :753 yields (read_stream, write_stream); no `streamablehttp_client` anywhere in the 2.0.0 or 2.2.0 wheel",
+  "mcp-2.2.0 METADATA: Requires-Dist httpx2>=2.5.0 and no httpx (mcp-1.28.1: httpx<1.0.0,>=0.27.1, httpx-sse); httpx is not installed in the pinned venv",
+  "run (2026-09-27, bench venvs): `from mcp.client.streamable_http import streamablehttp_client` fails at 2.2.0, works at 1.28.1",
+]
+# the removed name, the old keyword-style parameters, httpx 0.x, and the 1.x 3-tuple unpacking
+stale_patterns = [
+  '\bstreamablehttp_client\b',
+  '\bhttpx_client_factory\b',
+  '^\s*import\s+httpx\b(?!2)|^\s*from\s+httpx\b(?!2)[\w.]*\s+import\b',
+  '\bas\s*\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\)',
+]
+note_keys = ['streamablehttp_client']
+doc_keys = ['\bstreamable_http_client\b']
+answer_tokens = ["streamable_http_client"]
+
+[extra_solutions]
+halfmigrated = "fail"   # renamed only: streamable_http_client(url, headers=...) as (read, write, _) -> TypeError
+late_v1 = "fail"        # 1.2x's non-deprecated form: httpx.AsyncClient + 3-tuple -> ModuleNotFoundError: httpx

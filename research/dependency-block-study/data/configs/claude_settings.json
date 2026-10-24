@@ -1,0 +1,5 @@
+{"permissions":{"defaultMode":"dontAsk","blockReadsOutsideWorkingDirectories":true,
+ "allow":["Read","Edit","Write","Glob","Grep","TodoWrite","Skill",
+          "Bash(pytest)","Bash(pytest *)","Bash(python -m pytest *)","Bash(python *)"],
+ "deny":["WebFetch","WebSearch","Bash(pip *)","Bash(python -m pip *)","Bash(uv *)",
+         "Bash(curl *)","Bash(wget *)","Bash(npm *)","Bash(npx *)","Bash(git push *)"]}}

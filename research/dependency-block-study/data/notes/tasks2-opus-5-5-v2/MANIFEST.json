@@ -1,0 +1,317 @@
+{
+  "schema": "since-cutoff-bench/notes@1",
+  "tool": "research/dependency-block-study/notes/tools/3f0144f/since_cutoff-0.5.0-py3-none-any.whl",
+  "model": "anthropic:claude-opus-5-5",
+  "source": "generated",
+  "created_at": "2026-10-22T22:13:06+00:00",
+  "frozen": true,
+  "tasks": {
+    "mi01": {
+      "file": "mi01.md",
+      "sha256": "daef502f6bfc17327292829ffda6cb680379648ed30dd80eff6732e369cdda69",
+      "bytes": 1697,
+      "tokens_est": 424,
+      "empty": false,
+      "note_keys": [
+        "httpx2"
+      ],
+      "note_keys_found": [
+        "httpx2"
+      ],
+      "coverage": 1.0,
+      "covered": true,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "mi02": {
+      "file": "mi02.md",
+      "sha256": "daef502f6bfc17327292829ffda6cb680379648ed30dd80eff6732e369cdda69",
+      "bytes": 1697,
+      "tokens_est": 424,
+      "empty": false,
+      "note_keys": [
+        "include_blocks"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl01": {
+      "file": "pl01.md",
+      "sha256": "2460c36425001333301558bef0cd8ee2bf529877dae6364a80b96fd450883a70",
+      "bytes": 2097,
+      "tokens_est": 524,
+      "empty": false,
+      "note_keys": [
+        "empty_as_null"
+      ],
+      "note_keys_found": [
+        "empty_as_null"
+      ],
+      "coverage": 1.0,
+      "covered": true,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl02": {
+      "file": "pl02.md",
+      "sha256": "2460c36425001333301558bef0cd8ee2bf529877dae6364a80b96fd450883a70",
+      "bytes": 2097,
+      "tokens_est": 524,
+      "empty": false,
+      "note_keys": [
+        "read_csv_batched"
+      ],
+      "note_keys_found": [
+        "read_csv_batched"
+      ],
+      "coverage": 1.0,
+      "covered": true,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl03": {
+      "file": "pl03.md",
+      "sha256": "2460c36425001333301558bef0cd8ee2bf529877dae6364a80b96fd450883a70",
+      "bytes": 2097,
+      "tokens_est": 524,
+      "empty": false,
+      "note_keys": [
+        "replace_strict|\\breplace\\b[^\\n]{0,80}\\bdefault\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl04": {
+      "file": "pl04.md",
+      "sha256": "2460c36425001333301558bef0cd8ee2bf529877dae6364a80b96fd450883a70",
+      "bytes": 2097,
+      "tokens_est": 524,
+      "empty": false,
+      "note_keys": [
+        "streaming[^\\n]{0,80}(engine|removed)|engine[^\\n]{0,40}streaming"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl90": {
+      "file": "pl90.md",
+      "sha256": "2460c36425001333301558bef0cd8ee2bf529877dae6364a80b96fd450883a70",
+      "bytes": 2097,
+      "tokens_est": 524,
+      "empty": false,
+      "note_keys": [
+        "cum_sum|cumsum"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "pl91": {
+      "file": "pl91.md",
+      "sha256": "2460c36425001333301558bef0cd8ee2bf529877dae6364a80b96fd450883a70",
+      "bytes": 2097,
+      "tokens_est": 524,
+      "empty": false,
+      "note_keys": [
+        "group_by|groupby"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "st01": {
+      "file": "st01.md",
+      "sha256": "a439504f12c5241a037e7c1f30fb525ea7997e8853a4cbc85f5d068af9a15441",
+      "bytes": 1813,
+      "tokens_est": 453,
+      "empty": false,
+      "note_keys": [
+        "\\bcache\\b[^\\n]{0,80}(removed|cache_data)"
+      ],
+      "note_keys_found": [
+        "\\bcache\\b[^\\n]{0,80}(removed|cache_data)"
+      ],
+      "coverage": 1.0,
+      "covered": true,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "st02": {
+      "file": "st02.md",
+      "sha256": "ce179a285e9263babab90cfa059973ef8f925a0169c1a273e94e6c548ffabd8e",
+      "bytes": 1753,
+      "tokens_est": 438,
+      "empty": false,
+      "note_keys": [
+        "use_column_width"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    },
+    "st90": {
+      "file": "st90.md",
+      "sha256": "ce179a285e9263babab90cfa059973ef8f925a0169c1a273e94e6c548ffabd8e",
+      "bytes": 1753,
+      "tokens_est": 438,
+      "empty": false,
+      "note_keys": [
+        "experimental_get_query_params|query_params"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "exit_code": 0,
+      "command": [
+        "tools\\C_Users_Mohammad_Hijjawi_Desktop_AI_Research_Oct_2026_NAACL-Industry_I1_since_cutoff_notes_tools_3f0144f_since_cutoff-0.5.0-py3-none-any.whl\\Scripts\\python.exe",
+        "-m",
+        "since_cutoff",
+        "sync",
+        "--yes",
+        "--scope",
+        "imported",
+        "--model",
+        "anthropic:claude-opus-5-5",
+        "--target",
+        "CLAUDE.md"
+      ]
+    }
+  },
+  "frozen_at": "2026-10-22T22:13:06+00:00",
+  "manifest_sha256": "d292149bae015219d698be6a3cbb38f76bb739bea8ed8f83b64ecb3d7f3c767b"
+}

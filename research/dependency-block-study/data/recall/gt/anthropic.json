@@ -1,0 +1,2200 @@
+{
+  "library": "anthropic",
+  "from": "0.115.0",
+  "to": "1.8.0",
+  "built_by": "Claude (AI), single pass",
+  "built_utc": "2026-10-23T19:40:44Z",
+  "sources_read": [
+    "releases_anthropic.md",
+    "range_anthropic_CHANGELOG.md",
+    "anthropic_MIGRATION.md"
+  ],
+  "candidates": [
+    {
+      "id": "ant-001",
+      "description": "GA request type for the mid-conversation system content block was removed.",
+      "old_path": "anthropic.types.MidConversationSystemBlockParam",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic.types.mid_conversation_system_block_param.MidConversationSystemBlockParam"
+      ],
+      "documented_in": "0.123.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0",
+      "source_quote": "remove unsupported mid_conv_system content block",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-002",
+      "description": "Beta request type for the mid-conversation system content block was removed.",
+      "old_path": "anthropic.types.beta.BetaMidConversationSystemBlockParam",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic.types.beta.beta_mid_conversation_system_block_param.BetaMidConversationSystemBlockParam"
+      ],
+      "documented_in": "0.123.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0",
+      "source_quote": "remove unsupported mid_conv_system content block",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-003",
+      "description": "The SDK's HTTP layer switched from httpx to httpx2; httpx objects passed in or received back must become httpx2 ones.",
+      "old_path": "anthropic.Anthropic",
+      "params": [
+        "http_client",
+        "timeout"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.AsyncAnthropic",
+        "anthropic.DefaultHttpxClient",
+        "anthropic.DefaultAsyncHttpxClient",
+        "anthropic.DefaultAioHttpClient",
+        "anthropic.Timeout",
+        "anthropic.APIStatusError.response",
+        "anthropic.APIConnectionError.request",
+        "httpx",
+        "httpx2"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#the-sdk-is-built-on-httpx2",
+      "source_quote": "Anything you construct from `httpx` and pass to the client must now come from `httpx2`.",
+      "change_type_guess": "dependency_switch"
+    },
+    {
+      "id": "ant-004",
+      "description": "Top-level Transport alias of an httpx type was removed.",
+      "old_path": "anthropic.Transport",
+      "params": [],
+      "new_path": null,
+      "api_names": [],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-old-httpx-re-exports",
+      "source_quote": "The top-level `anthropic.Transport` and `anthropic.ProxiesTypes` exports were unused aliases of `httpx` types and are gone.",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-005",
+      "description": "Top-level ProxiesTypes alias was removed.",
+      "old_path": "anthropic.ProxiesTypes",
+      "params": [],
+      "new_path": null,
+      "api_names": [],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-old-httpx-re-exports",
+      "source_quote": "The top-level `anthropic.Transport` and `anthropic.ProxiesTypes` exports were unused aliases of `httpx` types and are gone.",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-006",
+      "description": "On the async client, raw responses from with_raw_response now need awaiting to parse/read (coroutines instead of sync methods).",
+      "old_path": "anthropic._legacy_response.LegacyAPIResponse.parse",
+      "params": [],
+      "new_path": "anthropic.AsyncAPIResponse.parse",
+      "api_names": [
+        "anthropic.AsyncAPIResponse.parse",
+        "anthropic.AsyncAPIResponse.read",
+        "anthropic.AsyncAPIResponse.text",
+        "anthropic.AsyncAPIResponse.json",
+        "anthropic._legacy_response.async_to_raw_response_wrapper"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#with_raw_response-returns-the-new-response-classes",
+      "source_quote": "`parse()`, `read()`, `text()` and `json()` are coroutines on `AsyncAPIResponse`.",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-007",
+      "description": "The raw response's text is now a method instead of a property.",
+      "old_path": "anthropic._legacy_response.LegacyAPIResponse.text",
+      "params": [],
+      "new_path": "anthropic.APIResponse.text",
+      "api_names": [
+        "anthropic.APIResponse.text",
+        "anthropic.AsyncAPIResponse.text"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#with_raw_response-returns-the-new-response-classes",
+      "source_quote": "`.text` and `.content` became methods. This applies to the sync client too.",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-008",
+      "description": "The raw response's content property is gone; the bytes are read with read().",
+      "old_path": "anthropic._legacy_response.LegacyAPIResponse.content",
+      "params": [],
+      "new_path": "anthropic.APIResponse.read",
+      "api_names": [
+        "anthropic.APIResponse.read",
+        "anthropic.AsyncAPIResponse.read"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#with_raw_response-returns-the-new-response-classes",
+      "source_quote": "`.text` and `.content` became methods. This applies to the sync client too.",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-009",
+      "description": "The legacy Text Completions resource (client.completions) was removed.",
+      "old_path": "anthropic.resources.Completions",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.AsyncCompletions",
+        "anthropic.resources.completions.Completions.create",
+        "anthropic.Anthropic.completions",
+        "anthropic.AsyncAnthropic.completions"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-the-legacy-text-completions-api",
+      "source_quote": "Removed: the legacy Text Completions API",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-010",
+      "description": "The Completion response type was removed.",
+      "old_path": "anthropic.types.Completion",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic.types.completion.Completion"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-the-legacy-text-completions-api",
+      "source_quote": "its types (`Completion`, `CompletionCreateParams`)",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-011",
+      "description": "The CompletionCreateParams request type was removed.",
+      "old_path": "anthropic.types.CompletionCreateParams",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic.types.completion_create_params.CompletionCreateParams"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-the-legacy-text-completions-api",
+      "source_quote": "its types (`Completion`, `CompletionCreateParams`)",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-012",
+      "description": "The HUMAN_PROMPT constant was removed.",
+      "old_path": "anthropic.HUMAN_PROMPT",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic._constants.HUMAN_PROMPT"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-the-legacy-text-completions-api",
+      "source_quote": "the `anthropic.HUMAN_PROMPT` / `anthropic.AI_PROMPT` prompt constants have been removed.",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-013",
+      "description": "The AI_PROMPT constant was removed.",
+      "old_path": "anthropic.AI_PROMPT",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic._constants.AI_PROMPT"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-the-legacy-text-completions-api",
+      "source_quote": "the `anthropic.HUMAN_PROMPT` / `anthropic.AI_PROMPT` prompt constants have been removed.",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-014",
+      "description": "messages.create no longer takes the sampling parameters temperature, top_p and top_k.",
+      "old_path": "anthropic.resources.messages.Messages.create",
+      "params": [
+        "temperature",
+        "top_p",
+        "top_k"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.messages.AsyncMessages.create"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "These parameters were deprecated by the API and are no longer accepted by the generated methods",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-015",
+      "description": "messages.stream no longer takes temperature, top_p and top_k.",
+      "old_path": "anthropic.resources.messages.Messages.stream",
+      "params": [
+        "temperature",
+        "top_p",
+        "top_k"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.messages.AsyncMessages.stream"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "These parameters were deprecated by the API and are no longer accepted by the generated methods",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-016",
+      "description": "messages.parse no longer takes temperature, top_p, top_k or stream.",
+      "old_path": "anthropic.resources.messages.Messages.parse",
+      "params": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "stream"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.messages.AsyncMessages.parse"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "These parameters were deprecated by the API and are no longer accepted by the generated methods",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-017",
+      "description": "beta.messages.create no longer takes temperature, top_p, top_k or output_format.",
+      "old_path": "anthropic.resources.beta.messages.Messages.create",
+      "params": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "output_format"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.messages.AsyncMessages.create"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "These parameters were deprecated by the API and are no longer accepted by the generated methods",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-018",
+      "description": "beta.messages.stream no longer takes temperature, top_p and top_k.",
+      "old_path": "anthropic.resources.beta.messages.Messages.stream",
+      "params": [
+        "temperature",
+        "top_p",
+        "top_k"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.messages.AsyncMessages.stream"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "These parameters were deprecated by the API and are no longer accepted by the generated methods",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-019",
+      "description": "beta.messages.parse no longer takes temperature, top_p, top_k or stream.",
+      "old_path": "anthropic.resources.beta.messages.Messages.parse",
+      "params": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "stream"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.messages.AsyncMessages.parse"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "the `stream` argument never worked and has been removed from `messages.parse()` / `beta.messages.parse()`",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-020",
+      "description": "beta.messages.tool_runner no longer takes temperature, top_p, top_k or compaction_control.",
+      "old_path": "anthropic.resources.beta.messages.Messages.tool_runner",
+      "params": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "compaction_control"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.messages.AsyncMessages.tool_runner"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "Client-side compaction in the tool runner (the `compaction_control=` argument and the `CompactionControl` dict) has been removed",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-021",
+      "description": "The per-request params of messages.batches.create (MessageCreateParams) lost the temperature/top_p/top_k keys.",
+      "old_path": "anthropic.types.MessageCreateParamsNonStreaming",
+      "params": [
+        "temperature",
+        "top_p",
+        "top_k"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.types.MessageCreateParams",
+        "anthropic.types.MessageCreateParamsStreaming",
+        "anthropic.types.messages.batch_create_params.Request",
+        "anthropic.resources.messages.Batches.create"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "They are also gone from the per-request `params` of `messages.batches.create()`",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-022",
+      "description": "The beta batch per-request params (beta MessageCreateParams) lost the output_format key.",
+      "old_path": "anthropic.types.beta.message_create_params.MessageCreateParamsNonStreaming",
+      "params": [
+        "output_format"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.types.beta.MessageCreateParams",
+        "anthropic.types.beta.messages.batch_create_params.Request",
+        "anthropic.resources.beta.messages.Batches.create"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "`beta.messages.create()`, `beta.messages.count_tokens()`, batch request params",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-023",
+      "description": "beta.messages.count_tokens no longer takes output_format.",
+      "old_path": "anthropic.resources.beta.messages.Messages.count_tokens",
+      "params": [
+        "output_format"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.messages.AsyncMessages.count_tokens"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "`beta.messages.create()`, `beta.messages.count_tokens()`, batch request params",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-024",
+      "description": "messages.stream's output_format now only accepts a type, not a schema dict.",
+      "old_path": "anthropic.resources.messages.Messages.stream",
+      "params": [
+        "output_format"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.messages.AsyncMessages.stream"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "`messages.stream()`, `messages.count_tokens()` and `beta.messages.stream()` used to accept a raw schema dict there too",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-025",
+      "description": "messages.count_tokens's output_format now only accepts a type, not a schema dict.",
+      "old_path": "anthropic.resources.messages.Messages.count_tokens",
+      "params": [
+        "output_format"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.messages.AsyncMessages.count_tokens"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "`messages.stream()`, `messages.count_tokens()` and `beta.messages.stream()` used to accept a raw schema dict there too",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-026",
+      "description": "beta.messages.stream's output_format now only accepts a type, not a schema dict.",
+      "old_path": "anthropic.resources.beta.messages.Messages.stream",
+      "params": [
+        "output_format"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.messages.AsyncMessages.stream"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+      "source_quote": "`messages.stream()`, `messages.count_tokens()` and `beta.messages.stream()` used to accept a raw schema dict there too",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-027",
+      "description": "Deprecated alias BetaBase64PDFBlockParam was removed in favour of BetaRequestDocumentBlockParam.",
+      "old_path": "anthropic.types.beta.BetaBase64PDFBlockParam",
+      "params": [],
+      "new_path": "anthropic.types.beta.BetaRequestDocumentBlockParam",
+      "api_names": [
+        "anthropic.types.beta.BetaRequestDocumentBlockParam"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-type-aliases-and-exports",
+      "source_quote": "`anthropic.types.beta.BetaBase64PDFBlockParam` | `anthropic.types.beta.BetaRequestDocumentBlockParam`",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-028",
+      "description": "agent_toolset.READ_MAX_BYTES was removed; DEFAULT_MAX_FILE_BYTES is the name to use.",
+      "old_path": "anthropic.lib.tools.agent_toolset.READ_MAX_BYTES",
+      "params": [],
+      "new_path": "anthropic.lib.tools.agent_toolset.DEFAULT_MAX_FILE_BYTES",
+      "api_names": [
+        "anthropic.lib.tools.agent_toolset.DEFAULT_MAX_FILE_BYTES"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-type-aliases-and-exports",
+      "source_quote": "`anthropic.lib.tools.agent_toolset.READ_MAX_BYTES` | `anthropic.lib.tools.agent_toolset.DEFAULT_MAX_FILE_BYTES`",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-029",
+      "description": "The CompactionControl TypedDict for client-side tool-runner compaction was removed.",
+      "old_path": "anthropic.lib.tools._beta_compaction_control.CompactionControl",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "CompactionControl"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#tool_runnercompaction_control",
+      "source_quote": "Client-side compaction in the tool runner (the `compaction_control=` argument and the `CompactionControl` dict) has been removed",
+      "change_type_guess": "removal"
+    },
+    {
+      "id": "ant-030",
+      "description": "Low-level client.get/post/put/patch/delete no longer accept raw bytes as body= (now JSON-serialised; use content=).",
+      "old_path": "anthropic.Anthropic.post",
+      "params": [
+        "body"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.Anthropic.put",
+        "anthropic.Anthropic.patch",
+        "anthropic.Anthropic.delete",
+        "anthropic.Anthropic.get",
+        "anthropic.AsyncAnthropic.post",
+        "anthropic.AsyncAnthropic.put",
+        "anthropic.AsyncAnthropic.patch",
+        "anthropic.AsyncAnthropic.delete"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#raw-bytes-as-body-on-clientgetpostputpatchdelete",
+      "source_quote": "`body=` is now always JSON-serialised and raw payloads go through `content=`",
+      "change_type_guess": "behaviour_only"
+    },
+    {
+      "id": "ant-031",
+      "description": "isinstance(message_stream, Stream) no longer passes; the compatibility shim was removed.",
+      "old_path": "anthropic.lib.streaming.MessageStream",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic.lib.streaming.AsyncMessageStream",
+        "anthropic.MessageStream",
+        "anthropic.Stream",
+        "anthropic.AsyncStream"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#isinstancestream-anthropicstream-for-message-streams",
+      "source_quote": "The shim is gone, so such checks now return `False`.",
+      "change_type_guess": "behaviour_only"
+    },
+    {
+      "id": "ant-032",
+      "description": "Header names are now merged case-insensitively, so a differently cased custom header replaces the SDK's one.",
+      "old_path": "anthropic.Anthropic",
+      "params": [
+        "default_headers",
+        "extra_headers"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.AsyncAnthropic",
+        "anthropic.Anthropic.with_options",
+        "extra_headers"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#header-names-are-matched-case-insensitively",
+      "source_quote": "the SDK now treats them that way everywhere it merges headers.",
+      "change_type_guess": "behaviour_only"
+    },
+    {
+      "id": "ant-033",
+      "description": "bytes header values now raise an error instead of being sent.",
+      "old_path": "anthropic.Anthropic",
+      "params": [
+        "extra_headers",
+        "default_headers"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.AsyncAnthropic",
+        "extra_headers"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#bytes-header-values-no-longer-work",
+      "source_quote": "you could pass `bytes` as header values, this now raises an error",
+      "change_type_guess": "behaviour_only"
+    },
+    {
+      "id": "ant-034",
+      "description": "Bedrock clients now raise ValueError when no AWS region can be found instead of defaulting to us-east-1.",
+      "old_path": "anthropic.AnthropicBedrock",
+      "params": [
+        "aws_region",
+        "aws_profile"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.AsyncAnthropicBedrock",
+        "anthropic.lib.bedrock.AnthropicBedrock"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#bedrock-a-region-is-now-required",
+      "source_quote": "They now raise a `ValueError` at construction time instead.",
+      "change_type_guess": "behaviour_only"
+    },
+    {
+      "id": "ant-035",
+      "description": "Bedrock streaming now skips unknown event types instead of yielding them.",
+      "old_path": "anthropic.AnthropicBedrock",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic.AsyncAnthropicBedrock"
+      ],
+      "documented_in": "1.0.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#bedrock-unknown-streaming-events-are-skipped",
+      "source_quote": "Previously all streaming events that the Bedrock API returned would be yielded by the SDK, now they are skipped.",
+      "change_type_guess": "behaviour_only"
+    },
+    {
+      "id": "ant-036",
+      "description": "beta.skills.delete now deletes a skill with all its versions and returns a BetaDeletedSkill.",
+      "old_path": "anthropic.resources.beta.skills.Skills.delete",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.skills.AsyncSkills.delete"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "`client.beta.skills.delete()` now deletes a Skill together with all of its versions (previously refused while any version existed).",
+      "change_type_guess": "behaviour_only"
+    },
+    {
+      "id": "ant-037",
+      "description": "SkillDeleteResponse was replaced by BetaDeletedSkill.",
+      "old_path": "anthropic.types.beta.SkillDeleteResponse",
+      "params": [],
+      "new_path": "anthropic.types.beta.BetaDeletedSkill",
+      "api_names": [
+        "anthropic.types.beta.BetaDeletedSkill"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "It returns `BetaDeletedSkill` (was `SkillDeleteResponse`).",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-038",
+      "description": "The container skill reference type BetaSkill was renamed BetaContainerSkill (the old name now means the Skill object).",
+      "old_path": "anthropic.types.beta.BetaSkill",
+      "params": [],
+      "new_path": "anthropic.types.beta.BetaContainerSkill",
+      "api_names": [
+        "anthropic.types.beta.BetaContainerSkill"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "Beta Messages type `BetaSkill` (container skill reference with `skill_id`, `type`, `version`) is renamed `BetaContainerSkill`",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-039",
+      "description": "SkillCreateResponse was replaced by BetaSkill.",
+      "old_path": "anthropic.types.beta.SkillCreateResponse",
+      "params": [],
+      "new_path": "anthropic.types.beta.BetaSkill",
+      "api_names": [
+        "anthropic.types.beta.BetaSkill"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "(replacing `SkillCreateResponse` / `SkillRetrieveResponse` / `SkillListResponse`)",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-040",
+      "description": "SkillRetrieveResponse was replaced by BetaSkill.",
+      "old_path": "anthropic.types.beta.SkillRetrieveResponse",
+      "params": [],
+      "new_path": "anthropic.types.beta.BetaSkill",
+      "api_names": [
+        "anthropic.types.beta.BetaSkill"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "(replacing `SkillCreateResponse` / `SkillRetrieveResponse` / `SkillListResponse`)",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-041",
+      "description": "SkillListResponse was replaced by BetaSkill.",
+      "old_path": "anthropic.types.beta.SkillListResponse",
+      "params": [],
+      "new_path": "anthropic.types.beta.BetaSkill",
+      "api_names": [
+        "anthropic.types.beta.BetaSkill"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "(replacing `SkillCreateResponse` / `SkillRetrieveResponse` / `SkillListResponse`)",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-042",
+      "description": "Skill-version VersionCreateResponse was replaced by BetaSkillVersion.",
+      "old_path": "anthropic.types.beta.skills.VersionCreateResponse",
+      "params": [],
+      "new_path": "anthropic.types.beta.skills.BetaSkillVersion",
+      "api_names": [
+        "anthropic.types.beta.skills.BetaSkillVersion"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "skill versions are `BetaSkillVersion` / `BetaDeletedSkillVersion` (replacing `Version*Response`)",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-043",
+      "description": "Skill-version VersionRetrieveResponse was replaced by BetaSkillVersion.",
+      "old_path": "anthropic.types.beta.skills.VersionRetrieveResponse",
+      "params": [],
+      "new_path": "anthropic.types.beta.skills.BetaSkillVersion",
+      "api_names": [
+        "anthropic.types.beta.skills.BetaSkillVersion"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "skill versions are `BetaSkillVersion` / `BetaDeletedSkillVersion` (replacing `Version*Response`)",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-044",
+      "description": "Skill-version VersionListResponse was replaced by BetaSkillVersion.",
+      "old_path": "anthropic.types.beta.skills.VersionListResponse",
+      "params": [],
+      "new_path": "anthropic.types.beta.skills.BetaSkillVersion",
+      "api_names": [
+        "anthropic.types.beta.skills.BetaSkillVersion"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "skill versions are `BetaSkillVersion` / `BetaDeletedSkillVersion` (replacing `Version*Response`)",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-045",
+      "description": "Skill-version VersionDeleteResponse was replaced by BetaDeletedSkillVersion.",
+      "old_path": "anthropic.types.beta.skills.VersionDeleteResponse",
+      "params": [],
+      "new_path": "anthropic.types.beta.skills.BetaDeletedSkillVersion",
+      "api_names": [
+        "anthropic.types.beta.skills.BetaDeletedSkillVersion"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "skill versions are `BetaSkillVersion` / `BetaDeletedSkillVersion` (replacing `Version*Response`)",
+      "change_type_guess": "rename_move"
+    },
+    {
+      "id": "ant-046",
+      "description": "beta.files.list dropped before_id/after_id (now page=/ids=) and returns a cursor page.",
+      "old_path": "anthropic.resources.beta.files.Files.list",
+      "params": [
+        "before_id",
+        "after_id"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.files.AsyncFiles.list"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "`client.beta.files.list()` returns `SyncPageCursor[BetaFileMetadata]` / `AsyncPageCursor[BetaFileMetadata]` (with `data` / `next_page`) and paginates with `page=` / `ids=`",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-047",
+      "description": "beta.skills.create's display_title keyword was renamed display_name.",
+      "old_path": "anthropic.resources.beta.skills.Skills.create",
+      "params": [
+        "display_title"
+      ],
+      "new_path": "anthropic.resources.beta.skills.Skills.create",
+      "api_names": [
+        "anthropic.resources.beta.skills.AsyncSkills.create"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27",
+      "source_quote": "`BetaSkill` uses `display_name` (was `display_title`, also the `create()` keyword)",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-048",
+      "description": "beta.webhooks.unwrap now requires headers to be passed.",
+      "old_path": "anthropic.resources.beta.webhooks.Webhooks.unwrap",
+      "params": [
+        "headers"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.webhooks.AsyncWebhooks.unwrap"
+      ],
+      "documented_in": "1.2.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.2.0",
+      "source_quote": "require headers to be passed to `unwrap()`",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-049",
+      "description": "beta.user_profiles.create dropped the relationship parameter (access_type replaces it).",
+      "old_path": "anthropic.resources.beta.user_profiles.UserProfiles.create",
+      "params": [
+        "relationship"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.user_profiles.AsyncUserProfiles.create"
+      ],
+      "documented_in": "1.3.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0",
+      "source_quote": "beta user profiles: add external_user_onboarded_at, remove relationship in favor of access_type",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-050",
+      "description": "beta.user_profiles.update dropped the relationship parameter.",
+      "old_path": "anthropic.resources.beta.user_profiles.UserProfiles.update",
+      "params": [
+        "relationship"
+      ],
+      "new_path": null,
+      "api_names": [
+        "anthropic.resources.beta.user_profiles.AsyncUserProfiles.update"
+      ],
+      "documented_in": "1.3.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0",
+      "source_quote": "beta user profiles: add external_user_onboarded_at, remove relationship in favor of access_type",
+      "change_type_guess": "signature"
+    },
+    {
+      "id": "ant-051",
+      "description": "The relationship field was removed from the BetaUserProfile model.",
+      "old_path": "anthropic.types.beta.BetaUserProfile.relationship",
+      "params": [],
+      "new_path": null,
+      "api_names": [
+        "anthropic.types.beta.BetaUserProfile"
+      ],
+      "documented_in": "1.3.0",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0",
+      "source_quote": "beta user profiles: add external_user_onboarded_at, remove relationship in favor of access_type",
+      "change_type_guess": "removal"
+    }
+  ],
+  "excluded": [
+    {
+      "text": "[v0.115.1 / Chores] api: remove some nonfunctional types from the SDKs",
+      "reason": "unnamed",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.115.1"
+    },
+    {
+      "text": "[v0.116.0 / Features] api: add agent-memory-2026-07-22 beta header",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.116.0"
+    },
+    {
+      "text": "[v0.117.0 / Features] api: add support for dreaming",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.0"
+    },
+    {
+      "text": "[v0.117.0 / Features] api: add support for MCP Tunnels",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.0"
+    },
+    {
+      "text": "[v0.117.0 / Bug Fixes] credentials: keep credential material out of traceback frame locals via SecretStr",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.0"
+    },
+    {
+      "text": "[v0.117.0 / Chores] docs: small updates to field descriptions",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.0"
+    },
+    {
+      "text": "[v0.117.0 / Chores] docs: update model example",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.0"
+    },
+    {
+      "text": "[v0.117.0 / Chores] docs: updates to descriptions and examples",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.0"
+    },
+    {
+      "text": "[v0.117.1 / Bug Fixes] aws: handle credentials correctly when using AnthropicAWS.copy()",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.1"
+    },
+    {
+      "text": "[v0.117.1 / Chores] api: add support for new refusal category",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.1"
+    },
+    {
+      "text": "[v0.117.1 / Chores] client: docs updates",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.1"
+    },
+    {
+      "text": "[v0.117.1 / Chores] deps: bump http-snapshot to 0.1.9",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.1"
+    },
+    {
+      "text": "[v0.117.1 / Chores] deps: pin httpx_aiohttp major version",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.1"
+    },
+    {
+      "text": "[v0.117.1 / Chores] docs: small updates",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.1"
+    },
+    {
+      "text": "[v0.117.1 / Chores] docs: small updates",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.1"
+    },
+    {
+      "text": "[v0.117.1 / Chores] internal: codegen related update",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.117.1"
+    },
+    {
+      "text": "[v0.118.0 / Features] api: add support for Managed Agents model effort, initial session events, and threads delta streaming",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.118.0"
+    },
+    {
+      "text": "[v0.119.0 / Features] api: add new stop reason 'model_context_window_exceeded'",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.119.0"
+    },
+    {
+      "text": "[v0.119.0 / Bug Fixes] tools: handle binary files in agent toolset read/edit",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.119.0"
+    },
+    {
+      "text": "[v0.120.0 / Features] api: add claude-opus-5 model",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.120.0"
+    },
+    {
+      "text": "[v0.120.0 / Features] api: add tool addition/removal blocks and tool_change events",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.120.0"
+    },
+    {
+      "text": "[v0.120.0 / Features] api: expand client-side fallback credit token types and add server-side fallbacks default option",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.120.0"
+    },
+    {
+      "text": "[v0.120.1 / Bug Fixes] mcp: pin mcp extra to &lt;2",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.120.1"
+    },
+    {
+      "text": "[v0.120.2 / Bug Fixes] mcp: support mcp sdk v2 alongside v1",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.120.2"
+    },
+    {
+      "text": "[v0.121.0 / Features] api: add `mid-conversation-tool-changes-2026-07-01` beta",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.121.0"
+    },
+    {
+      "text": "[v0.121.0 / Features] api: add support for session budgets, advisor tool, pinned inference location and skills auto-loading from GitHub",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.121.0"
+    },
+    {
+      "text": "[v0.121.0 / Chores] api: remove retired Claude Opus 4.1 models",
+      "reason": "server_or_rest_only",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.121.0"
+    },
+    {
+      "text": "[v0.121.0 / Chores] docs: small updates to descriptions",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.121.0"
+    },
+    {
+      "text": "[v0.121.0 / Chores] docs: updates to a few documentation strings",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.121.0"
+    },
+    {
+      "text": "[v0.121.0 / Chores] ensure all dependencies have major version constraints",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.121.0"
+    },
+    {
+      "text": "[v0.122.0 / Features] api: add output_behavior to dream creation (create a new memory store or update the input store in place)",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] bedrock,aws: run SigV4 signing off the event loop in async clients",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] bedrock: expose beta.messages.parse, stream and tool_runner",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] client: add models",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] client: keep token exchange bound per client across copy()",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] client: read PathLike contents passed inside a file tuple",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] client: treat empty ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN as unset",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] streaming: add context to malformed tool input JSON errors in the non-beta accumulator",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] streaming: apply all message_delta fields when accumulating streamed messages",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] streaming: emit input_json events for server tool use blocks",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] streaming: keep omitted content block fields unset in accumulated messages",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] streaming: run the request transform once in messages.stream()",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] streaming: silence pydantic serializer warnings on message_stop events",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] tools: reject symlink loops in tool paths and skip special skill-archive members",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Bug Fixes] vertex: expose beta.messages.parse and tool_runner",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Chores] ci: run breaking-change detection as a ci.yml job on every push",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Chores] examples: update messages_stream.py shebang from rye to uv",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Chores] internal: codegen related update",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Chores] internal: drop remaining references to black",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Chores] internal: remove misc things",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Chores] tests: use pytest monkeypatch and fakes instead of unittest.mock",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Chores] tests: use pytest monkeypatch instead of unittest.mock",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Documentation] api: clarify that user profile name is optional for resold profiles",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Documentation] fix fulfillment typos in session runner",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Documentation] fix incorrect docstring in AsyncAnthropicFoundry.models",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.122.0 / Refactors] use the not_given singleton instead of the legacy NOT_GIVEN alias",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.122.0"
+    },
+    {
+      "text": "[v0.123.0 / Features] api: additions to files and memory stores",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.123.0 / Features] api: updates to skill, files, and user profiles",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.123.0 / Features] client: add helpers for accessing the workspace ID in response headers",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.123.0 / Bug Fixes] client: compute platform headers without spawning a subprocess",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.123.0 / Bug Fixes] client: export custom status errors from _exceptions.__all__",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.123.0 / Bug Fixes] client: export ServiceUnavailableError and DeadlineExceededError from the package root",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.123.0 / Bug Fixes] session-runner: retry tool-result sends for at least the lease TTL",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.123.0 / Bug Fixes] tools: run synchronous session tools in a worker thread",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.123.0 / Chores] examples: remove legacy Text Completions API examples",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.123.0 / Chores] internal: remove leftover prism references",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.123.0"
+    },
+    {
+      "text": "[v0.124.0 / Features] api: Files and Skills APIs are now GA; add computer use and browser use toolsets",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.124.0"
+    },
+    {
+      "text": "[v0.125.0 / Features] api: managed agents web search config and self hosted sandbox memory",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v0.125.0"
+    },
+    {
+      "text": "[v1.0.0 / ⚠ BREAKING CHANGES] client: upgrade to httpx2 and some minor breaking changes. See MIGRATION.md for details",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.0.0"
+    },
+    {
+      "text": "[v1.0.0 / Features] client: upgrade to httpx2 and some minor breaking changes. See MIGRATION.md for details",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.0.0"
+    },
+    {
+      "text": "[v1.0.0 / Bug Fixes] beta: stop warning about `output_format=` on the parse/stream/tool_runner helpers",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.0.0"
+    },
+    {
+      "text": "[v1.0.0 / Chores] streaming: restore the original event imports in lib/streaming/_types.py",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.0.0"
+    },
+    {
+      "text": "[v1.0.0 / Documentation] examples: use adaptive thinking in thinking examples",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.0.0"
+    },
+    {
+      "text": "[v1.1.0 / Features] api: add `updates` thinking display mode (beta)",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Features] api: add missing anthropic-beta values",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Features] api: add support for Organization API endpoints",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Bug Fixes] docs: correct link for long requests error",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Bug Fixes] tools: keep the tool runner going on pause_turn",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Chores] docs: clarify skill version `latest` support and memory version retention",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Chores] internal: cancel superseded CI runs",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Chores] internal: minor workflow reformat",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Chores] internal: remove the legacy response API",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Chores] internal: use `import httpx2` directly instead of aliasing as httpx",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.1.0 / Documentation] api: clarify session thread agent and usage.iterations compaction descriptions (beta)",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.1.0"
+    },
+    {
+      "text": "[v1.2.0 / Features] api: beta files/skills namespaces use GA shapes; drop dated beta header pins",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.2.0"
+    },
+    {
+      "text": "[v1.2.0 / Bug Fixes] aws,bedrock: sign raw request bytes so binary file uploads work",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.2.0"
+    },
+    {
+      "text": "[v1.2.0 / Bug Fixes] ci: resolve assignment aliases in detect-breaking-changes",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.2.0"
+    },
+    {
+      "text": "[v1.2.0 / Bug Fixes] sessions: make event accumulator forward-compatible with new event types",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.2.0"
+    },
+    {
+      "text": "[v1.2.0 / Bug Fixes] tools: let read return a view_range of a file over the size cap",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.2.0"
+    },
+    {
+      "text": "[v1.2.0 / Bug Fixes] tools: preserve exact file bytes in the agent toolset and memory tool (no newline translation)",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.2.0"
+    },
+    {
+      "text": "[v1.2.0 / Documentation] api: clarify pagination on the organization rate-limit list endpoints",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.2.0"
+    },
+    {
+      "text": "[v1.3.0 / Features] api: manual updates",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Features] api: organization compliance settings, user-profile order_by, memory-store and toolset schema updates",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Bug Fixes] aws: resolve base_url from aws_region under skip_auth and with_options",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Bug Fixes] batches: add results to GA raw/streaming response wrappers",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Bug Fixes] ci: don't hard-wrap detect-breaking-changes output",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Bug Fixes] client: derive multipart filename for file tuples passed without one",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Bug Fixes] types: remove unused wire aliases from header and path params",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Chores] internal: drop the unused discriminator argument from PropertyInfo",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Chores] internal: drop the unused distro dependency",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Documentation] changelog: detail the beta files/skills GA-shape change",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Refactors] types: mark discriminated unions with UnionDiscriminator instead of PropertyInfo",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.3.0 / Refactors] types: use UnionDiscriminator for more discriminated unions",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.3.0"
+    },
+    {
+      "text": "[v1.4.0 / Features] api: add Claude Tag category and user breakdowns to usage reports",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Features] api: add named types for organization compliance settings state",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Features] api: add support for sending a workspace ID on more endpoints",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Bug Fixes] client: raise a clear error when an httpx object is passed instead of an httpx2 one",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Bug Fixes] repair custom-code merge in messages resources",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Chores] examples: refresh platform model IDs",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Chores] internal: bundle the mock server spec and update dev tooling",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Chores] internal: clean up code comments",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Chores] internal: fix mypy unreachable error in detect-breaking-changes script",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Chores] internal: narrower codeowners scope",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Chores] internal: revert codeowners change",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Chores] tests: remove stale warning filters",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Chores] tests: reword the skip reason on the path-level query param tests",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.4.0 / Documentation] api: update a few doc strings",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.4.0"
+    },
+    {
+      "text": "[v1.5.0 / Features] api: add auto mode tool permissions for Managed Agents",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Features] api: add content_too_large web_fetch tool error code",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Features] api: add the user-profiles-2026-09-04 beta value and external_user_details to user profiles",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Features] api: support mounting public GitHub repositories without an authorization_token in Managed Agents sessions",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Features] client: add Message.to_param() and BetaMessage.to_param()",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Features] credentials: add CredentialsError and IdentityTokenFileError",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Features] tools: accept tool objects directly in messages.create, parse, stream and count_tokens",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Bug Fixes] client: merge extra_body before client hooks run",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Bug Fixes] credentials: refuse credentials files accessible by group or others",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Bug Fixes] streaming: keep partial tool input JSON off content blocks",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Bug Fixes] types: leave parsed_output out of dumped text blocks",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Chores] client: clean up the unused idempotency request option",
+      "reason": "deprecation_only",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Chores] client: keep the idempotency_key request option as a deprecated no-op",
+      "reason": "deprecation_only",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Chores] docs: correct the environment scope field description",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Chores] internal: remove generated file header comments",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Chores] internal: restore package version",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Chores] internal: restore package version",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Chores] internal: stop stamping the package version into generated files",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.5.0 / Chores] tests: restore empty test package marker files",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.5.0"
+    },
+    {
+      "text": "[v1.6.0 / Features] api: add auto mode tool permissions for Managed Agents",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Features] api: add compaction parameter and signed compaction blocks (beta)",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Features] api: add enum types for workspace data-residency geo fields",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Features] api: add thinking_mismatch_allowed entries to input_transformations (beta)",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Features] api: add url_sources to the web fetch tool",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Features] api: add workspace_id parameter to user profiles methods",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Features] client: support async credential token providers",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Bug Fixes] api: mark usage iteration model as nullable",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Bug Fixes] api: use one input transformation type for message and delta event",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Bug Fixes] client: honor Retry-After values above 60 seconds",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Bug Fixes] client: ignore invalid Retry-After values and validate maxRetries",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Bug Fixes] client: retry connection errors in the async client and stop blocking in the coroutine retry loop",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Bug Fixes] client: use the default backoff when Retry-After is out of range",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Chores] deps: bump aiohttp, pygments and pytest in the dev lockfile",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Chores] deps: require anyio 4.1 or later",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Chores] docs: clarify that session_thread_id on tool use events is informational",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Chores] docs: correct the compaction beta's parameter descriptions",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Chores] internal: sort the imports in beta_message.py",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Chores] tests: define the model tests' type alias at module level",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Chores] tests: stop the mock server without failing a passing test run",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Documentation] api: clarify usage.iterations entry typing under server-side fallback",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Documentation] stop documenting unions with their first variant's description",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.6.0 / Documentation] use markdown formatting in most docstrings",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.6.0"
+    },
+    {
+      "text": "[v1.7.0 / Features] api: add group with display_name to rate limits, deprecate group_type",
+      "reason": "deprecation_only",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Features] tools: add compact_before_next_turn() to the tool runner",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Bug Fixes] bedrock: raise an API error for eventstream exception and error frames",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Bug Fixes] client: accept `X | Y` union types when parsing responses",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Bug Fixes] client: don't raise TypeError for `X | Y` fields with unknown data",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Bug Fixes] client: join multiple anthropic-beta values with a comma and no space",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Bug Fixes] tools: tidy compact_before_next_turn() state and failure handling",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Chores] deps: require pydantic 1.10 or later",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Chores] docs: add descriptions for enum values and path parameters",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Chores] docs: clarify the compaction tool_changes and tool change descriptions",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Chores] internal: add more unnecessary cast comments",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Chores] internal: pass strict= to zip() in the MCP tool helpers",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Chores] internal: remove an unused noqa comment from the model tests",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.7.0 / Chores] internal: set ruff's target version to Python 3.10",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.7.0"
+    },
+    {
+      "text": "[v1.8.0 / Features] api: add support for claude-opus-5-5, inline tool definitions and MCP tool-list pinning (beta)",
+      "reason": "addition",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Bug Fixes] api: share one evaluated_permission enum across Managed Agents events",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Bug Fixes] streaming: avoid a Python 3.13 crash at exit when a stream is left open",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Bug Fixes] tools: add_tools() takes effect straight away",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Bug Fixes] tools: leave reply-only params off the tool runner's compaction request",
+      "reason": "bugfix",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Chores] docs: add descriptions to the Dreams API reference",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Chores] docs: add descriptions to the User Profiles API reference",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Chores] docs: add memory store descriptions to the Managed Agents API reference",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Chores] docs: improve descriptions in the Dreams API reference",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Chores] docs: simplify the session thread agent type description",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Chores] docs: update diagnostics field descriptions on beta messages",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Chores] internal: fix tests",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Chores] internal: remove mypy",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Chores] tests: update fixtures",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Documentation] add path and header parameter descriptions",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[v1.8.0 / Refactors] client: remove the request param transform in favour of the JSON encoder",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.8.0"
+    },
+    {
+      "text": "[CHANGELOG 1.2.0 detail] beta files/skills namespaces no longer send the dated beta headers and return GA shapes (umbrella statement; specific API effects listed as ant-036..ant-047)",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27"
+    },
+    {
+      "text": "[CHANGELOG 1.2.0 detail] BetaSkill field renames display_title->display_name, latest_version->latest_version_id; BetaSkillVersion 'version' field gone (fields of response types that are themselves replaced, ant-039..ant-045)",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27"
+    },
+    {
+      "text": "[CHANGELOG 1.2.0 detail] links to platform migration guides for files-api / skills betas",
+      "reason": "docs",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md#120-2026-08-27"
+    },
+    {
+      "text": "[MIGRATION] pointer to the v2 migration guide (beyond the pinned 1.8.0)",
+      "reason": "out_of_range",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#migration-guide"
+    },
+    {
+      "text": "[MIGRATION] minimum Python raised from 3.9 to 3.10",
+      "reason": "python_version",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#environment-requirements"
+    },
+    {
+      "text": "[MIGRATION] passing an old httpx.Client/AsyncClient as http_client raises TypeError",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#custom-http-clients-transports-timeouts-and-limits"
+    },
+    {
+      "text": "[MIGRATION] returned response/error objects are httpx2 types",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#response-and-error-objects"
+    },
+    {
+      "text": "[MIGRATION] aiohttp extra no longer installs httpx_aiohttp (bundled in the SDK)",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#aiohttp-support"
+    },
+    {
+      "text": "[MIGRATION] tracing/mocking libraries that patch httpx stop seeing SDK requests",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#tracing-instrumentation-and-mocking-libraries"
+    },
+    {
+      "text": "[MIGRATION] anthropic._types.AsyncTransport / ProxiesDict removed (private module)",
+      "reason": "internal",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-type-aliases-and-exports"
+    },
+    {
+      "text": "[MIGRATION] type-alias table repeats Transport, ProxiesTypes, HUMAN_PROMPT, AI_PROMPT",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-type-aliases-and-exports"
+    },
+    {
+      "text": "[MIGRATION] DeprecationWarning for the class form of output_format on beta parse/stream/tool_runner is gone",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters"
+    },
+    {
+      "text": "[MIGRATION] quick-reference table (repeats the sections above)",
+      "reason": "duplicate",
+      "source_url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#quick-reference"
+    }
+  ],
+  "excluded_counts": {
+    "addition": 46,
+    "bugfix": 51,
+    "deprecation_only": 3,
+    "docs": 35,
+    "duplicate": 14,
+    "internal": 49,
+    "out_of_range": 1,
+    "python_version": 1,
+    "server_or_rest_only": 1,
+    "unnamed": 1
+  },
+  "shuffle_order": [
+    "ant-032",
+    "ant-034",
+    "ant-021",
+    "ant-006",
+    "ant-007",
+    "ant-042",
+    "ant-018",
+    "ant-004",
+    "ant-033",
+    "ant-046",
+    "ant-025",
+    "ant-048",
+    "ant-029",
+    "ant-022",
+    "ant-031",
+    "ant-011",
+    "ant-012",
+    "ant-009",
+    "ant-039",
+    "ant-036",
+    "ant-008",
+    "ant-044",
+    "ant-043",
+    "ant-010",
+    "ant-030",
+    "ant-049",
+    "ant-038",
+    "ant-028",
+    "ant-015",
+    "ant-041",
+    "ant-001",
+    "ant-040",
+    "ant-003",
+    "ant-045",
+    "ant-050",
+    "ant-019",
+    "ant-047",
+    "ant-020",
+    "ant-014",
+    "ant-026",
+    "ant-005",
+    "ant-027",
+    "ant-002",
+    "ant-024",
+    "ant-037",
+    "ant-016",
+    "ant-023",
+    "ant-035",
+    "ant-013",
+    "ant-051",
+    "ant-017"
+  ],
+  "verification": [
+    {
+      "id": "ant-032",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/_base_client.py:2581-2600 merge_headers stores non-append headers under their exact-case key (merged[key] = value); :472 httpx.Headers(headers_dict)",
+      "new_evidence": "anthropic-1.8.0/anthropic/_base_client.py:2549-2567 build_headers folds layers into httpx2.Headers 'later layers taking precedence whatever a name's casing'",
+      "change_type": "behaviour_only",
+      "notes": ""
+    },
+    {
+      "id": "ant-034",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/lib/bedrock/_client.py:88-90 log.warning('No AWS region specified, defaulting to us-east-1'); aws_region = 'us-east-1'",
+      "new_evidence": "anthropic-1.8.0/anthropic/lib/bedrock/_client.py:69-88 _infer_region(aws_profile) ... raise ValueError('No AWS region was provided...')",
+      "change_type": "behaviour_only",
+      "notes": ""
+    },
+    {
+      "id": "ant-021",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/message_create_params.py:178 temperature, :288 top_k, :297 top_p; types/messages/batch_create_params.py:42 params: Required[MessageCreateParamsNonStreaming]",
+      "new_evidence": "anthropic-1.8.0/anthropic/types/message_create_params.py: no temperature/top_p/top_k keys; types/messages/batch_create_params.py:48 params: Required[MessageCreateParamsNonStreaming]",
+      "change_type": "signature",
+      "notes": ""
+    },
+    {
+      "id": "ant-006",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/_legacy_response.py:395-407 async_to_raw_response_wrapper returns LegacyAPIResponse; :102 def parse (synchronous)",
+      "new_evidence": "anthropic-1.8.0/anthropic/_response.py:802-814 async_to_raw_response_wrapper returns AsyncAPIResponse; :426 async def parse, :472 async def read, :482 async def text",
+      "change_type": "signature",
+      "notes": ""
+    },
+    {
+      "id": "ant-007",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/_legacy_response.py:178-179 @property def text(self) -> str",
+      "new_evidence": "anthropic-1.8.0/anthropic/_response.py:371 def text(self) -> str (plain method on APIResponse); :482 async def text",
+      "change_type": "signature",
+      "notes": ""
+    },
+    {
+      "id": "ant-042",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/beta/skills/__init__.py:8 VersionCreateResponse; version_create_response.py:8 class VersionCreateResponse",
+      "new_evidence": "anthropic-1.8.0/anthropic/types/beta/skills/__init__.py:3 BetaSkillVersion (no Version*Response anywhere); resources/beta/skills/versions.py:78 create() -> BetaSkillVersion",
+      "change_type": "rename_move",
+      "notes": ""
+    },
+    {
+      "id": "ant-018",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/resources/beta/messages/messages.py:1691 def stream: temperature@1712, top_k@1716, top_p@1717",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/messages/messages.py:1616 def stream: no temperature/top_p/top_k",
+      "change_type": "signature",
+      "notes": ""
+    },
+    {
+      "id": "ant-004",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/__init__.py:6 from ._types import ... Transport, ProxiesTypes ...; :68 '__all__' entry 'Transport'",
+      "new_evidence": "anthropic-1.8.0/anthropic/__init__.py:3 from ._types import NOT_GIVEN, Omit, NoneType, NotGiven, omit, not_given (no Transport)",
+      "change_type": "removal",
+      "notes": ""
+    },
+    {
+      "id": "ant-033",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/_base_client.py:472 headers = httpx.Headers(headers_dict) (constructor normalises str or bytes values)",
+      "new_evidence": "anthropic-1.8.0/anthropic/_base_client.py:2557-2567 build_headers assigns headers[name] = value on httpx2.Headers; httpx2 Headers.__setitem__ calls value.encode(...) (httpx2 2.13.1 _models.py:327-333), which fails for bytes",
+      "change_type": "behaviour_only",
+      "notes": "New-side failure path relies on httpx2's Headers.__setitem__ (read from an installed httpx2 2.13.1, not from the wheel)."
+    },
+    {
+      "id": "ant-046",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/resources/beta/files.py:63 def list: after_id@66, before_id@67; :77 -> SyncPage[FileMetadata]",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/files.py:70 def list: ids@73, page@75 (no before_id/after_id); :85 -> SyncPageCursor[BetaFileMetadata]",
+      "change_type": "signature",
+      "notes": ""
+    },
+    {
+      "id": "ant-025",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/resources/messages/messages.py:1320 def count_tokens: output_format@1327: None | JSONOutputFormatParam | type | Omit",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/messages/messages.py:1251 def count_tokens: output_format@1258: Optional[type] | Omit",
+      "change_type": "signature",
+      "notes": ""
+    },
+    {
+      "id": "ant-048",
+      "status": "failed",
+      "reason": "already_in_old",
+      "old_evidence": "anthropic-0.115.0/anthropic/resources/beta/webhooks.py:17 def unwrap(self, payload: str, *, headers: Mapping[str, str], key=...) -- headers already required",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/webhooks.py:29 same signature",
+      "change_type": null,
+      "notes": "headers was already a required keyword argument at 0.115.0"
+    },
+    {
+      "id": "ant-029",
+      "status": "failed",
+      "reason": "not_public_python",
+      "old_evidence": "anthropic-0.115.0/anthropic/lib/tools/_beta_compaction_control.py:31 class CompactionControl(TypedDict) -- only in a private module, not re-exported (lib/tools/__init__.py has no CompactionControl)",
+      "new_evidence": "anthropic-1.8.0: no CompactionControl anywhere",
+      "change_type": null,
+      "notes": "removal is real but the object was never on a public import path; the parameter removal itself is ant-020"
+    },
+    {
+      "id": "ant-022",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/beta/message_create_params.py:196 output_format: Optional[BetaJSONOutputFormatParam]; types/beta/messages/batch_create_params.py:46 params: Required[MessageCreateParamsNonStreaming]",
+      "new_evidence": "anthropic-1.8.0/anthropic/types/beta/message_create_params.py: base TypedDict has no output_format (only the parse-helper params at :371); batch_create_params.py:52",
+      "change_type": "signature",
+      "notes": "temperature/top_p/top_k are also gone from the beta TypedDict"
+    },
+    {
+      "id": "ant-031",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/_streaming.py:26-37 metaclass __instancecheck__ shim emitting DeprecationWarning (also :194-205 for AsyncStream)",
+      "new_evidence": "anthropic-1.8.0/anthropic/_streaming.py: no __instancecheck__; lib/streaming/_messages.py:33 class MessageStream(Generic[ResponseFormatT])",
+      "change_type": "behaviour_only",
+      "notes": ""
+    },
+    {
+      "id": "ant-011",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/__init__.py:113 from .completion_create_params import CompletionCreateParams",
+      "new_evidence": "anthropic-1.8.0/anthropic/types/: no completion_create_params.py and no CompletionCreateParams export",
+      "change_type": "removal",
+      "notes": ""
+    },
+    {
+      "id": "ant-012",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/__init__.py:25 HUMAN_PROMPT as HUMAN_PROMPT; _constants.py:16 HUMAN_PROMPT = '\\n\\nHuman:'",
+      "new_evidence": "anthropic-1.8.0/anthropic/__init__.py and _constants.py: no HUMAN_PROMPT",
+      "change_type": "removal",
+      "notes": ""
+    },
+    {
+      "id": "ant-009",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/_client.py:296 def completions(self) -> Completions; resources/completions.py; resources/__init__.py:28 Completions",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/: no completions.py; _client.py has no completions property",
+      "change_type": "removal",
+      "notes": ""
+    },
+    {
+      "id": "ant-039",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/beta/__init__.py:67 SkillCreateResponse; resources/beta/skills/skills.py:83 create() -> SkillCreateResponse",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/skills/skills.py:82 create() -> BetaSkill; types/beta/__init__.py:4 BetaSkill, no SkillCreateResponse",
+      "change_type": "rename_move",
+      "notes": ""
+    },
+    {
+      "id": "ant-036",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/resources/beta/skills/skills.py:309 extra_headers pin 'anthropic-beta': 'skills-2025-10-02'; :278 -> SkillDeleteResponse",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/skills/skills.py:320-333 no dated beta pin, cast_to=BetaDeletedSkill; :291 -> BetaDeletedSkill",
+      "change_type": "behaviour_only",
+      "notes": "the cascade-delete itself is server-side; SDK-side evidence is the dropped skills-2025-10-02 pin and the new return type"
+    },
+    {
+      "id": "ant-008",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/_legacy_response.py:169-170 @property def content(self) -> bytes",
+      "new_evidence": "anthropic-1.8.0/anthropic/_response.py:361 def read(self) -> bytes; no content property in _response.py",
+      "change_type": "rename_move",
+      "notes": ""
+    },
+    {
+      "id": "ant-044",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/beta/skills/__init__.py:7 VersionListResponse",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/skills/versions.py:216 list() -> SyncPageCursor[BetaSkillVersion]; no VersionListResponse",
+      "change_type": "rename_move",
+      "notes": ""
+    },
+    {
+      "id": "ant-043",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/beta/skills/__init__.py:10 VersionRetrieveResponse",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/skills/versions.py:149 retrieve() -> BetaSkillVersion; no VersionRetrieveResponse",
+      "change_type": "rename_move",
+      "notes": ""
+    },
+    {
+      "id": "ant-010",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/__init__.py:24 from .completion import Completion",
+      "new_evidence": "anthropic-1.8.0/anthropic/types/: no completion.py and no Completion export",
+      "change_type": "removal",
+      "notes": ""
+    },
+    {
+      "id": "ant-030",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/_base_client.py:1526-1529 post(): isinstance(body, bytes) -> DeprecationWarning, then forwarded as content (:591-592)",
+      "new_evidence": "anthropic-1.8.0/anthropic/_base_client.py:607-608 raise TypeError('Passing raw bytes as `body` is not supported, pass them as `content` instead')",
+      "change_type": "behaviour_only",
+      "notes": "signature unchanged (body: Body | None, Body = object), runtime rejects bytes"
+    },
+    {
+      "id": "ant-049",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/resources/beta/user_profiles.py:47 def create: relationship@53",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/user_profiles.py:53 def create: access_type@56, no relationship (no 'relationship' anywhere in the 1.8.0 package)",
+      "change_type": "signature",
+      "notes": ""
+    },
+    {
+      "id": "ant-038",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/beta/beta_skill.py:10 class BetaSkill with skill_id@13 (container reference)",
+      "new_evidence": "anthropic-1.8.0/anthropic/types/beta/beta_container_skill.py:8 class BetaContainerSkill with skill_id@11; beta_skill.py:10 BetaSkill is now the Skill object (display_name@20)",
+      "change_type": "rename_move",
+      "notes": ""
+    },
+    {
+      "id": "ant-028",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/lib/tools/agent_toolset.py:88 READ_MAX_BYTES = DEFAULT_MAX_FILE_BYTES",
+      "new_evidence": "anthropic-1.8.0/anthropic/lib/tools/agent_toolset.py:97 DEFAULT_MAX_FILE_BYTES; no READ_MAX_BYTES",
+      "change_type": "rename_move",
+      "notes": ""
+    },
+    {
+      "id": "ant-015",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/resources/messages/messages.py:1085 def stream: temperature@1100, top_k@1101, top_p@1102",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/messages/messages.py:1024 def stream: no temperature/top_p/top_k",
+      "change_type": "signature",
+      "notes": ""
+    },
+    {
+      "id": "ant-041",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/beta/__init__.py:47 SkillListResponse; resources/beta/skills/skills.py:205 list() -> SyncPageCursor[SkillListResponse]",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/skills/skills.py:215 list() -> SyncPageCursor[BetaSkill]; no SkillListResponse",
+      "change_type": "rename_move",
+      "notes": ""
+    },
+    {
+      "id": "ant-001",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/__init__.py:183 MidConversationSystemBlockParam; types/mid_conversation_system_block_param.py",
+      "new_evidence": "anthropic-1.8.0/anthropic: no mid_conversation_system / MidConversationSystem anywhere",
+      "change_type": "removal",
+      "notes": ""
+    },
+    {
+      "id": "ant-040",
+      "status": "verified",
+      "old_evidence": "anthropic-0.115.0/anthropic/types/beta/__init__.py:85 SkillRetrieveResponse; resources/beta/skills/skills.py:152 retrieve() -> SkillRetrieveResponse",
+      "new_evidence": "anthropic-1.8.0/anthropic/resources/beta/skills/skills.py:156 retrieve() -> BetaSkill; no SkillRetrieveResponse",
+      "change_type": "rename_move",
+      "notes": ""
+    }
+  ],
+  "sample": [
+    "ant-032",
+    "ant-034",
+    "ant-021",
+    "ant-006",
+    "ant-007",
+    "ant-042",
+    "ant-018",
+    "ant-004",
+    "ant-033",
+    "ant-046",
+    "ant-025",
+    "ant-022",
+    "ant-031",
+    "ant-011",
+    "ant-012",
+    "ant-009",
+    "ant-039",
+    "ant-036",
+    "ant-008",
+    "ant-044",
+    "ant-043",
+    "ant-010",
+    "ant-030",
+    "ant-049",
+    "ant-038",
+    "ant-028",
+    "ant-015",
+    "ant-041",
+    "ant-001",
+    "ant-040"
+  ]
+}

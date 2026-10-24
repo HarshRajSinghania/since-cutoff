@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "cs01",
+  "task_id": "cs01-litellm-math-server-stdio",
+  "task_sha256": "b6d97bd890708e70059333e5e8b9f38dd75a674adfc145e39c5ec5e96f7e09e4",
+  "parts_sha256": {
+    "task.toml": "960db125bc4a59e0ccea01b1f471c51009f5a2105eaaf56e50cabc226f17f2e4",
+    "repo": "e134e64b9b6b87f1e286303a339cdef07dad5114158cfca3541e4bd0f83270aa",
+    "hidden": "a193e84d57dc9c43290600e227ca34183c9c67274f95a248de43537269870ab8",
+    "reference": "f189777e139355e45b9bff37082c0cc58581890e5709091c04d8adca281f4695",
+    "stale": "f54a1e70bac70553eb09a0a1df67bd27d4670956b25f62a5f14af68fcf40e4ea"
+  },
+  "validated_at": "2026-10-22T20:58:46+00:00",
+  "library": "mcp",
+  "pinned": "2.3.0",
+  "stale_version": "1.28.1",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "2.3.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 3,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 10.74,
+        "timed_out": false,
+        "first_error": "ModuleNotFoundError: No module named 'mcp.server.fastmcp'. This is mcp 2.x, where FastMCP was renamed to MCPServer (from mcp.server.mcpserver import MCPServer) and other APIs changed; see the migration guide at https://py.sdk.modelcontextprotocol.io/v2/migration/#fastmcp-renamed-to-mcpserver or pin "
+      },
+      "summary": "3 failed in 7.73s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "2.3.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 4.03,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed in 2.87s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.3.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 3,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 3.86,
+        "timed_out": false,
+        "first_error": "ModuleNotFoundError: No module named 'mcp.server.fastmcp'. This is mcp 2.x, where FastMCP was renamed to MCPServer (from mcp.server.mcpserver import MCPServer) and other APIs changed; see the migration guide at https://py.sdk.modelcontextprotocol.io/v2/migration/#fastmcp-renamed-to-mcpserver or pin "
+      },
+      "summary": "3 failed in 2.71s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.28.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 2.23,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed, 1 warning in 1.32s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "mcp-2.3.0 ed99fefe648a",
+    "stale": "mcp-1.28.1 c1f82f8ed8f1"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 40.6
+}

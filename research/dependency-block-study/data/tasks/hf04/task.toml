@@ -1,0 +1,45 @@
+schema = "since-cutoff-bench/task@1"
+id = "hf04-http-client-errors"
+library = "huggingface-hub"
+pinned = "2.0.0"
+cutoff_version = "1.21.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # stale code does `import httpx`, which huggingface-hub>=2 no longer installs (httpx2 instead)
+timeout_s = 900
+target_files = ["app/network.py"]
+# review 2026-09-27: the repo no longer contains a module that uses the old API (broken at the pinned version);
+# existing library use in repo/ is working code only (REVIEW.md, PROTOCOL.md section 12).
+instruction = """
+Implement the two functions in app/network.py, the network settings of our nightly sync job.
+
+1. `configure_hub_http(transport=None)`: from then on, every request huggingface_hub makes (from any
+   HfApi instance) must go through one shared HTTP client that we configure:
+   - connect timeout 5 seconds; read, write and pool timeouts 60 seconds;
+   - every request carries the header `X-Acme-Job: nightly-sync` (huggingface_hub's own headers,
+     such as its user agent, must still be sent);
+   - when `transport` is given (the tests pass a stub transport), the client must use it.
+2. `current_revision(repo_id)`: return the commit sha of the model repo's main branch. When the Hub
+   cannot be reached (connection failure or timeout), log a warning on the "app.network" logger and
+   return None. Every other error, for example a repo that does not exist, must still raise.
+
+The lockfile is fixed: do not add or install dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "huggingface_hub-1.21.0 METADATA: Requires-Dist httpx<1,>=0.23.0; huggingface_hub-2.0.0 METADATA: Requires-Dist httpx2<3,>=2.0.0 and no httpx (the 2.0.0 environment has httpx2 2.13.1 and no httpx)",
+  "huggingface_hub-1.21.0 wheel: utils/_http.py:31 `import httpx`, :279 default_client_factory() -> httpx.Client, :301 `CLIENT_FACTORY_T = Callable[[], httpx.Client]`, :310 set_client_factory, :404 retries on httpx exceptions; errors.py:6 `from httpx import HTTPError, Response`, :83 `class HfHubHTTPError(HTTPError, OSError)`",
+  "huggingface_hub-2.0.0 wheel: utils/_http.py:33 `import httpx2`, :331 default_client_factory() -> httpx2.Client(event_hooks=..., follow_redirects=True, timeout=None), :353 `CLIENT_FACTORY_T = Callable[[], httpx2.Client]`, :362 set_client_factory, :451 retries on httpx2.TimeoutException/NetworkError/RemoteProtocolError; errors.py:6 `from httpx2 import HTTPError, Response`, :90 `class HfHubHTTPError(HTTPError, OSError)`",
+  "model_info calls get_session().get(...) directly (1.21.0 hf_api.py:3312, 2.0.0 hf_api.py:3172), so transport errors reach the caller unwrapped: httpx.ConnectError/ReadTimeout in 1.21.0, httpx2.ConnectError/ReadTimeout in 2.0.0",
+  "httpx2 2.13.1: ConnectError -> NetworkError -> TransportError -> RequestError -> HTTPError; HfHubHTTPError also subclasses httpx2.HTTPError, so catching httpx2.HTTPError (or Exception/OSError) would swallow 404/500",
+  "run (bench validate, mocked transport): the stale solution fails at 2.0.0 with ModuleNotFoundError: No module named 'httpx' and passes at 1.21.0; the reference (httpx2 client factory, httpx2 transport errors) passes at 2.0.0",
+]
+# legacy httpx (not httpx2)
+stale_patterns = [
+  '^\s*import\s+httpx\b(?!2)',
+  '^\s*from\s+httpx\b(?!2)[\w.]*\s+import\b',
+]
+note_keys = ['httpx2']
+doc_keys = ['httpx2|Httpx2']
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_review = "pass"   # reviewer's alternative correct answer (REVIEW.md): the hidden tests must accept it

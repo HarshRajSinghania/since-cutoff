@@ -1,0 +1,51 @@
+{
+ "schema": "since-cutoff-bench/openagent-run@1",
+ "study_id": "openagent-qwen3c-main-2026-10-22",
+ "run_id": "lc02_C_r2_a62f",
+ "attempt": 1,
+ "attempt_id": "lc02_C_r2_a62f",
+ "task": "lc02",
+ "library": "langchain-core",
+ "stratum": "pre-cutoff-control",
+ "kind": "pre-cutoff-loud",
+ "condition": "C",
+ "rep": 2,
+ "block_id": "lc02#2",
+ "order_index": 68,
+ "pilot": false,
+ "condition_config": {
+  "notes_tokens": 396,
+  "notes_covered": true
+ },
+ "agent": {
+  "scaffold": "mini-swe-agent",
+  "step_limit": 40,
+  "textbased": false,
+  "wall_limit_s": 1800,
+  "temperature": 0.7,
+  "command_timeout_s": 180
+ },
+ "wall_s": 50.0,
+ "exit": {
+  "status": "RepeatedFormatError"
+ },
+ "process": {
+  "turns": 10,
+  "commands": 7,
+  "calls": 10,
+  "input_tokens": 29796,
+  "output_tokens": 1439,
+  "total_tokens": 31235,
+  "stale_in_first_edit": false,
+  "stale_in_final": false,
+  "first_edit": null
+ },
+ "valid": true,
+ "invalid_reason": null,
+ "grade": {
+  "passed": false,
+  "hidden_passed": false,
+  "visible_passed": true,
+  "lock_modified": false
+ }
+}

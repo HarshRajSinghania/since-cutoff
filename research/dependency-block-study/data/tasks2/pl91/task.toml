@@ -1,0 +1,25 @@
+schema = "since-cutoff-bench/task@1"
+id = "pl91-category-summary"
+library = "polars"
+pinned = "2.0.0"
+cutoff_version = "1.42.1"
+stale_version = "0.20.31"
+stratum = "pre-cutoff-control"
+kind = "pre-cutoff-control"  # DataFrame.groupby was renamed group_by in 0.19.0 and removed in 1.0.0 (2024-07), long before the cutoff
+timeout_s = 900
+target_files = ["basket/summary.py"]
+instruction = """
+Implement `category_summary` in basket/summary.py as its docstring describes. Do not add dependencies.
+You can run the tests with `pytest`.
+"""
+evidence = [
+  "polars-0.20.31: DataFrame.groupby exists (deprecated alias of group_by)",
+  "polars-1.42.1 and 2.0.0: DataFrame.groupby does not exist (removed in 1.0.0, released 2024-07-01); DataFrame.group_by exists",
+  "run (2026-10-22, /c/b/venvs/polars-{0.20.31,1.42.1,2.0.0}): hasattr(DataFrame, 'groupby') -> True / False / False",
+]
+stale_patterns = [
+  '''\.groupby\(''',
+]
+note_keys = ['group_by|groupby']
+doc_keys = ['group_by']
+answer_tokens = []

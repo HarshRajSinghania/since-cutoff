@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "pl01",
+  "task_id": "pl01-explode-empty-lists",
+  "task_sha256": "cf6a48e1926de5e8b10c1649c55858b1e0b58dc59498dd611844e391f995676b",
+  "parts_sha256": {
+    "task.toml": "57c5a7ebe6ca2ad89420d0163bc2c2201556777b2edad8ed2cf25ca203f97b31",
+    "repo": "486b9020c76242ac81385d516c7b14d3e72e5ed45d97abacb7bdae9b4e0a88c1",
+    "hidden": "5fb26395d62c8b412b3bc9c23ed4262aa2be1ae3ce93c1ad41069f4895b2ed59",
+    "reference": "c170cf1fdf1b4d2f6f814809fb8130fce5d9cddec03fd225778848ba44c7730e",
+    "stale": "43fd504d25f5103ba3d4c3ff3ab50cc63df6eab23fe25d225b8664a9288be109"
+  },
+  "validated_at": "2026-10-22T17:27:45+00:00",
+  "library": "polars",
+  "pinned": "2.0.0",
+  "stale_version": "1.42.1",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 3,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.85,
+        "timed_out": false,
+        "first_error": "NotImplementedError"
+      },
+      "summary": "3 failed in 0.31s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "2.0.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.76,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed in 0.25s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 2,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.81,
+        "timed_out": false,
+        "first_error": "assert [3] == [2, 3]"
+      },
+      "summary": "1 failed, 2 passed in 0.30s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "1.42.1",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.78,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "3 passed, 3 warnings in 0.24s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "polars-2.0.0 bd3c78b38a76",
+    "stale": "polars-1.42.1 225ce1b17d49"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 3.9
+}

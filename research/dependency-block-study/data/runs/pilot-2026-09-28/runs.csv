@@ -1,0 +1,17 @@
+run_id,attempt,task,stratum,condition,rep,pilot,valid,invalid_reason,model,passed,turns,wall_s,input_tokens,output_tokens,cache_read_input_tokens,cache_creation_input_tokens,total_tokens,cli_cost_usd,notes_tokens,notes_covered,pytest_runs,failing_pytest_runs,edits_after_first_failure,stale_in_first_edit,stale_in_final,site_packages_reads,introspection_cmds,context7_calls,doc_hit,started_at
+ant01_C_r2_fcb5,1,ant01,post-cutoff,C,2,True,True,,claude-opus-5-5,False,13,49.2,16,2757,102301,10828,115902,0.1622882,410,True,1,0,0,False,False,3,1,0,False,2026-09-28T01:03:48+00:00
+ant01_B_r1_4369,1,ant01,post-cutoff,B,1,True,True,,claude-opus-5-5,True,15,75.7,18,3835,437756,55721,497330,0.6100912,0,,2,0,0,True,False,0,1,0,False,2026-09-28T01:03:48+00:00
+ant01_D_r2_8d70,1,ant01,post-cutoff,D,2,True,True,,claude-opus-5-5,False,6,44.4,10,1846,59688,6401,67945,0.1001056,410,True,1,0,0,False,False,1,1,0,False,2026-09-28T01:05:33+00:00
+ant01_A_r1_b9ad,1,ant01,post-cutoff,A,1,True,True,,claude-opus-5-5,False,10,41.9,12,1754,243954,53468,299188,0.5116628000000001,0,,1,0,0,True,True,0,0,0,False,2026-09-28T01:05:57+00:00
+ant01_A_r2_769b,1,ant01,post-cutoff,A,2,True,True,,claude-opus-5-5,False,12,47.7,12,2175,249038,54203,305428,0.5269796,0,,1,0,0,True,True,0,0,0,False,2026-09-28T01:07:11+00:00
+ant01_D_r1_734e,1,ant01,post-cutoff,D,1,True,True,,claude-opus-5-5,False,14,52.5,18,2851,136350,12165,151384,0.181682,410,True,1,0,0,False,False,4,1,0,False,2026-09-28T01:07:32+00:00
+ant01_B_r2_dc19,1,ant01,post-cutoff,B,2,True,True,,claude-opus-5-5,False,7,44.8,10,1569,192774,50855,245208,0.4768147999999999,0,,1,0,0,True,True,0,0,0,False,2026-09-28T01:08:51+00:00
+ant01_C_r1_91a3,1,ant01,post-cutoff,C,1,True,True,,claude-opus-5-5,False,12,50.4,16,2856,105853,11711,120436,0.1720426,410,True,1,0,0,False,False,3,0,0,False,2026-09-28T01:09:17+00:00
+mcp01_B_r2_4c0b,1,mcp01,post-cutoff,B,2,True,True,,claude-opus-5-5,True,18,63.7,22,3924,201048,17426,222420,0.25818560000000007,0,,1,0,0,False,False,3,1,2,True,2026-09-28T01:10:30+00:00
+mcp01_C_r1_7921,1,mcp01,post-cutoff,C,1,True,True,,claude-opus-5-5,True,22,58.2,24,4068,172700,14225,191017,0.229796,394,False,1,0,0,False,False,7,1,0,False,2026-09-28T01:11:06+00:00
+mcp01_A_r2_e11d,1,mcp01,post-cutoff,A,2,True,True,,claude-opus-5-5,True,22,64.9,30,4128,275457,18981,298596,0.28961939999999997,0,,1,0,0,False,False,7,0,0,False,2026-09-28T01:12:19+00:00
+mcp01_B_r1_0690,1,mcp01,post-cutoff,B,1,True,True,,claude-opus-5-5,True,19,61.0,22,4039,202050,18816,224927,0.27180600000000005,0,,1,0,0,False,False,5,0,2,True,2026-09-28T01:12:51+00:00
+mcp01_D_r2_f70f,1,mcp01,post-cutoff,D,2,True,True,,claude-opus-5-5,True,20,63.9,28,3903,242780,16177,262888,0.256144,394,False,1,0,0,False,False,7,2,0,False,2026-09-28T01:14:09+00:00
+mcp01_A_r1_aed5,1,mcp01,post-cutoff,A,1,True,True,,claude-opus-5-5,True,19,58.5,24,3932,208376,18886,231218,0.2714992,0,,1,0,0,False,False,7,0,0,False,2026-09-28T01:14:36+00:00
+mcp01_C_r2_89fc,1,mcp01,post-cutoff,C,2,True,True,,claude-opus-5-5,True,18,54.9,22,3725,159170,15027,177944,0.226638,394,False,1,0,0,False,False,8,3,0,False,2026-09-28T01:15:55+00:00
+mcp01_D_r1_fc35,1,mcp01,post-cutoff,D,1,True,True,,claude-opus-5-5,True,18,53.4,26,3245,233408,17825,254504,0.2542856,394,False,1,0,0,False,False,7,0,0,False,2026-09-28T01:16:12+00:00

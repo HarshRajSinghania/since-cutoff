@@ -1,0 +1,54 @@
+{
+ "schema": "since-cutoff-bench/openagent-run@1",
+ "study_id": "openagent-qwen3c-main-2026-10-22",
+ "run_id": "ant01_C_r3_841e",
+ "attempt": 1,
+ "attempt_id": "ant01_C_r3_841e",
+ "task": "ant01",
+ "library": "anthropic",
+ "stratum": "post-cutoff",
+ "kind": "post-cutoff-loud",
+ "condition": "C",
+ "rep": 3,
+ "block_id": "ant01#3",
+ "order_index": 89,
+ "pilot": false,
+ "condition_config": {
+  "notes_tokens": 433,
+  "notes_covered": true
+ },
+ "agent": {
+  "scaffold": "mini-swe-agent",
+  "step_limit": 40,
+  "textbased": false,
+  "wall_limit_s": 1800,
+  "temperature": 0.7,
+  "command_timeout_s": 180
+ },
+ "wall_s": 277.2,
+ "exit": {
+  "status": "Submitted"
+ },
+ "process": {
+  "turns": 15,
+  "commands": 15,
+  "calls": 15,
+  "input_tokens": 81805,
+  "output_tokens": 1629,
+  "total_tokens": 83434,
+  "stale_in_first_edit": true,
+  "stale_in_final": true,
+  "first_edit": {
+   "command_index": 11,
+   "stale": true
+  }
+ },
+ "valid": true,
+ "invalid_reason": null,
+ "grade": {
+  "passed": false,
+  "hidden_passed": false,
+  "visible_passed": true,
+  "lock_modified": false
+ }
+}

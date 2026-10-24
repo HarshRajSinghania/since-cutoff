@@ -1,0 +1,47 @@
+schema = "since-cutoff-bench/task@1"
+id = "ant04-custom-http-client"
+library = "anthropic"
+pinned = "1.8.0"
+cutoff_version = "0.115.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud+silent"   # httpx.Client as http_client: TypeError at construction; an httpx.Timeout given to the SDK's own client class: silently wrong timeouts (halfmigrated/)
+timeout_s = 900
+target_files = ["app/claude.py"]
+instruction = """
+Implement `build_claude(api_key, transport=None)` in app/claude.py.
+
+Security wants Claude API traffic to follow the same egress rules as the rest of the service
+(app/http.py):
+1. every request carries the X-Egress-Tag header;
+2. every outgoing HTTP request, retries included, is logged once on the "app.egress" logger by the
+   `log_egress` request hook;
+3. connect timeout 5 seconds, read timeout 60 seconds.
+
+Use max_retries=2. When `transport` is given (the tests pass a stub transport), the HTTP client must
+send through it. Reuse what app/http.py already defines instead of copying values, and keep
+`fetch_status` working as it is.
+
+Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md (catalogue source; the change itself is verified in the wheels below)",
+  "anthropic-1.8.0 wheel METADATA: Requires-Dist httpx2<3,>=2.0.0 and no httpx (0.115.0: httpx<1,>=0.25.0); 1.0.0 already requires httpx2",
+  "anthropic-1.8.0 wheel: anthropic/_base_client.py:145-152 _reject_httpx_object() raises TypeError for any object whose class comes from the `httpx` package; called for http_client (:1008 sync, :1726 async), timeout (:426, :528) and transport (:918, :1613); :1023 isinstance(http_client, httpx2.Client)",
+  "anthropic-0.115.0 wheel: anthropic/_base_client.py:1010 accepts any httpx.Client as http_client; :906 _DefaultHttpxClient subclasses httpx.Client",
+]
+# the project's httpx objects handed to the SDK
+stale_patterns = [
+  '''http_client\s*=\s*(?:[\w.]+\.)?build_http_client\(''',
+  '''http_client\s*=\s*httpx\.(?:Async)?Client\(''',
+  '''(?<![\w.])timeout\s*=\s*(?:[\w.]+\.)?TIMEOUT\b''',
+  '''(?<![\w.])timeout\s*=\s*httpx\.Timeout\(''',
+]
+note_keys = ['httpx2']
+doc_keys = ['httpx2|Httpx2']
+answer_tokens = ["httpx2", "DefaultHttpxClient"]
+extra_requirements = ["httpx==0.28.1"]   # the project's own HTTP code uses httpx, so it is installed at both versions
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_direct = "pass"     # the SDK's HTTP library used directly, header via default_headers: must be accepted
+halfmigrated = "fail"   # the SDK's client class, but app/http.py's httpx.Timeout object
+alt_review = "pass"   # reviewer's alternative correct answer (REVIEW.md): the hidden tests must accept it

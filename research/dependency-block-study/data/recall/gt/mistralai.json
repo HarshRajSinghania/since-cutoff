@@ -1,0 +1,2580 @@
+{
+ "library": "mistralai",
+ "from": "2.5.0",
+ "to": "3.3.0",
+ "built_by": "Claude (AI), single pass",
+ "built_utc": "2026-10-23T19:46:32Z",
+ "sources_read": [
+  "releases_mistralai.md",
+  "range_mistralai_RELEASES.md",
+  "mistralai_MIGRATION.md (v2.x to v3.x part only)"
+ ],
+ "candidates": [
+  {
+   "id": "mi-001",
+   "description": "Observability campaigns operation create was removed with the campaigns resource.",
+   "old_path": "mistralai.client.campaigns.Campaigns.create",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.campaigns.Campaigns.create_async",
+    "Mistral.beta.observability.campaigns.create"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "campaigns.create",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-002",
+   "description": "Observability campaigns operation delete was removed with the campaigns resource.",
+   "old_path": "mistralai.client.campaigns.Campaigns.delete",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.campaigns.Campaigns.delete_async",
+    "Mistral.beta.observability.campaigns.delete"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "campaigns.delete",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-003",
+   "description": "Observability campaigns operation fetch was removed with the campaigns resource.",
+   "old_path": "mistralai.client.campaigns.Campaigns.fetch",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.campaigns.Campaigns.fetch_async",
+    "Mistral.beta.observability.campaigns.fetch"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "campaigns.fetch",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-004",
+   "description": "Observability campaigns operation fetch_status was removed with the campaigns resource.",
+   "old_path": "mistralai.client.campaigns.Campaigns.fetch_status",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.campaigns.Campaigns.fetch_status_async",
+    "Mistral.beta.observability.campaigns.fetch_status"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "campaigns.fetch_status",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-005",
+   "description": "Observability campaigns operation list was removed with the campaigns resource.",
+   "old_path": "mistralai.client.campaigns.Campaigns.list",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.campaigns.Campaigns.list_async",
+    "Mistral.beta.observability.campaigns.list"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "campaigns.list",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-006",
+   "description": "Observability campaigns operation list_events was removed with the campaigns resource.",
+   "old_path": "mistralai.client.campaigns.Campaigns.list_events",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.campaigns.Campaigns.list_events_async",
+    "Mistral.beta.observability.campaigns.list_events"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "campaigns.list_events",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-007",
+   "description": "Chat-completion-events operation fetch was removed.",
+   "old_path": "mistralai.client.chat_completion_events.ChatCompletionEvents.fetch",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.chat_completion_events.ChatCompletionEvents.fetch_async",
+    "Mistral.beta.observability.chat_completion_events.fetch"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "chatcompletionevents.fetch",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-008",
+   "description": "Chat-completion-events operation fetch_similar_events was removed.",
+   "old_path": "mistralai.client.chat_completion_events.ChatCompletionEvents.fetch_similar_events",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.chat_completion_events.ChatCompletionEvents.fetch_similar_events_async",
+    "Mistral.beta.observability.chat_completion_events.fetch_similar_events"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "chatcompletionevents.fetch_similar_events",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-009",
+   "description": "Chat-completion-events operation judge was removed.",
+   "old_path": "mistralai.client.chat_completion_events.ChatCompletionEvents.judge",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.chat_completion_events.ChatCompletionEvents.judge_async",
+    "Mistral.beta.observability.chat_completion_events.judge"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "chatcompletionevents.judge",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-010",
+   "description": "Chat-completion-events operation search was removed.",
+   "old_path": "mistralai.client.chat_completion_events.ChatCompletionEvents.search",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.chat_completion_events.ChatCompletionEvents.search_async",
+    "Mistral.beta.observability.chat_completion_events.search"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "chatcompletionevents.search",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-011",
+   "description": "Chat-completion-events operation search_ids was removed.",
+   "old_path": "mistralai.client.chat_completion_events.ChatCompletionEvents.search_ids",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.chat_completion_events.ChatCompletionEvents.search_ids_async",
+    "Mistral.beta.observability.chat_completion_events.search_ids"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "chatcompletionevents.search_ids",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-012",
+   "description": "Connectors create_or_update_organization_credentials was removed (replaced by create/update_credentials).",
+   "old_path": "mistralai.client.connectors.Connectors.create_or_update_organization_credentials",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.create_or_update_organization_credentials_async",
+    "Mistral.beta.connectors.create_or_update_organization_credentials"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "connectors.create_or_update_organization_credentials",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-013",
+   "description": "Connectors create_or_update_user_credentials was removed (replaced by create/update_credentials).",
+   "old_path": "mistralai.client.connectors.Connectors.create_or_update_user_credentials",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.create_or_update_user_credentials_async",
+    "Mistral.beta.connectors.create_or_update_user_credentials"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "connectors.create_or_update_user_credentials",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-014",
+   "description": "Connectors create_or_update_workspace_credentials was removed (replaced by create/update_credentials).",
+   "old_path": "mistralai.client.connectors.Connectors.create_or_update_workspace_credentials",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.create_or_update_workspace_credentials_async",
+    "Mistral.beta.connectors.create_or_update_workspace_credentials"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "connectors.create_or_update_workspace_credentials",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-015",
+   "description": "Datasets import_from_campaign was removed.",
+   "old_path": "mistralai.client.datasets.Datasets.import_from_campaign",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.datasets.Datasets.import_from_campaign_async",
+    "Mistral.beta.observability.datasets.import_from_campaign"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "datasets.import_from_campaign",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-016",
+   "description": "Datasets import_from_explorer was removed.",
+   "old_path": "mistralai.client.datasets.Datasets.import_from_explorer",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.datasets.Datasets.import_from_explorer_async",
+    "Mistral.beta.observability.datasets.import_from_explorer"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "datasets.import_from_explorer",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-017",
+   "description": "Fields operation fetch_option_counts was removed.",
+   "old_path": "mistralai.client.fields.Fields.fetch_option_counts",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.fields.Fields.fetch_option_counts_async",
+    "Mistral.beta.observability.chat_completion_events.fields.fetch_option_counts"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "fields.fetch_option_counts",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-018",
+   "description": "Fields operation fetch_options was removed.",
+   "old_path": "mistralai.client.fields.Fields.fetch_options",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.fields.Fields.fetch_options_async",
+    "Mistral.beta.observability.chat_completion_events.fields.fetch_options"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "fields.fetch_options",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-019",
+   "description": "Fields operation list was removed.",
+   "old_path": "mistralai.client.fields.Fields.list",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.fields.Fields.list_async",
+    "Mistral.beta.observability.chat_completion_events.fields.list"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "fields.list",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-020",
+   "description": "Connectors.create takes a single request object; the individual keyword arguments (name, description, server, ...) are gone.",
+   "old_path": "mistralai.client.connectors.Connectors.create",
+   "params": [
+    "name",
+    "description",
+    "server",
+    "title"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.create_async",
+    "Mistral.beta.connectors.create"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "`connectors.create` now takes a single request object",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-021",
+   "description": "Connectors.update takes a request_body instead of individual keyword arguments.",
+   "old_path": "mistralai.client.connectors.Connectors.update",
+   "params": [
+    "name",
+    "description",
+    "server",
+    "title"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.update_async",
+    "Mistral.beta.connectors.update"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "and `connectors.update` a `request_body`. The named arguments (`name`, `description`, `server`, `title`, ...) are no longer accepted.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-022",
+   "description": "Connector became a union of HTTPConnector and MCPConnector discriminated on protocol; formerly flat fields moved to the variants.",
+   "old_path": "mistralai.client.models.Connector",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ConnectorTypedDict",
+    "mistralai.client.models.HTTPConnector",
+    "mistralai.client.models.MCPConnector"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "`Connector` is now a union of `HTTPConnector` and `MCPConnector`, discriminated on `protocol`.",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-023",
+   "description": "ExtendedOAuthServerMetadata.authorization_endpoint became optional.",
+   "old_path": "mistralai.client.models.ExtendedOAuthServerMetadata",
+   "params": [
+    "authorization_endpoint"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ExtendedOAuthServerMetadataTypedDict"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "`ExtendedOAuthServerMetadata.authorization_endpoint` is now optional.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-024",
+   "description": "The service_tier field was removed from UsageInfoDollarDefs.",
+   "old_path": "mistralai.client.models.UsageInfoDollarDefs",
+   "params": [
+    "service_tier"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.UsageInfoDollarDefsTypedDict"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "`UsageInfoDollarDefs.service_tier` has been removed.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-025",
+   "description": "Three fields of DeploymentWorkerSpecResponse became required.",
+   "old_path": "mistralai.client.models.DeploymentWorkerSpecResponse",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DeploymentWorkerSpecResponseTypedDict"
+   ],
+   "documented_in": "2.10.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0",
+   "source_quote": "Three fields on `DeploymentWorkerSpecResponse` are now required.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-026",
+   "description": "JudgeDefinition dropped model and prompt and now requires slug.",
+   "old_path": "mistralai.client.models.JudgeDefinition",
+   "params": [
+    "model",
+    "prompt",
+    "slug"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.JudgeDefinitionTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`JudgeDefinition`: `model` and `prompt` removed. Now requires `slug`; optional `mapping: Dict[str, str]`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-027",
+   "description": "DeploymentResponse gained a required last_heartbeat field.",
+   "old_path": "mistralai.client.models.DeploymentResponse",
+   "params": [
+    "last_heartbeat"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DeploymentResponseTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`last_heartbeat: datetime` on `DeploymentResponse`, `DeploymentDetailResponse`, `DeploymentWorkerResponse`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-028",
+   "description": "DeploymentDetailResponse gained a required last_heartbeat field.",
+   "old_path": "mistralai.client.models.DeploymentDetailResponse",
+   "params": [
+    "last_heartbeat"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DeploymentDetailResponseTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`last_heartbeat: datetime` on `DeploymentResponse`, `DeploymentDetailResponse`, `DeploymentWorkerResponse`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-029",
+   "description": "DeploymentWorkerResponse gained a required last_heartbeat field.",
+   "old_path": "mistralai.client.models.DeploymentWorkerResponse",
+   "params": [
+    "last_heartbeat"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DeploymentWorkerResponseTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`last_heartbeat: datetime` on `DeploymentResponse`, `DeploymentDetailResponse`, `DeploymentWorkerResponse`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-030",
+   "description": "VoiceResponse gained a required type field.",
+   "old_path": "mistralai.client.models.VoiceResponse",
+   "params": [
+    "type"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.VoiceResponseTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`type` on `VoiceResponse`, `managed_indexes` on `Rag`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-031",
+   "description": "WorkflowExecutionResponse.search_keys values became nullable (Dict[str, str] -> Dict[str, Nullable[str]]).",
+   "old_path": "mistralai.client.models.WorkflowExecutionResponse",
+   "params": [
+    "search_keys"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.WorkflowExecutionResponseTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`search_keys` values are now nullable on `WorkflowExecutionResponse`, `WorkflowExecutionTraceEventsResponse`,",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-032",
+   "description": "WorkflowExecutionTraceEventsResponse.search_keys values became nullable (Dict[str, str] -> Dict[str, Nullable[str]]).",
+   "old_path": "mistralai.client.models.WorkflowExecutionTraceEventsResponse",
+   "params": [
+    "search_keys"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.WorkflowExecutionTraceEventsResponseTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`search_keys` values are now nullable on `WorkflowExecutionResponse`, `WorkflowExecutionTraceEventsResponse`,",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-033",
+   "description": "WorkflowExecutionTraceOTelResponse.search_keys values became nullable (Dict[str, str] -> Dict[str, Nullable[str]]).",
+   "old_path": "mistralai.client.models.WorkflowExecutionTraceOTelResponse",
+   "params": [
+    "search_keys"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.WorkflowExecutionTraceOTelResponseTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`search_keys` values are now nullable on `WorkflowExecutionResponse`, `WorkflowExecutionTraceEventsResponse`,",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-034",
+   "description": "WorkflowExecutionTraceSummaryResponse.search_keys values became nullable (Dict[str, str] -> Dict[str, Nullable[str]]).",
+   "old_path": "mistralai.client.models.WorkflowExecutionTraceSummaryResponse",
+   "params": [
+    "search_keys"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.WorkflowExecutionTraceSummaryResponseTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`search_keys` values are now nullable on `WorkflowExecutionResponse`, `WorkflowExecutionTraceEventsResponse`,",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-035",
+   "description": "And changed from a union alias of FilterGroup | FilterCondition (2.9.x) to an object model with type and matches.",
+   "old_path": "mistralai.client.models.And",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.AndTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`And` and `Or` are objects again (`type`, `matches`) after being removed in 2.10.0.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-036",
+   "description": "Or changed from a union alias of FilterGroup | FilterCondition (2.9.x) to an object model with type and matches.",
+   "old_path": "mistralai.client.models.Or",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.OrTypedDict"
+   ],
+   "documented_in": "2.10.1",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1",
+   "source_quote": "`And` and `Or` are objects again (`type`, `matches`) after being removed in 2.10.0.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-037",
+   "description": "DeploymentKoyebBackendSpec was replaced by DeploymentMistralCloudBackendSpec (koyeb backend renamed mistral_cloud).",
+   "old_path": "mistralai.client.models.DeploymentKoyebBackendSpec",
+   "params": null,
+   "new_path": "mistralai.client.models.DeploymentMistralCloudBackendSpec",
+   "api_names": [
+    "mistralai.client.models.DeploymentKoyebBackendSpecTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`DeploymentKoyebBackendSpec` is replaced by `DeploymentMistralCloudBackendSpec`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "mi-038",
+   "description": "UnknownDeploymentWorkerSpecResponseBackendSpec was renamed UnknownBackendSpec.",
+   "old_path": "mistralai.client.models.UnknownDeploymentWorkerSpecResponseBackendSpec",
+   "params": null,
+   "new_path": "mistralai.client.models.UnknownBackendSpec",
+   "api_names": [
+    "mistralai.client.models.UnknownDeploymentWorkerSpecResponseBackendSpecTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`UnknownDeploymentWorkerSpecResponseBackendSpec` is renamed `UnknownBackendSpec`.",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "mi-039",
+   "description": "DeploymentResourceConfig lost its CPU and memory request/limit fields.",
+   "old_path": "mistralai.client.models.DeploymentResourceConfig",
+   "params": [
+    "cpu_limit",
+    "cpu_request",
+    "memory_limit",
+    "memory_request"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DeploymentResourceConfigTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`DeploymentResourceConfig.cpu_limit`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-040",
+   "description": "DeploymentResourceConfigUpdate lost its CPU and memory request/limit fields.",
+   "old_path": "mistralai.client.models.DeploymentResourceConfigUpdate",
+   "params": [
+    "cpu_limit",
+    "cpu_request",
+    "memory_limit",
+    "memory_request"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DeploymentResourceConfigUpdateTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`DeploymentResourceConfigUpdate.cpu_limit`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-041",
+   "description": "DeploymentWorkerSpecInput lost entrypoint and working_dir.",
+   "old_path": "mistralai.client.models.DeploymentWorkerSpecInput",
+   "params": [
+    "entrypoint",
+    "working_dir"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DeploymentWorkerSpecInputTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`DeploymentWorkerSpecInput.entrypoint`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-042",
+   "description": "DeploymentWorkerSpecResponse lost commit_sha, entrypoint and working_dir.",
+   "old_path": "mistralai.client.models.DeploymentWorkerSpecResponse",
+   "params": [
+    "commit_sha",
+    "entrypoint",
+    "working_dir"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DeploymentWorkerSpecResponseTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`DeploymentWorkerSpecResponse.commit_sha`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-043",
+   "description": "WorkflowsWorkerSpecUpdate lost entrypoint and working_dir.",
+   "old_path": "mistralai.client.models.WorkflowsWorkerSpecUpdate",
+   "params": [
+    "entrypoint",
+    "working_dir"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.WorkflowsWorkerSpecUpdateTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`WorkflowsWorkerSpecUpdate.entrypoint`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-044",
+   "description": "beta.connectors.delete_organization_credentials and its request model were removed; use delete_credentials with consumer_scope.",
+   "old_path": "mistralai.client.connectors.Connectors.delete_organization_credentials",
+   "params": null,
+   "new_path": "mistralai.client.connectors.Connectors.delete_credentials",
+   "api_names": [
+    "mistralai.client.connectors.Connectors.delete_organization_credentials_async",
+    "Mistral.beta.connectors.delete_organization_credentials",
+    "mistralai.client.models.ConnectorDeleteOrganizationCredentialsV1Request"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`ConnectorDeleteOrganizationCredentialsV1Request`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-045",
+   "description": "beta.connectors.delete_user_credentials and its request model were removed; use delete_credentials with consumer_scope.",
+   "old_path": "mistralai.client.connectors.Connectors.delete_user_credentials",
+   "params": null,
+   "new_path": "mistralai.client.connectors.Connectors.delete_credentials",
+   "api_names": [
+    "mistralai.client.connectors.Connectors.delete_user_credentials_async",
+    "Mistral.beta.connectors.delete_user_credentials",
+    "mistralai.client.models.ConnectorDeleteUserCredentialsV1Request"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`ConnectorDeleteUserCredentialsV1Request`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-046",
+   "description": "beta.connectors.delete_workspace_credentials and its request model were removed; use delete_credentials with consumer_scope.",
+   "old_path": "mistralai.client.connectors.Connectors.delete_workspace_credentials",
+   "params": null,
+   "new_path": "mistralai.client.connectors.Connectors.delete_credentials",
+   "api_names": [
+    "mistralai.client.connectors.Connectors.delete_workspace_credentials_async",
+    "Mistral.beta.connectors.delete_workspace_credentials",
+    "mistralai.client.models.ConnectorDeleteWorkspaceCredentialsV1Request"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`ConnectorDeleteWorkspaceCredentialsV1Request`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-047",
+   "description": "beta.connectors.get no longer takes fetch_customer_data.",
+   "old_path": "mistralai.client.connectors.Connectors.get",
+   "params": [
+    "fetch_customer_data"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.get_async",
+    "Mistral.beta.connectors.get",
+    "mistralai.client.models.ConnectorGetV1Request"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`ConnectorGetV1Request.fetch_customer_data`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-048",
+   "description": "beta.connectors.list_tools no longer takes page.",
+   "old_path": "mistralai.client.connectors.Connectors.list_tools",
+   "params": [
+    "page"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.list_tools_async",
+    "Mistral.beta.connectors.list_tools",
+    "mistralai.client.models.ConnectorListToolsV1Request"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`ConnectorListToolsV1Request.page`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-049",
+   "description": "ConnectorsQueryFilters (query_filters of connectors.list) lost the active field.",
+   "old_path": "mistralai.client.models.ConnectorsQueryFilters",
+   "params": [
+    "active"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ConnectorsQueryFiltersTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`ConnectorsQueryFilters.active`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-050",
+   "description": "UsersAPIGetIdentitySecurity.dashboard_user_context_auth became optional (API key or bearer token accepted by beta.users.get_identity).",
+   "old_path": "mistralai.client.models.UsersAPIGetIdentitySecurity",
+   "params": [
+    "dashboard_user_context_auth"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.UsersAPIGetIdentitySecurityTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`UsersAPIGetIdentitySecurity.dashboard_user_context_auth: Annotated[str,",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-051",
+   "description": "UsersAPIListOrganizationsSecurity.dashboard_user_context_auth became optional (API key or bearer token accepted by beta.users.list_organizations).",
+   "old_path": "mistralai.client.models.UsersAPIListOrganizationsSecurity",
+   "params": [
+    "dashboard_user_context_auth"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.UsersAPIListOrganizationsSecurityTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`UsersAPIListOrganizationsSecurity.dashboard_user_context_auth: Annotated[str,",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-052",
+   "description": "UsersAPIListWorkspacesSecurity.dashboard_user_context_auth became optional (API key or bearer token accepted by beta.users.list_workspaces).",
+   "old_path": "mistralai.client.models.UsersAPIListWorkspacesSecurity",
+   "params": [
+    "dashboard_user_context_auth"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.UsersAPIListWorkspacesSecurityTypedDict"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "`UsersAPIListWorkspacesSecurity.dashboard_user_context_auth: Annotated[str,",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-053",
+   "description": "The SDK's HTTP dependency moved from httpx to httpx2: custom client/async_client must be httpx2 clients; raw requests, responses and transport errors are httpx2 types (also Azure/GCP clients).",
+   "old_path": "mistralai.client.Mistral",
+   "params": [
+    "client",
+    "async_client"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.sdk.Mistral",
+    "mistralai.azure.client.MistralAzure",
+    "mistralai.gcp.client.MistralGCP",
+    "mistralai.client.httpclient.HttpClient",
+    "mistralai.client.httpclient.AsyncHttpClient",
+    "mistralai.client.errors.MistralError",
+    "httpx",
+    "httpx2"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "The SDK uses HTTPX2 instead of HTTPX",
+   "change_type_guess": "dependency_switch"
+  },
+  {
+   "id": "mi-054",
+   "description": "The mcp and agents extras moved from MCP 1.x to MCP 2.2; MCP results use MCP 2.2 field names.",
+   "old_path": "mistralai.extra.mcp",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mcp"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "the `mcp` and `agents` extras MCP 2.2.",
+   "change_type_guess": "dependency_switch"
+  },
+  {
+   "id": "mi-055",
+   "description": "chat.complete no longer accepts the code_interpreter, web_search and web_search_premium tools.",
+   "old_path": "mistralai.client.chat.Chat.complete",
+   "params": [
+    "tools"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.chat.Chat.complete_async",
+    "Mistral.chat.complete"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "Chat and agents completions no longer accept the `code_interpreter`, `web_search` and `web_search_premium` tools",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-056",
+   "description": "chat.stream no longer accepts the code_interpreter, web_search and web_search_premium tools.",
+   "old_path": "mistralai.client.chat.Chat.stream",
+   "params": [
+    "tools"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.chat.Chat.stream_async",
+    "Mistral.chat.stream"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "Chat and agents completions no longer accept the `code_interpreter`, `web_search` and `web_search_premium` tools",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-057",
+   "description": "agents.complete no longer accepts the code_interpreter, web_search and web_search_premium tools.",
+   "old_path": "mistralai.client.agents.Agents.complete",
+   "params": [
+    "tools"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.agents.Agents.complete_async",
+    "Mistral.agents.complete"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "Chat and agents completions no longer accept the `code_interpreter`, `web_search` and `web_search_premium` tools",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-058",
+   "description": "agents.stream no longer accepts the code_interpreter, web_search and web_search_premium tools.",
+   "old_path": "mistralai.client.agents.Agents.stream",
+   "params": [
+    "tools"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.agents.Agents.stream_async",
+    "Mistral.agents.stream"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "Chat and agents completions no longer accept the `code_interpreter`, `web_search` and `web_search_premium` tools",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-059",
+   "description": "workflows.deployments.update_deployment backend_spec changed: only the Mistral Cloud backend is accepted (Kubernetes/koyeb can no longer be set).",
+   "old_path": "mistralai.client.deployments.Deployments.update_deployment",
+   "params": [
+    "backend_spec"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.deployments.Deployments.update_deployment_async",
+    "Mistral.workflows.deployments.update_deployment"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "Changed field `backend_spec` in `sdk.workflows.deployments.update_deployment()` and `sdk.workflows.deployments.create_deployment()`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-060",
+   "description": "workflows.deployments.create_deployment backend_spec changed: only the Mistral Cloud backend is accepted (Kubernetes/koyeb can no longer be set).",
+   "old_path": "mistralai.client.deployments.Deployments.create_deployment",
+   "params": [
+    "backend_spec"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.deployments.Deployments.create_deployment_async",
+    "Mistral.workflows.deployments.create_deployment"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0",
+   "source_quote": "Changed field `backend_spec` in `sdk.workflows.deployments.update_deployment()` and `sdk.workflows.deployments.create_deployment()`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-061",
+   "description": "The workflows runs SDK class Runs was renamed WorkflowsRuns.",
+   "old_path": "mistralai.client.runs.Runs",
+   "params": null,
+   "new_path": "mistralai.client.workflows_runs.WorkflowsRuns",
+   "api_names": [
+    "mistralai.client.workflows.Workflows.runs",
+    "Mistral.workflows.runs"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`Workflows.runs: Runs -> WorkflowsRuns`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "mi-062",
+   "description": "The dataset records SDK class Records was renamed DatasetsRecords.",
+   "old_path": "mistralai.client.records.Records",
+   "params": null,
+   "new_path": "mistralai.client.datasets_records.DatasetsRecords",
+   "api_names": [
+    "mistralai.client.datasets.Datasets.records",
+    "Mistral.beta.observability.datasets.records"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`Datasets.records: Records -> DatasetsRecords`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "mi-063",
+   "description": "AuthenticationMethodCreateOrUpdateRequest lost auth_direction and method_type now uses AuthenticationType.",
+   "old_path": "mistralai.client.models.AuthenticationMethodCreateOrUpdateRequest",
+   "params": [
+    "auth_direction",
+    "method_type"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.AuthenticationMethodCreateOrUpdateRequestTypedDict"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`AuthenticationMethodCreateOrUpdateRequest.auth_direction`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-064",
+   "description": "AuthenticationConfiguration.authentication_type type changed from OutboundAuthenticationType to AuthenticationType.",
+   "old_path": "mistralai.client.models.AuthenticationConfiguration",
+   "params": [
+    "authentication_type"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.AuthenticationConfigurationTypedDict"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`AuthenticationConfiguration.authentication_type: OutboundAuthenticationType -> AuthenticationType`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-065",
+   "description": "beta.connectors.get_auth_url method_type type changed from OutboundAuthenticationType to AuthenticationType.",
+   "old_path": "mistralai.client.connectors.Connectors.get_auth_url",
+   "params": [
+    "method_type"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.get_auth_url_async",
+    "Mistral.beta.connectors.get_auth_url",
+    "mistralai.client.models.ConnectorGetAuthURLV1Request"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`ConnectorGetAuthURLV1Request.method_type: Annotated[Optional[OutboundAuthenticationType],",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-066",
+   "description": "beta.connectors.list_organization_credentials auth_type type changed from OutboundAuthenticationType to AuthenticationType.",
+   "old_path": "mistralai.client.connectors.Connectors.list_organization_credentials",
+   "params": [
+    "auth_type"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.list_organization_credentials_async",
+    "Mistral.beta.connectors.list_organization_credentials",
+    "mistralai.client.models.ConnectorListOrganizationCredentialsV1Request"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`ConnectorListOrganizationCredentialsV1Request.auth_type: Annotated[OptionalNullable[OutboundAuthenticationType],",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-067",
+   "description": "beta.connectors.list_user_credentials auth_type type changed from OutboundAuthenticationType to AuthenticationType.",
+   "old_path": "mistralai.client.connectors.Connectors.list_user_credentials",
+   "params": [
+    "auth_type"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.list_user_credentials_async",
+    "Mistral.beta.connectors.list_user_credentials",
+    "mistralai.client.models.ConnectorListUserCredentialsV1Request"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`ConnectorListUserCredentialsV1Request.auth_type: Annotated[OptionalNullable[OutboundAuthenticationType],",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-068",
+   "description": "beta.connectors.list_workspace_credentials auth_type type changed from OutboundAuthenticationType to AuthenticationType.",
+   "old_path": "mistralai.client.connectors.Connectors.list_workspace_credentials",
+   "params": [
+    "auth_type"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.connectors.Connectors.list_workspace_credentials_async",
+    "Mistral.beta.connectors.list_workspace_credentials",
+    "mistralai.client.models.ConnectorListWorkspaceCredentialsV1Request"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`ConnectorListWorkspaceCredentialsV1Request.auth_type: Annotated[OptionalNullable[OutboundAuthenticationType],",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-069",
+   "description": "CredentialsResponse.connector_preset_credentials_for_auth element type changed to AuthenticationType.",
+   "old_path": "mistralai.client.models.CredentialsResponse",
+   "params": [
+    "connector_preset_credentials_for_auth"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.CredentialsResponseTypedDict"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`CredentialsResponse.connector_preset_credentials_for_auth: Optional[List[OutboundAuthenticationType]] -> Optional[List[AuthenticationType]]`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-070",
+   "description": "OrderByClause.direction type changed from Direction to OrderByClauseDirection.",
+   "old_path": "mistralai.client.models.OrderByClause",
+   "params": [
+    "direction"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.OrderByClauseTypedDict"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`OrderByClause.direction: Optional[Direction] -> Optional[OrderByClauseDirection]`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-071",
+   "description": "PublicAuthenticationMethod.method_type type changed from OutboundAuthenticationType to AuthenticationType.",
+   "old_path": "mistralai.client.models.PublicAuthenticationMethod",
+   "params": [
+    "method_type"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.PublicAuthenticationMethodTypedDict"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`PublicAuthenticationMethod.method_type: OutboundAuthenticationType -> AuthenticationType`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-072",
+   "description": "Dataset gained a required slug field.",
+   "old_path": "mistralai.client.models.Dataset",
+   "params": [
+    "slug"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DatasetTypedDict"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`Dataset.slug`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-073",
+   "description": "DatasetPreview gained a required slug field.",
+   "old_path": "mistralai.client.models.DatasetPreview",
+   "params": [
+    "slug"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DatasetPreviewTypedDict"
+   ],
+   "documented_in": "3.1.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0",
+   "source_quote": "`DatasetPreview.slug`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-074",
+   "description": "The beta model DetectionDefinition was removed.",
+   "old_path": "mistralai.client.models.DetectionDefinition",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.DetectionDefinitionTypedDict"
+   ],
+   "documented_in": "3.2.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0",
+   "source_quote": "`DetectionDefinition`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-075",
+   "description": "The beta model ExportDefinition was removed.",
+   "old_path": "mistralai.client.models.ExportDefinition",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ExportDefinitionTypedDict"
+   ],
+   "documented_in": "3.2.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0",
+   "source_quote": "`ExportDefinition`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-076",
+   "description": "The beta model JudgeDefinition was removed.",
+   "old_path": "mistralai.client.models.JudgeDefinition",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.JudgeDefinitionTypedDict"
+   ],
+   "documented_in": "3.2.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0",
+   "source_quote": "`JudgeDefinition`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-077",
+   "description": "The beta model ModerationDefinition was removed.",
+   "old_path": "mistralai.client.models.ModerationDefinition",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ModerationDefinitionTypedDict"
+   ],
+   "documented_in": "3.2.0",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0",
+   "source_quote": "`ModerationDefinition`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-078",
+   "description": "The realtime Sessions SDK class was renamed RealtimeSessions.",
+   "old_path": "mistralai.client.sessions.Sessions",
+   "params": null,
+   "new_path": "mistralai.client.realtime_sessions.RealtimeSessions",
+   "api_names": [
+    "mistralai.client.realtime.Realtime.sessions",
+    "Mistral.realtime.sessions"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`Realtime.sessions: Sessions -> RealtimeSessions`",
+   "change_type_guess": "rename_move"
+  },
+  {
+   "id": "mi-079",
+   "description": "UnknownAuthorization (open-union fallback of CustomConnector.authorization) was removed.",
+   "old_path": "mistralai.client.models.UnknownAuthorization",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.UnknownAuthorizationTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`UnknownAuthorization`",
+   "change_type_guess": "removal"
+  },
+  {
+   "id": "mi-080",
+   "description": "CustomConnector.authorization type changed from Authorization to CustomConnectorAuthorization.",
+   "old_path": "mistralai.client.models.CustomConnector",
+   "params": [
+    "authorization"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.CustomConnectorTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`CustomConnector.authorization: OptionalNullable[Authorization] -> OptionalNullable[CustomConnectorAuthorization]`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-081",
+   "description": "CreateConnectorRequest lost auth_data.",
+   "old_path": "mistralai.client.models.CreateConnectorRequest",
+   "params": [
+    "auth_data"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.CreateConnectorRequestTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`CreateConnectorRequest.auth_data`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-082",
+   "description": "CreateHTTPConnectorRequest lost auth_data.",
+   "old_path": "mistralai.client.models.CreateHTTPConnectorRequest",
+   "params": [
+    "auth_data"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.CreateHTTPConnectorRequestTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`CreateHTTPConnectorRequest.auth_data`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-083",
+   "description": "PublicConnectorExecutionData lost use_connectors_gateway.",
+   "old_path": "mistralai.client.models.PublicConnectorExecutionData",
+   "params": [
+    "use_connectors_gateway"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.PublicConnectorExecutionDataTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`PublicConnectorExecutionData.use_connectors_gateway`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-084",
+   "description": "Annotations lost additional_properties.",
+   "old_path": "mistralai.client.models.Annotations",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.AnnotationsTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`Annotations.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-085",
+   "description": "AudioContent lost additional_properties.",
+   "old_path": "mistralai.client.models.AudioContent",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.AudioContentTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`AudioContent.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-086",
+   "description": "BlobResourceContents lost additional_properties.",
+   "old_path": "mistralai.client.models.BlobResourceContents",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.BlobResourceContentsTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`BlobResourceContents.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-087",
+   "description": "ClientCapabilities lost additional_properties.",
+   "old_path": "mistralai.client.models.ClientCapabilities",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ClientCapabilitiesTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ClientCapabilities.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-088",
+   "description": "ClientTasksCapability lost additional_properties; cancel, list changed from Dict[str, Any] to typed capability models.",
+   "old_path": "mistralai.client.models.ClientTasksCapability",
+   "params": [
+    "additional_properties",
+    "cancel",
+    "list"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ClientTasksCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ClientTasksCapability.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-089",
+   "description": "ClientTasksRequestsCapability lost additional_properties.",
+   "old_path": "mistralai.client.models.ClientTasksRequestsCapability",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ClientTasksRequestsCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ClientTasksRequestsCapability.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-090",
+   "description": "ElicitationCapability lost additional_properties; form, url changed from Dict[str, Any] to typed capability models.",
+   "old_path": "mistralai.client.models.ElicitationCapability",
+   "params": [
+    "additional_properties",
+    "form",
+    "url"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ElicitationCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ElicitationCapability.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-091",
+   "description": "EmbeddedResource lost additional_properties.",
+   "old_path": "mistralai.client.models.EmbeddedResource",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.EmbeddedResourceTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`EmbeddedResource.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-092",
+   "description": "ImageContent lost additional_properties.",
+   "old_path": "mistralai.client.models.ImageContent",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ImageContentTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ImageContent.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-093",
+   "description": "MCPServerIcon lost additional_properties.",
+   "old_path": "mistralai.client.models.MCPServerIcon",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.MCPServerIconTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`MCPServerIcon.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-094",
+   "description": "PromptArgument lost additional_properties.",
+   "old_path": "mistralai.client.models.PromptArgument",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.PromptArgumentTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`PromptArgument.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-095",
+   "description": "PromptsCapability lost additional_properties.",
+   "old_path": "mistralai.client.models.PromptsCapability",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.PromptsCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`PromptsCapability.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-096",
+   "description": "ResourceLink lost additional_properties.",
+   "old_path": "mistralai.client.models.ResourceLink",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ResourceLinkTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ResourceLink.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-097",
+   "description": "ResourcesCapability lost additional_properties.",
+   "old_path": "mistralai.client.models.ResourcesCapability",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ResourcesCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ResourcesCapability.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-098",
+   "description": "RootsCapability lost additional_properties.",
+   "old_path": "mistralai.client.models.RootsCapability",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.RootsCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`RootsCapability.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-099",
+   "description": "SamplingCapability lost additional_properties; context, tools changed from Dict[str, Any] to typed capability models.",
+   "old_path": "mistralai.client.models.SamplingCapability",
+   "params": [
+    "additional_properties",
+    "context",
+    "tools"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.SamplingCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`SamplingCapability.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-100",
+   "description": "ServerCapabilities lost additional_properties; completions, logging changed from Dict[str, Any] to typed capability models.",
+   "old_path": "mistralai.client.models.ServerCapabilities",
+   "params": [
+    "additional_properties",
+    "completions",
+    "logging"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ServerCapabilitiesTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ServerCapabilities.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-101",
+   "description": "ServerTasksCapability lost additional_properties; cancel, list changed from Dict[str, Any] to typed capability models.",
+   "old_path": "mistralai.client.models.ServerTasksCapability",
+   "params": [
+    "additional_properties",
+    "cancel",
+    "list"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ServerTasksCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ServerTasksCapability.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-102",
+   "description": "ServerTasksRequestsCapability lost additional_properties.",
+   "old_path": "mistralai.client.models.ServerTasksRequestsCapability",
+   "params": [
+    "additional_properties"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.ServerTasksRequestsCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`ServerTasksRequestsCapability.additional_properties`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-103",
+   "description": "MessageInputEntry.role type changed from Role to MessageInputEntryRole.",
+   "old_path": "mistralai.client.models.MessageInputEntry",
+   "params": [
+    "role"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.MessageInputEntryTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`MessageInputEntry.role: Role -> MessageInputEntryRole`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-104",
+   "description": "TasksElicitationCapability.create changed from Dict[str, Any] to TasksCreateElicitationCapability.",
+   "old_path": "mistralai.client.models.TasksElicitationCapability",
+   "params": [
+    "create"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.TasksElicitationCapabilityTypedDict"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "`TasksElicitationCapability.create: OptionalNullable[Dict[str, Any]] -> OptionalNullable[TasksCreateElicitationCapability]`",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-105",
+   "description": "audio.agents create/update TTS configuration lost expressiveness and phoneme_hints.",
+   "old_path": "mistralai.client.audio_agents.AudioAgents.create",
+   "params": [
+    "configuration.tts.expressiveness",
+    "configuration.tts.phoneme_hints"
+   ],
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.audio_agents.AudioAgents.update",
+    "Mistral.audio.agents.create",
+    "Mistral.audio.agents.update"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "Removed fields `expressiveness` and `phoneme_hints` from request `configuration.tts` in `sdk.audio.agents.update()` and `sdk.audio.agents.create()`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-106",
+   "description": "audio.sessions.create TTS request lost expressiveness and phoneme_hints.",
+   "old_path": "mistralai.client.audio_sessions.AudioSessions.create",
+   "params": [
+    "tts.expressiveness",
+    "tts.phoneme_hints"
+   ],
+   "new_path": null,
+   "api_names": [
+    "Mistral.audio.sessions.create"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "Removed fields `expressiveness` and `phoneme_hints` from request `tts` in `sdk.audio.sessions.create()`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-107",
+   "description": "The library sharing entity type no longer includes the org value (share_with_type of libraries.accesses.update_or_create/delete).",
+   "old_path": "mistralai.client.models.EntityType",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.models.SharingRequest",
+    "mistralai.client.models.SharingDelete",
+    "mistralai.client.accesses.Accesses.update_or_create",
+    "mistralai.client.accesses.Accesses.delete",
+    "Mistral.beta.libraries.accesses.update_or_create",
+    "Mistral.beta.libraries.accesses.delete"
+   ],
+   "documented_in": "3.3.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147",
+   "source_quote": "Removed enum value `org` from request `share_with_type` in `sdk.beta.libraries.accesses.update_or_create()` and `sdk.beta.libraries.accesses.delete()`.",
+   "change_type_guess": "signature"
+  },
+  {
+   "id": "mi-108",
+   "description": "Mistral() now reads a service-account token from MISTRAL_SA_TOKEN_PATH, which takes precedence over MISTRAL_API_KEY and raises ServiceAccountTokenError if unreadable.",
+   "old_path": "mistralai.client.Mistral",
+   "params": null,
+   "new_path": null,
+   "api_names": [
+    "mistralai.client.sdk.Mistral",
+    "mistralai.client.errors.ServiceAccountTokenError"
+   ],
+   "documented_in": "3.0.0",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/MIGRATION.md#service-account-authentication",
+   "source_quote": "Set both `MISTRAL_SA_TOKEN_PATH` and `MISTRAL_API_KEY` and the token file wins",
+   "change_type_guess": "behaviour_only"
+  }
+ ],
+ "excluded": [
+  {
+   "text": "PII/secrets redaction when OpenTelemetry is activated (listed under Added)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.6.0"
+  },
+  {
+   "text": "2.10.0 added operations: connectors create/update/share credentials, evaluations pipeline configs, service accounts",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0"
+  },
+  {
+   "text": "protocol required on connector create payload: TypeScript only, Python still defaults it",
+   "reason": "server_or_rest_only",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0"
+  },
+  {
+   "text": "transcription segment start/end nullable (Fixed)",
+   "reason": "bugfix",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.0"
+  },
+  {
+   "text": "managed indexes operations added",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1"
+  },
+  {
+   "text": "PipelineConfig/CreatePipelineConfigRequest/UpdatePipelineConfigRequest definition->definitions, slug/group removed (pipeline configs introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1"
+  },
+  {
+   "text": "ListPipelineConfigs...GetRequest group removed (pipeline configs introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1"
+  },
+  {
+   "text": "chain_run_id required on WorkflowExecution*/ActivityTask*/CustomTask*/WorkflowTask* (wildcard families; made optional again in 3.0.0)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1"
+  },
+  {
+   "text": "supports_mcp required on HTTPConnector/MCPConnector (classes introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1"
+  },
+  {
+   "text": "managed_indexes on Rag (new sub-SDK attribute)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1"
+  },
+  {
+   "text": "updated_at on deployment models emits DeprecationWarning",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1"
+  },
+  {
+   "text": "ListServiceAccountsV1ServiceAccountsGetRequest.workspace_id optional (relaxed, non-breaking; service accounts introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v2.10.1"
+  },
+  {
+   "text": "fields of DeploymentKoyebBackendSpec / UnknownDeploymentWorkerSpecResponseBackendSpec (build_directory, dockerfile_path, type, is_unknown, raw, serialize_model) removed with their classes",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "stable type changes Nullable[str] -> OptionalNullable[str] for chain_run_id/continued_run_id/first_execution_run_id/schedule_id on ActivityTask* responses (relaxation)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "'...and 118 more' stable type changes (not listed)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "ConnectorDelete*CredentialsV1Request fields connector_id_or_name / credentials_name removed with their classes",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "CreatePipelineConfigRequest/UpdatePipelineConfigRequest.definitions removed; PipelineConfig.definitions optional; definition now required (pipeline configs introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "Connectors.delete_*_credentials(_async) methods (counted with their request models)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "SearchRequest.retriever Retriever -> SearchRequestRetriever (managed indexes introduced in 2.10.1; rrf variant added)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "ManagedIndexResponse.creator_id now required (managed indexes introduced in 2.10.1)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "New: service-account auth, beta.connectors.mcp_client()/http_client(), ConnectorsGatewayError (behaviour change counted from the migration guide)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "REST-level breaking lines for workflows deployments responses/requests (resources cpu/memory, spec entrypoint/working_dir/commit_sha, field type) duplicating the model items",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "REST-level line: removed tools variants from chat/agents complete/stream (duplicates the four method items)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "Beta API changes lines duplicating connectors/pipeline items",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "3.0.0 added operations (unharden_deployment, voices.search, pipelines, managed index ops, etc.)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "beta.connectors.call_tool deprecated",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "3.0.0 schema changes (added fields/enum values/variants)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.0.0"
+  },
+  {
+   "text": "Runs.get_run/get_run_history/list_runs(_async) listed as removed (methods move with the renamed class)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0"
+  },
+  {
+   "text": "Records.bulk_delete/delete/fetch/judge/update_payload/update_properties(_async) listed as removed (move with the renamed class)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0"
+  },
+  {
+   "text": "HTTPConnector/MCPConnector.system_prompt_route removed (classes introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0"
+  },
+  {
+   "text": "OAuth2AuthorizationCodeAuthMethod.oauth2_server_metadata required -> OptionalNullable (relaxation)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0"
+  },
+  {
+   "text": "UpdatePipelineRequest fields made optional (pipelines introduced in 3.0.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0"
+  },
+  {
+   "text": "'...and 2 more' beta type changes (not listed)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0"
+  },
+  {
+   "text": "Evaluations.optimizations/projects/records/runs 'now required' (new sub-SDK attributes)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0"
+  },
+  {
+   "text": "3.1.0 Beta API change lines duplicating system_prompt_route / auth_direction / method_type; 'Changed field auth_methods[]'",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0"
+  },
+  {
+   "text": "3.1.0 added operations and schema changes (resource/resource_link variants, agentic_safety, kind, slug, workflow_name)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.1.0"
+  },
+  {
+   "text": "VoiceCreateRequest.sample_audio str -> OptionalNullable[str] (relaxation)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0"
+  },
+  {
+   "text": "pipeline-config models removed (CreatePipelineConfigRequest, ...Request models, PaginatedResultPipelineConfig, PipelineConfigsResponse, UpdatePipelineConfigRequest; introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0"
+  },
+  {
+   "text": "'...and 39 more' beta removals (not listed)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0"
+  },
+  {
+   "text": "CreatePipelineRequest/UpdatePipelineRequest.definitions type change (pipelines introduced in 3.0.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0"
+  },
+  {
+   "text": "SetServiceAccountRolesRequest.role_ids now required (service accounts introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0"
+  },
+  {
+   "text": "PipelineConfig.slug now required (pipeline configs introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0"
+  },
+  {
+   "text": "evaluations get/delete/update/create/list_pipeline_config operations removed (introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0"
+  },
+  {
+   "text": "pipeline definition variants / pipeline_configs[] fields / pipeline_kind values changed (pipelines introduced in 3.0.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0"
+  },
+  {
+   "text": "3.2.0 added operations and schema changes (sampling, logprobs, whoami, search_pipeline_results)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/releases/tag/v3.2.0"
+  },
+  {
+   "text": "Sessions.create(_async) and UnknownAuthorization fields listed as removed (with their classes)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "Audio.agents / Audio.sessions 'now required' (new sub-SDK attributes)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "CompletionTokensDetails.reasoning_tokens Optional[int] -> OptionalNullable[int] (relaxation)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "HTTPConnector/MCPConnector.active removed (classes introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "PublicConnectorExecutionData.serialize_model removed (with use_connectors_gateway)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "'...and 8 more' beta removals; '...and 5 more' beta type changes (not listed)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "CredentialsResponse.connector_preset_credentials_for_auth marked deprecated",
+   "reason": "deprecation_only",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "OAuth2ClientCredentialsInput.client_secret str -> OptionalNullable[str] (relaxation)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "'Changed field type in sdk.chat.complete() and sdk.agents.complete()' (owning model not named; line repeated)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "'Changed field type in sdk.chat.complete(), sdk.fim.complete(), and sdk.agents.complete()' (owning model not named)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "'Changed field type in sdk.classifiers.moderate_chat()' / classify_chat() (owning model not named)",
+   "reason": "unnamed",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "expressiveness/phoneme_hints removed from audio agents responses (duplicates request items)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "connection_config/execution_env removed from HTTPConnector/MCPConnector responses (classes introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "3.3.0 added operations and schema changes (index summary, speaker_references, audio capabilities)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/RELEASES.md#2026-10-20-165147"
+  },
+  {
+   "text": "Migration guide: httpx2 custom client, raw types, Azure/GCP (same change as the 3.0.0 httpx2 item)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/MIGRATION.md#httpx2-and-mcp-22"
+  },
+  {
+   "text": "Migration guide: beta.connectors.http_client() returns httpx2.AsyncClient (method introduced in 3.0.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/MIGRATION.md#httpx2-and-mcp-22"
+  },
+  {
+   "text": "Migration guide: MCP 2.2 field names (same change as the 3.0.0 MCP item)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/MIGRATION.md#httpx2-and-mcp-22"
+  },
+  {
+   "text": "Migration guide: chat/agents tools (same as 3.0.0 items)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/MIGRATION.md#chat-and-agents-completions"
+  },
+  {
+   "text": "Migration guide: connectors credential deletions, ConnectorDeleteCredentialsRequest, fetch_customer_data, page, active (same as 3.0.0 items)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/MIGRATION.md#connectors-beta"
+  },
+  {
+   "text": "Migration guide: pipeline config definitions -> definition (pipeline configs introduced in 2.10.0)",
+   "reason": "addition",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/MIGRATION.md#observability-pipeline-configs-beta"
+  },
+  {
+   "text": "Migration guide: workflow deployments items (same as 3.0.0 items)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/MIGRATION.md#workflow-deployments"
+  },
+  {
+   "text": "Migration guide: Users (beta) security fields optional (same as 3.0.0 items)",
+   "reason": "duplicate",
+   "source_url": "https://github.com/mistralai/client-python/blob/main/MIGRATION.md#users-beta"
+  }
+ ],
+ "excluded_counts": {
+  "addition": 35,
+  "server_or_rest_only": 1,
+  "bugfix": 1,
+  "unnamed": 8,
+  "deprecation_only": 3,
+  "duplicate": 19
+ },
+ "shuffle_order": [
+  "mi-066",
+  "mi-022",
+  "mi-082",
+  "mi-028",
+  "mi-042",
+  "mi-014",
+  "mi-032",
+  "mi-068",
+  "mi-091",
+  "mi-095",
+  "mi-078",
+  "mi-075",
+  "mi-025",
+  "mi-030",
+  "mi-008",
+  "mi-106",
+  "mi-005",
+  "mi-011",
+  "mi-067",
+  "mi-079",
+  "mi-094",
+  "mi-024",
+  "mi-017",
+  "mi-064",
+  "mi-041",
+  "mi-061",
+  "mi-058",
+  "mi-055",
+  "mi-062",
+  "mi-056",
+  "mi-105",
+  "mi-086",
+  "mi-085",
+  "mi-009",
+  "mi-104",
+  "mi-016",
+  "mi-001",
+  "mi-012",
+  "mi-036",
+  "mi-057",
+  "mi-070",
+  "mi-051",
+  "mi-044",
+  "mi-039",
+  "mi-063",
+  "mi-084",
+  "mi-081",
+  "mi-013",
+  "mi-015",
+  "mi-054",
+  "mi-097",
+  "mi-093",
+  "mi-050",
+  "mi-060",
+  "mi-002",
+  "mi-023",
+  "mi-088",
+  "mi-080",
+  "mi-065",
+  "mi-018",
+  "mi-071",
+  "mi-072",
+  "mi-021",
+  "mi-102",
+  "mi-020",
+  "mi-108",
+  "mi-035",
+  "mi-004",
+  "mi-087",
+  "mi-043",
+  "mi-048",
+  "mi-090",
+  "mi-098",
+  "mi-089",
+  "mi-029",
+  "mi-037",
+  "mi-007",
+  "mi-092",
+  "mi-083",
+  "mi-049",
+  "mi-077",
+  "mi-059",
+  "mi-019",
+  "mi-099",
+  "mi-096",
+  "mi-073",
+  "mi-006",
+  "mi-103",
+  "mi-101",
+  "mi-107",
+  "mi-076",
+  "mi-038",
+  "mi-045",
+  "mi-040",
+  "mi-027",
+  "mi-052",
+  "mi-010",
+  "mi-053",
+  "mi-003",
+  "mi-047",
+  "mi-074",
+  "mi-031",
+  "mi-046",
+  "mi-069",
+  "mi-026",
+  "mi-100",
+  "mi-034",
+  "mi-033"
+ ],
+ "verification": [
+  {
+   "id": "mi-066",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/connectors.py:2630-2634 list_organization_credentials(auth_type: OptionalNullable[models.OutboundAuthenticationType])",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/connectors.py:2511-2515 auth_type: OptionalNullable[models.AuthenticationType]",
+   "change_type": "signature",
+   "notes": "OutboundAuthenticationType alias removed; AuthenticationType has the same literal values, so only the annotation/alias name changed."
+  },
+  {
+   "id": "mi-022",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/connector.py:71 class Connector(BaseModel) with flat fields (id, name, server, ...)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/connector.py:36 Connector = Annotated[Union[HTTPConnector, MCPConnector, UnknownConnector], ...]",
+   "change_type": "removal",
+   "notes": "Class replaced by a discriminated-union alias; constructing/isinstance on Connector no longer works. Guess kept: removal."
+  },
+  {
+   "id": "mi-082",
+   "status": "failed",
+   "reason": "cannot_locate",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/no CreateHTTPConnectorRequest (grep 0)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/createhttpconnectorrequest.py:76",
+   "change_type": null,
+   "notes": "Old form not present at the cutoff-era release: absent at 2.5.0 (grep 0 in mistralai-2.5.0); introduced within the range"
+  },
+  {
+   "id": "mi-028",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/deploymentdetailresponse.py:42 class DeploymentDetailResponse without last_heartbeat",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/deploymentdetailresponse.py:72 last_heartbeat: datetime (required)",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "mi-042",
+   "status": "failed",
+   "reason": "cannot_locate",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/no DeploymentWorkerSpecResponse (grep 0)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/deploymentworkerspecresponse.py:84 (no commit_sha/entrypoint/working_dir)",
+   "change_type": null,
+   "notes": "Old form not present at the cutoff-era release: absent at 2.5.0 (grep 0 in mistralai-2.5.0); introduced within the range"
+  },
+  {
+   "id": "mi-014",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/connectors.py:3256 def create_or_update_workspace_credentials",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/connectors.py:23 class Connectors has no create_or_update_* method (methods :85-:4427)",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-032",
+   "status": "failed",
+   "reason": "cannot_locate",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/workflowexecutiontraceeventsresponse.py:73 class has no search_keys field",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/workflowexecutiontraceeventsresponse.py:114 search_keys: OptionalNullable[Dict[str, Nullable[str]]]",
+   "change_type": null,
+   "notes": "Field absent at 2.5.0 (added within the range), so the old Dict[str, str] form cannot be located."
+  },
+  {
+   "id": "mi-068",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/connectors.py:3058-3062 list_workspace_credentials(auth_type: ...OutboundAuthenticationType)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/connectors.py:2713-2717 auth_type: ...AuthenticationType",
+   "change_type": "signature",
+   "notes": "Same literal values; alias rename only."
+  },
+  {
+   "id": "mi-091",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/embeddedresource.py:45-75 extra='allow' and additional_properties property (:71)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/embeddedresource.py:44 class without extra='allow' or additional_properties",
+   "change_type": "removal",
+   "notes": "additional_properties is a property, not a constructor field, so classified removal."
+  },
+  {
+   "id": "mi-095",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/promptscapability.py:37 additional_properties property",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/promptscapability.py:22 class without additional_properties",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-078",
+   "status": "failed",
+   "reason": "cannot_locate",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/no realtime/sessions module or class Sessions (grep 0)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/realtime_sessions.py:12 class RealtimeSessions; realtime.py:10 sessions: RealtimeSessions",
+   "change_type": null,
+   "notes": "Old form not present at the cutoff-era release: absent at 2.5.0 (grep 0 in mistralai-2.5.0); introduced within the range"
+  },
+  {
+   "id": "mi-075",
+   "status": "failed",
+   "reason": "cannot_locate",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/no ExportDefinition (grep 0)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/only ExportDefinitionV1 exists",
+   "change_type": null,
+   "notes": "Old form not present at the cutoff-era release: absent at 2.5.0 (grep 0 in mistralai-2.5.0); introduced within the range"
+  },
+  {
+   "id": "mi-025",
+   "status": "failed",
+   "reason": "cannot_locate",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/no DeploymentWorkerSpecResponse (grep 0)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/deploymentworkerspecresponse.py:84",
+   "change_type": null,
+   "notes": "Old form not present at the cutoff-era release: absent at 2.5.0 (grep 0 in mistralai-2.5.0); introduced within the range"
+  },
+  {
+   "id": "mi-030",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/voiceresponse.py:36 class VoiceResponse without a type field",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/voiceresponse.py:59 type: VoiceResponseType (required)",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "mi-008",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/chat_completion_events.py:654 ChatCompletionEvents.fetch_similar_events; observability.py:17 chat_completion_events attribute",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/no chat_completion_events.py; observability.py:15-20 has no chat_completion_events",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-106",
+   "status": "failed",
+   "reason": "cannot_locate",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/no audio_sessions.py / AudioSessions; no expressiveness or phoneme_hints anywhere (grep 0)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/audio_sessions.py exists (AudioSessions)",
+   "change_type": null,
+   "notes": "Old form not present at the cutoff-era release: absent at 2.5.0 (grep 0 in mistralai-2.5.0); introduced within the range"
+  },
+  {
+   "id": "mi-005",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/campaigns.py:230 Campaigns.list; observability.py:19 campaigns attribute",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/no campaigns.py; observability.py:15-20 has no campaigns",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-011",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/chat_completion_events.py:258 ChatCompletionEvents.search_ids",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/no chat_completion_events.py; no search_ids in package",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-067",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/connectors.py:3486-3490 list_user_credentials(auth_type: ...OutboundAuthenticationType)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/connectors.py:2915-2919 auth_type: ...AuthenticationType",
+   "change_type": "signature",
+   "notes": "Same literal values; alias rename only."
+  },
+  {
+   "id": "mi-079",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/customconnector.py:30 class UnknownAuthorization(BaseModel); :47 Authorization union uses it",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/customconnector.py:30 class UnknownCustomConnectorAuthorization; no UnknownAuthorization in package (grep 0)",
+   "change_type": "rename_move",
+   "notes": "Documented as removed; the same fallback class is now named UnknownCustomConnectorAuthorization, so classified rename_move (guess was removal)."
+  },
+  {
+   "id": "mi-094",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/promptargument.py:41 additional_properties property",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/promptargument.py:24 class without additional_properties",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-024",
+   "status": "failed",
+   "reason": "reverted",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/usageinfo_dollar_defs.py:34-51 no service_tier field",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/usageinfo_dollar_defs.py:50 service_tier: OptionalNullable[str] = UNSET",
+   "change_type": null,
+   "notes": "Field absent at 2.5.0 and present again at 3.3.0: the 2.10.0 removal is not visible across the pair."
+  },
+  {
+   "id": "mi-017",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/fields.py:386 Fields.fetch_option_counts; chat_completion_events.py:16 fields attribute",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/no fields.py; no fetch_option_counts in package",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-064",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/authenticationconfiguration.py:31 authentication_type: OutboundAuthenticationType",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/authenticationconfiguration.py:32 authentication_type: AuthenticationType",
+   "change_type": "signature",
+   "notes": "Same literal values; alias rename only."
+  },
+  {
+   "id": "mi-041",
+   "status": "failed",
+   "reason": "cannot_locate",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/no DeploymentWorkerSpecInput (grep 0)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/deploymentworkerspecinput.py exists",
+   "change_type": null,
+   "notes": "Old form not present at the cutoff-era release: absent at 2.5.0 (grep 0 in mistralai-2.5.0); introduced within the range"
+  },
+  {
+   "id": "mi-061",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/runs.py:15 class Runs; workflows.py:31 runs: Runs",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/no runs.py; workflows_runs.py:14 class WorkflowsRuns (same methods); workflows.py:30 runs: WorkflowsRuns",
+   "change_type": "rename_move",
+   "notes": ""
+  },
+  {
+   "id": "mi-058",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/agents.py:384-409 stream(tools: List[AgentsCompletionStreamRequestTool]); models/agentscompletionstreamrequest.py:84-89 union includes WebSearchTool, WebSearchPremiumTool, CodeInterpreterTool",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/agents.py:445-470 stream(tools: Iterable[AgentsCompletionStreamRequestTool]); models/agentscompletionstreamrequest.py:78 union without the three built-in tools",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "mi-055",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/chat.py:101-128 complete(tools: List[ChatCompletionRequestTool]); models/chatcompletionrequest.py:84-89 union includes web_search, web_search_premium, code_interpreter",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/chat.py:100-127 complete(tools: Iterable[ChatCompletionRequestTool]); models/chatcompletionrequest.py:78 union without them",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "mi-062",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/records.py:13 class Records; datasets.py:16 records: Records",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/no records.py; datasets_records.py:12 class DatasetsRecords (same methods); datasets.py:15 records: DatasetsRecords",
+   "change_type": "rename_move",
+   "notes": ""
+  },
+  {
+   "id": "mi-056",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/chat.py:487-514 stream(tools: List[ChatCompletionStreamRequestTool]); models/chatcompletionstreamrequest.py:84-89 union includes the three tools",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/chat.py:548-575 stream(tools: Iterable[ChatCompletionStreamRequestTool]); models/chatcompletionstreamrequest.py:78 union without them",
+   "change_type": "signature",
+   "notes": ""
+  },
+  {
+   "id": "mi-105",
+   "status": "failed",
+   "reason": "cannot_locate",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/no audio_agents.py / AudioAgents; no expressiveness or phoneme_hints (grep 0)",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/audio_agents.py exists (AudioAgents)",
+   "change_type": null,
+   "notes": "Old form not present at the cutoff-era release: absent at 2.5.0 (grep 0 in mistralai-2.5.0); introduced within the range"
+  },
+  {
+   "id": "mi-086",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/blobresourcecontents.py:48 additional_properties property",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/blobresourcecontents.py:26 class without additional_properties",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-085",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/audiocontent.py:55 additional_properties property",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/audiocontent.py:30 class without additional_properties",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-009",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/chat_completion_events.py:844 ChatCompletionEvents.judge",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/no chat_completion_events.py; observability has no chat_completion_events",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-104",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/taskselicitationcapability.py:32 create: OptionalNullable[Dict[str, Any]]",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/taskselicitationcapability.py:28 create: OptionalNullable[TasksCreateElicitationCapability]",
+   "change_type": "signature",
+   "notes": "Also lost its additional_properties property (old :35), which the release lists under '...and 8 more'."
+  },
+  {
+   "id": "mi-016",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/datasets.py:1640 Datasets.import_from_explorer",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/datasets.py: no import_from_explorer in package (grep 0)",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-001",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/campaigns.py:14 Campaigns.create",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/no campaigns.py; observability.py:15-20 has no campaigns",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-012",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/connectors.py:2828 def create_or_update_organization_credentials",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/connectors.py:23 class Connectors has no create_or_update_* method",
+   "change_type": "removal",
+   "notes": ""
+  },
+  {
+   "id": "mi-036",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/models/filtergroup.py:24 Or = TypeAliasType('Or', Union['FilterGroup', FilterCondition])",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/models/or_.py:27 class Or(BaseModel) with matches: List[OrMatch], type: 'or'",
+   "change_type": "signature",
+   "notes": "Union alias replaced by an object model; classified signature (accepted type changed)."
+  },
+  {
+   "id": "mi-057",
+   "status": "verified",
+   "old_evidence": "mistralai-2.5.0/mistralai/client/agents.py:16-41 complete(tools: List[AgentsCompletionRequestTool]); models/agentscompletionrequest.py:84-89 union includes the three tools",
+   "new_evidence": "mistralai-3.3.0/mistralai/client/agents.py:15-40 complete(tools: Iterable[AgentsCompletionRequestTool]); models/agentscompletionrequest.py:78 union without them",
+   "change_type": "signature",
+   "notes": ""
+  }
+ ],
+ "sample": [
+  "mi-066",
+  "mi-022",
+  "mi-028",
+  "mi-014",
+  "mi-068",
+  "mi-091",
+  "mi-095",
+  "mi-030",
+  "mi-008",
+  "mi-005",
+  "mi-011",
+  "mi-067",
+  "mi-079",
+  "mi-094",
+  "mi-017",
+  "mi-064",
+  "mi-061",
+  "mi-058",
+  "mi-055",
+  "mi-062",
+  "mi-056",
+  "mi-086",
+  "mi-085",
+  "mi-009",
+  "mi-104",
+  "mi-016",
+  "mi-001",
+  "mi-012",
+  "mi-036",
+  "mi-057"
+ ]
+}

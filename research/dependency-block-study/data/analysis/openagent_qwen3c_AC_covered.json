@@ -1,0 +1,118 @@
+{
+  "studies": [
+    "openagent-qwen3c-main-2026-10-22",
+    "openagent-qwen3c-tasks2-2026-10-22"
+  ],
+  "excluded_tasks": [],
+  "reps": "all",
+  "sessions": 36,
+  "valid": 36,
+  "invalid": 0,
+  "invalid_reasons": [],
+  "exit_status_counts": {
+    "RepeatedFormatError": 12,
+    "ContextExceeded": 1,
+    "Submitted": 23
+  },
+  "results": {
+    "treatment": {
+      "tasks": 6,
+      "pass": {
+        "A": "6/18",
+        "C": "6/18",
+        "A_rate": 0.3333333333333333,
+        "C_rate": 0.3333333333333333,
+        "delta_mean_task": -9.25185853854297e-18,
+        "delta_ci95": [
+          -0.4444444444444444,
+          0.38888888888888884
+        ],
+        "delta_one_sided_lower95": -0.3333333333333333,
+        "signflip_p": 1.0,
+        "tasks_with_difference": 3,
+        "mcnemar_majority": {
+          "C_only": 1,
+          "A_only": 1,
+          "p": 1.0
+        },
+        "floor": false,
+        "per_task": {
+          "ant01": {
+            "A": 0.0,
+            "C": 0.0
+          },
+          "hf01": {
+            "A": 0.0,
+            "C": 0.667
+          },
+          "hf03": {
+            "A": 0.0,
+            "C": 0.333
+          },
+          "lc01": {
+            "A": 0.0,
+            "C": 0.0
+          },
+          "lc02": {
+            "A": 1.0,
+            "C": 0.0
+          },
+          "st01": {
+            "A": 1.0,
+            "C": 1.0
+          }
+        }
+      },
+      "ratios_C_over_A": {
+        "total_tokens": {
+          "ratio": 1.3749909011077792,
+          "lo": 0.8880397884072797,
+          "hi": 2.266126361464572,
+          "tasks": 6
+        },
+        "turns": {
+          "ratio": 1.1187431387138638,
+          "lo": 0.8415382719239857,
+          "hi": 1.5550920187995878,
+          "tasks": 6
+        },
+        "wall_s": {
+          "ratio": 0.9589607271405147,
+          "lo": 0.6213193164714594,
+          "hi": 1.5117904978738608,
+          "tasks": 6
+        }
+      },
+      "stale_first_edit": {
+        "A": "7/12",
+        "C": "3/12",
+        "A_rate": 0.5833333333333334,
+        "C_rate": 0.25,
+        "tasks": 5,
+        "signflip_p": 0.5,
+        "tasks_with_difference": 2,
+        "fisher_run_level_p": 0.21375689864046304
+      },
+      "stale_in_final": {
+        "A": "6/18",
+        "C": "1/18"
+      },
+      "runs_without_target_edit": {
+        "A": 3,
+        "C": 6
+      },
+      "medians": {
+        "A": {
+          "total_tokens": 44526.5,
+          "turns": 14.5,
+          "wall_s": 116.15
+        },
+        "C": {
+          "total_tokens": 61196.0,
+          "turns": 16.0,
+          "wall_s": 120.15
+        }
+      }
+    }
+  }
+}

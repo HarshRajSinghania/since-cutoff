@@ -1,0 +1,37 @@
+schema = "since-cutoff-bench/task@1"
+id = "oai01-http-client-hooks"
+library = "openai"
+pinned = "3.19.2"
+cutoff_version = "2.44.0"
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"  # stale code does `import httpx`, which openai>=3 no longer installs
+timeout_s = 900
+target_files = ["app/llm_client.py"]
+instruction = """
+Implement `build_client(api_key, transport=None)` in app/llm_client.py. Requirements from ops:
+
+1. connect timeout 5 seconds; read, write and pool timeouts 30 seconds;
+2. max_retries=2;
+3. every outgoing HTTP request (including retries) is logged at INFO level on the logger
+   named "app.http" as "<METHOD> <URL>", using an event hook on the HTTP client;
+4. when `transport` is given (the tests pass a stub transport), the HTTP client must use it.
+
+The lockfile is fixed: do not add or install dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "https://github.com/openai/openai-python/blob/main/CHANGELOG.md (3.0.0, 2026-08-12: 'HTTPX2 is now the default HTTP client, and httpx is no longer installed automatically')",
+  "https://github.com/openai/openai-python/blob/main/httpx2.md",
+  "openai-3.19.2 METADATA: Requires-Dist httpx2<3,>=2.12.0 and no httpx; openai-2.44.0 required httpx",
+]
+# legacy httpx (not httpx2); `openai.DefaultHttpxClient` alone is not stale (it builds httpx2 clients in 3.x)
+stale_patterns = [
+  '^\s*import\s+httpx\b(?!2)',
+  '^\s*from\s+httpx\b(?!2)[\w.]*\s+import\b',
+]
+note_keys = ['httpx2']
+doc_keys = ['httpx2|Httpx2']
+answer_tokens = ["httpx2", "Httpx2"]
+
+# further solutions checked by `bench validate` at the pinned version, with the expected outcome
+[extra_solutions]
+alt_review = "pass"   # reviewer's alternative correct answer (REVIEW.md): the hidden tests must accept it

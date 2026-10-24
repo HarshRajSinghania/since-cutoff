@@ -1,0 +1,177 @@
+{
+  "schema": "since-cutoff-bench/notes@1",
+  "tool": "header-only notes + one false change line (NAACL addendum section 14.2 condition W)",
+  "model": "anthropic:claude-opus-5-5",
+  "source": "research/dependency-block-study\\notes\\tasks2-opus-5-5-header",
+  "created_at": "2026-10-23T16:21:41.992227+00:00",
+  "frozen": true,
+  "frozen_at": "2026-10-23T16:21:41.992227+00:00",
+  "tasks": {
+    "mi01": {
+      "file": "mi01.md",
+      "sha256": "e37fea38a990d71caeaf561a36237a5b7f980beab81d1c3fdc23bf4de5755517",
+      "bytes": 1179,
+      "tokens_est": 295,
+      "empty": false,
+      "note_keys": [
+        "httpx2"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "ce49f7916bfef9abc30bb4bd0fdc560135789eb042c0df5f984112e5869c6cc8",
+      "false_line": "- `mistralai` HTTP layer: the client still takes `httpx` objects; pass an `httpx.Client` or `httpx.AsyncClient` (and `httpx` transports) as before. [diff]"
+    },
+    "mi02": {
+      "file": "mi02.md",
+      "sha256": "c7b17dabb1123427eebb399ce239bcce110f98a03f692524b7968dec4fed29e5",
+      "bytes": 1172,
+      "tokens_est": 293,
+      "empty": false,
+      "note_keys": [
+        "include_blocks"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "ce49f7916bfef9abc30bb4bd0fdc560135789eb042c0df5f984112e5869c6cc8",
+      "false_line": "- `mistralai.ocr.process`: parameter `include_blocks` was removed; do not use it. Block-level output is returned only on request, as before. [diff]"
+    },
+    "pl01": {
+      "file": "pl01.md",
+      "sha256": "e5b7baaa6bf380bfd4b7d160eb53e5dc3aaab572073b60e0ddf8a817134dad53",
+      "bytes": 1064,
+      "tokens_est": 266,
+      "empty": false,
+      "note_keys": [
+        "empty_as_null"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "false_line": "- `polars.DataFrame.explode`: parameter `empty_as_null` was removed; do not use it. Empty lists still explode to a null row. [diff]"
+    },
+    "pl02": {
+      "file": "pl02.md",
+      "sha256": "e5cb2596360519007d6cf7d20d443a1b1f828cf010fc6d7602e470644306c93b",
+      "bytes": 1053,
+      "tokens_est": 263,
+      "empty": false,
+      "note_keys": [
+        "read_csv_batched"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "false_line": "- `polars.LazyFrame.collect_batches` was removed; do not use it. Use `polars.read_csv_batched` instead. [diff + library]"
+    },
+    "pl03": {
+      "file": "pl03.md",
+      "sha256": "f00a877e6596e24bb51511d4fce0bc86b257e0295142b5f03bddfda77fd45f1e",
+      "bytes": 1059,
+      "tokens_est": 265,
+      "empty": false,
+      "note_keys": [
+        "replace_strict|\\breplace\\b[^\\n]{0,80}\\bdefault\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "false_line": "- `polars.Expr.replace_strict` was removed; do not use it. Use `polars.Expr.replace` with `default=` instead. [diff + library]"
+    },
+    "pl04": {
+      "file": "pl04.md",
+      "sha256": "739e694b74833a62f3b87f94699a7849017bd02958f0d9e59817b16ae9f4c3d2",
+      "bytes": 1056,
+      "tokens_est": 264,
+      "empty": false,
+      "note_keys": [
+        "streaming[^\\n]{0,80}(engine|removed)|engine[^\\n]{0,40}streaming"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "false_line": "- `polars.LazyFrame.collect`: parameter `engine` was removed; do not use it. Use `streaming=True` instead. [diff + library]"
+    },
+    "pl90": {
+      "file": "pl90.md",
+      "sha256": "568288b7133ce4cb04321106ebfc16ff345c5c434bd54589efa3fbf8c9eb5cb2",
+      "bytes": 1035,
+      "tokens_est": 259,
+      "empty": false,
+      "note_keys": [
+        "cum_sum|cumsum"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "false_line": "- `polars.Expr.cum_sum` was removed; do not use it. Use `polars.Expr.cumsum` instead. [diff + library]"
+    },
+    "pl91": {
+      "file": "pl91.md",
+      "sha256": "3c21d7d8fef7052c77b7109f1503d41b2d0aa6096b59394bcbf7ec6de71619f2",
+      "bytes": 1047,
+      "tokens_est": 262,
+      "empty": false,
+      "note_keys": [
+        "group_by|groupby"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "f5dc1685930151ac83e8cbe6151260b19471d88a155996429ee74fabc2157801",
+      "false_line": "- `polars.DataFrame.group_by` was removed; do not use it. Use `polars.DataFrame.groupby` instead. [diff + library]"
+    },
+    "st01": {
+      "file": "st01.md",
+      "sha256": "f765a62849901ba1b2a3838eccc3b71edaa6d0a6056cd615925221f9f0965bce",
+      "bytes": 1037,
+      "tokens_est": 259,
+      "empty": false,
+      "note_keys": [
+        "\\bcache\\b[^\\n]{0,80}(removed|cache_data)"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "434167702eb623c86ac218fe3853df04e986ff8cabdb325bdf77ea243290226b",
+      "false_line": "- `streamlit.cache_data` was removed; do not use it. Use `streamlit.cache` instead. [diff + library]"
+    },
+    "st02": {
+      "file": "st02.md",
+      "sha256": "16476036f9ccc5ec7586cde3e89baae56b76be6fb6a9adb29894d37b39f23cf2",
+      "bytes": 1075,
+      "tokens_est": 269,
+      "empty": false,
+      "note_keys": [
+        "use_column_width"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "c36b73d6bcbb18d9659e684fd015a283debc785bee7cef4593cf52308001078c",
+      "false_line": "- `streamlit.image`: parameter `width` no longer accepts `\"stretch\"`; do not use it. Use `use_column_width=True` instead. [diff + library]"
+    },
+    "st90": {
+      "file": "st90.md",
+      "sha256": "214cb72d7a473f1e6ddb53e7a65165ca3d83df3ff22cb46a11dd36dc0ef92441",
+      "bytes": 1109,
+      "tokens_est": 277,
+      "empty": false,
+      "note_keys": [
+        "experimental_get_query_params|query_params"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "c36b73d6bcbb18d9659e684fd015a283debc785bee7cef4593cf52308001078c",
+      "false_line": "- `streamlit.query_params` was removed; do not use it. Use `streamlit.experimental_get_query_params` and `streamlit.experimental_set_query_params` instead. [diff + library]"
+    }
+  },
+  "manifest_sha256": "767ca7af4843a1f9897155ee96db7c4610dba3ac077015efeee83ab32562a5d2"
+}

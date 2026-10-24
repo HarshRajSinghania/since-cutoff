@@ -1,0 +1,104 @@
+{
+  "schema": "since-cutoff-bench/validation@1",
+  "task": "pl90",
+  "task_id": "pl90-running-balance",
+  "task_sha256": "cd5f79f0628c01d21306725f0629dc5b3bc1cfbfb5c13bc8495e6d75442001c6",
+  "parts_sha256": {
+    "task.toml": "f2868e58e367f145703dd7d7b8781289f012cca516f3b00d4ff0bf7514a84d71",
+    "repo": "16ee0005cd2c35e3f879b7a91aa65739710d14b56b363d37867edabfb4a54fcb",
+    "hidden": "be228883a65edbd6397bb6d07dcf50a04c89dc1c825355dfa41d08d290f02b3a",
+    "reference": "55b44d188d5cf1c1878e4fe0bdea4d2b817fb989df0b446b0ef048b15b744e07",
+    "stale": "1d02db30f2fd5a9b1ea9d1ed61931fa6efea64e86106f0dfa1280d1cccd5699d"
+  },
+  "validated_at": "2026-10-22T17:28:02+00:00",
+  "library": "polars",
+  "pinned": "2.0.0",
+  "stale_version": "0.20.31",
+  "gates": {
+    "1_repo_fails_at_pinned": {
+      "ok": true,
+      "solution": "repo",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.92,
+        "timed_out": false,
+        "first_error": "NotImplementedError"
+      },
+      "summary": "1 failed in 0.33s"
+    },
+    "2_reference_passes_at_pinned": {
+      "ok": true,
+      "solution": "reference",
+      "version": "2.0.0",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.93,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "1 passed in 0.32s"
+    },
+    "3_stale_fails_at_pinned": {
+      "ok": true,
+      "solution": "stale",
+      "version": "2.0.0",
+      "expected": "fail",
+      "observed": "fail",
+      "pytest": {
+        "exit_code": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 1.04,
+        "timed_out": false,
+        "first_error": "AttributeError: 'Expr' object has no attribute 'cumsum'. Did you mean: 'cum_sum'?"
+      },
+      "summary": "1 failed in 0.39s"
+    },
+    "4_stale_passes_at_cutoff": {
+      "ok": true,
+      "solution": "stale",
+      "version": "0.20.31",
+      "expected": "pass",
+      "observed": "pass",
+      "pytest": {
+        "exit_code": 0,
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "duration_s": 0.78,
+        "timed_out": false,
+        "first_error": null
+      },
+      "summary": "1 passed, 1 warning in 0.17s"
+    }
+  },
+  "extra": {},
+  "leaks": [],
+  "envs": {
+    "pinned": "polars-2.0.0 bd3c78b38a76",
+    "stale": "polars-0.20.31 84cf401fc98b"
+  },
+  "ok": true,
+  "python": "3.13.14",
+  "test_requirements": [
+    "pytest==8.4.2",
+    "pytest-socket==0.8.1"
+  ],
+  "duration_s": 4.4
+}

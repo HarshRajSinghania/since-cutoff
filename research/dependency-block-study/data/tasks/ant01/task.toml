@@ -1,0 +1,34 @@
+schema = "since-cutoff-bench/task@1"
+id = "ant01-sampling-params"
+library = "anthropic"
+pinned = "1.8.0"            # lockfile version the agent must target
+cutoff_version = "0.115.0"  # latest release before claude-opus-5-5's 2026-06 cutoff
+stratum = "post-cutoff"
+kind = "post-cutoff-loud"   # stale code raises TypeError at call time
+timeout_s = 900
+target_files = ["app/labeler.py"]
+instruction = """
+Implement `label_ticket` in app/labeler.py.
+
+It must send exactly one Messages API request to the model in `MODEL` with max_tokens=5,
+a system prompt telling the model to answer with exactly one word from LABELS, and the
+ticket text as the user message. The labeler must be deterministic on this model, so every
+request must be sent with temperature 0.
+
+Return the model's reply lower-cased and stripped; if that is not one of LABELS, return
+"question". Do not add dependencies. You can run the tests with `pytest`.
+"""
+evidence = [
+  "https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md#removed-deprecated-request-parameters",
+  "anthropic-1.8.0 wheel: anthropic/resources/messages/messages.py create() has no temperature/top_p/top_k parameter",
+]
+# regexes (Python re, MULTILINE) that mark the old API in an edit or in the final diff
+stale_patterns = [
+  '''(?<![\w"'.])(?:temperature|top_p|top_k)=(?!=)''',   # keyword argument, not a dict key or `x = 0`
+]
+# regexes that must ALL match the frozen notes for the change to count as covered by them
+note_keys = ['\btemperature\b']
+# regexes that must ALL match the Context7 tool results for `doc_hit`
+doc_keys = ['extra_body']
+# literal strings that must not appear in repo/ or the instruction (added to bench.toml's global list)
+answer_tokens = ["extra_body"]

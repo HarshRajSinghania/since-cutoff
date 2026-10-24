@@ -1,0 +1,1679 @@
+{
+ "audit": {
+  "label": "AI-judged (Claude Opus 5.5 in Claude Code; no human re-check)",
+  "pool_hits": 253,
+  "pool_repos": 44,
+  "audited": 60,
+  "audited_repos": 24,
+  "max_audited_hits_per_repo": 18,
+  "audited_hits_per_repo": [
+   18,
+   6,
+   4,
+   4,
+   3,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "stratum_membership": {
+   "G_only": 21,
+   "AI_only": 32,
+   "both": 7
+  },
+  "precision": {
+   "k": 48,
+   "n": 60,
+   "share": 0.8,
+   "wilson95": [
+    0.6822,
+    0.8817
+   ],
+   "repo_cluster_boot95": [
+    0.6111,
+    0.9277
+   ]
+  },
+  "verdicts": {
+   "TP": 48,
+   "FP-resolution": 11,
+   "FP-diff": 1
+  },
+  "tp_affected": {
+   "yes": 5,
+   "no": 42,
+   "handled": 1
+  },
+  "runtime_over_audited": {
+   "breaks": {
+    "k": 0,
+    "n": 60,
+    "share": 0.0,
+    "wilson95": [
+     0.0,
+     0.0602
+    ],
+    "repo_cluster_boot95": [
+     0.0,
+     0.0
+    ]
+   },
+   "warns": {
+    "k": 2,
+    "n": 60,
+    "share": 0.0333,
+    "wilson95": [
+     0.0092,
+     0.1136
+    ],
+    "repo_cluster_boot95": [
+     0.0,
+     0.1
+    ]
+   },
+   "runs": {
+    "k": 46,
+    "n": 60,
+    "share": 0.7667,
+    "wilson95": [
+     0.6456,
+     0.8556
+    ],
+    "repo_cluster_boot95": [
+     0.5652,
+     0.9079
+    ]
+   }
+  },
+  "runtime_basis_tp": {
+   "snippet": 14,
+   "static": 34
+  },
+  "runtime_snippets_run": 17,
+  "runtime_snippet_outcomes": {
+   "ok": 16,
+   "error": 1
+  },
+  "repos_with_tp": 21,
+  "repos_with_runtime_break": 0,
+  "repos_with_old_form_use": 5,
+  "tool_old_form_labels": 16,
+  "old_form_labels_correct": 4,
+  "packages_in_sample": [
+   [
+    "flydsl",
+    18
+   ],
+   [
+    "mcp",
+    14
+   ],
+   [
+    "anyio",
+    5
+   ],
+   [
+    "deepagents",
+    2
+   ],
+   [
+    "aiosendspin",
+    2
+   ],
+   [
+    "plotly",
+    2
+   ],
+   [
+    "click",
+    1
+   ],
+   [
+    "agent-client-protocol",
+    1
+   ],
+   [
+    "transformers",
+    1
+   ],
+   [
+    "openai",
+    1
+   ],
+   [
+    "langsmith",
+    1
+   ],
+   [
+    "agno",
+    1
+   ],
+   [
+    "qqmusic-api-python",
+    1
+   ],
+   [
+    "websockets",
+    1
+   ],
+   [
+    "modal",
+    1
+   ],
+   [
+    "vercel",
+    1
+   ],
+   [
+    "apprise",
+    1
+   ],
+   [
+    "mthds",
+    1
+   ],
+   [
+    "daytona",
+    1
+   ],
+   [
+    "fastmcp-slim",
+    1
+   ],
+   [
+    "genai-prices",
+    1
+   ],
+   [
+    "anthropic",
+    1
+   ],
+   [
+    "cje-eval",
+    1
+   ]
+  ],
+  "precision_excluding_largest_cluster": {
+   "k": 30,
+   "n": 42,
+   "share": 0.7143,
+   "wilson95": [
+    0.5643,
+    0.8283
+   ]
+  },
+  "precision_repo_weighted_mean": 0.7708,
+  "breaks_zero_of_n_upper95_rule_of_three": 0.05,
+  "change_kinds_in_sample": [
+   [
+    "param_keyword_only",
+    132
+   ],
+   [
+    "param_removed",
+    93
+   ],
+   [
+    "deprecated",
+    8
+   ],
+   [
+    "dependency_switched",
+    5
+   ],
+   [
+    "removed",
+    5
+   ],
+   [
+    "param_required",
+    1
+   ],
+   [
+    "kind_changed",
+    1
+   ],
+   [
+    "moved",
+    1
+   ]
+  ]
+ },
+ "exposure": {
+  "protocol": "expansion/EXPOSURE2_PROTOCOL.md",
+  "protocol_sha256": "539874b270a07128552ba629df669f14064d9f99b3b015fac8e65707ffbf2d25",
+  "tool": "since-cutoff 0.5.0 (scan venv)",
+  "model": "anthropic:claude-opus-5-5",
+  "cutoff": "2026-06-30",
+  "frame": {
+   "query": "language:Python pushed:>=2026-07-25 archived:false stars:>=200",
+   "enumerated_at": "2026-10-23T19:40:06.489930+00:00",
+   "total_count_unpartitioned": 15627,
+   "sum_slice_counts": 15628,
+   "enumerated_union": 15624,
+   "slices": 29,
+   "exclusions_before_sampling": {
+    "fork": 0,
+    "archived": 0,
+    "template": 77,
+    "author": 0,
+    "size": 123
+   },
+   "after_exclusions": 15424
+  },
+  "walk": {
+   "candidates_walked": 1809,
+   "stage_counts": {
+    "done": 425,
+    "e3": 7,
+    "e1": 877,
+    "precheck": 488,
+    "e2": 12
+   },
+   "reasons": [
+    [
+     "no pin source at root",
+     877
+    ],
+    [
+     "G full; no AI name in dependency files",
+     488
+    ],
+    [
+     "eligible",
+     284
+    ],
+    [
+     "E4 fewer than half of direct deps pinned",
+     141
+    ],
+    [
+     "clone failed: path invalid on Windows",
+     10
+    ],
+    [
+     "scan exit 1",
+     7
+    ],
+    [
+     "clone failed: path too long on Windows",
+     2
+    ]
+   ],
+   "eligible": 284,
+   "eligible_ai_stack": 100,
+   "scan_timeouts": 0
+  },
+  "strata_overlap": 19,
+  "union_size": 181,
+  "ai_stack_share_in_G": {
+   "k": 19,
+   "n": 100,
+   "share": 0.19,
+   "wilson95": [
+    0.1251,
+    0.2778
+   ]
+  },
+  "strata": {
+   "G": {
+    "n": 100,
+    "owners": 98,
+    "max_repos_per_owner": 2,
+    "post_cutoff_direct_pin": {
+     "k": 53,
+     "share": 0.53,
+     "wilson95": [
+      0.4329,
+      0.6249
+     ],
+     "owner_cluster_boot95": [
+      0.43,
+      0.63
+     ]
+    },
+    "imports_package_with_breaking_change": {
+     "k": 44,
+     "share": 0.44,
+     "wilson95": [
+      0.3467,
+      0.5377
+     ],
+     "owner_cluster_boot95": [
+      0.3434,
+      0.54
+     ]
+    },
+    "imports_changed_package_earlier_definition": {
+     "k": 47,
+     "share": 0.47,
+     "wilson95": [
+      0.3751,
+      0.5671
+     ],
+     "owner_cluster_boot95": [
+      0.3737,
+      0.57
+     ]
+    },
+    "imports_breaking_incl_unpinned": {
+     "k": 47,
+     "share": 0.47,
+     "wilson95": [
+      0.3751,
+      0.5671
+     ],
+     "owner_cluster_boot95": [
+      0.3737,
+      0.57
+     ]
+    },
+    "matcher_hit_changed_api_used": {
+     "k": 12,
+     "share": 0.12,
+     "wilson95": [
+      0.07,
+      0.1981
+     ],
+     "owner_cluster_boot95": [
+      0.0606,
+      0.1863
+     ]
+    },
+    "matcher_hit_incl_unpinned": {
+     "k": 13,
+     "share": 0.13,
+     "wilson95": [
+      0.0776,
+      0.2098
+     ],
+     "owner_cluster_boot95": [
+      0.07,
+      0.198
+     ]
+    },
+    "direct_deps": {
+     "n": 100,
+     "median": 19.0,
+     "p25": 9.0,
+     "p75": 36.5,
+     "mean": 28.33,
+     "min": 2,
+     "max": 176
+    },
+    "direct_pinned": {
+     "n": 100,
+     "median": 18.0,
+     "p25": 9.0,
+     "p75": 34.0,
+     "mean": 27.24,
+     "min": 1,
+     "max": 140
+    },
+    "share_pinned_direct_locked_after_cutoff": {
+     "n": 100,
+     "median": 0.05857385398981324,
+     "p25": 0.0,
+     "p75": 0.4095262096774194,
+     "mean": 0.192,
+     "min": 0.0,
+     "max": 0.813953488372093,
+     "median_boot95": [
+      0.0,
+      0.1579
+     ]
+    },
+    "post_pins_per_repo": {
+     "n": 100,
+     "median": 1.0,
+     "p25": 0.0,
+     "p75": 7.25,
+     "mean": 6.46,
+     "min": 0,
+     "max": 63
+    },
+    "breaking_in_imported": {
+     "n": 100,
+     "median": 0.0,
+     "p25": 0.0,
+     "p75": 47.0,
+     "mean": 104.77,
+     "min": 0,
+     "max": 1924,
+     "median_boot95": [
+      0.0,
+      3.0
+     ]
+    },
+    "matched_apis_total": 124,
+    "matched_changes_total": 298,
+    "matched_apis_per_hit_repo": {
+     "n": 12,
+     "median": 2.5,
+     "p25": 2.0,
+     "p75": 4.25,
+     "mean": 10.333,
+     "min": 1,
+     "max": 86
+    },
+    "packages_behind_matches": [
+     [
+      "mcp",
+      4
+     ],
+     [
+      "anthropic",
+      2
+     ],
+     [
+      "click",
+      1
+     ],
+     [
+      "tilelang",
+      1
+     ],
+     [
+      "cje-eval",
+      1
+     ],
+     [
+      "inspect-ai",
+      1
+     ],
+     [
+      "polars",
+      1
+     ],
+     [
+      "deepagents",
+      1
+     ],
+     [
+      "langsmith",
+      1
+     ],
+     [
+      "openai",
+      1
+     ],
+     [
+      "plotly",
+      1
+     ],
+     [
+      "logfire",
+      1
+     ],
+     [
+      "pydantic-ai-slim",
+      1
+     ],
+     [
+      "homeassistant",
+      1
+     ],
+     [
+      "anyio",
+      1
+     ]
+    ],
+    "used_scope_tokens_nonempty": {
+     "n": 13,
+     "median": 376,
+     "p25": 294.0,
+     "p75": 429.0,
+     "mean": 642.154,
+     "min": 264,
+     "max": 3483
+    },
+    "used_scope_nonempty_share": 0.13,
+    "scan_seconds": {
+     "n": 100,
+     "median": 9.649999999999999,
+     "p25": 2.25,
+     "p75": 34.974999999999994,
+     "mean": 38.267,
+     "min": 0.9,
+     "max": 553.1
+    },
+    "version_sources": [
+     [
+      "uv.lock",
+      55
+     ],
+     [
+      "requirements.txt",
+      21
+     ],
+     [
+      "poetry.lock",
+      11
+     ],
+     [
+      "pyproject.toml",
+      5
+     ],
+     [
+      "pdm.lock",
+      2
+     ],
+     [
+      "requirements-dev.txt",
+      2
+     ],
+     [
+      "requirements-ci.txt",
+      2
+     ],
+     [
+      "requirements-test.txt",
+      1
+     ],
+     [
+      "requirements-docs.txt",
+      1
+     ]
+    ],
+    "block_imported_scope": {
+     "ok": 100,
+     "failed_or_timeout": 0,
+     "nonempty": {
+      "k": 47,
+      "share": 0.47,
+      "wilson95": [
+       0.3751,
+       0.5671
+      ],
+      "owner_cluster_boot95": [
+       0.3737,
+       0.57
+      ]
+     },
+     "tokens_all": {
+      "n": 100,
+      "median": 0.0,
+      "p25": 0.0,
+      "p75": 624.0,
+      "mean": 476.35,
+      "min": 0,
+      "max": 3814
+     },
+     "tokens_nonempty": {
+      "n": 47,
+      "median": 704,
+      "p25": 435.0,
+      "p75": 1133.5,
+      "mean": 1013.511,
+      "min": 258,
+      "max": 3814
+     },
+     "tokens_nonempty_median_boot95": [
+      490.0,
+      962.0
+     ],
+     "tokens_all_median_boot95": [
+      0.0,
+      367.0
+     ],
+     "packages_nonempty": {
+      "n": 47,
+      "median": 2,
+      "p25": 1.0,
+      "p75": 6.0,
+      "mean": 4.532,
+      "min": 1,
+      "max": 21
+     },
+     "change_lines_nonempty": {
+      "n": 47,
+      "median": 10,
+      "p25": 5.0,
+      "p75": 20.5,
+      "mean": 18.872,
+      "min": 1,
+      "max": 90
+     },
+     "repos_over_423_1000_2000_5000": [
+      36,
+      15,
+      5,
+      0
+     ],
+     "seconds": {
+      "n": 100,
+      "median": 4.7,
+      "p25": 1.7,
+      "p75": 20.049999999999997,
+      "mean": 26.076,
+      "min": 0.6,
+      "max": 457.3
+     }
+    },
+    "stars": {
+     "n": 100,
+     "median": 695.0,
+     "p25": 307.0,
+     "p75": 1577.25,
+     "mean": 2838.76,
+     "min": 217,
+     "max": 75273
+    }
+   },
+   "AI": {
+    "n": 100,
+    "owners": 96,
+    "max_repos_per_owner": 2,
+    "post_cutoff_direct_pin": {
+     "k": 93,
+     "share": 0.93,
+     "wilson95": [
+      0.8625,
+      0.9657
+     ],
+     "owner_cluster_boot95": [
+      0.8763,
+      0.9714
+     ]
+    },
+    "imports_package_with_breaking_change": {
+     "k": 91,
+     "share": 0.91,
+     "wilson95": [
+      0.8377,
+      0.9519
+     ],
+     "owner_cluster_boot95": [
+      0.8485,
+      0.9604
+     ]
+    },
+    "imports_changed_package_earlier_definition": {
+     "k": 96,
+     "share": 0.96,
+     "wilson95": [
+      0.9016,
+      0.9843
+     ],
+     "owner_cluster_boot95": [
+      0.9184,
+      0.9903
+     ]
+    },
+    "imports_breaking_incl_unpinned": {
+     "k": 96,
+     "share": 0.96,
+     "wilson95": [
+      0.9016,
+      0.9843
+     ],
+     "owner_cluster_boot95": [
+      0.9184,
+      0.9903
+     ]
+    },
+    "matcher_hit_changed_api_used": {
+     "k": 40,
+     "share": 0.4,
+     "wilson95": [
+      0.3094,
+      0.498
+     ],
+     "owner_cluster_boot95": [
+      0.303,
+      0.4951
+     ]
+    },
+    "matcher_hit_incl_unpinned": {
+     "k": 42,
+     "share": 0.42,
+     "wilson95": [
+      0.328,
+      0.5179
+     ],
+     "owner_cluster_boot95": [
+      0.3265,
+      0.5152
+     ]
+    },
+    "direct_deps": {
+     "n": 100,
+     "median": 34.5,
+     "p25": 19.0,
+     "p75": 53.25,
+     "mean": 52.27,
+     "min": 5,
+     "max": 572
+    },
+    "direct_pinned": {
+     "n": 100,
+     "median": 33.5,
+     "p25": 18.0,
+     "p75": 53.25,
+     "mean": 50.55,
+     "min": 4,
+     "max": 558
+    },
+    "share_pinned_direct_locked_after_cutoff": {
+     "n": 100,
+     "median": 0.3798076923076923,
+     "p25": 0.15312046444121916,
+     "p75": 0.5768112329677634,
+     "mean": 0.366,
+     "min": 0.0,
+     "max": 0.813953488372093,
+     "median_boot95": [
+      0.2786,
+      0.4595
+     ]
+    },
+    "post_pins_per_repo": {
+     "n": 100,
+     "median": 11.0,
+     "p25": 5.0,
+     "p75": 19.25,
+     "mean": 16.1,
+     "min": 0,
+     "max": 108
+    },
+    "breaking_in_imported": {
+     "n": 100,
+     "median": 100.5,
+     "p25": 21.0,
+     "p75": 417.25,
+     "mean": 329.53,
+     "min": 0,
+     "max": 2629,
+     "median_boot95": [
+      49.0,
+      153.0
+     ]
+    },
+    "matched_apis_total": 155,
+    "matched_changes_total": 401,
+    "matched_apis_per_hit_repo": {
+     "n": 40,
+     "median": 2.5,
+     "p25": 1.0,
+     "p75": 4.25,
+     "mean": 3.875,
+     "min": 1,
+     "max": 29
+    },
+    "packages_behind_matches": [
+     [
+      "mcp",
+      16
+     ],
+     [
+      "openai",
+      8
+     ],
+     [
+      "anyio",
+      7
+     ],
+     [
+      "anthropic",
+      6
+     ],
+     [
+      "pydantic-ai-slim",
+      3
+     ],
+     [
+      "tilelang",
+      2
+     ],
+     [
+      "deepagents",
+      2
+     ],
+     [
+      "fastapi",
+      2
+     ],
+     [
+      "transformers",
+      2
+     ],
+     [
+      "modal",
+      2
+     ],
+     [
+      "apprise",
+      2
+     ],
+     [
+      "click",
+      1
+     ],
+     [
+      "cje-eval",
+      1
+     ],
+     [
+      "inspect-ai",
+      1
+     ],
+     [
+      "polars",
+      1
+     ]
+    ],
+    "used_scope_tokens_nonempty": {
+     "n": 42,
+     "median": 368.0,
+     "p25": 299.75,
+     "p75": 466.0,
+     "mean": 444.071,
+     "min": 252,
+     "max": 1680
+    },
+    "used_scope_nonempty_share": 0.42,
+    "scan_seconds": {
+     "n": 100,
+     "median": 62.5,
+     "p25": 22.5,
+     "p75": 135.825,
+     "mean": 90.956,
+     "min": 1.1,
+     "max": 498.6
+    },
+    "version_sources": [
+     [
+      "uv.lock",
+      74
+     ],
+     [
+      "requirements.txt",
+      7
+     ],
+     [
+      "pyproject.toml",
+      5
+     ],
+     [
+      "poetry.lock",
+      4
+     ],
+     [
+      "pdm.lock",
+      2
+     ],
+     [
+      "requirements-ci.txt",
+      1
+     ],
+     [
+      "requirements/build.txt",
+      1
+     ],
+     [
+      "requirements-experiments.txt",
+      1
+     ],
+     [
+      "requirements-hf5-cu128.txt",
+      1
+     ],
+     [
+      "requirements-macos-arm64.txt",
+      1
+     ],
+     [
+      "requirements-overlay.txt",
+      1
+     ],
+     [
+      "requirements/docs.txt",
+      1
+     ],
+     [
+      "requirements-dev.txt",
+      1
+     ]
+    ],
+    "block_imported_scope": {
+     "ok": 100,
+     "failed_or_timeout": 0,
+     "nonempty": {
+      "k": 96,
+      "share": 0.96,
+      "wilson95": [
+       0.9016,
+       0.9843
+      ],
+      "owner_cluster_boot95": [
+       0.9184,
+       0.9903
+      ]
+     },
+     "tokens_all": {
+      "n": 100,
+      "median": 1001.5,
+      "p25": 564.5,
+      "p75": 1670.25,
+      "mean": 1266.73,
+      "min": 0,
+      "max": 5580
+     },
+     "tokens_nonempty": {
+      "n": 96,
+      "median": 1024.5,
+      "p25": 622.0,
+      "p75": 1727.75,
+      "mean": 1319.51,
+      "min": 260,
+      "max": 5580
+     },
+     "tokens_nonempty_median_boot95": [
+      866.0,
+      1125.0
+     ],
+     "tokens_all_median_boot95": [
+      820.0,
+      1094.0
+     ],
+     "packages_nonempty": {
+      "n": 96,
+      "median": 5.0,
+      "p25": 3.0,
+      "p75": 10.0,
+      "mean": 6.719,
+      "min": 1,
+      "max": 28
+     },
+     "change_lines_nonempty": {
+      "n": 96,
+      "median": 20.0,
+      "p25": 10.0,
+      "p75": 36.25,
+      "mean": 26.135,
+      "min": 1,
+      "max": 129
+     },
+     "repos_over_423_1000_2000_5000": [
+      88,
+      50,
+      18,
+      1
+     ],
+     "seconds": {
+      "n": 100,
+      "median": 32.45,
+      "p25": 11.075,
+      "p75": 76.775,
+      "mean": 60.639,
+      "min": 1.3,
+      "max": 513.2
+     }
+    },
+    "stars": {
+     "n": 100,
+     "median": 768.5,
+     "p25": 367.0,
+     "p75": 2567.25,
+     "mean": 8387.67,
+     "min": 201,
+     "max": 256501
+    }
+   },
+   "G_non_ai_subset": {
+    "n": 81,
+    "owners": 80,
+    "max_repos_per_owner": 2,
+    "post_cutoff_direct_pin": {
+     "k": 35,
+     "share": 0.4321,
+     "wilson95": [
+      0.3297,
+      0.5406
+     ],
+     "owner_cluster_boot95": [
+      0.325,
+      0.5432
+     ]
+    },
+    "imports_package_with_breaking_change": {
+     "k": 26,
+     "share": 0.321,
+     "wilson95": [
+      0.2294,
+      0.4288
+     ],
+     "owner_cluster_boot95": [
+      0.2222,
+      0.4268
+     ]
+    },
+    "imports_changed_package_earlier_definition": {
+     "k": 28,
+     "share": 0.3457,
+     "wilson95": [
+      0.2512,
+      0.4541
+     ],
+     "owner_cluster_boot95": [
+      0.2375,
+      0.4524
+     ]
+    },
+    "imports_breaking_incl_unpinned": {
+     "k": 28,
+     "share": 0.3457,
+     "wilson95": [
+      0.2512,
+      0.4541
+     ],
+     "owner_cluster_boot95": [
+      0.2375,
+      0.4524
+     ]
+    },
+    "matcher_hit_changed_api_used": {
+     "k": 4,
+     "share": 0.0494,
+     "wilson95": [
+      0.0194,
+      0.1202
+     ],
+     "owner_cluster_boot95": [
+      0.012,
+      0.1
+     ]
+    },
+    "matcher_hit_incl_unpinned": {
+     "k": 5,
+     "share": 0.0617,
+     "wilson95": [
+      0.0267,
+      0.1365
+     ],
+     "owner_cluster_boot95": [
+      0.0123,
+      0.1235
+     ]
+    },
+    "direct_deps": {
+     "n": 81,
+     "median": 16,
+     "p25": 8.0,
+     "p75": 28.0,
+     "mean": 22.914,
+     "min": 2,
+     "max": 131
+    },
+    "direct_pinned": {
+     "n": 81,
+     "median": 15,
+     "p25": 8.0,
+     "p75": 26.0,
+     "mean": 22.296,
+     "min": 1,
+     "max": 131
+    },
+    "share_pinned_direct_locked_after_cutoff": {
+     "n": 81,
+     "median": 0.0,
+     "p25": 0.0,
+     "p75": 0.2727272727272727,
+     "mean": 0.148,
+     "min": 0.0,
+     "max": 0.625,
+     "median_boot95": [
+      0.0,
+      0.08
+     ]
+    },
+    "post_pins_per_repo": {
+     "n": 81,
+     "median": 0,
+     "p25": 0.0,
+     "p75": 3.0,
+     "mean": 3.691,
+     "min": 0,
+     "max": 27
+    },
+    "breaking_in_imported": {
+     "n": 81,
+     "median": 0,
+     "p25": 0.0,
+     "p75": 3.0,
+     "mean": 65.346,
+     "min": 0,
+     "max": 1924,
+     "median_boot95": [
+      0.0,
+      0.0
+     ]
+    },
+    "matched_apis_total": 98,
+    "matched_changes_total": 246,
+    "matched_apis_per_hit_repo": {
+     "n": 4,
+     "median": 5.0,
+     "p25": 2.0,
+     "p75": 27.5,
+     "mean": 24.5,
+     "min": 2,
+     "max": 86
+    },
+    "packages_behind_matches": [
+     [
+      "plotly",
+      1
+     ],
+     [
+      "homeassistant",
+      1
+     ],
+     [
+      "flydsl",
+      1
+     ],
+     [
+      "websockets",
+      1
+     ]
+    ],
+    "used_scope_tokens_nonempty": {
+     "n": 5,
+     "median": 344,
+     "p25": 293.0,
+     "p75": 732.0,
+     "mean": 1023.2,
+     "min": 264,
+     "max": 3483
+    },
+    "used_scope_nonempty_share": 0.0617,
+    "scan_seconds": {
+     "n": 81,
+     "median": 5.0,
+     "p25": 1.9,
+     "p75": 25.8,
+     "mean": 24.026,
+     "min": 0.9,
+     "max": 553.1
+    },
+    "version_sources": [
+     [
+      "uv.lock",
+      41
+     ],
+     [
+      "requirements.txt",
+      20
+     ],
+     [
+      "poetry.lock",
+      9
+     ],
+     [
+      "pyproject.toml",
+      4
+     ],
+     [
+      "pdm.lock",
+      2
+     ],
+     [
+      "requirements-dev.txt",
+      2
+     ],
+     [
+      "requirements-test.txt",
+      1
+     ],
+     [
+      "requirements-docs.txt",
+      1
+     ],
+     [
+      "requirements-ci.txt",
+      1
+     ]
+    ],
+    "block_imported_scope": {
+     "ok": 81,
+     "failed_or_timeout": 0,
+     "nonempty": {
+      "k": 28,
+      "share": 0.3457,
+      "wilson95": [
+       0.2512,
+       0.4541
+      ],
+      "owner_cluster_boot95": [
+       0.2375,
+       0.4524
+      ]
+     },
+     "tokens_all": {
+      "n": 81,
+      "median": 0,
+      "p25": 0.0,
+      "p75": 378.0,
+      "mean": 250.086,
+      "min": 0,
+      "max": 3487
+     },
+     "tokens_nonempty": {
+      "n": 28,
+      "median": 506.5,
+      "p25": 372.5,
+      "p75": 890.75,
+      "mean": 723.464,
+      "min": 258,
+      "max": 3487
+     },
+     "tokens_nonempty_median_boot95": [
+      424.0,
+      797.8875
+     ],
+     "tokens_all_median_boot95": [
+      0.0,
+      0.0
+     ],
+     "packages_nonempty": {
+      "n": 28,
+      "median": 1.5,
+      "p25": 1.0,
+      "p75": 3.25,
+      "mean": 2.536,
+      "min": 1,
+      "max": 8
+     },
+     "change_lines_nonempty": {
+      "n": 28,
+      "median": 7.0,
+      "p25": 3.0,
+      "p75": 16.0,
+      "mean": 11.821,
+      "min": 1,
+      "max": 86
+     },
+     "repos_over_423_1000_2000_5000": [
+      19,
+      4,
+      1,
+      0
+     ],
+     "seconds": {
+      "n": 81,
+      "median": 3.3,
+      "p25": 1.5,
+      "p75": 11.3,
+      "mean": 17.872,
+      "min": 0.6,
+      "max": 457.3
+     }
+    }
+   }
+  },
+  "AI_minus_G": {
+   "post_cutoff_direct_pin": {
+    "diff": 0.4,
+    "boot95": [
+     0.2894,
+     0.512
+    ]
+   },
+   "imports_package_with_breaking_change": {
+    "diff": 0.47,
+    "boot95": [
+     0.355,
+     0.5846
+    ]
+   },
+   "matcher_hit_changed_api_used": {
+    "diff": 0.28,
+    "boot95": [
+     0.1648,
+     0.3945
+    ]
+   }
+  },
+  "timeout_sensitivity": {
+   "G": {
+    "timeouts_before_filled": 0,
+    "P1": {
+     "all_exposed": 0.53,
+     "none_exposed": 0.53
+    },
+    "P2": {
+     "all_exposed": 0.44,
+     "none_exposed": 0.44
+    },
+    "P3": {
+     "all_exposed": 0.12,
+     "none_exposed": 0.12
+    }
+   },
+   "AI": {
+    "timeouts_before_filled": 0,
+    "P1": {
+     "all_exposed": 0.93,
+     "none_exposed": 0.93
+    },
+    "P2": {
+     "all_exposed": 0.91,
+     "none_exposed": 0.91
+    },
+    "P3": {
+     "all_exposed": 0.4,
+     "none_exposed": 0.4
+    }
+   }
+  },
+  "earlier_47_same_definitions": {
+   "n": 47,
+   "owners": 46,
+   "max_repos_per_owner": 2,
+   "post_cutoff_direct_pin": {
+    "k": 36,
+    "share": 0.766,
+    "wilson95": [
+     0.6278,
+     0.864
+    ],
+    "owner_cluster_boot95": [
+     0.6346,
+     0.8913
+    ]
+   },
+   "imports_package_with_breaking_change": {
+    "k": 30,
+    "share": 0.6383,
+    "wilson95": [
+     0.4954,
+     0.7603
+    ],
+    "owner_cluster_boot95": [
+     0.5,
+     0.7826
+    ]
+   },
+   "imports_changed_package_earlier_definition": {
+    "k": 31,
+    "share": 0.6596,
+    "wilson95": [
+     0.5167,
+     0.7783
+    ],
+    "owner_cluster_boot95": [
+     0.5208,
+     0.8043
+    ]
+   },
+   "imports_breaking_incl_unpinned": {
+    "k": 31,
+    "share": 0.6596,
+    "wilson95": [
+     0.5167,
+     0.7783
+    ],
+    "owner_cluster_boot95": [
+     0.5208,
+     0.8043
+    ]
+   },
+   "matcher_hit_changed_api_used": {
+    "k": 10,
+    "share": 0.2128,
+    "wilson95": [
+     0.1199,
+     0.349
+    ],
+    "owner_cluster_boot95": [
+     0.1042,
+     0.3404
+    ]
+   },
+   "matcher_hit_incl_unpinned": {
+    "k": 10,
+    "share": 0.2128,
+    "wilson95": [
+     0.1199,
+     0.349
+    ],
+    "owner_cluster_boot95": [
+     0.1042,
+     0.3404
+    ]
+   },
+   "direct_deps": {
+    "n": 47,
+    "median": 36,
+    "p25": 23.5,
+    "p75": 69.5,
+    "mean": 59.766,
+    "min": 2,
+    "max": 458
+   },
+   "direct_pinned": {
+    "n": 47,
+    "median": 35,
+    "p25": 22.5,
+    "p75": 66.0,
+    "mean": 58.362,
+    "min": 2,
+    "max": 458
+   },
+   "share_pinned_direct_locked_after_cutoff": {
+    "n": 47,
+    "median": 0.15151515151515152,
+    "p25": 0.05086021505376344,
+    "p75": 0.5,
+    "mean": 0.251,
+    "min": 0.0,
+    "max": 0.6774193548387096,
+    "median_boot95": [
+     0.0884,
+     0.3168
+    ]
+   },
+   "post_pins_per_repo": {
+    "n": 47,
+    "median": 6,
+    "p25": 1.0,
+    "p75": 19.5,
+    "mean": 16.83,
+    "min": 0,
+    "max": 283
+   },
+   "breaking_in_imported": {
+    "n": 47,
+    "median": 16,
+    "p25": 0.0,
+    "p75": 56.5,
+    "mean": 146.511,
+    "min": 0,
+    "max": 4081,
+    "median_boot95": [
+     0.5,
+     30.5
+    ]
+   },
+   "matched_apis_total": 53,
+   "matched_changes_total": 128,
+   "matched_apis_per_hit_repo": {
+    "n": 10,
+    "median": 2.0,
+    "p25": 1.0,
+    "p75": 6.0,
+    "mean": 5.3,
+    "min": 1,
+    "max": 22
+   },
+   "packages_behind_matches": [
+    [
+     "mcp",
+     2
+    ],
+    [
+     "anthropic",
+     2
+    ],
+    [
+     "websockets",
+     1
+    ],
+    [
+     "islo",
+     1
+    ],
+    [
+     "pgvector",
+     1
+    ],
+    [
+     "pydantic-ai-slim",
+     1
+    ],
+    [
+     "django-stubs",
+     1
+    ],
+    [
+     "openviking-sdk",
+     1
+    ],
+    [
+     "temporalio",
+     1
+    ],
+    [
+     "build",
+     1
+    ],
+    [
+     "anyio",
+     1
+    ]
+   ],
+   "used_scope_tokens_nonempty": {
+    "n": 10,
+    "median": 303.0,
+    "p25": 266.5,
+    "p75": 556.25,
+    "mean": 477.4,
+    "min": 262,
+    "max": 1268
+   },
+   "used_scope_nonempty_share": 0.2128,
+   "scan_seconds": {
+    "n": 47,
+    "median": 25.8,
+    "p25": 10.600000000000001,
+    "p75": 53.5,
+    "mean": 57.787,
+    "min": 1.1,
+    "max": 621.3
+   },
+   "version_sources": [
+    [
+     "uv.lock",
+     43
+    ],
+    [
+     "poetry.lock",
+     4
+    ]
+   ],
+   "block_imported_scope": {
+    "ok": 47,
+    "failed_or_timeout": 0,
+    "nonempty": {
+     "k": 31,
+     "share": 0.6596,
+     "wilson95": [
+      0.5167,
+      0.7783
+     ],
+     "owner_cluster_boot95": [
+      0.5208,
+      0.8043
+     ]
+    },
+    "tokens_all": {
+     "n": 47,
+     "median": 568,
+     "p25": 0.0,
+     "p75": 909.0,
+     "mean": 861.255,
+     "min": 0,
+     "max": 11100
+    },
+    "tokens_nonempty": {
+     "n": 31,
+     "median": 764,
+     "p25": 574.0,
+     "p75": 1328.5,
+     "mean": 1305.774,
+     "min": 260,
+     "max": 11100
+    },
+    "tokens_nonempty_median_boot95": [
+     691.0,
+     1270.0
+    ],
+    "tokens_all_median_boot95": [
+     260.0,
+     751.5
+    ],
+    "packages_nonempty": {
+     "n": 31,
+     "median": 4,
+     "p25": 2.0,
+     "p75": 6.0,
+     "mean": 7.161,
+     "min": 1,
+     "max": 69
+    },
+    "change_lines_nonempty": {
+     "n": 31,
+     "median": 14,
+     "p25": 8.0,
+     "p75": 26.0,
+     "mean": 25.774,
+     "min": 1,
+     "max": 246
+    },
+    "repos_over_423_1000_2000_5000": [
+     26,
+     11,
+     3,
+     1
+    ],
+    "seconds": {
+     "n": 47,
+     "median": 9.4,
+     "p25": 3.45,
+     "p75": 15.2,
+     "mean": 13.066,
+     "min": 1.0,
+     "max": 54.0
+    }
+   }
+  },
+  "overlap_with_earlier_47": 1
+ }
+}

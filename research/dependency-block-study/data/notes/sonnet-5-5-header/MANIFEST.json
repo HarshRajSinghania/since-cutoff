@@ -1,0 +1,350 @@
+{
+  "schema": "since-cutoff-bench/notes@1",
+  "tool": "since-cutoff==0.4.1 (header-only, NAACL addendum condition H)",
+  "model": "anthropic:claude-sonnet-5-5",
+  "source": "research/dependency-block-study\\notes\\sonnet-5-5",
+  "created_at": "2026-10-21T20:58:13.109302+00:00",
+  "frozen": true,
+  "frozen_at": "2026-10-21T20:58:13.109313+00:00",
+  "tasks": {
+    "ant01": {
+      "file": "ant01.md",
+      "sha256": "a9b4a518d0f4676bfa22b6f19373539a0089d7e668540d7b6ceda8002feeca72",
+      "bytes": 1030,
+      "tokens_est": 258,
+      "empty": false,
+      "note_keys": [
+        "\\btemperature\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "a471bd75590276f2c832f22a9f42fc0012c03263b1665032e61b932ce4ae4196"
+    },
+    "ant02": {
+      "file": "ant02.md",
+      "sha256": "a9b4a518d0f4676bfa22b6f19373539a0089d7e668540d7b6ceda8002feeca72",
+      "bytes": 1030,
+      "tokens_est": 258,
+      "empty": false,
+      "note_keys": [
+        "\\.text\\(\\)|\\btext\\b[^\\n]{0,80}\\bmethod\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "a471bd75590276f2c832f22a9f42fc0012c03263b1665032e61b932ce4ae4196"
+    },
+    "ant03": {
+      "file": "ant03.md",
+      "sha256": "cbd8089d77fbbdc011b6f28e674d472cbd2011291963afa6fdbf2908734256fe",
+      "bytes": 1030,
+      "tokens_est": 258,
+      "empty": false,
+      "note_keys": [
+        "\\boutput_format\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "ed05cc576dcc804911cd28d490bc71f03ec146b7b0420b2b1a7873e8cb9fbc73"
+    },
+    "ant04": {
+      "file": "ant04.md",
+      "sha256": "70db2e95d4952537e8233ddf9bb07017c9eb4d679ad9e521c7d549fedd903cdc",
+      "bytes": 1030,
+      "tokens_est": 258,
+      "empty": false,
+      "note_keys": [
+        "httpx2"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "6788e78df5d336bb3246cc1787293c857f810774293dce0cb6c3b72e34ddc46c"
+    },
+    "ant05": {
+      "file": "ant05.md",
+      "sha256": "719b4c3cd8bab0244b6de8ff58b8a62017255688e2eca8756334febca0e00781",
+      "bytes": 1030,
+      "tokens_est": 258,
+      "empty": false,
+      "note_keys": [
+        "\\bparse\\b[^\\n]{0,160}\\b(?:await|coroutine|async)\\b|\\b(?:await|coroutine|async)\\b[^\\n]{0,160}\\bparse\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "ad417b4b4aec9de3dda9f671c07cec7a1d291b1e006079ef1fe8b3b2e705dd49"
+    },
+    "hf01": {
+      "file": "hf01.md",
+      "sha256": "1855802b6a0c19739ffbc8c8be1e8ab67197381499200c082e1f1fc5d5d3f9c3",
+      "bytes": 945,
+      "tokens_est": 236,
+      "empty": false,
+      "note_keys": [
+        "stop_sequences"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "c8035ae8918cf4c430a3dfe71c1600cb85bab175b0e4eadd303e9a5373d40ea7"
+    },
+    "hf02": {
+      "file": "hf02.md",
+      "sha256": "c053c7abb17e849e7609cc999b1a5f786d15c43fd6b37745c9a4b47c2cbaba4b",
+      "bytes": 945,
+      "tokens_est": 236,
+      "empty": false,
+      "note_keys": [
+        "\\bupload_large_folder\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0bd8ac8f45ef068f0547ea81768c8f4c018ac5fa3bf411f94c4b1ce92ed1e156"
+    },
+    "hf03": {
+      "file": "hf03.md",
+      "sha256": "876b88a8d49f8c44191d4ee986d5989f2944b8233d404d60a90c72f370ab6895",
+      "bytes": 945,
+      "tokens_est": 236,
+      "empty": false,
+      "note_keys": [
+        "\\blist_models\\b",
+        "\\bmodel_name\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "1b14b26f99c6b833f40792f19675dd044c1d1e07548d2df2beb075c4f15cd678"
+    },
+    "hf04": {
+      "file": "hf04.md",
+      "sha256": "c053c7abb17e849e7609cc999b1a5f786d15c43fd6b37745c9a4b47c2cbaba4b",
+      "bytes": 945,
+      "tokens_est": 236,
+      "empty": false,
+      "note_keys": [
+        "httpx2"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "0bd8ac8f45ef068f0547ea81768c8f4c018ac5fa3bf411f94c4b1ce92ed1e156"
+    },
+    "lc01": {
+      "file": "lc01.md",
+      "sha256": "0e709af9a65ac8e7d82b6a42413069eddeaab0e55266d07ae568a779b632b995",
+      "bytes": 943,
+      "tokens_est": 236,
+      "empty": false,
+      "note_keys": [
+        "get_relevant_documents"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "e2533612b03cbd86cd543b8c801f5bf925fc6b259a2efcee427a1de06017ae3e"
+    },
+    "lc02": {
+      "file": "lc02.md",
+      "sha256": "0e709af9a65ac8e7d82b6a42413069eddeaab0e55266d07ae568a779b632b995",
+      "bytes": 943,
+      "tokens_est": 236,
+      "empty": false,
+      "note_keys": [
+        "\\bpredict\\b|__call__"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "e2533612b03cbd86cd543b8c801f5bf925fc6b259a2efcee427a1de06017ae3e"
+    },
+    "mcp01": {
+      "file": "mcp01.md",
+      "sha256": "9a3a67b5adcbb205a7eb1574f396ca8fb44089effc5e3303eeae6321893004cc",
+      "bytes": 1023,
+      "tokens_est": 256,
+      "empty": false,
+      "note_keys": [
+        "FastMCP|MCPServer",
+        "ToolError"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "25deb83e2cfabe154eac242b65ebfe42d57758b14352e4f650b0d76976374b92"
+    },
+    "mcp02": {
+      "file": "mcp02.md",
+      "sha256": "9a3a67b5adcbb205a7eb1574f396ca8fb44089effc5e3303eeae6321893004cc",
+      "bytes": 1023,
+      "tokens_est": 256,
+      "empty": false,
+      "note_keys": [
+        "isError|is_error",
+        "structuredContent|structured_content"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "25deb83e2cfabe154eac242b65ebfe42d57758b14352e4f650b0d76976374b92"
+    },
+    "mcp04": {
+      "file": "mcp04.md",
+      "sha256": "b36e8050ce539d517d1e4713779465f5ebdbafae6b0360341bd2a9f1b539d64a",
+      "bytes": 1023,
+      "tokens_est": 256,
+      "empty": false,
+      "note_keys": [
+        "\\b(?:host|port)\\b[^\\n]{0,160}\\b(?:run|__init__|constructor|MCPServer|FastMCP)\\b|\\b(?:run|__init__|constructor|MCPServer|FastMCP)\\b[^\\n]{0,160}\\b(?:host|port)\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "1fa807fa167a98447e7cefeeb3a76aec7f3f14c9dcf1fd3668dbfd8d89a96121"
+    },
+    "mcp05": {
+      "file": "mcp05.md",
+      "sha256": "23fec298ecaa2768df06bddc8ed832481b659887ae1948faaa3ad710d0b92166",
+      "bytes": 1023,
+      "tokens_est": 256,
+      "empty": false,
+      "note_keys": [
+        "streamablehttp_client"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "19d85534c92f536983209ad33e6d0c4a0e879301454bfe2c186f359afcc99528"
+    },
+    "mcp06": {
+      "file": "mcp06.md",
+      "sha256": "23fec298ecaa2768df06bddc8ed832481b659887ae1948faaa3ad710d0b92166",
+      "bytes": 1023,
+      "tokens_est": 256,
+      "empty": false,
+      "note_keys": [
+        "create_connected_server_and_client_session"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "19d85534c92f536983209ad33e6d0c4a0e879301454bfe2c186f359afcc99528"
+    },
+    "oai01": {
+      "file": "oai01.md",
+      "sha256": "c6cd7176f22a07e5a6b82bf0fc7c27f77703f2eb49b6aaf2de580b231bce7e56",
+      "bytes": 937,
+      "tokens_est": 234,
+      "empty": false,
+      "note_keys": [
+        "httpx2"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "31d8256003b7096fc43cbe5488a1b7fc020fac357d9db4f75170ef307fcb67ff"
+    },
+    "oai02": {
+      "file": "oai02.md",
+      "sha256": "8b48ed2d99c0cb4d3cc0d623fb41b149bfa0d27da1cc55f64de1df7973b4e4ce",
+      "bytes": 937,
+      "tokens_est": 234,
+      "empty": false,
+      "note_keys": [
+        "httpx2"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "bfff2b702c488dd4e79344481c3831c0e7a0763d158d62cece8ba1d4c45e2a68"
+    },
+    "oai03": {
+      "file": "oai03.md",
+      "sha256": "c6cd7176f22a07e5a6b82bf0fc7c27f77703f2eb49b6aaf2de580b231bce7e56",
+      "bytes": 937,
+      "tokens_est": 234,
+      "empty": false,
+      "note_keys": [
+        "httpx2",
+        "(?i)stream[^\\n]{0,160}(APIConnectionError|APITimeoutError)|(APIConnectionError|APITimeoutError)[^\\n]{0,160}stream"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "31d8256003b7096fc43cbe5488a1b7fc020fac357d9db4f75170ef307fcb67ff"
+    },
+    "oai04": {
+      "file": "oai04.md",
+      "sha256": "c6cd7176f22a07e5a6b82bf0fc7c27f77703f2eb49b6aaf2de580b231bce7e56",
+      "bytes": 937,
+      "tokens_est": 234,
+      "empty": false,
+      "note_keys": [],
+      "note_keys_found": [],
+      "coverage": null,
+      "covered": false,
+      "source_sha256": "31d8256003b7096fc43cbe5488a1b7fc020fac357d9db4f75170ef307fcb67ff"
+    },
+    "oai05": {
+      "file": "oai05.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "tokens_est": 0,
+      "empty": true,
+      "note_keys": [],
+      "note_keys_found": [],
+      "coverage": null,
+      "covered": false,
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pd01": {
+      "file": "pd01.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "tokens_est": 0,
+      "empty": true,
+      "note_keys": [
+        "\\bstr\\b[^\\n]{0,60}dtype|string dtype|StringDtype",
+        "Copy-on-Write|inplace"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pd02": {
+      "file": "pd02.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "tokens_est": 0,
+      "empty": true,
+      "note_keys": [
+        "\\bapplymap\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "pd03": {
+      "file": "pd03.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "tokens_est": 0,
+      "empty": true,
+      "note_keys": [
+        "\\bfillna\\b",
+        "\\bmethod\\b"
+      ],
+      "note_keys_found": [],
+      "coverage": 0.0,
+      "covered": false,
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "manifest_sha256": "38f4015fc58f2564473b5c448604b3e7a430e4ba56d1e370bab76cd8ec132dd7"
+}

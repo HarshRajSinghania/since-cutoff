@@ -1,5 +1,5 @@
 {
- "schema": 21,
+ "schema": 22,
  "package": "mcp",
  "from_version": "1.28.1",
  "to_version": "2.2.0",
@@ -51,6 +51,8 @@
     "mcp.client.auth.utils.handle_token_response_scopes"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -363,6 +365,8 @@
     "mcp.shared.exceptions.McpError"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "class",
     "kept": 1,
@@ -409,6 +413,8 @@
     "mcp.cli.claude.MCP_PACKAGE"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -450,6 +456,8 @@
     "mcp.client.auth.extensions.client_credentials.JWTParameters"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -491,6 +499,8 @@
     "mcp.client.auth.extensions.client_credentials.RFC7523OAuthClientProvider"
    ],
    "hint_source": "docstring",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -535,6 +545,8 @@
     "mcp.client.auth.oauth2.OAuthContext.timeout"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -576,6 +588,8 @@
     "mcp.client.experimental"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -622,6 +636,8 @@
     "mcp.server.session.ServerSession.add_response_router"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -664,6 +680,8 @@
     "mcp.client.session.ClientSession.experimental"
    ],
    "hint_source": "docstring",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -706,6 +724,8 @@
     "mcp.client.session.ClientSession.get_server_capabilities"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -747,6 +767,8 @@
     "mcp.client.stdio.FallbackProcess"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -788,6 +810,8 @@
     "mcp.client.streamable_http.ACCEPT"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -829,6 +853,8 @@
     "mcp.client.streamable_http.CONTENT_TYPE"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -870,6 +896,8 @@
     "mcp.client.streamable_http.GetSessionIdCallback"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -911,6 +939,8 @@
     "mcp.client.streamable_http.JSON"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -952,6 +982,8 @@
     "mcp.client.streamable_http.MCP_PROTOCOL_VERSION"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -993,6 +1025,8 @@
     "mcp.client.streamable_http.RequestContext.headers"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1034,6 +1068,8 @@
     "mcp.client.streamable_http.RequestContext.sse_read_timeout"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1075,6 +1111,8 @@
     "mcp.client.streamable_http.SSE"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1116,6 +1154,8 @@
     "mcp.client.streamable_http.StreamableHTTPTransport.get_session_id"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1157,6 +1197,8 @@
     "mcp.client.streamable_http.StreamableHTTPTransport.protocol_version"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1198,6 +1240,8 @@
     "mcp.client.streamable_http.streamablehttp_client"
    ],
    "hint_source": "decorator",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1241,6 +1285,8 @@
     "mcp.client.websocket"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1283,6 +1329,8 @@
     "mcp.os.win32.utilities.FallbackProcess.__aenter__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1325,6 +1373,8 @@
     "mcp.os.win32.utilities.FallbackProcess.__aexit__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1367,6 +1417,8 @@
     "mcp.os.win32.utilities.FallbackProcess.stderr"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1409,6 +1461,8 @@
     "mcp.os.win32.utilities.FallbackProcess.stdin_raw"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1451,6 +1505,8 @@
     "mcp.os.win32.utilities.FallbackProcess.stdout_raw"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1492,6 +1548,8 @@
     "mcp.os.win32.utilities.JobHandle"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1533,6 +1591,8 @@
     "mcp.os.win32.utilities.terminate_windows_process"
    ],
    "hint_source": "decorator",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1578,6 +1638,8 @@
     "mcp.server.fastmcp.server.FastMCP"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "class",
     "kept": 29,
@@ -1624,6 +1686,8 @@
     "mcp.server.auth.handlers.authorize.AnyUrlModel"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1665,6 +1729,8 @@
     "mcp.server.auth.handlers.register.RegistrationRequest.root"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1706,6 +1772,8 @@
     "mcp.server.auth.handlers.token.TokenSuccessResponse.root"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1747,6 +1815,8 @@
     "mcp.server.experimental"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1789,6 +1859,8 @@
     "mcp.server.fastmcp.utilities.types.Audio"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "class",
     "kept": 3,
@@ -1835,6 +1907,8 @@
     "mcp.server.fastmcp.server.Context"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "class",
     "kept": 14,
@@ -1882,6 +1956,8 @@
     "mcp.server.fastmcp.server.FastMCP"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1925,6 +2001,8 @@
     "mcp.client.stdio.types.Icon"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1967,6 +2045,8 @@
     "mcp.server.fastmcp.utilities.types.Image"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "class",
     "kept": 3,
@@ -2012,6 +2092,8 @@
     "mcp.server.fastmcp.exceptions"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "module",
     "kept": 3,
@@ -2058,6 +2140,8 @@
     "mcp.server.fastmcp.prompts"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "module",
     "kept": 2,
@@ -2104,6 +2188,8 @@
     "mcp.server.fastmcp.resources"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "module",
     "kept": 4,
@@ -2150,6 +2236,8 @@
     "mcp.server.fastmcp.server"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "module",
     "kept": 4,
@@ -2196,6 +2284,8 @@
     "mcp.server.fastmcp.tools"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "module",
     "kept": 2,
@@ -2242,6 +2332,8 @@
     "mcp.server.fastmcp.utilities"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "module",
     "kept": 4,
@@ -2288,6 +2380,8 @@
     "mcp.server.lowlevel.experimental"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2329,6 +2423,8 @@
     "mcp.server.lowlevel.func_inspection"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2370,6 +2466,8 @@
     "mcp.server.lowlevel.server.CombinationContent"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2413,6 +2511,8 @@
     "mcp.server.lowlevel.server.Server.call_tool"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2456,6 +2556,8 @@
     "mcp.server.lowlevel.server.Server.completion"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2499,6 +2601,8 @@
     "mcp.server.lowlevel.server.Server.experimental"
    ],
    "hint_source": "docstring",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2542,6 +2646,8 @@
     "mcp.server.lowlevel.server.Server.get_prompt"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2585,6 +2691,8 @@
     "mcp.server.lowlevel.server.Server.list_prompts"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2628,6 +2736,8 @@
     "mcp.server.lowlevel.server.Server.list_resource_templates"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2671,6 +2781,8 @@
     "mcp.server.lowlevel.server.Server.list_resources"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2714,6 +2826,8 @@
     "mcp.server.lowlevel.server.Server.list_tools"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2757,6 +2871,8 @@
     "mcp.server.lowlevel.server.Server.notification_handlers"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2800,6 +2916,8 @@
     "mcp.server.lowlevel.server.Server.progress_notification"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2843,6 +2961,8 @@
     "mcp.server.lowlevel.server.Server.read_resource"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2886,6 +3006,8 @@
     "mcp.server.lowlevel.server.Server.request_context"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2929,6 +3051,8 @@
     "mcp.server.lowlevel.server.Server.request_handlers"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -2972,6 +3096,8 @@
     "mcp.server.lowlevel.server.Server.set_logging_level"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3015,6 +3141,8 @@
     "mcp.server.lowlevel.server.Server.subscribe_resource"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3058,6 +3186,8 @@
     "mcp.server.lowlevel.server.Server.unsubscribe_resource"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3099,6 +3229,8 @@
     "mcp.server.lowlevel.server.StructuredContent"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3140,6 +3272,8 @@
     "mcp.server.lowlevel.server.UnstructuredContent"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3181,6 +3315,8 @@
     "mcp.server.lowlevel.server.request_ctx"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3222,6 +3358,8 @@
     "mcp.server.session.InitializationState"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3263,6 +3401,8 @@
     "mcp.server.session.ServerRequestResponder"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3305,6 +3445,8 @@
     "mcp.server.session.ServerSession.__aenter__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3347,6 +3489,8 @@
     "mcp.server.session.ServerSession.__aexit__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3389,6 +3533,8 @@
     "mcp.server.session.ServerSession.experimental"
    ],
    "hint_source": "docstring",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3431,6 +3577,8 @@
     "mcp.server.session.ServerSession.incoming_messages"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3473,6 +3621,8 @@
     "mcp.server.session.ServerSession.send_message"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3514,6 +3664,8 @@
     "mcp.server.websocket"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3555,6 +3707,8 @@
     "mcp.shared.auth.OAuthClientMetadata.validate_redirect_uri"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3596,6 +3750,8 @@
     "mcp.shared.auth.OAuthClientMetadata.validate_scope"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3637,6 +3793,8 @@
     "mcp.shared.context.RequestContext"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3679,6 +3837,8 @@
     "mcp.shared.exceptions.McpError"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": {
     "compared": "class",
     "kept": 1,
@@ -3725,6 +3885,8 @@
     "mcp.shared.experimental"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3766,6 +3928,8 @@
     "mcp.shared.memory.create_connected_server_and_client_session"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3807,6 +3971,8 @@
     "mcp.shared.progress"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3848,6 +4014,8 @@
     "mcp.shared.response_router"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3889,6 +4057,8 @@
     "mcp.shared.session"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3930,6 +4100,8 @@
     "mcp.shared.version"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -3973,6 +4145,8 @@
     "mcp.client.auth.extensions.client_credentials.ClientCredentialsOAuthProvider.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4016,6 +4190,8 @@
     "mcp.client.auth.extensions.client_credentials.PrivateKeyJWTOAuthProvider.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4058,6 +4234,8 @@
     "mcp.client.auth.oauth2.OAuthClientProvider.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4099,6 +4277,8 @@
     "mcp.client.auth.oauth2.OAuthContext.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4142,6 +4322,8 @@
     "mcp.client.session.ClientSession.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4185,6 +4367,8 @@
     "mcp.client.session.ClientSession.list_prompts"
    ],
    "hint_source": "docstring",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4230,6 +4414,8 @@
     "mcp.client.session.ClientSession.list_resource_templates"
    ],
    "hint_source": "docstring",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4275,6 +4461,8 @@
     "mcp.client.session.ClientSession.list_resources"
    ],
    "hint_source": "docstring",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4320,6 +4508,8 @@
     "mcp.client.session.ClientSession.list_tools"
    ],
    "hint_source": "docstring",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4372,6 +4562,8 @@
     "mcp.shared.session.BaseSession.send_notification"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4414,6 +4606,8 @@
     "mcp.client.session_group.ClientSessionGroup.call_tool"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4455,6 +4649,8 @@
     "mcp.client.streamable_http.RequestContext.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4496,6 +4692,8 @@
     "mcp.client.streamable_http.RequestContext.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4537,6 +4735,8 @@
     "mcp.client.streamable_http.StreamableHTTPTransport.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4578,6 +4778,8 @@
     "mcp.client.streamable_http.StreamableHTTPTransport.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4619,6 +4821,8 @@
     "mcp.client.streamable_http.StreamableHTTPTransport.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4660,6 +4864,8 @@
     "mcp.client.streamable_http.StreamableHTTPTransport.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4702,6 +4908,8 @@
     "mcp.os.win32.utilities.terminate_windows_process_tree"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4745,6 +4953,8 @@
     "mcp.server.lowlevel.server.Server.run"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4787,6 +4997,8 @@
     "mcp.server.session.ServerSession.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4829,6 +5041,8 @@
     "mcp.server.session.ServerSession.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4871,6 +5085,8 @@
     "mcp.server.session.ServerSession.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4913,6 +5129,8 @@
     "mcp.server.session.ServerSession.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -4957,6 +5175,8 @@
     "mcp.server.session.ServerSession.elicit"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5001,6 +5221,8 @@
     "mcp.server.session.ServerSession.elicit_form"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5042,6 +5264,8 @@
     "mcp.server.auth.handlers.token.TokenRequest"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5085,6 +5309,8 @@
     "mcp.client.session.ClientSession.send_progress_notification"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5128,6 +5354,8 @@
     "mcp.client.session.ClientSession.send_roots_list_changed"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5171,6 +5399,8 @@
     "mcp.client.session.ClientSession.set_logging_level"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5214,6 +5444,8 @@
     "mcp.client.session.ClientSession.subscribe_resource"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5259,6 +5491,8 @@
     "mcp.client.session.ClientSession.unsubscribe_resource"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5308,6 +5542,8 @@
     "mcp.server.lowlevel.server.Server.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5352,6 +5588,8 @@
     "mcp.server.session.ServerSession.create_message"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5394,6 +5632,8 @@
     "mcp.server.session.ServerSession.list_roots"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -5436,6 +5676,8 @@
     "mcp.server.session.ServerSession.send_log_message"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,

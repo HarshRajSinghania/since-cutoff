@@ -41,6 +41,7 @@ from since_cutoff.apidiff import (
     keyword_parameters,
     load_api,
     receiver_map,
+    running_python,
 )
 from since_cutoff.cache import DiskCache, stable_hash
 from since_cutoff.errors import PackageIndexError
@@ -196,7 +197,7 @@ BUILTIN_MEMBERS = frozenset(
     if not name.startswith("_")
 )
 
-# How the project's code uses a changed API (form): as the release at the cutoff allowed and
+# How the project's code uses a changed API (form): as the comparison release allowed and
 # the pinned one no longer does, or only uses the API (the line is fine today, but an assistant
 # editing it may add the old form). A static name match: nothing is run.
 OLD_FORM = "old_form"
@@ -350,6 +351,7 @@ def collapse(changes: Iterable[APIChange]) -> list[APIChange]:
                 rep.alias_of = c.alias_of
                 if not rep.hint and c.hint:
                     rep.hint, rep.hint_source, rep.hint_file = c.hint, c.hint_source, c.hint_file
+                    rep.hint_from, rep.template_hint = c.hint_from, c.template_hint
                     rep.library_names = list(c.library_names or [])
         merged[key] += _merged(c)
     _merge_aliases(firsts, merged)
@@ -1121,10 +1123,11 @@ def type_project(
     keeps the files as the scan read them.
 
     The releases read are those whose source tree the scan has: every package newer than its
-    release at the cutoff (the diff read its pinned tree), and a package the model knows whose
+    comparison release (the diff read its pinned tree), and a package the model knows whose
     pinned tree an earlier run left in the cache (nothing is downloaded for this). Each tree's
-    :func:`apidiff.receiver_map` is kept in ``store`` per release and griffe. A tree griffe
-    cannot read types nothing.
+    :func:`apidiff.receiver_map` is kept in ``store`` per release and griffe, and per Python
+    when the running one could not parse all of the tree. A tree griffe cannot read types
+    nothing.
 
     The names kept for the name-only tier (FileUse.loose; :data:`NAME_ONLY`) are the member
     names that are one changed API's in all the changed packages the code imports or reaches
@@ -1143,14 +1146,20 @@ def type_project(
             key = stable_hash(
                 "receivers", RECEIVERS_SCHEMA, griffe_version(), s.name, s.locked, import_name
             )
+            # A map made of sources the running Python could not all parse is kept for that
+            # Python only: a newer one reads more (numpy 2.5's stub on Python 3.10 gave {}).
+            for_python = stable_hash(key, "python", running_python())
             found = store.get("receivers", key)
             if found is None:
+                found = store.get("receivers", for_python)
+            if found is None:
+                unparsed: list[tuple[str, SyntaxError]] = []
                 try:
-                    found = receiver_map(load_api(import_name, tree.root))
+                    found = receiver_map(load_api(import_name, tree.root, unparsed=unparsed))
                 except Exception as exc:  # griffe fails in many ways on unusual code
                     log.debug("cannot type from %s %s: %s", s.name, s.locked, exc)
                     found = {}
-                store.set("receivers", key, found)
+                store.set("receivers", for_python if unparsed else key, found)
             if isinstance(found, dict) and found:
                 maps.append(found)
     api = ApiTypes(maps)

@@ -75,7 +75,8 @@ corte: los modelos conocen peor las semanas anteriores a su fecha de corte):
 
 ```console
 $ uvx since-cutoff scan --model anthropic:claude-sonnet-4-5
-Your code uses 2 APIs that changed after claude-sonnet-4-5's training cutoff (2025-07-31)
+Your code uses 2 APIs that changed after 2025-07-01, 30 days before claude-sonnet-4-5's training
+  cutoff (2025-07-31)
 
 huggingface-hub 0.33.1 -> 2.0.0 (0.33.1 was the latest release 30 days before the cutoff;
   pyproject.toml pins 2.0.0)
@@ -111,7 +112,7 @@ diff). Para el proyecto de ejemplo, el bloque termina así:
 - `Messages.create()` no longer accepts `temperature`, `top_k` or `top_p` as keyword arguments. If the API still needs them, pass them through its `extra_body` argument. [diff]
 
 **huggingface-hub 2.0.0** (compared from 0.33.1)
-- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases (2.0.0). [diff]
+- `huggingface_hub.hf_hub_download()` no longer accepts `proxies`, `force_filename`, `local_dir_use_symlinks` or `resume_download`; do not pass them. huggingface-hub's deprecation text says there is no replacement for `force_filename`, `local_dir_use_symlinks` or `resume_download`. For `proxies`, see https://github.com/huggingface/huggingface_hub/releases for the changes since 0.33.1. [diff]
 <!-- since-cutoff:end -->
 ```
 
@@ -184,16 +185,19 @@ julio de 2025) en el [proyecto de ejemplo](https://github.com/MohammadHijjawi97/
 que fija seis de sus nueve dependencias en las versiones actuales (para las otras tres, que no
 están fijadas, la herramienta usa la versión más reciente):
 
-| biblioteca | versión en la fecha de corte | versión fijada | qué cambió |
+| biblioteca | versión de comparación | versión fijada | qué cambió |
 |---|---|---|---|
-| anthropic | 0.60.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` ya no se acepta |
-| huggingface-hub | 0.34.3 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)`: parámetros que salieron de la firma en la 1.0 (la 2.0.0 aún los acepta en tiempo de ejecución, los ignora y emite un aviso) |
-| langchain-core | 0.3.72 | 1.6.5 | se eliminaron `retriever.get_relevant_documents()` y `llm.predict()` |
-| openai | 1.98.0 | 3.19.2 | 19 cambios incompatibles, 6 obsolescencias nuevas (+3 internas) |
+| anthropic | 0.56.0 | 1.8.0 | `messages.create(temperature=..., top_p=..., top_k=...)` ya no se acepta |
+| huggingface-hub | 0.33.1 | 2.0.0 | `hf_hub_download(resume_download=..., force_filename=..., local_dir_use_symlinks=...)`: parámetros que salieron de la firma en la 1.0 (la 2.0.0 aún los acepta en tiempo de ejecución, los ignora y emite un aviso) |
+| langchain-core | 0.3.67 | 1.6.5 | se eliminaron `retriever.get_relevant_documents()` y `llm.predict()` |
+| openai | 1.93.0 | 3.19.2 | 24 cambios incompatibles, 6 obsolescencias nuevas (+5 internas) |
 
-En ese proyecto, 7 de las 9 dependencias cambiaron su API pública después de la fecha de corte.
-El diff estático señala 257 cambios incompatibles y 23 obsolescencias nuevas en API públicas, y
-71 cambios en API internas; el código del proyecto usa 2 de las API modificadas.
+Cada biblioteca se compara desde su última versión publicada al menos 30 días antes de la fecha
+de corte (el margen por defecto del análisis), así que un cambio puede ser de las últimas
+semanas antes de la fecha de corte. En ese proyecto, 7 de las 9 dependencias cambiaron su API
+pública desde esa versión. El diff estático señala 331 cambios incompatibles y 24
+obsolescencias nuevas en API públicas, y 139 cambios en API internas; el código del proyecto
+usa 2 de las API modificadas.
 
 No es cosa de un modelo ni de un proveedor. En 36 bibliotecas de IA de Python muy usadas y 21
 modelos de OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, Moonshot y Mistral, incluso el modelo
@@ -247,7 +251,7 @@ uvx --with basedpyright since-cutoff run
 
 Lo que muestra `scan` para el proyecto de ejemplo, completo:
 
-<p align="center"><img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/scan.svg" width="100%" alt="since-cutoff scan --model anthropic:claude-sonnet-4-5 en el proyecto de ejemplo. Tu código usa 2 API que cambiaron después de la fecha de corte de entrenamiento de claude-sonnet-4-5 (2025-07-31). huggingface-hub 0.33.1 -> 2.0.0: hf_hub_download, usada en app/main.py, ya no tiene force_filename, local_dir_use_symlinks, resume_download ni proxies en su firma; su nota lleva la etiqueta [diff], y una línea Runtime dice que el código fuente de la 2.0.0 todavía los gestiona, así que las llamadas que los pasan pueden ejecutarse con un aviso. anthropic 0.56.0 -> 1.8.0: Messages.create, llamada en app/main.py, ya no acepta temperature, top_k ni top_p; su nota lleva la etiqueta [diff]. 2 notas listas para AGENTS.md; qué significan uses this API y [diff]; otros 348 cambios en 7 paquetes que el código no usa, y 139 cambios en API internas."></p>
+<p align="center"><img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/scan.svg" width="100%" alt="since-cutoff scan --model anthropic:claude-sonnet-4-5 en el proyecto de ejemplo. Tu código usa 2 API que cambiaron después del 2025-07-01, 30 días antes de la fecha de corte de entrenamiento de claude-sonnet-4-5 (2025-07-31). huggingface-hub 0.33.1 -> 2.0.0: hf_hub_download, usada en app/main.py, ya no tiene force_filename, local_dir_use_symlinks, resume_download ni proxies en su firma; su nota lleva la etiqueta [diff], y una línea Runtime dice que el código fuente de la 2.0.0 todavía los gestiona, así que las llamadas que los pasan pueden ejecutarse con un aviso. anthropic 0.56.0 -> 1.8.0: Messages.create, llamada en app/main.py, ya no acepta temperature, top_k ni top_p; su nota lleva la etiqueta [diff]. 2 notas listas para AGENTS.md; qué significan uses this API y [diff]; otros 348 cambios en 7 paquetes que el código no usa, y 139 cambios en API internas."></p>
 
 Las dos API aparecen como «uses this API»; un archivo que pasara `resume_download=True` o
 `temperature=0.2` las convertiría en «old form». `scan -v` lista todos los archivos que usan una
@@ -291,7 +295,8 @@ y su fecha de modificación.
 
 Si el bloque se editó a mano, `sync` y `sync --check` muestran el diff, no escriben nada y salen
 con el código 4; `sync --force` lo sustituye. Si no se puede comprobar un paquete del que tratan
-las notas (PyPI inaccesible), `sync` no escribe nada y sale con el código 1.
+las notas (PyPI inaccesible, o fuentes que el Python que lo ejecuta no sabe analizar), `sync`
+no escribe nada y sale con el código 1.
 
 `sync --json` requiere `--yes`, `--check` o `--dry-run`; sin uno de ellos sale con el código 2 sin
 preguntar. La salida estándar contiene solo JSON, y queda vacía cuando sync falla (un error de
@@ -328,15 +333,19 @@ Más opciones:
 
 Claude Code lee CLAUDE.md, y solo lee AGENTS.md cuando no hay CLAUDE.md o cuando CLAUDE.md lo
 importa con una línea `@AGENTS.md` ([documentación sobre la memoria](https://code.claude.com/docs/en/memory),
-en inglés); Codex, Cursor y Copilot leen AGENTS.md. Con ambos archivos y todavía sin bloque,
-las notas van solo a AGENTS.md cuando CLAUDE.md lo importa, y a los dos archivos cuando no
-([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)); `scan`, `sync` y
-`status` indican entonces cómo quedarse con una sola copia: añade la línea `@AGENTS.md` a
-CLAUDE.md y ejecuta `since-cutoff unapply --target CLAUDE.md`. Un bloque que ya está solo en
-AGENTS.md se queda ahí, y lo avisan cuando CLAUDE.md no lo importa. Cuando los dos archivos
-tienen un bloque y CLAUDE.md pasa a importar AGENTS.md, avisan de que CLAUDE.md tiene una
-segunda copia, con el mismo comando `unapply`. Un `@AGENTS.md` dentro de código en línea o
-de un bloque de código no es una importación.
+en inglés); Codex, Cursor y Copilot leen AGENTS.md; Gemini CLI lee GEMINI.md, y AGENTS.md solo
+cuando `context.fileName` de su settings.json lo incluye
+(`"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}`; [documentación de
+GEMINI.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md), en
+inglés). Con ambos archivos y todavía sin bloque, las notas van solo a AGENTS.md cuando CLAUDE.md
+lo importa, y a los dos archivos cuando no
+([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)); `scan`, `sync` y `status`
+indican entonces cómo quedarse con una sola copia: añade la línea `@AGENTS.md` a CLAUDE.md y
+ejecuta `since-cutoff unapply --target CLAUDE.md`. Un bloque que ya está solo en AGENTS.md se
+queda ahí, y lo avisan cuando CLAUDE.md no lo importa. Cuando los dos archivos tienen un bloque y
+CLAUDE.md pasa a importar AGENTS.md, avisan de que CLAUDE.md tiene una segunda copia, con el mismo
+comando `unapply`. Un `@AGENTS.md` dentro de código en línea o de un bloque de código no es una
+importación.
 
 ### Medir tu modelo
 
@@ -491,7 +500,7 @@ y [PRIVACY.md](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/PRIVA
 **¿Por qué algunas notas dicen «since-cutoff found no replacement»?** Una nota nombra un
 sustituto solo cuando el texto de obsolescencia de la propia biblioteca lo indica y ese nombre
 existe en tu versión fijada (etiqueta `[diff + library]`). Si no, la nota describe el cambio y
-remite al registro de cambios del paquete con la versión fijada (la URL «Changelog» de sus
+remite al registro de cambios del paquete para los cambios desde la versión de comparación (la URL «Changelog» de sus
 metadatos en PyPI, o si no su página de versiones en GitHub) o, cuando PyPI no indica ninguna
 de las dos, dice que no se encontró ningún sustituto: un sustituto adivinado, que el agente después sigue, es
 peor que ninguno. Los nombres de la versión fijada que solo se parecen a lo eliminado se
@@ -504,12 +513,13 @@ porque un parámetro de la petición que salió de la firma puede seguir siendo 
 archivo; en los dos cuando CLAUDE.md no importa AGENTS.md
 ([#13](https://github.com/MohammadHijjawi97/since-cutoff/issues/13)); y en el que ya tenga un
 bloque (`--target` indica cualquier archivo). Claude Code lee CLAUDE.md, y AGENTS.md solo
-cuando CLAUDE.md lo importa con una línea `@AGENTS.md`; Codex, Cursor y Copilot leen
-AGENTS.md. Para tener una sola copia, añade `@AGENTS.md` a CLAUDE.md y ejecuta
-`since-cutoff unapply --target CLAUDE.md`; `scan`, `sync` y `status` lo avisan mientras los
-dos archivos tengan el bloque, y avisan cuando un bloque solo en AGENTS.md no se importa. A
-partir de entonces `sync` actualiza cada archivo que tenga un bloque, y `status` informa de
-cada uno.
+cuando CLAUDE.md lo importa con una línea `@AGENTS.md`; Codex, Cursor y Copilot leen AGENTS.md;
+Gemini CLI lee GEMINI.md, y AGENTS.md solo cuando `context.fileName` de su settings.json lo
+incluye (`"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}`). Para tener una sola copia, añade
+`@AGENTS.md` a CLAUDE.md y ejecuta `since-cutoff unapply --target CLAUDE.md`; `scan`, `sync` y
+`status` lo avisan mientras los dos archivos tengan el bloque, y avisan cuando un bloque solo en
+AGENTS.md no se importa. A partir de entonces `sync` actualiza cada archivo que tenga un bloque, y
+`status` informa de cada uno.
 
 **¿Cuánto cuestan las notas en tokens?** El agente lee el bloque en cada turno. Para el proyecto
 de ejemplo ocupa unos 410 tokens, de los cuales las dos notas son unos 140; el resto es la
@@ -746,12 +756,12 @@ Lo que devuelve `api_changes("huggingface-hub", model="claude-haiku-4-5", to_ver
 (salida real, recortada):
 
 ```markdown
-# huggingface-hub 0.29.1 -> 2.0.0
+# huggingface-hub 0.28.0 -> 2.0.0
 
-- From 0.29.1 (2025-02-20): the newest release on or before 2025-02-28 (training cutoff of claude-haiku-4-5, from models.dev)
+- From 0.28.0 (2025-01-28): the newest release on or before 2025-01-29, 30 days before the cutoff 2025-02-28 (training cutoff of claude-haiku-4-5, from models.dev)
 - To 2.0.0 (2026-09-24): as requested
 - Warning: huggingface-hub 2.0.0: huggingface_hub.hf_file_system.HfFileSystemFile inherits from fsspec.spec.AbstractBufferedFile, which since-cutoff did not read; the attributes it sets are not compared
-- 98 breaking changes, 0 new deprecations (dependencies switched 1, removed or moved 45, parameters removed 43, parameters now required 7, changed kind 1, now keyword-only or positional-only 1, +8 internal)
+- 104 breaking changes, 0 new deprecations (dependencies switched 1, removed or moved 49, parameters removed 45, parameters now required 7, changed kind 1, now keyword-only or positional-only 1, +8 internal)
 
 ## Dependencies switched
 
@@ -769,7 +779,7 @@ Lo que devuelve `api_changes("huggingface-hub", model="claude-haiku-4-5", to_ver
 - `huggingface_hub.snapshot_download(proxies=...)`: parameter `proxies` was removed; 2.0.0's source still handles `proxies` (huggingface_hub/utils/_validators.py:178), so calls passing it may run with a warning; type checkers reject it
 ...
 
-Not listed: 58 breaking changes, 0 new deprecations (removed or moved 30, parameters removed 28). Narrow with symbol="..." or raise limit.
+Not listed: 64 breaking changes, 0 new deprecations (removed or moved 34, parameters removed 30). Narrow with symbol="..." or raise limit.
 ```
 
 Con `symbol="hf_hub_download"` solo lista los 8 cambios de esa función (`resume_download=`,
@@ -817,7 +827,7 @@ modificada.
 | `only`, `exclude` | | nombres de PyPI separados por comas |
 | `cutoff` | | sustituye la fecha de corte de entrenamiento (`YYYY-MM` o `YYYY-MM-DD`) |
 | `cutoff-margin` | | compara desde la última versión publicada este número de días antes de la fecha de corte (el valor por defecto de since-cutoff es 30; `0` compara desde la propia fecha de corte) |
-| `fail-on-changes` | `false` | hace fallar el paso cuando una dependencia cambió su API después de la fecha de corte |
+| `fail-on-changes` | `false` | hace fallar el paso cuando una dependencia cambió su API desde la versión con la que se compara (por defecto, la última publicada 30 días antes de la fecha de corte) |
 | `check-notes` | `false` | ejecuta también `since-cutoff sync --check`, que no escribe nada, y hace fallar el trabajo cuando las notas de AGENTS.md / CLAUDE.md están desactualizadas o el bloque se editó a mano; las notas conservan el modelo para el que se escribieron, y `model` (y `cutoff`) sirven para un proyecto que aún no tiene bloque |
 | `step-summary` | `true` | añade el resumen en Markdown al resumen del trabajo |
 | `cache` | `true` | conserva entre ejecuciones los metadatos de PyPI, el código fuente de los paquetes y los diffs de API (también cuando `fail-on-changes` hace fallar el trabajo) |
@@ -884,10 +894,12 @@ de salida:
   respuesta del modelo, o `sync` no pudo comprobar un paquete del que tratan sus notas);
 - `2` error de uso;
 - `3` una comprobación falló: `scan --fail-on changes`, `used` u `old-form` (una dependencia
-  cambió su API después de la fecha de corte, tu código usa una API modificada o la usa en la
-  forma antigua; `--fail-on-changes` equivale a `--fail-on changes`), `run --fail-on-stale` (se
-  detectó uso de API desactualizadas) o notas desactualizadas con `sync --check` o `status` (y
-  con `sync`, cuando no las escribió);
+  cambió su API desde la versión con la que se compara, por defecto la última publicada 30 días
+  antes de la fecha de corte; tu código usa una API modificada o la usa en la forma antigua;
+  `--fail-on-changes` equivale a `--fail-on changes`; con cualquiera de ellos, también una
+  dependencia cuyas fuentes el Python que lo ejecuta no sabe analizar), `run --fail-on-stale`
+  (se detectó uso de API desactualizadas) o notas desactualizadas con `sync --check` o `status`
+  (y con `sync`, cuando no las escribió);
 - `4` `sync`: el bloque se editó a mano y no se escribió nada sin `--force`;
 - `141` la salida se cerró antes de tiempo (por ejemplo, al pasarla por una tubería a `head`).
 
@@ -902,7 +914,7 @@ modelo:
 
 <p align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works-dark.es.svg">
-  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.es.svg" width="640" alt="Tres etapas. Análisis (scan), sin llamadas al modelo: el lockfile da tus versiones exactas, después se busca la versión publicada en la fecha de corte del modelo y se hace un diff estático de la API con griffe. Sondeo: tareas breves que requieren el cambio, el modelo responde de memoria y basedpyright comprueba la respuesta con ambas versiones. Escribir y probar las notas: una nota escrita por el modelo solo se conserva si su ejemplo pasa la verificación de tipos; si no, se usa una descripción del cambio tomada del diff de la API. Las tareas reservadas se responden sin las notas y con ellas, y --apply escribe un bloque en AGENTS.md.">
+  <img src="https://raw.githubusercontent.com/MohammadHijjawi97/since-cutoff/main/docs/img/how-it-works.es.svg" width="640" alt="Tres etapas. Análisis (scan), sin llamadas al modelo: el lockfile da tus versiones exactas, después se busca la última versión publicada al menos 30 días antes de la fecha de corte del modelo y se hace un diff estático de la API con griffe. Sondeo: tareas breves que requieren el cambio, el modelo responde de memoria y basedpyright comprueba la respuesta con ambas versiones. Escribir y probar las notas: una nota escrita por el modelo solo se conserva si su ejemplo pasa la verificación de tipos; si no, se usa una descripción del cambio tomada del diff de la API. Las tareas reservadas se responden sin las notas y con ellas, y --apply escribe un bloque en AGENTS.md.">
 </picture></p>
 
 | resultado | significado |
@@ -940,10 +952,10 @@ dice qué se comprobó, y no se afirma nada más:
 
 | etiqueta | qué se comprobó | qué no |
 |---|---|---|
-| `[diff]` | El cambio aparece en una comparación estática (griffe) de las API públicas de dos versiones: la más reciente publicada al menos 30 días antes de la fecha de corte de entrenamiento del modelo (por defecto), y la versión que fija tu proyecto. El código fuente se lee, no se importa. Con `[diff]` solo, no se nombra ningún sustituto: la nota dice lo que dice el propio texto de obsolescencia de la biblioteca («there is no replacement for `resume_download`», no hay sustituto), o remite al registro de cambios del paquete (la URL «Changelog» de sus metadatos en PyPI, o si no su página de versiones en GitHub) con la versión fijada, o, cuando PyPI no indica ninguna de las dos, dice que since-cutoff no encontró ninguno en ese texto. | El comportamiento, y si una llamada sigue funcionando: la versión fijada puede seguir aceptando un parámetro eliminado con un aviso, como hace huggingface-hub 2.0.0 con `resume_download`. La terminal, report.md, las herramientas MCP y el JSON añaden una línea «Runtime:» cuando el código fuente fijado todavía gestiona uno; el bloque no, porque el consejo es el mismo. Si tu modelo se equivoca con él. |
+| `[diff]` | El cambio aparece en una comparación estática (griffe) de las API públicas de dos versiones: la más reciente publicada al menos 30 días antes de la fecha de corte de entrenamiento del modelo (por defecto), y la versión que fija tu proyecto. El código fuente se lee, no se importa. Con `[diff]` solo, no se nombra ningún sustituto: la nota dice lo que dice el propio texto de obsolescencia de la biblioteca («there is no replacement for `resume_download`», no hay sustituto), o remite al registro de cambios del paquete (la URL «Changelog» de sus metadatos en PyPI, o si no su página de versiones en GitHub) para los cambios desde la versión de comparación, o, cuando PyPI no indica ninguna de las dos, dice que since-cutoff no encontró ninguno en ese texto. | El comportamiento, y si una llamada sigue funcionando: la versión fijada puede seguir aceptando un parámetro eliminado con un aviso, como hace huggingface-hub 2.0.0 con `resume_download`. La terminal, report.md, las herramientas MCP y el JSON añaden una línea «Runtime:» cuando el código fuente fijado todavía gestiona uno; el bloque no, porque el consejo es el mismo. Si tu modelo se equivoca con él. |
 | `[diff + library]` | Como `[diff]`, y el propio texto de obsolescencia de la biblioteca (un docstring, la entrada de un parámetro en el docstring, un mensaje de `@deprecated` o un texto de `warnings.warn`, en la versión anterior o, para una obsolescencia, en la fijada) indica el sustituto («Use `stop` instead»), y ese nombre existe en tu versión fijada. Un texto que solo menciona un nombre como consejo se cita bajo `[diff]`; no se toma como sustituto. | Que el sustituto se comporte igual. |
 | `[diff + move checked]` | Como `[diff]`, y el objeto en la nueva ruta es el mismo objeto hasta donde se puede contar: una clase o un módulo conserva al menos la mitad de los nombres públicos del anterior, una función conserva sus parámetros, un valor es el mismo. | El comportamiento. |
-| `[diff + metadata]` | El Requires-Dist de la versión anterior (el METADATA de su wheel) incluye una biblioteca que la versión fijada ya no incluye, y los lugares de la API pública que nombraban tipos de esa biblioteca (parámetros, tipos de retorno, atributos, clases base, reexportaciones) nombran tipos de otra biblioteca que la versión fijada requiere, o de una copia de la anterior que incluye, sin que quede ninguno de la anterior: openai 3.x, anthropic 1.8, huggingface-hub 2.0 y mcp 2.2 aceptan objetos de `httpx2` donde aceptaban objetos de `httpx`. `[metadata]` solo marca la única viñeta de un paquete publicado por primera vez después de la fecha de corte (o dentro del margen anterior a ella) que tu código importa: no hay ninguna versión con la que comparar, así que la nota da la fecha de su primera versión, su resumen en PyPI y la URL de su registro de cambios. | El comportamiento: si la versión fijada todavía acepta objetos de la biblioteca anterior (openai 3 convierte algunos, anthropic 1.8 lanza `TypeError`, según su código fuente). La terminal, report.md, las herramientas MCP y el JSON añaden una línea «Installed:» (si tu proyecto, incluido su entorno virtual, todavía tiene la biblioteca anterior) y una línea «Runtime:» que señala dónde el código fuente fijado todavía la nombra. |
+| `[diff + metadata]` | El Requires-Dist de la versión anterior (el METADATA de su wheel) incluye una biblioteca que la versión fijada ya no incluye, y los lugares de la API pública que nombraban tipos de esa biblioteca (parámetros, tipos de retorno, atributos, clases base, reexportaciones) nombran tipos de otra biblioteca que la versión fijada requiere, o de una copia de la anterior que incluye, sin que quede ninguno de la anterior: openai 3.x, anthropic 1.8, huggingface-hub 2.0 y mcp 2.2 aceptan objetos de `httpx2` donde aceptaban objetos de `httpx`. `[metadata]` solo marca la única viñeta de un paquete publicado por primera vez después de la fecha de corte (o dentro del margen anterior a ella), o cuya versión de comparación era una versión vacía que solo reservaba el nombre (zensical 0.0.0), que tu código importa: no hay ninguna versión con API con la que comparar, así que la nota da la fecha de su primera versión (o el número de esa versión vacía), su resumen en PyPI y la URL de su registro de cambios. | El comportamiento: si la versión fijada todavía acepta objetos de la biblioteca anterior (openai 3 convierte algunos, anthropic 1.8 lanza `TypeError`, según su código fuente). La terminal, report.md, las herramientas MCP y el JSON añaden una línea «Installed:» (si tu proyecto, incluido su entorno virtual, todavía tiene la biblioteca anterior) y una línea «Runtime:» que señala dónde el código fuente fijado todavía la nombra. |
 | `[diff; probable rename]` | Un parámetro en la misma posición y con la misma anotación tiene un nombre nuevo, y ninguna nota de versión del docstring de la versión fijada (`.. versionadded::`, `.. versionchanged::`) dice que uno se añadió o que el otro se eliminó. Una suposición, señalada como tal. | Que sea el mismo parámetro. |
 | `[type-checked]` | La escribió un modelo durante `since-cutoff run` y se conservó porque su ejemplo pasó la comprobación de tipos descrita abajo. | El comportamiento; que la explicación de la viñeta sea cierta más allá de los nombres que muestra. |
 | `[not confirmed]` | Solo con `sync --suggestions`: nombres de la versión fijada que se parecen a lo que se eliminó (la etiqueta de la viñeta es entonces `[diff; not confirmed]`). | Que alguno de ellos lo sustituya. |
@@ -1040,6 +1052,11 @@ La [referencia](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs
   `__getattr__`, pero `run` no los sondea.
 - El diff cubre la API pública: se omiten los nombres `_private`, así como los conjuntos de pruebas,
   los benchmarks y los ejemplos que se distribuyen dentro de un paquete.
+- Las fuentes las analiza el Python que ejecuta since-cutoff, que no sabe leer la sintaxis de
+  una versión más reciente: con Python 3.10, numpy 2.5 (instrucciones `type` de la PEP 695 en su
+  stub) no se puede comprobar. El escaneo lo dice, con el Python que sí puede («run since-cutoff
+  with Python 3.12 or later to check it»), y `--fail-on` falla por ello. Ejecuta since-cutoff
+  con el Python de tu proyecto, o con uno más reciente.
 - «Your code uses» (tu código usa) es una coincidencia estática, archivo por archivo:
   importaciones (incluidos los nombres reexportados), llamadas, lecturas de atributos y argumentos
   por nombre; el receptor de una llamada a un método se tipa a partir de las anotaciones del propio
@@ -1051,8 +1068,10 @@ La [referencia](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs
   de un tipo integrado o de la biblioteca estándar: esa coincidencia `[name match]` no aparece
   en ningún informe, ni en las notas, ni en `--fail-on` ni en `--annotate` salvo que se indique
   `--include-name-matches` (`include_name_matches` por MCP), porque la mayoría son un método
-  homónimo de otra biblioteca. Un parámetro que pasó a ser obligatorio, solo por nombre o
-  solo posicional aparece siempre como «uses this API», nunca como «old form», por ahora.
+  homónimo de otra biblioteca; `scan`, `sync` y `project_changes` dicen cuántos usos ocultaron
+  (`name_matches_hidden` en results.json). Un parámetro que pasó a ser obligatorio, solo por
+  nombre o solo posicional aparece siempre como «uses this API», nunca como «old form», por
+  ahora.
 - Una nota solo nombra un sustituto cuando el propio texto de obsolescencia de la biblioteca lo
   indica. Los consejos que solo están en una guía de migración (el
   [MIGRATION.md](https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md) de

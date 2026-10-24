@@ -437,7 +437,7 @@ def test_full_run_measures_fixes_and_verifies(tmp_path, cache, fake_pypi):
     assert to_json(scan, run)["attempts"]
     # A run's dependency table has the probe columns after the counts.
     assert (
-        "| package | you use | at cutoff | status | breaking | deprecated | probed | stale | wrong |"
+        "| package | you use | compared from | status | breaking | deprecated | probed | stale | wrong |"
         "\n|---|---|---|---|---:|---:|---:|---:|---:|\n"
         "| toylib | 2.0 (2025-10-01) | 1.0 | API changed, imported by your code | 5 | 1 | 5 | 3 |  |"
     ) in md

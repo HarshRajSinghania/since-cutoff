@@ -363,7 +363,7 @@ def test_packages_are_ordered_by_the_breaking_changes_the_table_shows(
     assert [c.strip() for c in rows["quietlib"]] == ["0", "1"]  # never a blank cell
 
     report = render_markdown(scan)
-    assert "| package | you use | at cutoff | status | breaking | deprecated |\n" in report
+    assert "| package | you use | compared from | status | breaking | deprecated |\n" in report
     assert "| quietlib | 2.0 (2025-10-01) | 1.0 | API changed | 0 | 1 |" in report
     assert "probed" not in report  # a scan has no probes
 

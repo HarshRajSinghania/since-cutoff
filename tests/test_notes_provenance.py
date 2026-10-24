@@ -1069,7 +1069,11 @@ def test_report_and_console_show_the_notes_with_their_sources(app_scan) -> None:
     console = Console(width=200, record=True)
     render_scan(console, app_scan)  # each used API with its note under it
     text = console.export_text()
-    assert "Your code uses 3 APIs that changed after scripted-1's training cutoff" in text
+    # --cutoff gave the cutoff, not the model's listing; the comparison releases are older.
+    assert (
+        "Your code uses 3 APIs that changed after 2025-07-01, 30 days before the cutoff given "
+        "for scripted-1 (2025-07-31)" in text
+    )
     assert "    Note: `toylib.fetch()` now requires `timeout`. [diff]" in text
 
 
@@ -1113,7 +1117,10 @@ def test_cli_scan_prints_the_notes_and_json_has_them(
     argv = ["scan", str(root), "--model", "anthropic:claude-sonnet-4-5", "--cutoff", "2025-07-31"]
     assert cli.main(argv) == 0
     out = capsys.readouterr().out
-    assert "Your code uses 3 APIs that changed after claude-sonnet-4-5's training cutoff" in out
+    assert (
+        "Your code uses 3 APIs that changed after 2025-07-01, 30 days before the cutoff given "
+        "for claude-sonnet-4-5 (2025-07-31)" in " ".join(out.split())
+    )
     assert "    Note: `toylib.fetch()` now requires `timeout`. [diff]" in out
     assert cli.main([*argv, "--json"]) == 0
     data = json.loads(capsys.readouterr().out)

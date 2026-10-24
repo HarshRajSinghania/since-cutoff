@@ -80,10 +80,10 @@ def test_markdown_summary_lists_what_the_code_uses_first(tmp_path, cache, fake_p
         "Model `claude-sonnet-4-5`, training cutoff **2025-07-31**, comparing from releases up "
         "to **2025-07-01** (source: --cutoff)"
     ) in md
-    assert "- 1 of 1 dependency changed its API after the cutoff" in md
+    assert "- 1 of 1 dependency changed its API after 2025-07-01, 30 days before the cutoff" in md
     assert "- Static diff: 5 breaking changes, 1 new deprecation" in md
     # The same columns, in the same order, as the terminal table and report.md.
-    assert "| package | you use | at cutoff | status | breaking | deprecated |" in md
+    assert "| package | you use | compared from | status | breaking | deprecated |" in md
     assert (
         "| toylib | 2.0 (2025-10-01) | 1.0 (2025-01-10) | API changed, imported by your code | 5 | 1 |"
         in md
@@ -91,7 +91,8 @@ def test_markdown_summary_lists_what_the_code_uses_first(tmp_path, cache, fake_p
     # The APIs the code uses lead (tests/test_scan_first.py); each package's changes follow,
     # folded, those that hit the project's own code first: the call with the removed
     # parameter, then another change to the same method.
-    assert md.index("**Your code uses 1 API that changed after the cutoff**") < md.index("<details")
+    used = "**Your code uses 1 API that changed after 2025-07-01, 30 days before the cutoff**"
+    assert md.index(used) < md.index("<details")
     assert (
         "<details><summary><b>toylib</b> 1.0 -> 2.0: 5 breaking, 1 deprecated, "
         "2 touching names your code uses</summary>" in md
@@ -183,7 +184,7 @@ def test_console_headline_renders_in_full(tmp_path, cache, fake_pypi, width):
     lines = console.export_text().splitlines()
     assert all(len(line) <= width for line in lines)  # wrapped, never cropped at the edge
     body = " ".join(line.strip("│ ") for line in lines if line.startswith("│"))
-    assert "1 of 1 dependency changed its API after the cutoff" in body
+    assert "1 of 1 dependency changed its API after 2025-07-01, 30 days before the cutoff" in body
     assert "Static diff: 5 breaking changes, 1 new deprecation" in body
     assert "(" not in body and ")" not in body  # no parenthesis a wrap could split
     if width >= 80:  # room for the subtitle: it is not cut
@@ -272,7 +273,12 @@ def test_scan_with_only_a_cutoff_names_no_model(tmp_path, capsys, fake_cli, monk
         "Custom cutoff 2025-02-28, comparing from releases up to 2025-01-29 "
         "(from --cutoff; no model given)" in out
     )
-    assert "Your code uses 1 API that changed after the cutoff (2025-02-28)" in out
+    # Changed after the day the comparison releases were published by, which may be before
+    # the cutoff, not "after the cutoff".
+    assert (
+        "Your code uses 1 API that changed after 2025-01-29, 30 days before the cutoff "
+        "(2025-02-28)" in " ".join(out.split())
+    )
     assert cli.main([*argv, "--all"]) == 0  # 0.3's summary panel
     assert "since-cutoff · custom cutoff 2025-02-28" in capsys.readouterr().out
     assert "sonnet" not in out and "assuming" not in out

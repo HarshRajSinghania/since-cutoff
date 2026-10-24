@@ -56,8 +56,8 @@ from since_cutoff.apidiff import (
     DEPENDENCY_SWITCHED,
     DEPRECATED,
     DIFF_SCHEMA,
-    HINT_PARAM_DOC,
-    HINT_WARNING,
+    HINT_BORROWED,
+    HINT_LIMIT,
     KIND_CHANGED,
     KIND_PRIORITY,
     MOVED,
@@ -71,9 +71,10 @@ from since_cutoff.apidiff import (
     object_replacements,
     parameter_replacements,
     signature_parameters,
+    template_hint_of,
 )
 from since_cutoff.errors import SinceCutoffError
-from since_cutoff.models import DEFAULT_CUTOFF_MARGIN, compare_date
+from since_cutoff.models import DEFAULT_CUTOFF_MARGIN, compare_date, days_text
 
 BLOCK_START = "<!-- since-cutoff:start -->"
 BLOCK_END = "<!-- since-cutoff:end -->"
@@ -278,7 +279,8 @@ class Note:
         compared = f"{c.from_version} vs {c.to_version}, diff schema {DIFF_SCHEMA}"
         if c.kind == NEW_PACKAGE:
             change = (
-                f"the release list and metadata of {c.package} on PyPI: no release by the cutoff"
+                f"the release list and metadata of {c.package} on PyPI: no release by the day "
+                "compared from, or only an empty placeholder"
             )
         elif c.kind == DEPENDENCY_SWITCHED:
             change = (
@@ -476,11 +478,12 @@ def diff_note(
     to force a new download, use `force_download=True`") is quoted, and is not a replacement.
     What has none is said right after what it is about: "huggingface-hub's deprecation text
     says there is no replacement for `x`" where the library says so; else a pointer to where
-    the package documents its releases, "See <changelog> (2.0.0).", when ``changelog`` is
-    known (:func:`pypi.changelog_url`), else "since-cutoff found no replacement in its
-    deprecation text" (what was read: docstrings, deprecation decorators, warnings). A removed
-    parameter of an SDK method that still takes ``extra_body`` points there instead, and says
-    nothing more. Names that merely look similar go in ``not_confirmed``, never in the bullet,
+    the package documents its releases, "See <changelog> for the changes since 0.34.3." (the
+    comparison release: the diff does not say which later release made the change), when
+    ``changelog`` is known (:func:`pypi.changelog_url`), else "since-cutoff found no
+    replacement in its deprecation text" (what was read: docstrings, deprecation decorators,
+    warnings). A removed parameter of an SDK method that still takes ``extra_body`` points
+    there instead, and says nothing more. Names that merely look similar go in ``not_confirmed``, never in the bullet,
     unless ``suggestions`` asks for them (tagged ``[not confirmed]``); where the library says
     there is no replacement, they are dropped. ``lookup`` is only used for a change from a diff
     older than DIFF_SCHEMA 13, which did not record the names its library's text gives.
@@ -732,7 +735,10 @@ def _replacement_sentences(
                 if quote:
                     sentences.append(f'{c.package} {c.to_version} says: "{quote}"')
             continue  # still works: nothing to replace yet
-        unnamed.append(what)
+        if not (found is not None and c.hint_source == HINT_BORROWED and not changelog):
+            # Not after another object's text, quoted: "found no replacement in its
+            # deprecation text" would read as contradicting what it names for that object.
+            unnamed.append(what)
         similar += [s for s in c.suggestions if s not in similar]
     if none_said:
         sentences.append(
@@ -744,8 +750,12 @@ def _replacement_sentences(
         some = _unique(unnamed) != _unique(items)
         listed = _listed(_unique(unnamed), "or")
         if changelog:
+            # Since the comparison release: the change may be in any release after it, and the
+            # pinned version (anthropic 1.13.0, for what 1.0.0 removed) would mislead.
             see = f"For {listed}, see" if some else "See"
-            sentences.append(f"{see} {_url(changelog)} ({group[0].to_version}).")
+            sentences.append(
+                f"{see} {_url(changelog)} for the changes since {group[0].from_version}."
+            )
         else:
             rest = f" for {listed}" if some else ""
             sentences.append(
@@ -860,8 +870,11 @@ def _library_evidence(
     "Use ... instead" form when it is too long to quote). Text that only mentions a name as
     advice ("If you want to force a new download, use `force_download=True`", "see `Config`
     for the available options") gives a quote and no replacement (None), or nothing when there
-    is nothing worth quoting."""
+    is nothing worth quoting. Another object's text (HINT_BORROWED) is quoted as that
+    object's, and names no replacement (:func:`_borrowed_evidence`)."""
     names = library_names(change, lookup)
+    if change.hint_source == HINT_BORROWED:
+        return _borrowed_evidence(change, names)
     if not names:
         return None
     what = change.parameter or api_name(change)
@@ -886,9 +899,15 @@ def _library_evidence(
         replacement = Replacement(found[0], EVIDENCE_LIBRARY, source, what)
         shown = _listed([_shown_name(n) for n in found], "or")
         use = f"Use {shown} instead of `{what}`." if change.parameter else f"Use {shown} instead."
-        quote = "" if stated.direct else _quote(text, found[0])
+        # Stated directly, the short form says it all, unless the sentence goes on to say how
+        # (polars' "use `DataFrame.unpivot` instead, with `index` instead of `id_vars` ...").
+        quote = "" if stated.direct and not stated.more else _quote(text, found[0], keep=names)
+        if quote is None and not stated.direct:
+            continue  # it cannot be quoted cleanly: the text is not shown, nor taken as evidence
         if quote:
             return f'{on}{change.package} {version} {said}: "{quote}"', replacement
+        # Too long to quote, or stated directly in a sentence that cannot be quoted cleanly (a
+        # backtick no span closes): the short form, which polars 1.31's ``with_context`` lost.
         return use, replacement
     # Nothing stated: the text that names one of them, quoted up to that sentence.
     best = names[0]
@@ -896,10 +915,24 @@ def _library_evidence(
     text, version, _where, said = next(
         (t for t in texts if _mentions(_plain(t[0]), last)), texts[-1]
     )
-    quote = _quote(text, best)
+    quote = _quote(text, best, keep=names)
     if not quote:
         return None
     return f'{on}{change.package} {version} {said}: "{quote}"', None
+
+
+def _borrowed_evidence(change: APIChange, names: list[str]) -> tuple[str, None] | None:
+    """A removed object's deprecation text that is another object's (HINT_BORROWED: its
+    deprecated class's, or a method's of a removed class), quoted as that object's: "On
+    `ReActAgent`, llama-index-core 0.12.45 said: "..."". Never a replacement: what a class's
+    text names replaces the class, and may not have the member (llama-index-core 0.14's
+    workflow ``ReActAgent`` has no ``from_tools``), and a method's text replaces that method
+    only. None when it says nothing worth quoting."""
+    quote = _quote_text(change.hint or "", keep=names)
+    if not quote:
+        return None
+    on = f"On `{_code(change.hint_from)}`, " if change.hint_from else ""
+    return f'{on}{change.package} {change.from_version} said: "{quote}"', None
 
 
 def library_replacement(change: APIChange) -> Replacement | None:
@@ -977,6 +1010,10 @@ class _Stated:
     # The cue states them as the replacement. False for "see `X`", and for a sentence-initial
     # "Use `X` to ..." that says more than the names: advice, quoted and not a replacement.
     replacement: bool
+    # The sentence goes on after the cue with a clause of its own: polars' "use
+    # `DataFrame.unpivot` instead, with `index` instead of `id_vars` and ...". The note then
+    # quotes it, short as the direct form would be.
+    more: bool = False
 
 
 def _stated_replacement(text: str, names: list[str], subject: str = "") -> _Stated | None:
@@ -1012,19 +1049,25 @@ def _stated_by(cue: re.Pattern[str], sentences: list[str], names: list[str]) -> 
         ((i, m) for i, sentence in enumerate(sentences) for m in cue.finditer(sentence)),
         key=lambda im: (im[0], im[1].start("rest")),
     )
-    for _, m in matches:
+    for i, m in matches:
         tokens = [t.strip(".") for t in _TOKEN.findall(m.group("rest"))]
         said = [(t, _named_as(t, names)) for t in tokens if t]
-        found = _unique(n for _, n in said if n is not None)
+        found = _unique(m for _, n in said if n is not None for m in _same_member(n, names))
         if not found:
             continue
         direct = all(n is not None or t.lower() in ("or", "and") for t, n in said)
+        more = _GOES_ON.match(sentences[i][m.end() :]) is not None
         weak = m.groupdict().get("weak")
         if weak is None:
-            return _Stated(found, direct, True)
+            return _Stated(found, direct, True, more)
         # A sentence-initial "Use" that names nothing else states it; "see" never does.
-        return _Stated(found, direct, direct and weak.lower() != "see")
+        return _Stated(found, direct, direct and weak.lower() != "see", more)
     return None
+
+
+# A clause after the cue that says more than "instead": ", with `index` instead of ...", ",
+# or read in as ``object`` and then ..." (not " of this.").
+_GOES_ON = re.compile(r"\s*[,;:]\s*\w|\s+(?:with|and|or|but|which|passing|using|setting)\s", re.I)
 
 
 def _named_as(said: str, names: list[str]) -> str | None:
@@ -1032,6 +1075,25 @@ def _named_as(said: str, names: list[str]) -> str | None:
     return next(
         (n for n in names if n == said or n.endswith("." + said) or said.endswith("." + n)), None
     )
+
+
+def _same_member(name: str, names: list[str]) -> list[str]:
+    """``name`` and, when it is a member of a class, the members of other classes among
+    ``names`` with its name: apidiff gives the replacement of a member the base class lost on
+    each public subclass that has it (pandas 3.0's ``DataFrame.transpose`` and
+    ``Series.transpose`` for ``NDFrame.swapaxes``), and the note names them all."""
+    parts = name.split(".")
+    if len(parts) < 3 or not parts[-2][:1].isupper():
+        return [name]
+    twins = [
+        n
+        for n in names
+        if n != name
+        and n.count(".") >= 2
+        and n.rsplit(".", 1)[-1] == parts[-1]
+        and n.split(".")[-2][:1].isupper()
+    ]
+    return [name, *twins]
 
 
 # A sentence of a deprecation message that only says what the bullet says already ("X is
@@ -1043,66 +1105,169 @@ _NOISE = re.compile(
 )
 
 
-# Markup a docstring puts around a name: Sphinx roles (:func:`x`, :py:meth:`~pkg.x`) and
-# MkDocs' cross-references ([`HfApi`], ['Repository']).
+# Markup a docstring puts around a name: Sphinx roles (:func:`x`, :py:meth:`~pkg.x`), MkDocs'
+# cross-references ([`HfApi`], ['Repository']), reStructuredText's ``literals`` and its
+# ``.. deprecated:: 2.1.0`` directive (the bullet says "deprecated" already).
 _ROLE = re.compile(r":(?:\w+:)+(?=`)")
 _BRACKETED = re.compile(r"\[([`'\"][^\[\]]*?[`'\"])\]")
+_RST_LITERAL = re.compile(r"``(?!`)(.+?)``")
+_DIRECTIVE = re.compile(r"\.\.\s+deprecated::(?:\s+v?\d(?:[\w.]*\w)?)?\s*", re.IGNORECASE)
+_SPAN = re.compile(r"`([^`]+)`")
 
 
 def _plain(text: str) -> str:
-    """``text`` without the markup around names: ``[`HfApi`]`` reads ```HfApi```."""
-    return _BRACKETED.sub(r"\1", _ROLE.sub("", text).replace("`~", "`"))
+    """``text`` without the markup around names: ``[`HfApi`]`` reads ```HfApi```, and
+    ```sep='\\\\s+'``` (reStructuredText, which escapes the backslash) reads ```sep='\\s+'```."""
+    text = _RST_LITERAL.sub(r"`\1`", _DIRECTIVE.sub("", text))
+    text = _BRACKETED.sub(r"\1", _ROLE.sub("", text).replace("`~", "`"))
+    return _SPAN.sub(lambda m: "`" + m.group(1).replace("\\\\", "\\") + "`", text)
+
+
+# A code span a quote keeps as one (the name of what exists in the pinned version, called or
+# with a value: ``DataFrame.unpivot``, ``sep='\s+'``, ``force_download=True``).
+_KEPT_CODE = re.compile(r"\.?(?P<name>[A-Za-z_][\w.]*?)(?:\(\))?(?:=\S+)?")
+# Sphinx's leading "." of a relative name (:meth:`.unpivot`), which a reader has no use for.
+_RELATIVE = re.compile(r"^\.(?=[A-Za-z_])")
+
+
+def _render(text: str, keep: Sequence[str] = ()) -> str | None:
+    """``text`` (:func:`_plain`) as a note quotes it, on one line, unable to end the block
+    (:func:`safe_text`): a code span that names one of ``keep`` (names that exist in the pinned
+    version) stays one, whole (```sep='\\s+'```); any other reads 'quoted', or as it is when it
+    holds a quote itself (```'auth'```, ```norm(A, 'fro')```). A leading "." of a relative name
+    goes. None when it cannot be made clean, rather than garbled: a backtick no span closes."""
+    text = " ".join(text.split())
+    while "<!--" in text or "-->" in text:  # "<!<!----" is "<!--" once the inner one goes
+        text = text.replace("<!--", "").replace("-->", "")
+    out: list[str] = []
+    end = 0
+    for m in _SPAN.finditer(text):
+        out.append(text[end : m.start()])
+        end = m.end()
+        code = m.group(1).strip()
+        named = _KEPT_CODE.fullmatch(code)
+        shown = _RELATIVE.sub("", code)
+        # By its whole name or its last parts: ``DataFrame.unpivot`` is
+        # ``polars.dataframe.frame.DataFrame.unpivot``; ``HfFolder.get_token`` is not
+        # ``huggingface_hub.get_token``.
+        name = named.group("name") if named else ""
+        if name and any(k == name or k.endswith("." + name) for k in keep):
+            out.append(f"`{shown}`")
+        elif "'" not in code:
+            out.append(f"'{shown}'")
+        else:
+            out.append(shown)  # 'auth' is quoted already; norm(A, 'fro') reads as code
+    out.append(text[end:])
+    if any("`" in part for part in out[::2]):
+        return None  # a backtick no span closes
+    return "".join(out)
 
 
 def _sentences(text: str) -> list[str]:
-    return [s for s in re.split(r"(?<=[.!?])\s+", " ".join(_plain(text).split())) if s]
+    """The sentences of ``text`` (:func:`_plain`); a "; " before a capital letter ends one too,
+    where apidiff joined two texts (polars 1.31's decorator message and its docstring's "Use
+    the :meth:`.unpivot` method instead.")."""
+    plain = " ".join(_plain(text).split())
+    return [s for s in re.split(r"(?<=[.!?])\s+|;\s+(?=[A-Z])", plain) if s]
+
+
+def _says_more(sentence: str) -> bool:
+    """Not boilerplate the bullet says already ("deprecated", "will be removed"), unless it
+    gives advice, and not a request to open an issue."""
+    if _NOISE.search(sentence):
+        return False
+    return not _BOILERPLATE.search(sentence) or _ADVICE.search(sentence) is not None
 
 
 def _worth_quoting(sentence: str) -> bool:
-    """Not boilerplate the bullet says already, and not a request to open an issue."""
+    """:func:`_says_more`, or a sentence that says "deprecated" and of which a clause says
+    something else at some length: fastapi 0.143's "ORJSONResponse is deprecated, FastAPI now
+    serializes data directly to JSON bytes via Pydantic when a return type or response model is
+    set, ..." is worth quoting; "X is deprecated, and will be removed in 3.0." is not."""
+    if _says_more(sentence):
+        return True
     if _NOISE.search(sentence):
         return False
-    return not (_BOILERPLATE.search(sentence) and not _ADVICE.search(sentence))
+    clauses = re.split(r"[,;:]\s+|\s+-+\s+", sentence)
+    return any(not _BOILERPLATE.search(c) and len(c.split()) >= 5 for c in clauses)
 
 
-def _whole_sentences(sentences: list[str], limit: int) -> str:
-    """As many of ``sentences`` as fit in ``limit`` characters, each whole (:func:`safe_text`
-    made): "" when not even the first one fits. A quote never stops mid-sentence."""
+def _worth(sentences: Sequence[str]) -> list[str]:
+    """Those of ``sentences`` to quote: the ones that say more than "deprecated" or give advice
+    (:func:`_says_more`), and only when none does, those of which a clause says something else
+    (:func:`_worth_quoting`), so that sqlalchemy 2.1's "... are deprecated for removal, along
+    with the PG-specific functions." cannot push its "See `any_` and `all_` functions for
+    modern use." out of the quote."""
+    strict = [s for s in sentences if _says_more(s)]
+    return strict or [s for s in sentences if _worth_quoting(s)]
+
+
+# How long a quote may be: a sentence that states the replacement whole, as polars 1.31's
+# "`DataFrame.melt` is deprecated; use `DataFrame.unpivot` instead, with `index` instead of
+# `id_vars` and `on` instead of `value_vars`" (127 characters), or fastapi's deprecation (196).
+QUOTE_LIMIT = 200
+
+
+def _whole_sentences(
+    sentences: list[str], limit: int, keep: Sequence[str] = (), fragment: str | None = None
+) -> str:
+    """As many of ``sentences`` as fit in ``limit`` characters, each whole and each ending as
+    a sentence does (:func:`_render` made; the quote stops before one that cannot be): "" when
+    not even the first one fits. A quote never stops mid-sentence, and never leaves one out of
+    the middle. ``fragment``: the last sentence of a text apidiff cut at HINT_LIMIT, which gets
+    no period it did not have."""
     out: list[str] = []
     for s in sentences:
-        text = safe_text(" ".join([*out, s]), 10**6)
-        if len(text) > limit:
+        shown = _render(s, keep)
+        if shown is None:
             break
-        out.append(s)
-    return safe_text(" ".join(out), 10**6) if out else ""
+        if s != fragment and (shown[-1:].isalnum() or shown[-1:] in "`'\")"):
+            shown += "."  # pandas 2.3's "Use ``sep='\\s+'`` instead" has no period
+        if len(" ".join([*out, shown])) > limit:
+            break
+        out.append(shown)
+    return " ".join(out)
 
 
-def _quote(text: str, name: str, limit: int = 160) -> str:
+def _fragment(text: str, sentences: Sequence[str]) -> str | None:
+    """The last of ``sentences`` when ``text`` is as long as apidiff keeps (HINT_LIMIT): it
+    may have been cut there."""
+    return sentences[-1] if sentences and len(text) >= HINT_LIMIT else None
+
+
+def _quote(text: str, name: str, limit: int = QUOTE_LIMIT, keep: Sequence[str] = ()) -> str | None:
     """What ``text`` says up to the sentence that names ``name``, safe to quote
-    (:func:`safe_text`), with ``name`` (and ``name=value``) in a code span again: it exists in
-    the pinned version.
+    (:func:`_render`), with ``name`` (and ``name=value``) and the names of ``keep`` in code
+    spans: they exist in the pinned version.
 
     Sentences that only say "deprecated" (the bullet says as much) or ask to open an issue are
-    left out, and so is anything before the naming sentence when the quote would be longer
-    than ``limit``. Only whole sentences are quoted: "" when the naming one alone is longer.
+    left out (:func:`_worth`), and so is anything before the naming sentence when the quote
+    would be longer than ``limit``. Only whole sentences are quoted: "" when the naming one
+    alone is longer; None when it cannot be quoted cleanly (:func:`_render`), so that a note
+    drops it.
     """
     last = name.rsplit(".", 1)[-1]
+    keep = [name, *keep]
     sentences = _sentences(text)
+    cut = _fragment(text, sentences)
+    worth = _worth(sentences)
     at = next((i for i, s in enumerate(sentences) if _mentions(s, last)), None)
     if at is None:
-        chosen = [s for s in sentences if _worth_quoting(s)]
-    else:
-        chosen = [s for s in sentences[:at] if _worth_quoting(s)] + [sentences[at]]
-        while len(chosen) > 1 and len(safe_text(" ".join(chosen), 10**6)) > limit:
-            chosen.pop(0)
-    quote = _whole_sentences(chosen, limit)
-    return re.sub(rf"'((?:[\w.]*\.)?{re.escape(last)}(?:=[^'\s]*)?)'", r"`\1`", quote)
+        return _whole_sentences(worth, limit, keep, cut)
+    if _render(sentences[at], keep) is None:
+        return None
+    chosen = [s for s in sentences[:at] if s in worth] + [sentences[at]]
+    while len(chosen) > 1 and len(_whole_sentences(chosen, 10**6, keep, cut)) > limit:
+        chosen.pop(0)
+    return _whole_sentences(chosen, limit, keep, cut)
 
 
-def _quote_text(text: str, limit: int = 160) -> str:
+def _quote_text(text: str, limit: int = QUOTE_LIMIT, keep: Sequence[str] = ()) -> str:
     """A deprecation message worth quoting in a note: its sentences that say more than
-    "deprecated", each whole, within ``limit`` characters; "" when none does."""
-    return _whole_sentences([s for s in _sentences(text) if _worth_quoting(s)], limit)
+    "deprecated" (:func:`_worth`), each whole, within ``limit`` characters, with the names of
+    ``keep`` in code spans; "" when none does."""
+    sentences = _sentences(text)
+    return _whole_sentences(_worth(sentences), limit, keep, _fragment(text, sentences))
 
 
 def _mentions(text: str, name: str) -> bool:
@@ -1494,6 +1659,8 @@ def new_package_note(
     changelog: str | None = None,
     released: str | None = None,
     margin: int | None = None,
+    placeholder: str | None = None,
+    by: str | None = None,
 ) -> Note:
     """The one bullet for a package first released after the cutoff that the project's code
     imports: no release existed at the cutoff to compare with, so there is no diff, and the
@@ -1504,7 +1671,10 @@ def new_package_note(
     :func:`pypi.changelog_url`), each left out when unknown. ``margin``: the package was first
     released that many days before the cutoff or fewer (ModelTarget.released_within_margin),
     after the day the scan compares from, which the bullet says instead of "after the cutoff".
-    Tagged ``[metadata]``; about 50 tokens.
+    ``placeholder``: the version of the release the scan compared from, the latest one
+    published by ``by`` (ISO), which was an empty placeholder (zensical 0.0.0): the package
+    existed, but not its API, so the bullet says that instead; with a ``margin`` (not 0), the
+    API may be older than the cutoff. Tagged ``[metadata]``; about 50 tokens.
 
     ``httpx2 first appeared on PyPI on 2026-05-11, after the cutoff; the model has no training
     data on it. The project pins 2.13.1 (released 2026-09-23). Summary: The next generation
@@ -1513,10 +1683,17 @@ def new_package_note(
     when = f"on {first_released}, after the cutoff" if first_released else "after the cutoff"
     known = "the model has no training data on it"
     if margin is not None and first_released:
-        when = f"on {first_released}, within {margin} days before the cutoff"
+        when = f"on {first_released}, within {days_text(margin)} before the cutoff"
         known = "the model has little or no training data on it"
     pinned = f"{version} (released {released})" if released else version
     text = f"{package} first appeared on PyPI {when}; {known}. The project pins {pinned}."
+    if placeholder:
+        latest = f"latest release by {by}" if by else "comparison release"
+        some = "little or no" if margin else "no"
+        text = (
+            f"{package}'s {latest} ({placeholder}) was an empty placeholder; the model has "
+            f"{some} training data on its API. The project pins {pinned}."
+        )
     if summary:
         text += f" Summary: {safe_text(summary, 120).rstrip('.')}."
     if changelog:
@@ -1534,10 +1711,11 @@ def template_bullet(change: APIChange) -> str:
     """
     pkg = f"{change.package} {change.to_version}"
     # Only the text 0.3 read (a deprecation decorator, a docstring line naming it), so that the
-    # ``--compare template`` baseline, and the numbers measured against it, stay the same. A
-    # removed parameter's own docstring entry and warnings.warn text (DIFF_SCHEMA 12) are not.
-    old = change.hint_source not in (HINT_PARAM_DOC, HINT_WARNING)
-    hint = f" ({safe_text(change.hint).rstrip('.')})" if change.hint and old else ""
+    # ``--compare template`` baseline, and the numbers measured against it, stay the same: not
+    # a removed parameter's own docstring entry or warnings.warn text (DIFF_SCHEMA 12), nor a
+    # directive's body after a blank line, an @Appender template or a borrowed text (22).
+    said = template_hint_of(change)
+    hint = f" ({safe_text(said).rstrip('.')})" if said else ""
     if change.kind == MOVED and change.moved_to:
         module, _, name = change.moved_to.rpartition(".")
         return f"`{change.path}` moved: use `from {module} import {name}` ({pkg})."

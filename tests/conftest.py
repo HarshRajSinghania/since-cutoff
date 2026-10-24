@@ -253,6 +253,48 @@ def cache(tmp_path: Path) -> DiskCache:
     return DiskCache(tmp_path / "cache")
 
 
+@pytest.fixture
+def older_python(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Parse sources as Python 3.10 does (:func:`pretend_python`)."""
+    pretend_python(monkeypatch)
+
+
+def pretend_python(
+    monkeypatch: pytest.MonkeyPatch,
+    version: tuple[int, int] = (3, 10),
+    fails: tuple[str, ...] = ("type ", "def g["),
+) -> None:
+    """Parse sources as an older Python does newer syntax, whatever Python runs the test: a
+    SyntaxError for a line that starts with one of ``fails`` (by default a PEP 695 ``type``
+    statement or ``def g[``: numpy 2.5's ``__init__.pyi`` has the first), with "invalid
+    syntax", or the message a ``# fails: <message>`` line just above it gives; and
+    since-cutoff names ``version`` as the running Python."""
+    import griffe
+
+    from since_cutoff import apidiff
+
+    visit = griffe.GriffeLoader._visit_module
+
+    def error(path: Path) -> SyntaxError | None:
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+        for n, line in enumerate(lines, 1):
+            said = lines[n - 2] if n > 1 and lines[n - 2].startswith("# fails: ") else ""
+            if line.startswith(fails) or said:
+                message = said.removeprefix("# fails: ") or "invalid syntax"
+                return SyntaxError(message, (str(path), n, 1, line + "\n"))
+        return None
+
+    def parse(self: Any, module_name: str, module_path: Path, parent: Any = None) -> Any:
+        found = error(module_path)
+        if found is not None:
+            raise found
+        return visit(self, module_name, module_path, parent)
+
+    monkeypatch.setattr(griffe.GriffeLoader, "_visit_module", parse)
+    monkeypatch.setattr(apidiff, "_syntax_error", error)
+    monkeypatch.setattr(apidiff, "_running", lambda: version)
+
+
 # ------------------------------------------------------------------ fake PyPI
 def _dt(s: str) -> datetime:
     return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)

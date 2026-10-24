@@ -19,13 +19,15 @@ image:
 **since-cutoff** est un outil open source, utilisable en ligne de commande et comme serveur MCP,
 pour les projets Python écrits avec des agents de code. `scan` montre où votre code utilise une
 API d'une dépendance qui a changé après la date limite d'entraînement du modèle, avec pour chacune
-une note tirée du diff d'API ; `sync` écrit les notes dans AGENTS.md ou CLAUDE.md et les tient à
-jour avec votre fichier de verrouillage ; `status`, des hooks pre-commit et une action GitHub vous
-préviennent quand elles ne le sont plus ; le serveur MCP permet à un agent de demander ce qui a
-changé dans une bibliothèque avant d'écrire du code. Seul `run`, facultatif, appelle un modèle :
-il mesure sur lesquels des changements le modèle se trompe et si les notes l'aident. Chaque note
-porte une étiquette qui dit ce qui a été vérifié : énoncée à partir du diff d'API, ou rédigée par
-le modèle et conservée seulement si son exemple passe le vérificateur de types pour votre version.
+une note tirée du diff d'API (la version épinglée face à la version de comparaison, la dernière
+publiée au moins 30 jours avant la date limite) ; `sync` écrit les notes dans AGENTS.md ou
+CLAUDE.md et les tient à jour avec votre fichier de verrouillage ; `status`, des hooks pre-commit
+et une action GitHub vous préviennent quand elles ne le sont plus ; le serveur MCP permet à un
+agent de demander ce qui a changé dans une bibliothèque avant d'écrire du code. Seul `run`,
+facultatif, appelle un modèle : il mesure sur lesquels des changements le modèle se trompe et si
+les notes l'aident. Chaque note porte une étiquette qui dit ce qui a été vérifié : énoncée à
+partir du diff d'API, ou rédigée par le modèle et conservée seulement si son exemple passe le
+vérificateur de types pour votre version.
 
 ```bash
 # les API modifiées qu'utilise votre code, avec une note pour chacune (aucun appel au modèle, aucune clé d'API)
@@ -39,14 +41,97 @@ uvx since-cutoff sync
 uvx --with basedpyright since-cutoff run
 ```
 
+`pip install since-cutoff` installe tout sauf le vérificateur de types de `run` ;
+`pip install "since-cutoff[run]"` l'ajoute (basedpyright, avec le Node.js qu'il apporte).
+
 [Documentation en français et code source sur GitHub](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/README.fr.md) ·
 [PyPI](https://pypi.org/project/since-cutoff/) ·
-[Le fonctionnement en détail (en anglais)](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/how-it-works.md)
+[Le fonctionnement en détail (en anglais)](https://github.com/MohammadHijjawi97/since-cutoff/blob/main/docs/how-it-works.md) ·
+[Dépannage (en anglais)](../troubleshooting.md)
+
+## Ce qu'il fait, depuis la 0.6
+
+- **Avec quelle version il compare.** Pour chaque dépendance, la version de comparaison est la
+  dernière publiée au moins 30 jours avant la date limite d'entraînement du modèle
+  (`--cutoff-margin JOURS` ; `0` compare à partir de la date limite elle-même, comme avant la
+  0.6). Un modèle connaît le moins bien les dernières semaines avant sa date limite :
+  llama-index-core 0.13.0, qui a supprimé `ReActAgent.from_tools` et `FunctionCallingAgent`, a
+  été publiée la veille de la date limite de Claude Sonnet 4.5, et comparer à partir de la date
+  limite masquait ces deux suppressions ; avec la marge, un projet qui épingle la 0.14.25 et
+  appelle les deux est averti des deux. La ligne du modèle, les rapports et le bloc de notes
+  donnent les deux dates, les tableaux des dépendances intitulent la colonne « compared from »,
+  et le scan dit après quel jour les API ont changé : « Your code uses 2 APIs that changed after
+  2025-07-01, 30 days before claude-sonnet-4-5's training cutoff (2025-07-31) ».
+- **Où votre code utilise une API modifiée.** Les imports et les appels, et depuis la 0.6 les
+  appels de méthodes sur des objets dont le fichier ne nomme jamais la classe : le type du
+  receveur est déduit des annotations de la version épinglée elle-même, si bien que
+  `df = pd.read_csv(...)` est un `DataFrame`, `df.groupby(...).count()` un
+  `DataFrameGroupBy.count`, et `llm.predict(q)` sur un `ChatOpenAI` le `BaseChatModel.predict`
+  de langchain-core. Un changement d'une méthode héritée est repéré sous les classes publiques
+  qui en héritent (`DataFrame.fillna` pour `NDFrame.fillna`). Un usage repéré au seul nom de la
+  méthode est laissé de côté, sauf avec `--include-name-matches`, et le scan dit combien il en
+  a laissé.
+- **Ce que voit le diff.** Les noms supprimés ou déplacés, les paramètres supprimés ou devenus
+  obligatoires, les passages en keyword-only ou positional-only, les nouveaux marqueurs de
+  dépréciation (y compris le `@deprecated` de la PEP 702 importé par un module de
+  compatibilité) et les changements de dépendance (`httpx` remplacé par `httpx2`). Nouveau dans
+  la 0.6 : les paramètres supprimés derrière `**kwargs: Unpack[UnTypedDict]` (le `read_csv` de
+  pandas 3.0 reçoit ainsi ses mots-clés, et a perdu `delim_whitespace`, `date_parser`,
+  `infer_datetime_format`, `keep_date_col` et `verbose`), et les noms qu'un module prend à une
+  autre distribution avec `from x import *` (le `mcp.types` de mcp vient de mcp-types, qui a
+  renommé tous ses champs en snake_case).
+- **Changements publics et internes.** Chaque changement est public (le niveau supérieur du
+  paquet l'exporte, un module le nomme dans `__all__`, le réexporte ou le documente) ou interne.
+  Les décomptes donnent les changements internes à part, sous la forme « +N internal », et
+  `scan --internal` les liste ; les notes ne couvrent que les API qu'utilise votre code.
+- **Ce que disent les notes.** Le remplaçant que nomme le texte de dépréciation de la
+  bibliothèque elle-même, dans ses propres mots, avec l'étiquette `[diff + library]` (httpx
+  0.28 : « Use `proxy` or `mounts` instead of `proxies` »). Le texte est cherché là où les
+  bibliothèques le mettent : une directive `.. deprecated::`, l'entrée d'un paramètre dans la
+  docstring, un message de `warnings.warn` et, pour une méthode supprimée sans texte propre,
+  celui de sa classe (le `ReActAgent.from_tools` de llama-index-core : « Use
+  `llama_index.core.agent.workflow.ReActAgent` instead. »). Quand le texte n'en nomme aucun, la
+  note renvoie au guide de migration, au changelog ou à la page des versions du paquet pour les
+  changements depuis la version de comparaison. Les citations gardent intact le code de la
+  bibliothèque. Les puces qui disent la même chose de plusieurs API d'un paquet sont fusionnées
+  en une seule. Une dépendance publiée pour la première fois après la date limite, ou dans la
+  marge qui la précède, reçoit une note `[metadata]` avec la date de sa première version et son
+  résumé.
+- **Ce qu'il signale ne pas avoir pu voir.** Un module que la version épinglée livre compilé,
+  sans source `.py` ni stub `.pyi` ; une distribution réexportée qui n'a pas pu être
+  téléchargée ; une classe dont une classe de base d'un autre paquet peut définir les
+  attributs ; des sources dans une syntaxe que le Python qui exécute since-cutoff ne sait pas
+  analyser (le stub de numpy 2.5.4 sous Python 3.10 : le paquet n'a pas pu être vérifié, et le
+  scan nomme le Python qui le peut). Le scan, le rapport et les outils MCP le signalent, au lieu
+  d'annoncer des suppressions qui n'en sont peut-être pas, ou aucun changement. Un métapaquet
+  comme llama-index, sans API propre, est présenté comme tel, avec les parties vérifiées et
+  celles qui ne l'ont pas été. Quand PyPI est injoignable, une liste de versions mise en cache
+  il y a plus de 12 heures est utilisée, et le scan indique de quel jour elle date.
+- **Où vont les notes.** Dans AGENTS.md, CLAUDE.md ou les deux : quand les deux fichiers
+  existent et que CLAUDE.md n'importe pas AGENTS.md (`@AGENTS.md`), `sync` écrit le bloc dans
+  les deux, car Claude Code ne lit que CLAUDE.md, et Codex, Cursor et Copilot lisent AGENTS.md ;
+  il explique comment n'en garder qu'une copie.
+- **Pour les scripts et les agents.** `since-cutoff sync --json` (avec `--yes`, `--check` ou
+  `--dry-run`), `since-cutoff models --json`, et `models --makers` pour les seules listes des
+  éditeurs des modèles, sans passerelles ni revendeurs. Le serveur MCP a deux prompts,
+  `check_project` et `before_upgrade`. Sans `--model`, le modèle de Gemini CLI est lu dans
+  `GEMINI_MODEL` ou `.gemini/settings.json`.
+- **Installation, démarrage et cache.** basedpyright, dont seul `run` se sert, est l'extra
+  `[run]`. Une installation sans extra occupait environ 73 Mo de paquets dans un environnement
+  virtuel neuf (environ 254 Mo avec `[run]`), et `since-cutoff --help` démarre en 100 ms
+  environ (mesures faites sous Windows, avec Python 3.13). `since-cutoff cache info` montre le
+  cache par type, `cache clear --sources`, `--diffs` ou `--pypi` vide un seul type, et
+  `SINCE_CUTOFF_CACHE_MAX_MB` plafonne les sources extraites (2048 par défaut).
+
+Il ne prend toujours en charge que Python, et les notes viennent toujours d'un diff statique de
+deux versions : elles disent ce qui a changé, pas ce que le modèle sait. Les changements de
+comportement derrière une signature inchangée lui échappent.
 
 La suite de cette page raconte l'origine du projet et présente les premières mesures, faites
 avec since-cutoff 0.1.0 en septembre 2026. Des mesures plus récentes (en anglais) :
 [Ce que votre modèle n'a pas vu](../ai-stack.md) (36 bibliothèques, 21 modèles, aucun appel au
-modèle) et [le benchmark avec un agent de code](../benchmark.md) (360 sessions de Claude Code).
+modèle, refait avec la 0.6) et [le benchmark avec un agent de code](../benchmark.md) (360
+sessions de Claude Code, avec les notes de la 0.4.1).
 
 ---
 
@@ -72,14 +157,16 @@ et **Claude Opus 4.6** (mai 2025). Les tâches et les notes ont été rédigées
 
 ## La méthode de mesure
 
-1. **Ce qui a changé.** Pour chaque dépendance, on prend la version la plus récente publiée au
-   plus tard à la date limite du modèle, et on compare son API publique à celle de la version
-   épinglée, de façon statique (griffe, aucun code importé). On trouve ainsi les objets supprimés
-   ou déplacés, les paramètres supprimés ou devenus obligatoires, les passages en paramètres
-   nommés uniquement ou positionnels uniquement (keyword-only, positional-only) et les nouveaux
-   marqueurs de dépréciation. Pour ce projet et la date limite de
-   Claude Haiku 4.5, 7 des 9 dépendances ont changé ; le diff actuel (0.5.0) signale 475
-   changements incompatibles et 48 nouvelles dépréciations, dont une partie concerne des éléments
+1. **Ce qui a changé.** Pour chaque dépendance, on prend la version de comparaison, la dernière
+   version publiée au moins 30 jours avant la date limite d'entraînement du modèle (par défaut ;
+   les exécutions faites avec la 0.1.0, plus bas, prenaient la plus récente publiée au plus tard
+   à la date limite), et on compare son API publique à celle de la version épinglée, de façon
+   statique (griffe, aucun code importé). On trouve ainsi les objets supprimés ou déplacés, les
+   paramètres supprimés ou devenus obligatoires, les passages en paramètres nommés uniquement ou
+   positionnels uniquement (keyword-only, positional-only) et les nouveaux marqueurs de
+   dépréciation. Pour ce projet et la date limite de Claude Haiku 4.5, 7 des 9 dépendances ont
+   changé ; le diff de la 0.6, qui compare à partir du 29 janvier 2025, signale 344 changements
+   incompatibles et 48 nouvelles dépréciations dans des API publiques, et 168 changements d'API
    internes.
 2. **Des tâches qui nécessitent le changement.** Pour les changements les mieux classés, un
    rédacteur de tâches produit de courtes tâches de programmation réalistes, qui exigent la
@@ -88,10 +175,10 @@ et **Claude Opus 4.6** (mai 2025). Les tâches et les notes ont été rédigées
 3. **Des réponses sans rien à consulter.** Le modèle reçoit la tâche et le numéro de la version
    épinglée, sans outils, sans accès au web, sans fichiers du projet.
 4. **Une évaluation par un vérificateur de types, à deux reprises.** La réponse est vérifiée avec
-   basedpyright par rapport à la version de comparaison (la plus récente à la date limite du
-   modèle), puis par rapport à la version épinglée, chacune dans un environnement isolé avec ses propres dépendances. Seules comptent les
-   erreurs de connaissance de l'API (noms, imports et paramètres inconnus, arguments manquants,
-   arité), jamais les remarques liées à la rigueur du typage.
+   basedpyright par rapport à la version de comparaison (celle de l'étape 1), puis par rapport
+   à la version épinglée, chacune dans un environnement isolé avec ses propres dépendances.
+   Seules comptent les erreurs de connaissance de l'API (noms, imports et paramètres inconnus,
+   arguments manquants, arité), jamais les remarques liées à la rigueur du typage.
    - **stale** : valide pour la version de comparaison, invalide pour la version épinglée
    - **wrong** : invalide, sans que le changement de version l'explique
    - **deprecated** : valide, mais utilise une API marquée `@deprecated` dans la version épinglée
@@ -170,9 +257,11 @@ dans son contexte.
   échappent.
 - **Les tâches réservées sont des reformulations du même changement** : la comparaison
   avant/après mesure donc si une note corrige *ce* changement, pas une capacité générale.
-- **« La version de comparaison » découle d'une règle de date** (la version la plus récente
-  publiée au plus tard à la date limite). Les modèles connaissent mal les mois qui précèdent immédiatement leur
-  date limite, si bien que leurs connaissances peuvent être périmées plus tôt.
+- **« La version de comparaison » découle d'une règle de date.** Dans ces exécutions faites
+  avec la 0.1.0, c'était la version la plus récente publiée au plus tard à la date limite. Les
+  modèles connaissent mal les semaines qui précèdent immédiatement leur date limite, si bien que
+  leurs connaissances peuvent être périmées plus tôt ; depuis la 0.6, c'est la dernière version
+  publiée au moins 30 jours avant la date limite d'entraînement du modèle (par défaut).
 
 ## Pourquoi ce sujet m'intéresse
 

@@ -1,5 +1,5 @@
 {
- "schema": 21,
+ "schema": 22,
  "package": "openai",
  "from_version": "2.44.0",
  "to_version": "3.19.2",
@@ -70,6 +70,8 @@
     "openai.resources.batches.make_request_options"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,

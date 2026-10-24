@@ -37,6 +37,7 @@ from since_cutoff.apidiff import (
     TIER_INTERNAL,
     APIChange,
     griffe_version,
+    running_python,
 )
 from since_cutoff.apidiff import (
     DEPRECATED as CHANGE_DEPRECATED,
@@ -1636,7 +1637,10 @@ def fail_reason(scan: ScanResult, conditions: set[str]) -> str | None:
     changed API in the old form, ``used`` when it uses one at all, ``changes`` when any
     dependency changed its API since the release it is compared from (``--fail-on-changes``;
     by default the latest one published 30 days before the cutoff). A name match counts
-    only with ``--include-name-matches`` (:func:`counted`)."""
+    only with ``--include-name-matches`` (:func:`counted`). Whatever the condition, a dependency
+    the running Python cannot parse the sources of fails it too (PackageScan.unparsed): it may
+    well have changed, and a newer Python checks it, so a CI job does not pass on Python 3.10
+    what fails on 3.13."""
     used = counted(scan) if conditions & {"used", "old-form"} else []
     old = [u for u in used if u.form == OLD_FORM]
     if "old-form" in conditions and old:
@@ -1653,7 +1657,20 @@ def fail_reason(scan: ScanResult, conditions: set[str]) -> str | None:
             f"--fail-on changes: {_deps(n)} changed {'its' if n == 1 else 'their'} API after "
             f"{scan.target.changed_after}"
         )
+    unparsed = [p.name for p in scan.packages if p.unparsed]
+    if conditions and unparsed:
+        one = len(unparsed) == 1
+        return (
+            f"--fail-on: {_listed_names(unparsed)} could not be checked: Python "
+            f"{running_python()} cannot parse {'its' if one else 'their'} sources (see "
+            f"{'its reason' if one else 'the reasons'} above)"
+        )
     return None
+
+
+def _listed_names(names: Sequence[str]) -> str:
+    """``a``, ``a and b``, ``a, b and c``."""
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
 def github_annotations(scan: ScanResult, env: Mapping[str, str] | None = None) -> list[str]:

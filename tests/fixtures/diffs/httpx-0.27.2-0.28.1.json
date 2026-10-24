@@ -1,5 +1,5 @@
 {
- "schema": 21,
+ "schema": 22,
  "package": "httpx",
  "from_version": "0.27.2",
  "to_version": "0.28.1",
@@ -39,6 +39,8 @@
     "httpx.Client.__init__"
    ],
    "hint_source": "warnings.warn",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -85,6 +87,8 @@
     "httpx.Client.__init__"
    ],
    "hint_source": "warnings.warn",
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -129,6 +133,8 @@
     "httpx.create_ssl_context"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -170,6 +176,8 @@
     "httpx.delete"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -211,6 +219,8 @@
     "httpx.delete"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -252,6 +262,8 @@
     "httpx.get"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -293,6 +305,8 @@
     "httpx.get"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -334,6 +348,8 @@
     "httpx.head"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -375,6 +391,8 @@
     "httpx.head"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -416,6 +434,8 @@
     "httpx.options"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -457,6 +477,8 @@
     "httpx.options"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -498,6 +520,8 @@
     "httpx.patch"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -539,6 +563,8 @@
     "httpx.patch"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -580,6 +606,8 @@
     "httpx.post"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -621,6 +649,8 @@
     "httpx.post"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -662,6 +692,8 @@
     "httpx.put"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -703,6 +735,8 @@
     "httpx.put"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -744,6 +778,8 @@
     "httpx.request"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -785,6 +821,8 @@
     "httpx.request"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -826,6 +864,8 @@
     "httpx.stream"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -867,6 +907,8 @@
     "httpx.stream"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,

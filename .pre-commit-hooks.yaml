@@ -5,7 +5,9 @@
 # since-cutoff-scan lists API changes in your pinned dependencies since your coding model's
 # training cutoff. Pass the model in `args`, e.g. [--model=anthropic:claude-sonnet-4-5]; add
 # --fail-on-changes to block the commit when a dependency changed its API after the cutoff
-# (--fail-on=used or --fail-on=old-form: when your code uses one).
+# (--fail-on=used or --fail-on=old-form: when your code uses one). Either also blocks it when
+# the Python pre-commit runs since-cutoff with cannot parse a dependency's sources (numpy 2.5
+# on Python 3.10): set `language_version` to a newer Python for the hook.
 #
 # since-cutoff-sync writes and updates the notes for the changed APIs your code uses in
 # AGENTS.md / CLAUDE.md. It fails by changing the file, as pre-commit expects: add the file and

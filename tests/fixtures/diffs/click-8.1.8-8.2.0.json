@@ -1,5 +1,5 @@
 {
- "schema": 21,
+ "schema": 22,
  "package": "click",
  "from_version": "8.1.8",
  "to_version": "8.2.0",
@@ -37,6 +37,8 @@
     "click.decorators.HelpOption"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -79,6 +81,8 @@
     "click.decorators.HelpOption"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -120,6 +124,8 @@
     "click.testing.CliRunner.mix_stderr"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -162,6 +168,8 @@
     "click.core.CommandCollection.add_source"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -203,6 +211,8 @@
     "click.testing.CliRunner.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -245,6 +255,8 @@
     "click.core.Argument.make_metavar"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -296,6 +308,8 @@
     "click.decorators.HelpOption.make_metavar"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -337,6 +351,8 @@
     "click.testing.Result.__init__"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -379,6 +395,8 @@
     "click.types.Choice.get_metavar"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -421,6 +439,8 @@
     "click.types.Choice.get_missing_message"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -463,6 +483,8 @@
     "click.types.DateTime.get_metavar"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -529,6 +551,8 @@
     "click.types.UnprocessedParamType.get_metavar"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -597,6 +621,8 @@
     "click.types.UnprocessedParamType.get_missing_message"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -639,6 +665,8 @@
     "click.core.BaseCommand"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -683,6 +711,8 @@
     "click.core.MultiCommand"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -727,6 +757,8 @@
     "click.parser.OptionParser"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -769,6 +801,8 @@
     "click.core.BaseCommand"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -813,6 +847,8 @@
     "click.core.MultiCommand"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -856,6 +892,8 @@
     "click.parser.Argument"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -897,6 +935,8 @@
     "click.parser.Option"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -939,6 +979,8 @@
     "click.parser.OptionParser"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -980,6 +1022,8 @@
     "click.parser.ParsingState"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1021,6 +1065,8 @@
     "click.parser.normalize_opt"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1062,6 +1108,8 @@
     "click.parser.split_arg_string"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,
@@ -1103,6 +1151,8 @@
     "click.parser.split_opt"
    ],
    "hint_source": null,
+   "hint_from": null,
+   "template_hint": null,
    "move_evidence": null,
    "alias_of": null,
    "still_handled_at": null,

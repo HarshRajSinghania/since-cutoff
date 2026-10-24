@@ -343,6 +343,43 @@ def test_the_first_screen_quotes_what_the_scan_writes(name: str) -> None:
     assert "```bash\nuvx since-cutoff scan\n```" in first
 
 
+def _hub_note() -> str:
+    """The note the sample block has for ``hf_hub_download`` (huggingface-hub 0.33.1 -> 2.0.0):
+    three parameters the library says nothing replaces, and one it says nothing of, in the
+    order of 0.33.1's signature."""
+    signature = (
+        "hf_hub_download(repo_id, filename, *, proxies=None, force_filename=None, "
+        "local_dir_use_symlinks='auto', resume_download=None)"
+    )
+    changes = [
+        APIChange(
+            "huggingface-hub",
+            "0.33.1",
+            "2.0.0",
+            PARAM_REMOVED,
+            "huggingface_hub.hf_hub_download",
+            "hf_hub_download",
+            parameter=p,
+            hint=None if p == "proxies" else f"`{p}` is deprecated without replacement.",
+            old_signature=signature,
+            library_names=[],
+        )
+        for p in ("proxies", "force_filename", "local_dir_use_symlinks", "resume_download")
+    ]
+    return diff_note(
+        changes, changelog="https://github.com/huggingface/huggingface_hub/releases"
+    ).line
+
+
+@pytest.mark.parametrize("name", READMES)
+def test_the_sample_block_quotes_what_sync_writes(name: str) -> None:
+    """The second bullet of the sample block still pointed at "releases (2.0.0)", the pinned
+    version, after the notes came to say "for the changes since 0.33.1"."""
+    note = _hub_note()
+    assert note.endswith("for the changes since 0.33.1. [diff]")
+    assert f"**huggingface-hub 2.0.0** (compared from 0.33.1)\n- {note}\n" in _text(name)
+
+
 @pytest.mark.parametrize("name", [*READMES, "docs/how-it-works.md"])
 def test_what_verified_means_names_every_tag(name: str) -> None:
     text = _text(name)

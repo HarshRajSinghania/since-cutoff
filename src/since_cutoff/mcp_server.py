@@ -380,11 +380,13 @@ class Tools:
             cutoff_margin=target.margin if target else self._margin(cutoff_margin),
         )
         self._engine(settings, reporter).diff_package(scan)
+        if scan.status == SKIPPED and scan.unparsed:  # PyPI was reached: this Python is too old
+            raise SinceCutoffError(scan.reason or f"could not diff {name}")
         if scan.status == SKIPPED:
             raise PackageIndexError(scan.reason or f"could not diff {name}")
         if scan.status == NEW:  # the comparison release was an empty placeholder
             return "\n".join([*head, "", _placeholder_note(old, new)]) + "\n"
-        if scan.unread:  # compiled modules, unread bases: no changes found is not the same as none
+        if unread_warning(scan):  # compiled modules, unread bases: none found is not none there
             head.append(f"- Warning: {unread_warning(scan)}")
         if scan.reexported:  # names from another distribution that could not be read
             head.append(f"- Warning: {reexport_warning(scan)}")
@@ -679,7 +681,11 @@ def change_line(change: APIChange) -> str:
         parts.append(f"now `{_clip(signature, 160)}`")
     if change.hint and change.kind != DEPRECATED:
         said = (
-            "the old version warned" if change.hint_source == HINT_WARNING else "the old docs said"
+            "the old version warned"
+            if change.hint_source == HINT_WARNING
+            else f"the old docs of `{change.hint_from}` said"
+            if change.hint_from
+            else "the old docs said"
         )
         parts.append(f"{said}: {_clip(change.hint.rstrip(' .;'), 200)}")
     runtime = runtime_text([change])
@@ -748,7 +754,7 @@ def _render_project(
     if target.note:
         out.append(f"- {target.note}")
     out += [f"- Warning: {w}" for w in project.warnings]  # (`only` gets its own line below)
-    out += [f"- Warning: {unread_warning(p)}" for p in scan.packages if p.unread]
+    out += [f"- Warning: {unread_warning(p)}" for p in scan.packages if unread_warning(p)]
     out += [f"- Warning: {reexport_warning(p)}" for p in scan.packages if p.reexported]
     if scan.stale:
         out.append(f"- Warning: {stale_warning(scan.stale)}")

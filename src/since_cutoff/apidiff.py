@@ -29,7 +29,7 @@ import sys
 import textwrap
 import warnings
 from collections import deque
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import asdict, dataclass, field, replace
 from functools import cache
@@ -130,7 +130,17 @@ log = logging.getLogger(__name__)
 # a sibling (engine._star_imported: not one in a docstring, a function or an ``if
 # TYPE_CHECKING:`` block). The diff's cache key has the distributions read next to each release
 # (Engine._diff_key), which the cache keeps per release (Engine._siblings_key).
-DIFF_SCHEMA = 21
+# 22 (21 was never released): ``hint`` reads the body of a ``.. deprecated::`` directive after a
+# blank line (and is None for a bare directive, or a sentence with an unfilled ``{klass}``
+# placeholder) and the docstring an ``@Appender`` template gives (_appended_doc), and
+# ``template_hint`` keeps what 0.3 read where that differs (the ``--compare template``
+# baseline); a removed member of a deprecated class with no text of its own takes the class's,
+# and a removed class the text of its first method that names something (HINT_BORROWED, with
+# ``hint_from``: _borrowed_hint); ``library_names`` takes a name the class no longer has from
+# its public subclasses (_Differ._subclass_names). Sources the running Python cannot parse
+# raise UnparsedSources, or are UNREAD_SYNTAX, UNREAD_UNPARSED or UNREAD_SIBLING entries,
+# instead of being left out (_check_parsed).
+DIFF_SCHEMA = 22
 
 # Above this many removals in one package the release is a rewrite. Looking for similarly
 # named replacements (difflib over every owner's members) then costs minutes and adds little.
@@ -165,12 +175,56 @@ TIER_INTERNAL = "internal"
 # package whose attributes were not compared: ``"fastapi.routing.APIRoute inherits from
 # starlette.routing.Route"``. The other entries name compiled modules.
 UNREAD_BASE = " inherits from "
+# Entries of PackageScan.unread for sources the running Python could not parse (_check_parsed),
+# which leave out what they hold: a private module in syntax of a newer Python, with the Python
+# that can (``"numpy._core._x needs Python 3.12"``); a module that shows no newer syntax (Python
+# 2 code, a template), with the Python that tried (``"pkg.legacy could not be parsed by Python
+# 3.13"``); and a distribution read next to a release for its ``from x import *`` (engine
+# .Sibling), by its import name and that release, with either ending (``"star-imported numpy
+# next to 1.7.0 needs Python 3.11"``), which the scan reports as names it could not compare
+# (PackageScan.reexported). A diff with any of them is cached for the running Python only
+# (Engine._finish): a newer one may read more.
+UNREAD_SYNTAX = " needs Python "
+UNREAD_UNPARSED = " could not be parsed by Python "
+UNREAD_SIBLING = "star-imported "
+UNREAD_NEXT_TO = " next to "
+
+
+def is_python_specific(entry: str) -> bool:
+    """Does this entry of PackageScan.unread depend on the Python that made the diff
+    (UNREAD_SYNTAX, UNREAD_UNPARSED, UNREAD_SIBLING)?"""
+    return UNREAD_SYNTAX in entry or UNREAD_UNPARSED in entry or entry.startswith(UNREAD_SIBLING)
+
+
+class UnparsedSources(Exception):
+    """The running Python cannot parse sources a diff needs (a release's top-level module or
+    stub, or a public module in syntax of a newer Python, or a private one that public names
+    lead to: numpy 2.5's ``__init__.pyi`` has PEP 695 ``type`` statements, which Python 3.10
+    cannot parse): the package could not be checked. The message says so and which Python can
+    (:func:`_check_parsed`). Nothing is cached for it, so that a run on a newer Python diffs it.
+    """
+
+
+def running_python() -> str:
+    """The running Python's version as the syntax checks name it: ``"3.10"``."""
+    return _python(_running())
+
+
+def _running() -> tuple[int, int]:
+    """The running Python's version, for the syntax checks (a test stands in an older one)."""
+    return sys.version_info[0], sys.version_info[1]
+
 
 # Where APIChange.hint comes from (APIChange.hint_source).
 HINT_DECORATOR = "decorator"  # the old version's deprecation decorator
 HINT_DOCSTRING = "docstring"  # a line of the old docstring that says "deprecated" (and names it)
 HINT_PARAM_DOC = "param_doc"  # the removed parameter's own entry in the old docstring
 HINT_WARNING = "warnings.warn"  # the old code's warnings.warn text when the parameter is passed
+# Not the changed object's own text: that of the deprecated class of a removed member, or of the
+# first method of a removed class that names something (APIChange.hint_from: _borrowed_hint).
+HINT_BORROWED = "borrowed"
+# How much of a deprecation text ``hint`` keeps: a text of this length may have been cut.
+HINT_LIMIT = 300
 
 KIND_PRIORITY = {
     DEPENDENCY_SWITCHED: 0,
@@ -289,6 +343,15 @@ class APIChange:
     import_paths: list[str] | None = None
     # Where ``hint`` comes from (HINT_*: its first part when it joins several); None without.
     hint_source: str | None = None
+    # HINT_BORROWED: whose text ``hint`` is, as a note names it: the class of a removed member
+    # (``ReActAgent``), the method of a removed class (``HfFolder.get_token``). None otherwise.
+    hint_from: str | None = None
+    # The hint as since-cutoff 0.3 read the old version (a deprecation decorator, a docstring
+    # line, without the body of a ``.. deprecated::`` directive after a blank line, an
+    # ``@Appender`` template or a borrowed text), only where what the ``--compare template``
+    # baseline shows of it differs from ``hint``'s (notes.template_bullet): "" when 0.3 read
+    # none. None otherwise, and in a diff made before DIFF_SCHEMA 22.
+    template_hint: str | None = None
     # MOVED: what find_moved compared to take the object at ``moved_to`` for the same one:
     # ``{"compared": "class" | "module" | "function" | "value" | "message", "kept": k, "of": n}``,
     # k of the n public names (a class's or module's) or public parameters (a function's) still
@@ -582,12 +645,23 @@ def griffe_version() -> str:
     return "unknown"
 
 
-def load_api(import_name: str, root: Path, extra_roots: Sequence[Path] = ()) -> Any:
+def load_api(
+    import_name: str,
+    root: Path,
+    extra_roots: Sequence[Path] = (),
+    *,
+    unparsed: list[tuple[str, SyntaxError]] | None = None,
+) -> Any:
     """Load one top-level package statically. ``foo-stubs`` directories load as ``foo``.
 
     ``extra_roots`` are the source trees of the distributions the package takes names from with
     ``from x import *`` (engine.Sibling): griffe expands such an import only from a package it
-    can find, so with them ``mcp.types`` has mcp-types' names, and without, a placeholder."""
+    can find, so with them ``mcp.types`` has mcp-types' names, and without, a placeholder.
+
+    ``unparsed`` collects each module the running Python could not parse, with the error, as
+    ``(dotted path, SyntaxError)``: griffe leaves a submodule out with a debug log, and raises
+    for the top-level module or its stub (:func:`_check_parsed`). Those of ``extra_roots`` are
+    among them; the error's ``filename`` tells which tree a module is in."""
 
     # griffe warns about every annotation it cannot resolve in third-party code; that is noise
     # for our purpose (and would spill into the user's terminal from worker processes).
@@ -598,7 +672,7 @@ def load_api(import_name: str, root: Path, extra_roots: Sequence[Path] = ()) -> 
     if not stubs and _stubs_only(root, name):  # pandas-stubs' import name is pandas
         stubs = True
     with _quiet():
-        loader = _loader(root, extra_roots)
+        loader = _loader(root, extra_roots, unparsed)
         module = loader.load(name, try_relative_path=False, find_stubs_package=stubs)
         if extra_roots:
             try:
@@ -610,7 +684,11 @@ def load_api(import_name: str, root: Path, extra_roots: Sequence[Path] = ()) -> 
     return module
 
 
-def _loader(root: Path, extra_roots: Sequence[Path] = ()) -> Any:
+def _loader(
+    root: Path,
+    extra_roots: Sequence[Path] = (),
+    unparsed: list[tuple[str, SyntaxError]] | None = None,
+) -> Any:
     """griffe's loader, keeping what it drops when it merges a ``.pyi`` stub into its module.
 
     Functions declared only through ``@overload`` (the usual case in a stub, which has no
@@ -624,6 +702,8 @@ def _loader(root: Path, extra_roots: Sequence[Path] = ()) -> Any:
     import from a private one took its public path from the machine's directory order. mcp 1.28's ``McpHttpClientFactory`` was ``mcp.client.sse.McpHttpClientFactory`` on
     one machine and ``mcp.client.streamable_http.McpHttpClientFactory`` on another, and only
     ``sse`` still imports it in 2.2, so its switch to ``httpx2`` had 23 places or 20.
+
+    A module the running Python cannot parse goes to ``unparsed`` (see :func:`load_api`).
     """
     import griffe
 
@@ -653,6 +733,16 @@ def _loader(root: Path, extra_roots: Sequence[Path] = ()) -> Any:
                 for member in declared:
                     member.runtime = True
             super().expand_wildcards(obj, **kwargs)
+
+        def _load_module(self, module_name: str, module_path: Any, **kwargs: Any) -> Any:
+            try:
+                return super()._load_module(module_name, module_path, **kwargs)
+            except griffe.LoadingError as exc:
+                if unparsed is not None and isinstance(exc.__cause__, SyntaxError):
+                    parent = kwargs.get("parent")
+                    path = module_name if parent is None else f"{parent.path}.{module_name}"
+                    unparsed.append((path, exc.__cause__))
+                raise
 
     search_paths = [str(root), *(str(r) for r in extra_roots)]
     loader = Loader(
@@ -806,6 +896,8 @@ def diff_sources(
     new_compiled: Sequence[str] = (),
     old_roots: Sequence[Path] = (),
     new_roots: Sequence[Path] = (),
+    old_requires_python: str | None = None,
+    new_requires_python: str | None = None,
 ) -> list[dict[str, Any]]:
     """Diff two extracted source trees. Returns plain dicts (picklable across processes).
 
@@ -822,8 +914,15 @@ def diff_sources(
     names from with ``from x import *`` (engine.Sibling: mcp 2.3's ``mcp.types`` is mcp-types'
     names), so that those names are compared under the paths that re-export them.
 
+    ``old_requires_python`` / ``new_requires_python`` are the releases' Requires-Python, as
+    PyPI lists it for the file read (pypi.PyPI.requires_python): a release that excludes the
+    running Python is one whose syntax may be newer (:func:`_needs_python`).
+
     Never raises for problems in the analysed package: griffe can fail on unusual code, and one
-    bad top-level module must not hide the changes found in the others.
+    bad top-level module must not hide the changes found in the others. The one exception is
+    sources that the running Python cannot parse where the diff needs them (UnparsedSources:
+    a top-level module or its stub, or a public module in newer syntax), which would make the
+    diff say "no changes" of what it never read.
     """
     return diff_sources_with_unread(
         package,
@@ -837,6 +936,8 @@ def diff_sources(
         new_compiled=new_compiled,
         old_roots=old_roots,
         new_roots=new_roots,
+        old_requires_python=old_requires_python,
+        new_requires_python=new_requires_python,
     )[0]
 
 
@@ -853,10 +954,14 @@ def diff_sources_with_unread(
     new_compiled: Sequence[str] = (),
     old_roots: Sequence[Path] = (),
     new_roots: Sequence[Path] = (),
+    old_requires_python: str | None = None,
+    new_requires_python: str | None = None,
 ) -> tuple[list[dict[str, Any]], list[str]]:
-    """:func:`diff_sources`, and the entries of ``new_compiled`` that hid something the older
-    release had, so that its removal was not reported: the scan warns that changes to them,
-    and to the names taken from them, are not reported (PackageScan.unread)."""
+    """:func:`diff_sources`, and what it could not compare (PackageScan.unread): the entries of
+    ``new_compiled`` that hid something the older release had, so that its removal was not
+    reported, the classes with a base outside the package (UNREAD_BASE), and the sources the
+    running Python could not parse (UNREAD_SYNTAX, UNREAD_UNPARSED, UNREAD_SIBLING). The scan
+    warns that changes to them are not reported."""
     unread: set[str] = set()
     with _quiet():
         changes = _diff_imports(
@@ -872,6 +977,7 @@ def diff_sources_with_unread(
             unread=unread,
             old_roots=old_roots,
             new_roots=new_roots,
+            requires_python={old_version: old_requires_python, new_version: new_requires_python},
         )
     return [c.to_dict() for c in _group(changes)], sorted(unread)
 
@@ -881,10 +987,36 @@ def unread_text(package: str, version: str, cutoff_version: str, entries: Sequen
     of :func:`diff_sources_with_unread` (PackageScan.unread), which are the modules the pinned
     release ships compiled, without a source or a stub, and the classes whose attributes a base
     outside the package may set (UNREAD_BASE: ``"pkg.Route inherits from starlette.routing
-    .Route"``). One warning per package, in one line."""
-    modules = [e for e in entries if UNREAD_BASE not in e]
-    bases = [e for e in entries if UNREAD_BASE in e]
+    .Route"``), and the modules the running Python could not parse (UNREAD_SYNTAX: private
+    ones in newer syntax; UNREAD_UNPARSED: ones in no newer syntax). The distributions read
+    next to it (UNREAD_SIBLING) are the re-export warning's (engine.reexport_warning). One
+    warning per package, in one line; "" when there is nothing to say."""
+    own = [e for e in entries if not e.startswith(UNREAD_SIBLING)]
+    syntax = [e for e in own if UNREAD_SYNTAX in e]
+    unparsed = [e for e in own if UNREAD_UNPARSED in e]
+    modules = [e for e in own if UNREAD_BASE not in e and not is_python_specific(e)]
+    bases = [e for e in own if UNREAD_BASE in e]
     parts: list[str] = []
+    if syntax:
+        names = sorted({e.partition(UNREAD_SYNTAX)[0] for e in syntax})
+        newest = max(
+            (e.partition(UNREAD_SYNTAX)[2] for e in syntax),
+            key=lambda v: tuple(int(n) for n in v.split(".") if n.isdigit()),
+        )
+        one = len(names) == 1
+        parts.append(
+            f"{len(names)} private module{'' if one else 's'} ({_some(names)}) "
+            f"use{'s' if one else ''} syntax that Python {running_python()} "
+            f"cannot parse, so changes in {'it' if one else 'them'} are not reported; run "
+            f"since-cutoff with Python {newest} or later to check {'it' if one else 'them'}"
+        )
+    if unparsed:
+        names = sorted({e.partition(UNREAD_UNPARSED)[0] for e in unparsed})
+        one = len(names) == 1
+        parts.append(
+            f"{len(names)} module{'' if one else 's'} ({_some(names)}) could not be parsed by "
+            f"Python {running_python()}, so changes in {'it' if one else 'them'} are not reported"
+        )
     if modules:
         one = len(modules) == 1
         what = "is a compiled module" if one else "are compiled modules"
@@ -908,7 +1040,12 @@ def unread_text(package: str, version: str, cutoff_version: str, entries: Sequen
             f"{', and '.join(clauses)}, which since-cutoff did not read; the attributes "
             f"{'it sets' if one else 'they set'} are not compared"
         )
-    return f"{package} {version}: " + ". ".join(parts)
+    return f"{package} {version}: " + ". ".join(parts) if parts else ""
+
+
+def _some(names: Sequence[str]) -> str:
+    """The first three of ``names`` and how many more: ``a, b, c and 2 more``."""
+    return _and(list(names[:3]) + ([f"{len(names) - 3} more"] if len(names) > 3 else []))
 
 
 def _and(items: Sequence[str]) -> str:
@@ -932,25 +1069,51 @@ def _diff_imports(
     unread: set[str] | None = None,
     old_roots: Sequence[Path] = (),
     new_roots: Sequence[Path] = (),
+    requires_python: Mapping[str, str | None] | None = None,
 ) -> list[APIChange]:
-    """The changes of each import name; ``unread`` collects the entries of ``new_compiled``
-    that hid a removal (see diff_sources_with_unread)."""
+    """The changes of each import name; ``unread`` collects what could not be compared (see
+    diff_sources_with_unread). ``requires_python``: each release's Requires-Python, by
+    version."""
     changes: list[APIChange] = []
     compiled = frozenset(new_compiled)
     hidden: set[str] = set() if unread is None else unread
+    pythons = dict(requires_python or {})
     # The trees are kept for the dependency pass only when a requirement went (a base one, or
     # one of an extra both releases define): in most release pairs none did (87% of 1991
     # measured for the base requirements), and the pass is skipped.
     dropped = _dropped_requirements(old_requires, new_requires, import_names, new_root)
     loaded: list[tuple[Any, Any]] = []
+    # What the running Python could not parse, in either release or a distribution read next
+    # to one, and the modules each release loaded (_check_parsed).
+    unparsed: list[_Unparsed] = []
+    trees: dict[str, list[Any]] = {old_version: [], new_version: []}
+
+    def load(name: str, version: str, root: Path, roots: Sequence[Path]) -> Any:
+        found: list[tuple[str, SyntaxError]] = []
+        try:
+            module = load_api(name, root, roots, unparsed=found)
+            trees[version].append(module)
+            return module
+        finally:
+            unparsed.extend(
+                _Unparsed.of(version, root, name, p, e, pythons.get(version)) for p, e in found
+            )
+
     for import_name in import_names:
         try:
-            old = load_api(import_name, old_root, old_roots)
+            old = load(import_name, old_version, old_root, old_roots)
         except Exception as exc:
             log.debug("cannot load %s %s from %s: %s", package, old_version, import_name, exc)
+            if any(u.top and u.version == old_version for u in unparsed):
+                # Nothing to compare. Which Python parses the pinned release too: what its own
+                # top-level files and its Requires-Python say (numpy 2.3.1 needs 3.11, and
+                # 2.5.4 3.12), without loading all of it.
+                unparsed.extend(
+                    _top_unparsed(new_version, new_root, import_name, pythons.get(new_version))
+                )
             continue
         try:
-            new = load_api(import_name, new_root, new_roots)
+            new = load(import_name, new_version, new_root, new_roots)
         except Exception as exc:
             owner = _compiled_owner(import_name, compiled, module=True)
             if owner is not None:
@@ -998,7 +1161,330 @@ def _diff_imports(
             )
         except Exception as exc:
             log.debug("dependency pass of %s failed: %s", package, exc)
+    _check_parsed(package, unparsed, hidden, trees, pythons)
     return changes
+
+
+@dataclass(frozen=True)
+class _Unparsed:
+    """A module that the running Python could not parse (load_api's ``unparsed``): of which
+    release, where, and the Python that can, when its syntax or the release's Requires-Python
+    tells (:func:`_needs_python`). ``top`` for the top-level module of an import name (or its
+    stub); ``sibling`` for a module of a distribution read next to the release for its ``from
+    x import *`` (load_api's ``extra_roots``): its file is outside the release's tree."""
+
+    version: str
+    path: str
+    file: str
+    line: int | None
+    message: str
+    needs: tuple[int, int] | None
+    top: bool
+    sibling: bool = False
+
+    @classmethod
+    def of(
+        cls,
+        version: str,
+        root: Path,
+        import_name: str,
+        path: str,
+        exc: SyntaxError,
+        requires_python: str | None = None,
+    ) -> _Unparsed:
+        file = str(exc.filename or "")
+        try:
+            file = Path(file).resolve().relative_to(root.resolve()).as_posix()
+        except (ValueError, OSError):
+            if file and Path(file).is_file():
+                # The release's Requires-Python says nothing of a distribution read next to it.
+                return cls(
+                    version, path, file, exc.lineno, exc.msg, _needs_python(exc), False, True
+                )
+        top = path == import_name.removesuffix("-stubs")
+        needs = _needs_python(exc, requires_python)
+        return cls(version, path, file, exc.lineno, exc.msg, needs, top)
+
+    @property
+    def public(self) -> bool:
+        parts = self.path.split(".")
+        return not (
+            _has_private_segment(self.path)
+            or _private(parts[0])
+            or any(_skipped_segment(p) for p in parts)
+            or _non_api_path(self.path, module=True)
+        )
+
+
+def _top_unparsed(
+    version: str, root: Path, import_name: str, requires_python: str | None
+) -> list[_Unparsed]:
+    """The top-level files of ``import_name`` in a release (its ``__init__`` and stub, or its
+    module) that the running Python cannot parse, read on their own: what load_api would fail
+    on, without loading the rest of the release."""
+    base = root.joinpath(*import_name.split("."))
+    files = (base / "__init__.py", base / "__init__.pyi", base.with_suffix(".py"))
+    out: list[_Unparsed] = []
+    for file in (*files, base.with_suffix(".pyi")):
+        exc = _syntax_error(file) if file.is_file() else None
+        if exc is not None:
+            name = import_name.removesuffix("-stubs")
+            out.append(_Unparsed.of(version, root, import_name, name, exc, requires_python))
+    return out
+
+
+def _syntax_error(file: Path) -> SyntaxError | None:
+    """The SyntaxError the running Python raises for ``file``, or None when it parses (or
+    cannot be read)."""
+    try:
+        ast.parse(file.read_bytes(), filename=str(file))
+    except SyntaxError as exc:
+        return exc
+    except (OSError, ValueError, RecursionError, MemoryError):
+        return None
+    return None
+
+
+# Syntax that a Python older than the one named cannot parse, as the statement that fails shows
+# it: PEP 758's ``except A, B:`` (not Python 2's ``except ValueError, e:``, which names a
+# variable), PEP 696's type parameter defaults, PEP 695's ``type X = ...`` and ``def f[T]``, PEP
+# 701's f-string that reuses its quote or leaves a replacement field open at the end of a line,
+# PEP 654's ``except*``, and PEP 646's ``*args: *Ts``. PEP 750's t-strings and PEP 646's star in
+# a subscript are read from the statement's tokens (:func:`_token_syntax`).
+_NEWER_SYNTAX = (
+    ((3, 14), re.compile(r"^\s*except\s+(?![(*])[^():]*,\s*(?:[A-Za-z_]\w*\.)*[A-Z]\w*\s*:", re.M)),
+    ((3, 13), re.compile(r"^\s*(?:(?:async\s+)?def|class|type)\s+\w+\s*\[[^\]]*=", re.M)),
+    ((3, 12), re.compile(r"^\s*type\s+[A-Za-z_]\w*\s*(?:\[.*\])?\s*=", re.M)),
+    ((3, 12), re.compile(r"^\s*(?:(?:async\s+)?def|class)\s+\w+\s*\[", re.M)),
+    ((3, 12), re.compile(r"""(?<![\w'"])[rR]?[fF][rR]?(['"])[^'"\n]*\{[^}'"\n]*\1""")),
+    (
+        (3, 12),
+        re.compile(r"""(?<![\w'"])[rR]?[fF][rR]?(['"])(?!\1)(?:(?!\1)[^\n])*\{[^}\n]*$""", re.M),
+    ),
+    ((3, 11), re.compile(r"^\s*except\s*\*", re.M)),
+    ((3, 11), re.compile(r"\*\w+\s*:\s*\*\s*[A-Za-z_]")),
+)
+# What Python 3.11 and older say of an f-string that PEP 701 makes valid.
+_PEP701_MESSAGES = (
+    "f-string expression part cannot include a backslash",
+    "f-string expression part cannot include '#'",
+    "f-string: expressions nested too deeply",
+)
+
+
+def _needs_python(exc: SyntaxError, requires_python: str | None = None) -> tuple[int, int] | None:
+    """The Python that parses what ``exc`` is about: a newer one than the running Python, by
+    the statement that fails (:data:`_NEWER_SYNTAX`, :data:`_PEP701_MESSAGES`,
+    :func:`_token_syntax`), and at least the oldest one the release allows when its
+    Requires-Python excludes the running one (:func:`_requires_floor`). None when neither says:
+    code that no Python parses (Python 2's ``print "x"``, a template) or that this one should."""
+    running = _running()
+    text = _failing_statement(exc)
+    seen = [v for v, pattern in _NEWER_SYNTAX if pattern.search(text)] + _token_syntax(text)
+    if any(m in str(exc.msg or "") for m in _PEP701_MESSAGES):
+        seen.append((3, 12))
+    # Syntax this Python parses is not what it failed on: the line fails for another reason.
+    found = max((v for v in seen if v > running), default=None)
+    floor = _requires_floor(requires_python)
+    if floor is None:
+        return found
+    return floor if found is None else max(found, floor)
+
+
+def _failing_statement(exc: SyntaxError) -> str:
+    """The statement ``exc`` is about, as its file has it: from the line it names, on while a
+    bracket stays open or a line ends with a backslash (at most 30 lines; a formatted
+    ``Generic[\\n    *Ts,\\n]`` fails on its first line); ``exc.text`` when the file cannot be
+    read."""
+    lines: list[str] = []
+    if exc.filename and exc.lineno:
+        with suppress(OSError, UnicodeDecodeError, ValueError):
+            lines = Path(exc.filename).read_text(encoding="utf-8").splitlines()
+    if not exc.lineno or exc.lineno > len(lines):
+        return exc.text or ""
+    out: list[str] = []
+    depth = 0
+    for line in lines[exc.lineno - 1 : exc.lineno + 29]:
+        out.append(line)
+        depth += sum(map(line.count, "([{")) - sum(map(line.count, ")]}"))
+        if depth <= 0 and not line.rstrip().endswith("\\"):
+            break
+    return "\n".join(out) + "\n"
+
+
+def _token_syntax(text: str) -> list[tuple[int, int]]:
+    """The newer syntax the tokens of ``text`` show: a PEP 750 t-string (3.14: a ``t``, ``tr``
+    or ``rt`` prefix right before a string; a "t" inside a string is none), and a star on an
+    item of a subscript, as PEP 646 allows (3.11: ``tuple[int, *Ts]``, ``Generic[*Shape]``,
+    ``a[0, :, *idx]``; a star in a call, Python 2's ``print "row", f(a, *rest)``, in a list
+    display, ``[*a, *b]``, or in a product, ``a[i * n]``, is none)."""
+    import io
+    import tokenize
+
+    found: list[tuple[int, int]] = []
+    subscripts: list[bool] = []  # per open bracket: is it a subscript
+    prev: tokenize.TokenInfo | None = None
+    skip = (tokenize.NL, tokenize.NEWLINE, tokenize.COMMENT, tokenize.INDENT, tokenize.DEDENT)
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+            if tok.type in skip:
+                continue
+            if (
+                tok.type == tokenize.STRING
+                and prev is not None
+                and prev.type == tokenize.NAME
+                and prev.string.lower() in ("t", "tr", "rt")
+                and prev.end == tok.start
+            ):
+                found.append((3, 14))
+            if tok.type == tokenize.OP and tok.string in "([{":
+                subscripts.append(
+                    tok.string == "["
+                    and prev is not None
+                    and (
+                        (prev.type == tokenize.NAME and not keyword.iskeyword(prev.string))
+                        or prev.string in (")", "]")
+                    )
+                )
+            elif tok.type == tokenize.OP and tok.string in ")]}":
+                if subscripts:
+                    subscripts.pop()
+            elif (
+                tok.string == "*"
+                and subscripts
+                and subscripts[-1]
+                and prev is not None
+                and prev.string in ("[", ",")
+            ):
+                found.append((3, 11))
+            prev = tok
+    except Exception:  # tokenize stops at what it cannot read (an unclosed bracket at the end)
+        pass
+    return found
+
+
+def _requires_floor(requires_python: str | None) -> tuple[int, int] | None:
+    """The oldest Python after the running one that ``requires_python`` (a release's
+    Requires-Python) allows, when it excludes the running one: a SyntaxError in that release
+    is then newer syntax (tstring-util 2.1's t-strings need 3.14). None when it allows the
+    running Python, is unknown, or allows none of the next ten."""
+    if not requires_python:
+        return None
+    from packaging.specifiers import InvalidSpecifier, SpecifierSet
+    from packaging.version import Version
+
+    try:
+        allowed = SpecifierSet(requires_python)
+    except InvalidSpecifier:
+        return None
+    major, minor = _running()
+
+    def allows(m: int) -> bool:
+        return any(Version(f"{major}.{m}.{micro}") in allowed for micro in (0, 99))
+
+    if allows(minor):
+        return None
+    return next(((major, m) for m in range(minor + 1, minor + 11) if allows(m)), None)
+
+
+def _python(version: tuple[int, int]) -> str:
+    return f"{version[0]}.{version[1]}"
+
+
+def _check_parsed(
+    package: str,
+    unparsed: Sequence[_Unparsed],
+    unread: set[str],
+    trees: Mapping[str, Sequence[Any]] | None = None,
+    requires_python: Mapping[str, str | None] | None = None,
+) -> None:
+    """Raise UnparsedSources when the running Python could not parse a top-level module of
+    either release (or its stub: griffe then loads nothing), a public module in syntax of a
+    newer Python, or a private one in such syntax that a public name of its release leads to
+    (an alias that cannot resolve: scikit-learn 1.9's ``sklearn.linear_model.LogisticRegression``
+    is defined in ``_logistic.py``, which Python 3.10 cannot parse; ``trees``: the modules each
+    release loaded, by version). The Python named is the newest the failures and the releases'
+    Requires-Python (``requires_python``, by version) call for.
+
+    Each other module left out is an entry of ``unread`` (unread_text says how many, once):
+    UNREAD_SYNTAX for a private module in newer syntax, UNREAD_UNPARSED for one that shows none
+    (Python 2 code, a template), and UNREAD_SIBLING for a distribution read next to a release,
+    by its import name: the release is checked all the same, without the names it takes from
+    there (the scan's re-export warning says which)."""
+    trees = trees or {}
+    running = running_python()
+    own = [u for u in unparsed if not u.sibling]
+    blocking = [
+        u
+        for u in own
+        if u.top
+        or (u.needs is not None and (u.public or _leads_to(u.path, trees.get(u.version, ()))))
+    ]
+    # By the distribution's import name and the release it was read next to.
+    siblings: dict[tuple[str, str], tuple[int, int] | None] = {}
+    for u in unparsed:
+        if u in blocking:
+            continue
+        log.debug("%s %s: cannot parse %s: %s", package, u.version, u.file, u.message)
+        if u.sibling:
+            at = (u.path.split(".")[0], u.version)
+            known = [n for n in (siblings.get(at), u.needs) if n is not None]
+            siblings[at] = max(known) if known else None
+        elif u.needs is not None:
+            unread.add(f"{u.path}{UNREAD_SYNTAX}{_python(u.needs)}")
+        else:
+            unread.add(f"{u.path}{UNREAD_UNPARSED}{running}")
+    for (top, release), python in siblings.items():
+        ending = f"{UNREAD_SYNTAX}{_python(python)}" if python else f"{UNREAD_UNPARSED}{running}"
+        unread.add(f"{UNREAD_SIBLING}{top}{UNREAD_NEXT_TO}{release}{ending}")
+    if not blocking:
+        return
+    versions = list(dict.fromkeys(u.version for u in blocking))
+    whose = f"{package} " + " and ".join(f"{v}'s" for v in versions)
+    needs = [u.needs for u in blocking if u.needs is not None]
+    if needs:
+        floors = (_requires_floor(p) for p in (requires_python or {}).values())
+        needs += [f for f in floors if f is not None]
+        raise UnparsedSources(
+            f"Python {running} cannot parse {whose} sources; run since-cutoff with Python "
+            f"{_python(max(needs))} or later to check it"
+        )
+    u = blocking[0]
+    where = f"{u.file}, line {u.line}" if u.line else u.file
+    raise UnparsedSources(
+        f"{package} {u.version}'s {u.path} could not be parsed by Python {running} ({where}: "
+        f"{u.message}), so since-cutoff could not check {package}"
+    )
+
+
+def _leads_to(path: str, modules: Iterable[Any]) -> bool:
+    """Does a public name of a public module among ``modules`` (griffe modules of one release,
+    and their submodules) lead to the module at ``path`` or to something it defines: an alias
+    whose target is there?"""
+    stack = list(modules)
+    seen: set[int] = set()
+    while stack:
+        module = stack.pop()
+        if id(module) in seen:
+            continue
+        seen.add(id(module))
+        try:
+            members = list(module.members.items())
+        except Exception:
+            continue
+        for name, member in members:
+            if name.startswith("_"):
+                continue
+            try:
+                if member.is_alias:
+                    target = str(member.target_path)
+                    if target == path or target.startswith(path + "."):
+                        return True
+                elif member.is_module:
+                    stack.append(member)
+            except Exception:
+                continue
+    return False
 
 
 class _Differ:
@@ -1569,6 +2055,7 @@ class _Differ:
             hint, source = parameter_hint(old_fn, param.lstrip("*"))
         else:
             hint, source = deprecation_hint_and_source(old_fn, param.lstrip("*"))
+        legacy = deprecation_hint_and_source(old_fn, param.lstrip("*"), legacy=True)[0]
         handled, handled_text = None, None
         extras: list[str] | None = None
         if ckind == PARAM_REMOVED and not param.startswith("*"):
@@ -1589,6 +2076,7 @@ class _Differ:
             hint=hint,
             hint_source=source,
             hint_file=_file_of(old_fn) if hint else None,
+            template_hint=_template_hint(legacy, hint, source),
             still_handled_at=handled,
             still_handled_text=handled_text,
             suggestions=suggestions,
@@ -1736,11 +2224,18 @@ class _Differ:
             evidence["left_behind"] = self.left_behind(obj)
         method = self.aliased_method(obj)
         hinted = obj
+        legacy = deprecation_hint_and_source(obj, legacy=True)[0]
+        if method is not None and not legacy:
+            legacy = deprecation_hint_and_source(method, legacy=True)[0]
         if method is not None and not hint:
             # ``duplicate_space = api.duplicate_space``: what the library says of the method,
             # it says of this name for it.
             hint, source = deprecation_hint_and_source(method)
             hinted = method
+        hint_from = None
+        if not hint and not moved_to:
+            hint, hinted, hint_from = _borrowed_hint(obj, hinted)
+            source = HINT_BORROWED if hint else None
         change = self._change(
             MOVED if moved_to else REMOVED,
             obj,
@@ -1750,7 +2245,9 @@ class _Differ:
             namesake=namesake,
             hint=hint,
             hint_source=source,
+            hint_from=hint_from,
             hint_file=_file_of(hinted) if hint else None,
+            template_hint=_template_hint(legacy, hint, source),
             suggestions=[] if moved_to or not self.fuzzy else self.similar_names(obj),
             old_signature=signature_of(obj),
             old_doc=doc_summary(obj),
@@ -1767,7 +2264,46 @@ class _Differ:
             change.library_names = self.library_names(like, None)
         else:
             change.library_names = self.library_names(change, None)
+            if not change.library_names and hint and source != HINT_BORROWED:
+                change.library_names = self._subclass_names(obj, hint)
         return change
+
+    def _subclass_names(self, obj: Any, text: str) -> list[str]:
+        """For a removed member of a class: the names ``text`` gives (:func:`_named`) that the
+        new version's public subclasses of the class have, each under the shortest public path
+        of every subclass that defines its own (at most three, by that path): the note is about
+        the base class, which code reaches through any of them. pandas 2.3's
+        ``NDFrame.swapaxes`` says "Please use ``transpose`` instead", and in 3.0 ``NDFrame``
+        has none, ``DataFrame`` and ``Series`` do (``pandas.DataFrame.transpose``,
+        ``pandas.Series.transpose``)."""
+        parent: Any = getattr(obj, "parent", None)
+        if not getattr(parent, "is_class", False):
+            return []
+        root = str(self.new.path)
+        subclasses = [
+            (min(paths, key=lambda p: (len(p), p)), sub)
+            for sub in self._inheritor_index(self.new).get(str(parent.path), ())
+            if (paths := self.paths_in(self.new, sub))
+        ]
+        found: list[str] = []
+        for name in _named(text):
+            if name in (obj.name, parent.name) or "." in name or name.startswith("_"):
+                continue
+            defined: set[str] = set()  # a subclass of a subclass inherits the same one
+            for path, sub in sorted(subclasses, key=lambda ps: ps[0]):
+                try:
+                    member = sub.all_members.get(name)
+                    if getattr(member, "is_alias", False):
+                        member = member.final_target
+                    where = str(member.path) if member is not None else ""
+                except Exception:
+                    continue
+                if where not in defined and is_callable_api(member, root):
+                    defined.add(where)
+                    found.append(f"{path}.{name}")
+                if len(defined) == 3:
+                    break
+        return found
 
     def left_behind(self, module: Any) -> int:
         """How many public names the parent package of ``module`` (an old module that moved)
@@ -3922,7 +4458,9 @@ def _ordered(paths: Iterable[str]) -> list[str]:
 # What receiver_map records of a pinned release; bumped when that changes, so that the copies
 # the scan caches per release (Engine.store, "receivers") are made again. Not part of a diff.
 # 2: ``members``, the names each class declares itself.
-RECEIVERS_SCHEMA = 2
+# 3: a map made of sources the running Python could not all parse is kept for that Python only
+# (selection.type_project); the ones 2 kept for every Python (numpy 2.5's {}, on 3.10) go.
+RECEIVERS_SCHEMA = 3
 # Where an annotation that names no package of the project leads: the standard library and the
 # typing helpers (``typing_extensions.Self``). Not recorded.
 _STDLIB_MODULES = frozenset(getattr(sys, "stdlib_module_names", ())) | {
@@ -4678,15 +5216,26 @@ def deprecation_hint(obj: Any, param: str | None = None) -> str | None:
 
 
 def deprecation_hint_and_source(
-    obj: Any, param: str | None = None
+    obj: Any, param: str | None = None, *, legacy: bool = False
 ) -> tuple[str | None, str | None]:
     """:func:`deprecation_hint` and where it comes from (HINT_DECORATOR or HINT_DOCSTRING:
-    that of its first part, when it joins several)."""
+    that of its first part, when it joins several). With ``legacy``, as since-cutoff 0.3 read
+    it (APIChange.template_hint): a docstring's own lines only, and a directive's first line
+    whatever follows it (:func:`_sentence`)."""
+    return _joined(_deprecation_parts(obj, param, legacy=legacy))
+
+
+def _deprecation_parts(
+    obj: Any, param: str | None = None, *, legacy: bool = False
+) -> list[tuple[str, str]]:
+    """The texts :func:`deprecation_hint_and_source` joins, each with its HINT_* source: the
+    messages of the object's deprecation decorators (none for a parameter), then the first
+    docstring sentence that says "deprecated" of it (of ``param``, for a parameter)."""
     try:
         if getattr(obj, "is_alias", False):
             obj = obj.final_target
     except Exception:
-        return None, None
+        return []
     parts: list[tuple[str, str]] = []
     if param is None:
         for dec in getattr(obj, "decorators", None) or []:
@@ -4698,7 +5247,7 @@ def deprecation_hint_and_source(
                 continue  # descriptors deprecate a way of reading it, not the object
             args, kwargs = _decorator_call(dec)
             parts.append((_decorator_message(name, args, kwargs), HINT_DECORATOR))
-    lines = _doc_lines(obj)
+    lines = _doc_lines(obj, legacy=legacy)
     in_params = False
     for i, line in enumerate(lines):
         header = _doc_section(lines, i)
@@ -4711,14 +5260,106 @@ def deprecation_hint_and_source(
             continue  # a parameter's deprecation, not the object's
         if param is not None and not _mentions(line, param):
             continue
-        text = _sentence(lines, i)
+        text = _sentence(lines, i, legacy=legacy)
         if text is None:
             continue  # cut off before what it announces
         parts.append((text, HINT_DOCSTRING))
         break
+    return parts
+
+
+def _joined(parts: Sequence[tuple[str, str]]) -> tuple[str | None, str | None]:
+    """``parts`` (:func:`_deprecation_parts`) as one hint, at most HINT_LIMIT characters, and
+    the source of its first part; ``(None, None)`` when they say nothing."""
     kept = [(t.strip(), source) for t, source in parts if t and t.strip()]
-    text = "; ".join(t for t, _ in kept)[:300]
+    text = "; ".join(t for t, _ in kept)[:HINT_LIMIT]
     return (text, kept[0][1]) if text else (None, None)
+
+
+def _template_hint(legacy: str | None, hint: str | None, source: str | None) -> str | None:
+    """APIChange.template_hint: ``legacy`` (the hint as 0.3 read it) where what the
+    ``--compare template`` baseline shows of ``hint`` and ``source`` differs from it, "" for
+    none; None when it is the same."""
+    shown = hint if hint and source not in _TEMPLATE_UNSEEN else None
+    return None if (legacy or None) == shown else legacy or ""
+
+
+# The hint sources 0.3 did not read: the ``--compare template`` baseline shows none of them.
+_TEMPLATE_UNSEEN = (HINT_PARAM_DOC, HINT_WARNING, HINT_BORROWED)
+
+
+def template_hint_of(change: APIChange) -> str | None:
+    """The old version's deprecation text as since-cutoff 0.3 read it for ``change``, which the
+    baselines of ``run --compare`` show and read (notes.template_bullet,
+    baselines.replacement), so that the numbers measured against them stay comparable; None
+    when 0.3 read none."""
+    if change.template_hint is not None:
+        return change.template_hint or None
+    return change.hint if change.hint and change.hint_source not in _TEMPLATE_UNSEEN else None
+
+
+# A sentence of a class's docstring about the class itself (_class_deprecation).
+_THIS_CLASS = re.compile(r"\bthis\s+(?:class|type|object|interface)\b", re.IGNORECASE)
+
+
+def _borrowed_hint(obj: Any, hinted: Any) -> tuple[str | None, Any, str | None]:
+    """The deprecation text a removed object with none of its own takes (HINT_BORROWED), the
+    object it was read from, and that object's name as a note gives it (APIChange.hint_from):
+    for a member, its class's, when the class itself is deprecated (llama-index-core 0.12's
+    ``ReActAgent.from_tools``: the class "has been rewritten and replaced by
+    llama_index.core.agent.workflow.ReActAgent"; :func:`_class_deprecation`), the class it is
+    reported under (an inherited member's alias, not the base that defines it); for a class,
+    that of the first of its own methods whose text names something (huggingface-hub 0.33's
+    ``HfFolder``: its ``get_token`` "is deprecated in favor of [`huggingface_hub.get_token`]").
+    ``(None, hinted, None)`` when there is none."""
+    try:
+        parent = getattr(obj, "parent", None)
+        target = obj.final_target if getattr(obj, "is_alias", False) else obj
+        if parent is not None and getattr(parent, "is_class", False):
+            hint = _class_deprecation(parent, str(obj.name))
+            if hint:
+                return hint, parent, str(parent.name)
+        elif getattr(target, "is_class", False):
+            for member in list(target.members.values()):
+                if member.is_alias or not member.is_function or member.name.startswith("_"):
+                    continue
+                hint, _ = deprecation_hint_and_source(member)
+                if hint and _named(hint):
+                    return hint, member, f"{target.name}.{member.name}"
+    except Exception as exc:
+        log.debug("no deprecation text to borrow for %s: %s", getattr(obj, "path", "?"), exc)
+    return None, hinted, None
+
+
+def _class_deprecation(cls: Any, member: str) -> str | None:
+    """What ``cls``'s own deprecation text says of the class itself, for its removed ``member``:
+    a deprecation decorator's message, or a docstring sentence that is a ``.. deprecated::``
+    directive, names the class or says "this class"; never one that names another of its
+    members ("The ``fetch_all`` method is deprecated; use ``iter_all`` instead." is about
+    ``fetch_all``). None when the class itself is not deprecated."""
+    try:
+        target = cls.final_target if getattr(cls, "is_alias", False) else cls
+        try:
+            names = set(target.all_members)
+        except Exception:
+            names = set(target.members)
+        others = {n for n in names if n not in (member, target.name) and not n.startswith("_")}
+        own = str(target.name)
+    except Exception:
+        return None
+    kept = [
+        (text, source)
+        for text, source in _deprecation_parts(cls)
+        # By its name alone or after the class's: ``Client.fetch_all``.
+        if not any(re.search(rf"(?<!\w){re.escape(n)}(?!\w)", text) for n in others)
+        and (
+            source == HINT_DECORATOR
+            or _BARE_DIRECTIVE.match(text) is not None
+            or _mentions(text, own)
+            or _THIS_CLASS.search(text) is not None
+        )
+    ]
+    return _joined(kept)[0]
 
 
 def parameter_hint(fn: Any, param: str) -> tuple[str | None, str | None]:
@@ -4741,16 +5382,50 @@ def parameter_hint(fn: Any, param: str) -> tuple[str | None, str | None]:
     for find, source in ((_parameter_doc_hint, HINT_PARAM_DOC), (_warning_hint, HINT_WARNING)):
         text = find(fn, param)
         if text:
-            return text[:300], source
+            return text[:HINT_LIMIT], source
     return None, None
 
 
-def _doc_lines(obj: Any) -> list[str]:
+def _doc_lines(obj: Any, *, legacy: bool = False) -> list[str]:
+    """The lines of ``obj``'s docstring, or of the one an ``@Appender`` gives it
+    (:func:`_appended_doc`; not with ``legacy``)."""
     try:
         doc = obj.docstring.value if obj.docstring else ""
     except Exception:
         doc = ""
+    if not doc and not legacy:
+        doc = _appended_doc(obj) or ""
     return (doc or "").splitlines()
+
+
+def _appended_doc(obj: Any) -> str | None:
+    """The docstring an ``@Appender(_doc_x.format(...))`` decorator gives a function that has
+    none of its own: the module-level template it names, as its source spells it (pandas 2.3's
+    ``read_csv``, whose ``date_parser`` entry says "Use ``date_format`` instead"). None
+    otherwise; nothing is run, and the template's ``{placeholders}`` stay."""
+    for dec in getattr(obj, "decorators", None) or []:
+        try:
+            call = ast.parse(str(dec.value), mode="eval").body
+        except (SyntaxError, ValueError, RecursionError, MemoryError):
+            continue
+        if not (isinstance(call, ast.Call) and _name(call.func) == "Appender" and call.args):
+            continue
+        arg = call.args[0]
+        if isinstance(arg, ast.Call) and isinstance(arg.func, ast.Attribute):
+            arg = arg.func.value  # _doc.format(...)
+        elif isinstance(arg, ast.BinOp) and isinstance(arg.op, ast.Mod):
+            arg = arg.left  # _doc % (...)
+        if not isinstance(arg, ast.Name):
+            continue
+        try:
+            template = obj.module.members.get(arg.id)
+            source = textwrap.dedent(template.source) if template is not None else ""
+            assigned = ast.parse(source).body[0]
+        except Exception:
+            continue
+        if isinstance(assigned, ast.Assign):
+            return _message(assigned.value) or None
+    return None
 
 
 def _mentions(text: str, name: str) -> bool:
@@ -4758,17 +5433,42 @@ def _mentions(text: str, name: str) -> bool:
     return re.search(rf"(?<![\w.]){re.escape(name)}(?!\w)", text) is not None
 
 
-def _sentence(lines: list[str], i: int) -> str | None:
+_BARE_DIRECTIVE = re.compile(r"\.\.\s+deprecated::(?:\s+\S+)?", re.IGNORECASE)
+# A ``{klass}`` a docstring template leaves for a decorator to fill (pandas' ``@doc``).
+_PLACEHOLDER = re.compile(r"\{[A-Za-z_]\w*\}")
+
+
+def _sentence(lines: list[str], i: int, *, legacy: bool = False) -> str | None:
     """Line ``i`` of a docstring and the lines that continue its sentence (docstrings wrap
     long sentences, and ".. deprecated:: 1.0" is usually followed by the advice); None when
-    it ends with a colon, cut off before what it announces."""
+    it ends with a colon, cut off before what it announces. The body of a bare ``..
+    deprecated:: 2.1.0`` directive may start after a blank line (pandas 2.3's
+    ``DataFrame.applymap``: "DataFrame.applymap has been deprecated. Use DataFrame.map
+    instead."); a bare one with nothing after it is None, and so is a sentence with an
+    unfilled ``{klass}`` placeholder (pandas 2.3's ``NDFrame.backfill``: "{klass}.backfill is
+    deprecated."), which the decorator would fill at import. With ``legacy``, as 0.3 read it:
+    the lines that follow line ``i`` only, and a bare directive as it is."""
     chunk = [lines[i].strip()]
-    for j, follow in enumerate(lines[i + 1 : i + 4], start=i + 1):
+    start = i + 1
+    if not legacy and _BARE_DIRECTIVE.fullmatch(chunk[0]):
+        body = start
+        while body < len(lines) and not lines[body].strip():
+            body += 1
+        indent = len(lines[i]) - len(lines[i].lstrip())
+        if body < len(lines) and len(lines[body]) - len(lines[body].lstrip()) > indent:
+            start = body  # the directive's own body, indented below it
+    for j, follow in enumerate(lines[start : start + 3], start=start):
         if not follow.strip() or _is_param_head(follow) or _doc_section(lines, j) is not None:
             break
         chunk.append(follow.strip())
     text = " ".join(" ".join(chunk).split())
-    return None if text.endswith(":") else text
+    if text.endswith(":"):
+        return None
+    if legacy:
+        return text
+    if _BARE_DIRECTIVE.fullmatch(text) or _PLACEHOLDER.search(text):
+        return None  # nothing after it ("the verbose argument: .. deprecated:: 2.2.0")
+    return text
 
 
 def _parameter_doc_hint(fn: Any, param: str) -> str | None:

@@ -35,6 +35,7 @@ from since_cutoff.apidiff import (
     find_object,
     is_callable_api,
     signature_of,
+    template_hint_of,
 )
 from since_cutoff.apidiff import (  # where it lived before 0.4.0
     replacement_candidates as replacement_candidates,
@@ -177,7 +178,8 @@ def replacement(change: APIChange, api: ApiLookup) -> Reference | None:
     """
     if change.kind not in (REMOVED, DEPRECATED):
         return None
-    text = " ".join(t for t in (change.deprecation, change.hint) if t)
+    # The old text as 0.3 read it, so that the baseline stays as 0.3 built it.
+    text = " ".join(t for t in (change.deprecation, template_hint_of(change)) if t)
     if not text:
         return None
     root = api(change)

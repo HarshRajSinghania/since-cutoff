@@ -336,9 +336,9 @@ Autres options :
   moins de projets, et plus court, mais le benchmark ne l'a pas testée. La formulation des notes
   a changé depuis la version mesurée (0.4.1), qui comparait avec la version publiée à la date
   limite : ajoutez `--cutoff-margin 0` pour comparer à partir du même jour.
-- `sync --header-only` n'écrit que l'en-tête : les paquets qui ont changé après la date limite,
-  chacun avec sa version épinglée et la version à laquelle il est comparé, et la consigne de les
-  suivre, sans lignes de changement (`--no-header-only` les écrit de nouveau). C'est le bloc du
+- `sync --header-only` n'écrit que l'en-tête : les paquets dont l'API a changé depuis la version
+  à laquelle ils sont comparés, chacun avec sa version épinglée et cette version, et la consigne de
+  les suivre, sans lignes de changement (`--no-header-only` les écrit de nouveau). C'est le bloc du
   bras « en-tête seul » du benchmark : plus court (environ 250 tokens avec un paquet, contre 285
   à 505 pour les blocs complets), il indique à l'agent quels paquets vérifier, mais pas ce qui a
   changé ni quoi utiliser à la place. Sans `--scope`, un nouvel en-tête liste les paquets

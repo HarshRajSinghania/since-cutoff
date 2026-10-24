@@ -346,5 +346,11 @@ def test_project_changes_header_only_is_what_sync_writes(tools: Tools, tmp_path:
 def test_project_changes_header_only_with_nothing_imported(tools: Tools, tmp_path: Path) -> None:
     root = mcp_app(tmp_path, "import json\n")
     out = tools.project_changes(str(root), cutoff="2025-07", header_only=True)
-    assert out.startswith("No package this project imports changed its API after the cutoff ")
-    assert "at the versions from pyproject.toml." in out
+    # The day it compares from, as the rest of 0.6 says it, not "after the cutoff".
+    assert out.startswith(
+        "No package this project imports changed its API after 2025-07-01 (30 days before the "
+        "cutoff). Cutoff 2025-07-31 ("
+    )
+    assert out.endswith("; versions from pyproject.toml.\n")
+    out = tools.project_changes(str(root), cutoff="2025-07", header_only=True, cutoff_margin=0)
+    assert out.startswith("No package this project imports changed its API after the cutoff. ")

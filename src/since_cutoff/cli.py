@@ -570,9 +570,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--header-only",
         action=argparse.BooleanOptionalAction,
         default=None,
-        help="write only the header: the packages that changed after the cutoff, each with its "
-        "pinned version and the release it is compared from, and the instruction to follow "
-        "them; no change lines (a much shorter block, the one the benchmark's header-only arm "
+        help="write only the header: the packages whose API changed since the release they are "
+        "compared from, each with its pinned version and that release, and the instruction to "
+        "follow them; no change lines (a much shorter block, the one the benchmark's header-only arm "
         "used). Without --scope and without a block, the scope is imported. The block keeps "
         "the choice; --no-header-only writes the change lines again",
     )

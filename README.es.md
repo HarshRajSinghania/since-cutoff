@@ -330,8 +330,8 @@ Más opciones:
   y más corto, pero el benchmark no lo probó. La redacción de las notas ha cambiado desde la
   versión medida (0.4.1), y esa versión comparaba con la versión publicada en la fecha de corte:
   añade `--cutoff-margin 0` para comparar desde el mismo día.
-- `sync --header-only` escribe solo el encabezado: los paquetes que cambiaron después de la fecha
-  de corte, cada uno con su versión fijada y la versión con la que se compara, y la instrucción de
+- `sync --header-only` escribe solo el encabezado: los paquetes cuya API cambió desde la versión
+  con la que se comparan, cada uno con su versión fijada y esa versión, y la instrucción de
   seguirlos, sin líneas de cambios (`--no-header-only` las vuelve a escribir). Es el bloque del
   brazo «solo encabezado» del benchmark: más corto (unos 250 tokens con un paquete, frente a 285 a
   505 de los bloques completos), y le dice al agente qué paquetes revisar, pero no qué cambió ni

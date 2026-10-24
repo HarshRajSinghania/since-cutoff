@@ -316,9 +316,9 @@ More options:
   and a shorter one, but the benchmark did not test it. The notes' wording has changed since the
   release that was measured (0.4.1), and that release compared from the release at the cutoff:
   add `--cutoff-margin 0` to compare from the same day.
-- `sync --header-only` writes only the header: the packages that changed after the cutoff, each
-  with its pinned version and the release it is compared from, and the instruction to follow
-  them, with no change lines (`--no-header-only` writes them again). It is the block of the
+- `sync --header-only` writes only the header: the packages whose API changed since the release
+  they are compared from, each with its pinned version and that release, and the instruction to
+  follow them, with no change lines (`--no-header-only` writes them again). It is the block of the
   benchmark's header-only arm: shorter (about 250 tokens with one package, against 285 to 505
   for the full blocks), and it tells the agent which packages to check, but not what changed
   or what to use instead. Without `--scope`, a new header lists the packages your code imports.

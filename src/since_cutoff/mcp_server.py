@@ -861,10 +861,11 @@ def _render_header(scan: ScanResult, target: Target) -> str:
     notes = scan.scope_notes(SCOPE_IMPORTED)
     block = scan.notes_block(notes, scope=SCOPE_IMPORTED, header_only=True)
     if block is None:
+        # The day the comparison releases were published by, as project_changes says it.
         return (
-            f"No package this project imports changed its API after the cutoff "
-            f"{target.cutoff.isoformat()} ({target.label}){target.compared_from}, at the "
-            f"versions from {scan.project.version_source}.\n"
+            f"No package this project imports changed its API after {_since(scan)}. Cutoff "
+            f"{target.cutoff.isoformat()} ({target.label}); versions from "
+            f"{scan.project.version_source}.\n"
         )
     lines = block.splitlines()
     return "\n".join(lines[2:-1]) + "\n"  # without the start marker, meta line and end marker
